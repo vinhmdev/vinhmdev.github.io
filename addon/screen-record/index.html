@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vCapture</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #777;
+        }
+        video {
+            width: 50%;
+            float: left;
+            box-sizing: border-box;
+            border: 2px solid #aaa;
+            background-color: #222;
+        }
+        button {
+            padding: .5rem;
+            font-size: 1.5rem;
+            display: block;
+            box-sizing: border-box;
+            width: 25%;
+        }
+        .container-button {
+            width: 50%;
+            float: right;
+            box-sizing: border-box;
+        }
+        .clean-float {
+            clear: both;
+            display: block;
+            content: " ";
+        }
+    </style>
+</head>
+<body>
+    <a id="download-video" target="_blank"></a>
+    <video id="video-demo" autoplay muted></video>
+    <div class={container-button}>
+        <button id="start-record" onclick="startRecordOnPress()">Quay màn hình</button>
+        <button id="stop-record" onclick="stopRecordOnPress()">Dừng Quay</button>
+    </div>
+    <h1 class="clean-float">vCapture | Quay màn hình desktop | (gọn - nhẹ)</h1>
+</body>
+<script src="./scripts/capture.js"></script>
+<script>
+    const videoDemoUI = document.getElementById("video-demo")
+    videoDemoUI.height = videoDemoUI.clientWidth * window.screen.height / window.screen.width
+    window.onresize = () => {
+        videoDemoUI.height = videoDemoUI.clientWidth * window.screen.height / window.screen.width
+    }
+</script>
+</html>

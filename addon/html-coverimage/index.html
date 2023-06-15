@@ -1,0 +1,58 @@
+<!--
+    Author: Vinh Srl
+    Source: https://github.com/VinhSrl/HTML-CoverImage
+ -->
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Images | Vinh</title>
+
+    <base href="/addon/HTML-CoverImage/">
+
+    <style>
+        #img-source {
+            box-sizing: border-box;
+            width: 25ch;
+            background-color: #fff;
+            border: 1px solid #aaa;
+            /* display: none; */
+        }
+        
+        #canvas-source {
+            box-sizing: border-box;
+            border: 1px solid #aaa;
+        }
+        
+        #result {
+            font-family: 'Courier New', Courier, monospace, consolas;
+            font-size: .9em;
+            line-height: .9ch;
+            background-color: #ddd;
+            margin: auto;
+            padding: 1em;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <input id="file-anh" type="file"><br>
+    <input id="do-phuc-tap" type="number" value="185" placeholder="185" /> : Độ phức tạp ảnh (px) <br>
+    <input onclick="setValue()" type="button" value="Tạo ảnh" />
+    <hr />
+    <img id="img-source" src="images/megumin2.png" />
+    <canvas id="canvas-source">
+        Xin lỗi, Trình duyện của bạn không hổ trợ canvas HTML 5
+    </canvas>
+    <hr />
+    <div id="result">
+        Kết quả
+    </div>
+    <script src="java-script/cover-images.js"></script>
+</body>
+
+</html>

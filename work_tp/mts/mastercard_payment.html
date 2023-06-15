@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Chage change merchant in here -->
+  <script src="https://test-gateway.mastercard.com/form/version/65/merchant/TEST001-M-110422/session.js"></script>
+  
+  <style id="antiClickjack">
+    body {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="https://omni.mutosi.com/images/icons/THE THANH TOAN.png" width="100%">
+  <h3>Vui lòng nhập chi tiết thẻ thanh toán:</h3>
+  <br/>
+  <div>
+    Số thẻ: <br/>
+    <input
+    type="text"
+    id="card-number" 
+    class="input-field" 
+    title="card number" 
+    aria-label="enter your card number" 
+    tabindex="1" 
+    style="box-sizing: border-box; border-block: 1px solid rgb(206, 212, 218); border-inline: 1px solid rgb(206, 212, 218); width: 100%; height: 2.5em;"
+    readonly>
+  </div>
+  <br />
+  <div>
+    Tên in trên thẻ: <br />
+    <input 
+    type="text" 
+    id="cardholder-name" 
+    class="input-field" 
+    title="cardholder name" 
+    aria-label="enter name on card" 
+    tabindex="5" 
+    style="box-sizing: border-box; border-block: 1px solid rgb(206, 212, 218); border-inline: 1px solid rgb(206, 212, 218); width: 100%; height: 2.5em;"
+    readonly>
+  </div>
+  <br />
+  <div>
+    Tháng hết hạng: <br/>
+    <input 
+    type="text" 
+    id="expiry-month" 
+    class="input-field" 
+    title="expiry month"
+    aria-label="two digit expiry month"
+    tabindex="2" 
+    style="box-sizing: border-box; border-block: 1px solid rgb(206, 212, 218); border-inline: 1px solid rgb(206, 212, 218); width: 100%; height: 2.5em;"
+    readonly>
+  </div>
+  <br />
+  <div>
+    Năm hết hạng: <br/>
+    <input 
+    type="text" 
+    id="expiry-year" 
+    class="input-field" 
+    title="expiry year" 
+    aria-label="two digit expiry year" 
+    tabindex="3" 
+    style="box-sizing: border-box; border-block: 1px solid rgb(206, 212, 218); border-inline: 1px solid rgb(206, 212, 218); width: 100%; height: 2.5em;"
+    readonly>
+  </div>
+  <br />
+  <div>
+    Mã bảo mật (CCV): <br/>
+    <input 
+    type="text" 
+    id="security-code" 
+    class="input-field" 
+    title="security code" 
+    aria-label="three digit CCV security code" 
+    tabindex="4"
+    style="box-sizing: border-box; border-block: 1px solid rgb(206, 212, 218); border-inline: 1px solid rgb(206, 212, 218); width: 100%; height: 2.5em;"
+    readonly>
+  </div>
+
+  <h4>
+    <img src="https://uat-omni.mutosi.com/images/icons/icon-pci-shield.svg" width="45px">
+    Cổng thanh toán VPBank bảo mật thông tin thanh toán theo Tiêu Chuẩn Bảo Mật PCI-DSS, đảm bảo an toàn cho thanh toán của bạn.
+  </h4>
+
+  <div style="width: 100%;">
+    <button
+    id="payButton" 
+    style="min-width: 50%; height: 2.25em; background-color: #55d; font-weight: bold; font-size: 1em; color: #fff;"
+    onclick="pay('card');">
+      Xác nhận
+    </button>
+  </div>
+
+
+  <!-- DISPLAY VISA CHECKOUT AND AMEX EXPRESS CHECKOUT AS A PAYMENT OPTION ON YOUR PAYMENT PAGE -->
+  <!-- JAVASCRIPT FRAME-BREAKER CODE TO PROVIDE PROTECTION AGAINST IFRAME CLICK-JACKING -->
+  <script type="text/javascript">
+    if (self === top) {
+      var antiClickjack = document.getElementById("antiClickjack");
+      antiClickjack.parentNode.removeChild(antiClickjack);
+    } else {
+      top.location = self.location;
+    }
+
+    var querys = window.location.search.substring(1).split('&');
+    console.log(`>>> ${querys} ${querys[1].split('=')[1]}`)
+
+    PaymentSession.configure({
+      session: `${querys[1].split('=')[1]}`,
+      fields: {
+        card: {
+          number: "#card-number",
+          securityCode: "#security-code",
+          expiryMonth: "#expiry-month",
+          expiryYear: "#expiry-year",
+          nameOnCard: "#cardholder-name"
+        },
+      },
+      frameEmbeddingMitigation: ["javascript"],
+      callbacks: {
+        initialized: function (response) {
+          // HANDLE INITIALIZATION RESPONSE
+          if (response.status === "ok") {
+            console.log(response.status);
+          }
+        },
+
+        formSessionUpdate: function (response) {
+          // HANDLE RESPONSE FOR UPDATE SESSION
+          if (response.status) {
+            if ("ok" == response.status) {
+              FlutterSuccess.postMessage(JSON.stringify(response))
+              // console.log("Session updated with data: " + response.session.id);
+              //check if the security code was provided by the user
+              // if (response.sourceOfFunds.provided.card.securityCode) {
+              //   console.log("Security code was provided.");
+              // }
+              //check if the user entered a MasterCard credit card
+              // if (response.sourceOfFunds.provided.card.scheme == 'MASTERCARD') {
+              //   console.log("The user entered a MasterCard credit card.")
+              // }
+            } else if ("fields_in_error" == response.status) {
+              console.log("Session update failed with field errors.");
+              if (response.errors.cardNumber) {
+                console.log("Card number invalid or missing.");
+                FlutterError.postMessage('Số thẻ không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.expiryYear) {
+                console.log("Expiry year invalid or missing.");
+                FlutterError.postMessage('Năm hết hạn không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.expiryMonth) {
+                console.log("Expiry month invalid or missing.");
+                FlutterError.postMessage('Tháng hết hạn không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.securityCode) {
+                console.log("Security code invalid.");
+                FlutterError.postMessage('Mã bảo mật không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.number) {
+                console.log("Gift card number invalid or missing.");
+                FlutterError.postMessage('Số thẻ nội địa không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.pin) {
+                console.log("Pin invalid or missing.");
+                FlutterError.postMessage('Mã pin không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.bankAccountHolder) {
+                console.log("Bank account holder invalid.");
+                FlutterError.postMessage('Tên trên thẻ không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.bankAccountNumber) {
+                console.log("Bank account number invalid.");
+                FlutterError.postMessage('Số tài khoản ngân hàng không đúng hoặc không hợp lệ!');
+                return;
+              }
+              else if (response.errors.routingNumber) {
+                console.log("Routing number invalid.");
+                FlutterError.postMessage('Mã chuyển hướng không đúng hoặc không hợp lệ!');
+                return;
+              }
+            } else if ("request_timeout" == response.status) {
+              console.log("Session update failed with request timeout: " + response.errors.message);
+              FlutterError.postMessage('Server chờ đợi quá lâu mà chưa có phản hồi. Vui lòng thử lại!');
+              return;
+            } else if ("system_error" == response.status) {
+              console.log("Session update failed with system error: " + response.errors.message);
+              FlutterError.postMessage('Sự cố phát sinh từ hệ thống: ' + response.errors.message);
+              return;
+            }
+          } else {
+            console.log("Session update failed: " + response);
+            FlutterError.postMessage('Cập nhật thông tin thất bại!');
+            return;
+          }
+        },
+        visaCheckout: function (response) {
+          // HANDLE VISA CHECKOUT RESPONSE
+        },
+        amexExpressCheckout: function (response) {
+          // HANDLE AMEX EXPRESS CHECKOUT RESPONSE
+        }
+      },
+      interaction: {
+        displayControl: {
+          formatCard: "EMBOSSED",
+          invalidFieldCharacters: "REJECT"
+        }
+      },
+    });
+
+    function pay(paymentType) {
+      if (paymentType === 'giftCard') {
+        PaymentSession.updateSessionFromForm(paymentType, '<localCardBrand>');
+      } else {
+        PaymentSession.updateSessionFromForm(paymentType);
+      }
+    }
+  </script>
+</body>
+
+</html>

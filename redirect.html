@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>mDev Redirects</title>
+    <style>
+        * {
+          box-sizing: border-box;
+          background-color: #0000;
+        }
+        a {
+          text-decoration: none;
+          color: blue;
+        }
+        body, html {
+          padding: 0;
+          margin: 0;
+        }
+        img {
+          width: 100%;
+          max-height: 80vh;
+          object-fit: contain;
+        }
+        .next-link {
+          width: 100%;
+          max-width: 28rem;
+          font-size: 1.5rem;
+          font-weight: bold;
+          border: 1px solid gray;
+          margin: 1rem auto;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <a id="goto-link" class="next-link">
+        <div id="loading" style="
+          padding: 1rem;
+          background-color: #ddd;
+          border-bottom: 1px solid gray;">
+            Ấn vào đây để đi tiếp ...
+        </div>
+        <!--    <img class="error-image" src="wait.jpeg">-->
+        <img class="error-image" src="loading.gif">
+        <!--    <div style="-->
+        <!--      padding: 1rem;-->
+        <!--      font-size: 1rem;-->
+        <!--      border-top: 1px solid gray;-->
+        <!--      text-align: justify;">-->
+        <!--    </div>-->
+    </a>
+    <script>
+        const queries = window.location.search;
+        const params = new URLSearchParams(queries);
+        const rawUrl = params.get('url');
+        
+        try {
+            rawUrl = decodeURIComponent(rawUrl);
+        }
+        catch(e){console.log(e)}
+
+        var aTag = document.getElementById('goto-link');
+        aTag.setAttribute('href', rawUrl);
+        var gotoText = document.getElementById('loading');
+        gotoText.innerText = gotoText.innerText.replaceAll('...', `"${rawUrl}"`);
+
+        aTag.click();
+    </script>
+</body>
+</html>

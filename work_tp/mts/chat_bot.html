@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body style="margin: 0, padding: 0">
+    <script>
+        // Configs
+        let liveChatBaseUrl   = document.location.protocol + '//' + 'livechat.fpt.ai/v36/src'
+        let LiveChatSocketUrl = 'livechat.fpt.ai:443'
+        let FptAppCode        = '613120ebca6065e9d363f70c58f05ad4'
+        let FptAppName        = 'Hỗ trợ trực tuyến'
+        // Define custom styles
+        let CustomStyles = {
+            // header
+            headerBackground: '#B41D8DFF',
+            headerTextColor: '#ffffffff',
+            headerLogoEnable: true,
+            headerLogoLink: 'https://api-omni.mutosi.com/v0/s3/view/QGYH-1659514101.png',
+            headerText: 'Hỗ trợ trực tuyến',
+            // main
+            primaryColor: '#6d9ccbff',
+            secondaryColor: '#ecececff',
+            primaryTextColor: '#ffffffff',
+            secondaryTextColor: '#000000DE',
+            buttonColor: '#b4b4b4ff',
+            buttonTextColor: '#ffffffff',
+            bodyBackgroundEnable: false,
+            bodyBackgroundLink: ',',
+            avatarBot: 'https://api-omni.mutosi.com/v0/s3/view/PpAn-1659514101.png',
+            sendMessagePlaceholder: 'Nhập tin nhắn',
+            // float button
+            floatButtonLogo: 'https://api-omni.mutosi.com/v0/s3/view/QGYH-1659514101.png',
+            floatButtonTooltip: 'MUTOSI xin chào',
+            floatButtonTooltipEnable: false,
+            // start screen
+            customerLogo: 'https://omni.mutosi.com/images/logo.png',
+            customerWelcomeText: 'Vui lòng nhập tên của bạn',
+            customerButtonText: 'Bắt đầu',
+            prefixEnable: true,
+            prefixType: 'radio',
+            prefixOptions: ["Anh","Chị"],
+            prefixPlaceholder: 'Danh xưng',
+            // custom css
+            css: ''
+        }
+        // Get bot code from url if FptAppCode is empty
+        if (!FptAppCode) {
+            let appCodeFromHash = window.location.hash.substr(1)
+            if (appCodeFromHash.length === 32) {
+                FptAppCode = appCodeFromHash
+            }
+        }
+        // Set Configs
+        let FptLiveChatConfigs = {
+            appName: FptAppName,
+            appCode: FptAppCode,
+            themes : '',
+            styles : CustomStyles,
+            extra_info: [
+                {
+                    type: 'text',
+                    label: 'Địa chỉ',
+                    required: true,
+                    variable: 'address',
+                    value: ''
+                },
+                {
+                    type: 'text',
+                    label: 'Số điện thoại',
+                    required: true,
+                    variable: 'phonenumber',
+                    value: ''
+                }
+            ]
+        }
+        // Append Script
+        let FptLiveChatScript  = document.createElement('script')
+        FptLiveChatScript.id   = 'fpt_ai_livechat_script'
+        FptLiveChatScript.src  = liveChatBaseUrl + '/static/fptai-livechat.js'
+        document.body.appendChild(FptLiveChatScript)
+        // Append Stylesheet
+        let FptLiveChatStyles  = document.createElement('link')
+        FptLiveChatStyles.id   = 'fpt_ai_livechat_script'
+        FptLiveChatStyles.rel  = 'stylesheet'
+        FptLiveChatStyles.href = liveChatBaseUrl + '/static/fptai-livechat.css'
+        document.body.appendChild(FptLiveChatStyles)
+        // Init
+        FptLiveChatScript.onload = function () {
+            fpt_ai_render_chatbox(FptLiveChatConfigs, liveChatBaseUrl, LiveChatSocketUrl)
+        }
+    </script>
+
+</body>
+</html>

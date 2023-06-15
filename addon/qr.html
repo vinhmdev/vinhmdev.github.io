@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body style="background-color: #ddd;">
+    <input id="qr-content" type="text">
+    <input type="button" onclick="showQR()" value="submit">
+    <hr/>
+    <h1 id="qr-content-text"></h1>
+    <img 
+        id="qr-img"
+        style="border: 1px solid #000;"
+    />
+    
+    <script>
+        var srcImg = 'https://chart.googleapis.com/chart?cht=qr&chs=512x512&choe=UTF-8&chld=L|2&chl=';
+        var qrImage = document.getElementById('qr-img')
+        var qrContent = document.getElementById('qr-content')
+        var qrText = document.getElementById('qr-content-text')
+        function showQR() {
+            var qrLink = `${srcImg}${qrContent.value}`
+            qrText.innerText = "'" + qrContent.value + "'"
+            qrImage.setAttribute('src', qrLink)
+        }
+
+        var lo = document.location.toString()
+        var url = new URL(lo)
+        var content = url.searchParams.get('content')
+        if (context.toString() != '') {
+            qrContent.value = content
+            showQR()
+        }
+    </script>
+</body>
+</html>

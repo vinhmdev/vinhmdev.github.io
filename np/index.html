@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Profile</title>
+    <style>
+        .item {
+            padding: 16px;
+            font-size: 20px;
+            margin: 8px 0px;
+            color: #fff;
+            font-weight: bold;
+            background-color: #222;
+            width: 100%;
+            text-align: left;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        .container {
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body style="background-color: #333;">
+    <br>
+    <div class="item" style="background-color: #333; text-align: center; border: 0px solid #000; font-size: 28px;">
+        <div id="name"></div>
+        <div id="subtite" style="font-size: 16px;">aksdf</div>
+    </div>
+    <div class="container">
+        <button class="item" onclick="clickPhone()">
+            <table>
+                <tr>
+                    <td>
+                        <i class="fa fa-phone" aria-hidden="true" style="width: 24px;"></i>
+                    </td>
+                    <td><div id="phone"></div></td>
+                </tr>
+            </table>
+        </button>
+        <button class="item" onclick="clickEmail()">
+            <table>
+                <tr>
+                    <td>
+                        <i class="fa fa-envelope" aria-hidden="true" style="width: 24px;"></i>
+                    </td>
+                    <td id="email"></td>
+                </tr>
+            </table>
+        </button>
+        <button class="item" onclick="clickWebsite()">
+            <table>
+                <tr>
+                    <td>
+                        <i class="fa fa-link" aria-hidden="true" style="width: 24px;"></i>
+                    </td>
+                    <td id="website"></td>
+                </tr>
+            </table>
+        </button>
+        <button class="item" onclick="clickWebsite2()">
+            <table>
+                <tr>
+                    <td>
+                        <i class="fa fa-link" aria-hidden="true" style="width: 24px;"></i>
+                    </td>
+                    <td id="website2"></td>
+                </tr>
+            </table>
+        </button>
+    </div>
+
+    <script>
+        var lo = document.location.toString(); // http://localhost:9815/flutter_assets/mastercard_callback.html?code=DH20221017009&price=20,040,000%C4%91&payment_method=Thanh%20to%C3%A1n%20qua%20th%E1%BA%BB%20t%C3%ADn%20d%E1%BB%A5ng/th%E1%BA%BB%20ghi%20n%E1%BB%A3%20qu%E1%BB%91c%20t%E1%BA%BF&order_id=11326&status=fail
+        var url = new URL(lo)
+        var name = url.searchParams.get('n');
+        var subtite = url.searchParams.get('s');
+        var phone = url.searchParams.get('p');
+        var email = url.searchParams.get('e');
+        var website = url.searchParams.get('w');
+        var website2 = url.searchParams.get('w2');
+
+        document.getElementById('name').innerText = name;
+        document.getElementById('subtite').innerText = subtite;
+        document.getElementById('phone').innerText = phone;
+        document.getElementById('email').innerText = email;
+        document.getElementById('website').innerText = website;
+        document.getElementById('website2').innerText = website2;
+
+        function clickPhone() {
+            window.open(`tel:${phone}`);
+        }
+        function clickEmail() {
+            window.open(`mailto:${email}`);
+        }
+        function clickWebsite() {
+            window.open(website);
+        }
+        function clickWebsite2() {
+            window.open(website2);
+        }
+
+    </script>
+</body>
+
+</html>

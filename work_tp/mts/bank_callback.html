@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1 style="text-align: center;">Thông tin thanh toán</h1>
+    <ul>
+        <li><h3 id="status">Trạng thái: </h3></li>
+        <li style="display: none;"><h3 id="orderId">Số: </h3></li>
+        <li><h3 id="code">Mã đơn hàng: </h3></li>
+        <li><h3 id="price">Giá tiền: </h3></li>
+        <li><h3 id="payment">Đã thanh toán: </h3></li>
+    </ul>
+    <div style="text-align: center;">
+        <button style="padding: 0px 24px; font-weight: bold; background-color: blueviolet; color: white;" onclick="confirm()"><h3>Xác nhận</h3></button>
+    </div>
+
+    <script>
+        var lo = document.location.toString(); // http://localhost:9815/flutter_assets/mastercard_callback.html?code=DH20221017009&price=20,040,000%C4%91&payment_method=Thanh%20to%C3%A1n%20qua%20th%E1%BA%BB%20t%C3%ADn%20d%E1%BB%A5ng/th%E1%BA%BB%20ghi%20n%E1%BB%A3%20qu%E1%BB%91c%20t%E1%BA%BF&order_id=11326&status=fail
+        var url = new URL(lo)
+        var status = url.searchParams.get('status').replaceAll('success', 'Thành công').replaceAll('fail', 'Thất bại'); // fail
+        var code = url.searchParams.get('code'); // DH20221017006
+        var price = url.searchParams.get('price'); // 10,040,000
+        var payment = url.searchParams.get('payment_method'); //
+        var orderId = url.searchParams.get('order_id'); // 11323
+
+        document.getElementById('status').innerHTML += status.replaceAll('success', 'Thành công').replaceAll('fail', 'Thất bại');
+        document.getElementById('code').innerHTML += code;
+        document.getElementById('price').innerHTML += price;
+        document.getElementById('payment').innerHTML += payment;
+        document.getElementById('orderId').innerHTML += orderId;
+        
+        function confirm() {
+            try {
+                var obj = {
+                    "status": status.replaceAll('success', 'Thành công').replaceAll('fail', 'Thất bại'),
+                    "code": code,
+                    "price": price,
+                    "payment": payment,
+                    "orderId": orderId,
+                }
+                FlutterConfirm.postMessage(JSON.stringify(obj))
+            } catch (_){
+                console.log('error in catch');
+            }
+        }
+        confirm();
+
+    </script>
+</body>
+</html>
+
