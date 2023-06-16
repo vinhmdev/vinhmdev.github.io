@@ -35,7 +35,7 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = "520535670";
+    var serviceWorkerVersion = "352222165";
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
@@ -43,13 +43,17 @@
 <body id="body">
   <script>
     var hre = window.location.href;
+    var body = document.getElementById('body')
+
+    var kIsDev = hre.toLowerCase().includes('/kisdev.');
+    var hre = hre.replaceAll(/\/[kK][iI][sS][dD][eE][vV]\./g, '');
+    body.setAttribute('kIsDev', kIsDev ? 1 : 0);
+
     if(hre.includes('/token.')) {
       var newHre = hre.substring(0,hre.lastIndexOf('/token.'));
       var token = hre.substring(hre.lastIndexOf('/token.') + '/token.'.length)
-      localStorage.setItem('jwt', token);
-      var body = document.getElementById('body')
       body.setAttribute('jwt', token);
-       window.location.href = newHre;
+      window.location.href = newHre;
     }
 
 
