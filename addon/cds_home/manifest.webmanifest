@@ -1,6 +1,6 @@
 {
-    "name": "web_uni_cdshome",
-    "short_name": "web_uni_cdshome",
+    "name": "CDS Home",
+    "short_name": "CDS Home",
     "start_url": "index.html",
     "display": "fullscreen",
     "background_color": "#1F1F20",
