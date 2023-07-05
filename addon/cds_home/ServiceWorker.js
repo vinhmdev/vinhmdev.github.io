@@ -1,9 +1,9 @@
 const cacheName = "Tien Phong CDS JSC-CDS Home-1.0";
 const contentToCache = [
     "Build/cds_home.loader.js",
-    "Build/cds_home.framework.js.unityweb",
-    "Build/cds_home.data.unityweb",
-    "Build/cds_home.wasm.unityweb",
+    "Build/cds_home.framework.js",
+    "Build/cds_home.data",
+    "Build/cds_home.wasm",
     "TemplateData/style.css"
 
 ];
