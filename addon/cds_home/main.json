@@ -29,8 +29,8 @@
             "pitch": 0,
             "yaw": 0,
             "type": "equirectangular",
-            "panorama": "/images/0.jpg",
-            "preview": "/images/0.jpg",
+            "panorama": "images/0.jpg",
+            "preview": "images/0.jpg",
             "hotSpots": [
                 {
                     "pitch": -15,
@@ -63,8 +63,8 @@
             "pitch": 0,
             "yaw": 0,
             "type": "equirectangular",
-            "panorama": "/images/0a.jpg",
-            "preview": "/images/0a.jpg",
+            "panorama": "images/0a.jpg",
+            "preview": "images/0a.jpg",
             "hotSpots": [
                 {
                     "sceneId": "index0",
