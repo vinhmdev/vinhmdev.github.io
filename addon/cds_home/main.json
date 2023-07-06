@@ -1,0 +1,82 @@
+{
+    "default": {
+        "firstScene": "index0",
+        "autoLoad": true,
+        "sceneFadeDuration": 1000,
+        "compass": true,
+        "northOffset": 0,
+        "showControls": true,
+        "title": "Tien Phong CDS JSC",
+        "author": "Vinh mDev"
+    },
+
+    "cupe": {
+        "type": "cubemap",
+        "cubeMap": [
+            "/images/wyman-park-playground-cubic/face0.jpg",
+            "/images/wyman-park-playground-cubic/face1.jpg",
+            "/images/wyman-park-playground-cubic/face2.jpg",
+            "/images/wyman-park-playground-cubic/face3.jpg",
+            "/images/wyman-park-playground-cubic/face4.jpg",
+            "/images/wyman-park-playground-cubic/face5.jpg"
+        ]
+    },
+
+    "scenes": {
+        "index0": {
+            "_title": null,
+            "hfov": 100,
+            "pitch": 0,
+            "yaw": 0,
+            "type": "equirectangular",
+            "panorama": "/images/0.jpg",
+            "preview": "/images/0.jpg",
+            "hotSpots": [
+                {
+                    "pitch": -15,
+                    "yaw": 12,
+                    "targetYaw": 0,
+                    "targetPitch": 0,
+                    "type": "scene",
+                    "sceneId": "index1",
+                    "text": "Di chuyển",
+                    "cssClass": "custom-hotspot custom-hotspot-location"
+                },
+                {
+                    "pitch": 10,
+                    "yaw": 20,
+                    "type": "product",
+                    "cssClass": "custom-hotspot",
+                    "createTooltipArgs": {
+                        "id": 0,
+                        "title": "Tiêu đề sản phẩm",
+                        "description": "Mô tả sản phẩm",
+                        "url": "https://www.youtube.com/watch?v=xd1y2-dIHGg",
+                        "thumbnail": "https://i.ytimg.com/vi/K4xLi8IF1FM/hqdefault.jpg"
+                    }
+                }
+            ]
+        },
+
+        "index1": {
+            "hfov": 100,
+            "pitch": 0,
+            "yaw": 0,
+            "type": "equirectangular",
+            "panorama": "/images/0a.jpg",
+            "preview": "/images/0a.jpg",
+            "hotSpots": [
+                {
+                    "sceneId": "index0",
+                    "type": "scene",
+                    "pitch": 0,
+                    "yaw": 0,
+                    "targetPitch": 20,
+                    "targetYaw": 0,
+                    "text": "Di chuyển",
+                    "cssClass": "custom-hotspot custom-hotspot-location"
+                }
+            ]
+        }
+    }
+}
