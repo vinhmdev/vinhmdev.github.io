@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CDS Home</title>
+
+    <link rel="stylesheet" href="pannellum/pannellum.css" />
+    <script type="text/javascript" src="pannellum/pannellum.js"></script>
+    <link rel="stylesheet" href="bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="main.css" />
+    <script language="JavaScript">
+</script>
+</head>
+
+<body style="
+    margin: 0;
+">
+    <div id="panorama" style="
+        width: 100vw;
+        height: 100vh;
+    "></div>
+
+
+    <div id="div-dialog" class="position-absolute p-5" style="display: none; background-color: #222b; left: 0; top: 0; right: 0; bottom: 0;">
+        <div class="container">
+            <div class="card p-2">
+                <div class="row pe-3">
+                    <h3 id="div-dialog-name" class="card-title mx-3 mt-2 mb-0 col">
+                        Nồi cơm điện đa năng, Nồi cơm điện đa năng
+                    </h3>
+                    <button class="btn-close col-1" onclick="closeDialog()"/>
+                </div>
+                <hr>
+                <div class="card-body pt-0">
+                    <div class="row">
+                        <div class="col">
+                            <img id="div-dialog-thubnail" src="images/0.jpg" class="img-fluid img-thumbnail rounded" style="object-fit: contain;" alt="Nồi cơm điện đa năng">
+                        </div>
+                        <div class="col-6 col-sm-8">
+                            <h5 class="card-text">
+                                Thông tin sản phẩm:
+                            </h5>
+                            <p id="div-dialog-description" class="card-text">
+                                Nấu là chín, đừng quên bật nút!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <a id="div-dialog-url" href="https://google.com" target="_blank" class="btn btn-primary col mx-3 my-2">Xem chi tiết</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
