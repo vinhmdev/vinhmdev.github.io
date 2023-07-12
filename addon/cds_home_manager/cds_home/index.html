@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="pannellum/pannellum.css" />
     <script type="text/javascript" src="pannellum/pannellum.js"></script>
     <link rel="stylesheet" href="bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="fontawesome-free-6.4.0-web/css/all.min.css" />
     <link rel="stylesheet" href="main.css" />
     <script language="JavaScript">
 </script>
@@ -18,13 +19,11 @@
 <body style="
     margin: 0;
 ">
-    <div id="panorama" style="
-        width: 100vw;
-        height: 100vh;
-    "></div>
+
+    <div id="panorama" style="width: 100vw;height: 100vh;"></div>
 
 
-    <div id="div-dialog" class="position-absolute p-5" style="display: none; background-color: #222b; left: 0; top: 0; right: 0; bottom: 0;">
+    <div id="div-dialog" class="position-fixed p-5" style="display: none; background-color: #222b; left: 0; top: 0; right: 0; bottom: 0;">
         <div class="container">
             <div class="card p-2">
                 <div class="row pe-3">
@@ -54,6 +53,92 @@
         </div>
     </div>
 
+    <div id="div-dialog-question-video" class="position-fixed p-5" style="
+        display: block;
+        background-color: #222b; 
+        left: 0; 
+        top: 0; 
+        right: 0; 
+        bottom: 0;
+    ">
+        <div class="container">
+            <div class="card p-2">
+                <div class="row pe-3">
+                    <h3 id="div-dialog-name" class="card-title mx-3 mt-2 mb-0 col">
+                        Bạn muốn có trải nghiệm tốt nhất ?
+                    </h3>
+                    <button class="btn-close col-1" onclick="closeDialogVideoQuestion()"/>
+                </div>
+                <hr>
+                <div class="card-body pt-0">
+                    Chấp nhận <b>mở âm thanh và phát video</b> hướng dẫn để có trải nghiệm tốt nhất. <br/>
+                    Bạn cũng có thể bật / tắt video bằng nút mũi tên ở góc dưới phía tay phải trên màn hình.
+                </div>
+                <div class="row px-4 mb-2">
+                    <div class="col"></div>
+                    <button class="btn btn-primary col-5 col-md-3 col-lg-2 mx-3" onclick="acceptDialogVideoQuestion()">Chấp nhận</button>
+                    <button class="btn btn-secondary col-5 col-md-3 col-lg-2" onclick="closeDialogVideoQuestion()">Mở thủ công</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed" onclick="clickVideoPanelBtn()" style="
+        right: 0;
+        border: 1px solid gray;
+        bottom: -1px;
+        width: 42px;
+        height: 32px;
+        font-size: 20px;
+        box-sizing: border-box;
+        border-radius: 4px 0 0 0;
+        background-color: #fdfdfd;
+        align-items: center;
+        z-index: 0;
+        transition: 500ms;
+    ">
+        <center>
+            <i class="fas fa-caret-left"></i>
+        </center>
+    </div>
+
+    <div id="video-panel" class="position-fixed bg-white" style="
+        right: -360px;
+        bottom: 0;
+        box-sizing: border-box;
+        padding: 4px;
+        margin: 0;
+        transition: 300ms;
+        border: 1px solid gray;
+        z-index: 1;
+        height: 150px;
+    ">
+        <div onclick="clickVideoPanelBtn()" style="
+            position: absolute;
+            border: 1px solid gray;
+            bottom: -1px;
+            left: -42px;
+            width: 42px;
+            height: 32px;
+            font-size: 20px;
+            background-color: #fdfdfd;
+            border-radius: 4px 0 0 0;
+            text-align: center;
+            align-items: center;
+        ">
+            <center>
+                <i class="fas fa-caret-right"></i>
+            </center>
+        </div>
+
+        <video id="video-support" poster="images/poster.gif" style="
+            width: 100%; 
+            height: 100%;
+            border-radius: 4px;
+        ">
+        </video>
+        
+    </div>
     <script src="main.js"></script>
 </body>
 

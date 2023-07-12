@@ -2,6 +2,11 @@
     box-sizing: border-box;
 }
 
+div.pnlm-compass {
+    top: 0px !important;
+    left: 36px !important;
+}
+
 .custom-hotspot {
     height: 36px;
     width: 36px;
