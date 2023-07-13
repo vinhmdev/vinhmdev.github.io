@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDS vCard</title>
+
+    <link rel="stylesheet" href="bootstrap-5.0.2-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="fontawesome-free-6.4.0-web/css/all.min.css">
+    <script src="bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+
+</head>
+<body class="container-fluid m-0 p-0 " style="
+    background-image: url('images/scattered-forcefields.svg');
+    background-position: center;
+    background-repeat: repeat;
+    background-clip: padding-box;
+    background-size: 700px;
+">
+
+<div class="container-sm mx-auto mt-0 mt-sm-3 mt-md-5 p-0" style="
+    max-width: 570px;
+    box-shadow: 0 0 8px gray;
+    border-radius: 4px;
+">
+    <div class="bg-primary p-4 text-white" style="
+        border-radius: 4px 4px 0 0;
+        text-align: center;
+    ">
+        <img id="avatar" class="mt-1" style="
+            width: 96px;
+            height: 96px;
+            border-radius: 4px;
+            background-image: url('images/wintery-sunburst.svg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            border: 4px solid #fff;
+        "/>
+        <h1 id="name" class="h1 mt-2 mb-4"></h1>
+        <button onclick="saveVcf()" class="btn btn-outline-light my-1 mb-2"><i class="fa fa-save" aria-hidden="true"></i> Lưu vào danh bạ</button>
+    </div>
+    <div class="bg-white p-0 text-black" style="
+        border-radius: 0 0 4px 4px;
+    ">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button 
+                    class="nav-link active" 
+                    id="nav-personal-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#nav-personal" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="nav-personal" 
+                    aria-selected="true">Cá nhân</button>
+                <button 
+                    class="nav-link" 
+                    id="nav-company-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#nav-company" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="nav-company" 
+                    aria-selected="false">Công ty</button>
+                <button 
+                    class="nav-link" 
+                    id="nav-social-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#nav-social" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="nav-social" 
+                    aria-selected="false">Liên kết</button>
+            </div>
+          </nav>
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade px-4 active show" id="nav-personal" role="tabpanel" aria-labelledby="nav-personal-tab">
+
+            </div>
+            <div class="tab-pane fade px-4" id="nav-company" role="tabpanel" aria-labelledby="nav-company-tab">
+                
+            </div>
+            <div class="tab-pane fade px-4" id="nav-social" role="tabpanel" aria-labelledby="nav-social-tab">
+                
+            </div>
+          </div>
+    </div>
+</div>
+
+
+<script src="index.js"></script>
+</body>
+</html>
