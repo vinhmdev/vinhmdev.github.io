@@ -1,0 +1,66 @@
+[
+  {
+    "code": "111",
+    "lines": [
+      true,
+      true,
+      true
+    ]
+  },
+  {
+    "code": "110",
+    "lines": [
+      true,
+      true,
+      false
+    ]
+  },
+  {
+    "code": "101",
+    "lines": [
+      true,
+      false,
+      true
+    ]
+  },
+  {
+    "code": "100",
+    "lines": [
+      true,
+      false,
+      false
+    ]
+  },
+  {
+    "code": "011",
+    "lines": [
+      false,
+      true,
+      true
+    ]
+  },
+  {
+    "code": "010",
+    "lines": [
+      false,
+      true,
+      false
+    ]
+  },
+  {
+    "code": "001",
+    "lines": [
+      false,
+      false,
+      true
+    ]
+  },
+  {
+    "code": "000",
+    "lines": [
+      false,
+      false,
+      false
+    ]
+  }
+]

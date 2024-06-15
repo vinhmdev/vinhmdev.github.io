@@ -1,0 +1,509 @@
+{
+  "index_screen": {
+    "tabs": {
+      "forecast_button_label": "Trang chủ",
+      "dictionary_button_label": "Tra cứu"
+    }
+  },
+  "home_tab": {
+    "appbar_title": "Trang chủ",
+    "toss_coin_button_label": "Gieo quẻ bằng đồng xu"
+  },
+  "i_ching_tab": {
+    "appbar_title": "Tra cứu"
+  },
+  "toss_coin_screen": {
+    "appbar_title": "Gieo quẻ bằng đồng xu",
+    "support_content": "Bấm vào nút \"Gieo quẻ\" phía dưới để gieo đồng xu. Sau khi gieo 6 lần, kết quả của bạn sẽ được hiển thị.",
+    "toss_coin_label": "Gieo quẻ",
+    "last_coin_title": "Kết quả gieo quẻ",
+    "hexagram_title": "Hào đã gieo"
+  },
+  "i_ching_detail_screen": {
+    "appbar_title": "Thông tin quẻ"
+  },
+  "hexagrams": {
+    "111111": {
+      "hexagram_title_no": "Quẻ 1",
+      "charset": "䷀",
+      "name": "Thuần Càn",
+      "subtitle": "--"
+    },
+    "000000": {
+      "hexagram_title_no": "Quẻ 2",
+      "charset": "䷁",
+      "name": "Thuần Khôn",
+      "subtitle": "--"
+    },
+    "100010": {
+      "hexagram_title_no": "Quẻ 3",
+      "charset": "䷂",
+      "name": "Thủy Lôi Truân",
+      "subtitle": "--"
+    },
+    "010001": {
+      "hexagram_title_no": "Quẻ 4",
+      "charset": "䷃",
+      "name": "Sơn Thủy Mông",
+      "subtitle": "--"
+    },
+    "111010": {
+      "hexagram_title_no": "Quẻ 5",
+      "charset": "䷄",
+      "name": "Thủy Thiên Nhu",
+      "subtitle": "--"
+    },
+    "010111": {
+      "hexagram_title_no": "Quẻ 6",
+      "charset": "䷅",
+      "name": "Thiên Thủy Tụng",
+      "subtitle": "--"
+    },
+    "010000": {
+      "hexagram_title_no": "Quẻ 7",
+      "charset": "䷆",
+      "name": "Địa Thủy Sư",
+      "subtitle": "--"
+    },
+    "000010": {
+      "hexagram_title_no": "Quẻ 8",
+      "charset": "䷇",
+      "name": "Thủy Địa Tỷ",
+      "subtitle": "--"
+    },
+    "111011": {
+      "hexagram_title_no": "Quẻ 9",
+      "charset": "䷈",
+      "name": "Phong Thiên Tiểu Súc",
+      "subtitle": "--"
+    },
+    "110111": {
+      "hexagram_title_no": "Quẻ 10",
+      "charset": "䷉",
+      "name": "Thiên Trạch Lý",
+      "subtitle": "--"
+    },
+    "111000": {
+      "hexagram_title_no": "Quẻ 11",
+      "charset": "䷊",
+      "name": "Địa Thiên Thái",
+      "subtitle": "--"
+    },
+    "000111": {
+      "hexagram_title_no": "Quẻ 12",
+      "charset": "䷋",
+      "name": "Thiên Địa Bĩ",
+      "subtitle": "--"
+    },
+    "101111": {
+      "hexagram_title_no": "Quẻ 13",
+      "charset": "䷌",
+      "name": "Thiên Hỏa Đồng Nhân",
+      "subtitle": "--"
+    },
+    "111101": {
+      "hexagram_title_no": "Quẻ 14",
+      "charset": "䷍",
+      "name": "Hỏa Thiên Đại Hữu",
+      "subtitle": "--"
+    },
+    "001000": {
+      "hexagram_title_no": "Quẻ 15",
+      "charset": "䷎",
+      "name": "Địa Sơn Khiêm",
+      "subtitle": "--"
+    },
+    "000100": {
+      "hexagram_title_no": "Quẻ 16",
+      "charset": "䷏",
+      "name": "Lôi Địa Dự",
+      "subtitle": "--"
+    },
+    "100110": {
+      "hexagram_title_no": "Quẻ 17",
+      "charset": "䷐",
+      "name": "Trạch Lôi Tùy",
+      "subtitle": "--"
+    },
+    "011001": {
+      "hexagram_title_no": "Quẻ 18",
+      "charset": "䷑",
+      "name": "Sơn Phong Cổ",
+      "subtitle": "--"
+    },
+    "110000": {
+      "hexagram_title_no": "Quẻ 19",
+      "charset": "䷒",
+      "name": "Địa Trạch Lâm",
+      "subtitle": "--"
+    },
+    "000011": {
+      "hexagram_title_no": "Quẻ 20",
+      "charset": "䷓",
+      "name": "Phong Địa Quan",
+      "subtitle": "--"
+    },
+    "100101": {
+      "hexagram_title_no": "Quẻ 21",
+      "charset": "䷔",
+      "name": "Hỏa Lôi Phệ Hạp",
+      "subtitle": "--"
+    },
+    "101001": {
+      "hexagram_title_no": "Quẻ 22",
+      "charset": "䷕",
+      "name": "Sơn Hỏa Bí",
+      "subtitle": "--"
+    },
+    "000001": {
+      "hexagram_title_no": "Quẻ 23",
+      "charset": "䷖",
+      "name": "Sơn Địa Bác",
+      "subtitle": "--"
+    },
+    "100000": {
+      "hexagram_title_no": "Quẻ 24",
+      "charset": "䷗",
+      "name": "Địa Lôi Phục",
+      "subtitle": "--"
+    },
+    "100111": {
+      "hexagram_title_no": "Quẻ 25",
+      "charset": "䷘",
+      "name": "Thiên Lôi Vô Vọng",
+      "subtitle": "--"
+    },
+    "111001": {
+      "hexagram_title_no": "Quẻ 26",
+      "charset": "䷙",
+      "name": "Sơn Thiên Đại Súc",
+      "subtitle": "--"
+    },
+    "100001": {
+      "hexagram_title_no": "Quẻ 27",
+      "charset": "䷚",
+      "name": "Sơn Lôi Di",
+      "subtitle": "--"
+    },
+    "011110": {
+      "hexagram_title_no": "Quẻ 28",
+      "charset": "䷛",
+      "name": "Trạch Phong Đại Quá",
+      "subtitle": "--"
+    },
+    "010010": {
+      "hexagram_title_no": "Quẻ 29",
+      "charset": "䷜",
+      "name": "Thuần Khảm",
+      "subtitle": "--"
+    },
+    "101101": {
+      "hexagram_title_no": "Quẻ 30",
+      "charset": "䷝",
+      "name": "Thuần Ly",
+      "subtitle": "--"
+    },
+    "001110": {
+      "hexagram_title_no": "Quẻ 31",
+      "charset": "䷞",
+      "name": "Trạch Sơn Hàm",
+      "subtitle": "--"
+    },
+    "011100": {
+      "hexagram_title_no": "Quẻ 32",
+      "charset": "䷟",
+      "name": "Lôi Phong Hằng",
+      "subtitle": "--"
+    },
+    "001111": {
+      "hexagram_title_no": "Quẻ 33",
+      "charset": "䷠",
+      "name": "Thiên Sơn Độn",
+      "subtitle": "--"
+    },
+    "111100": {
+      "hexagram_title_no": "Quẻ 34",
+      "charset": "䷡",
+      "name": "Lôi Thiên Đại Tráng",
+      "subtitle": "--"
+    },
+    "000101": {
+      "hexagram_title_no": "Quẻ 35",
+      "charset": "䷢",
+      "name": "Hỏa Địa Tấn",
+      "subtitle": "--"
+    },
+    "101000": {
+      "hexagram_title_no": "Quẻ 36",
+      "charset": "䷣",
+      "name": "Địa Hỏa Minh Di",
+      "subtitle": "--"
+    },
+    "101011": {
+      "hexagram_title_no": "Quẻ 37",
+      "charset": "䷤",
+      "name": "Phong Hỏa Gia Nhân",
+      "subtitle": "--"
+    },
+    "110101": {
+      "hexagram_title_no": "Quẻ 38",
+      "charset": "䷥",
+      "name": "Hỏa Trạch Khuê",
+      "subtitle": "--"
+    },
+    "001010": {
+      "hexagram_title_no": "Quẻ 39",
+      "charset": "䷦",
+      "name": "Thủy Sơn Kiển",
+      "subtitle": "--"
+    },
+    "010100": {
+      "hexagram_title_no": "Quẻ 40",
+      "charset": "䷧",
+      "name": "Lôi Thủy Giải",
+      "subtitle": "--"
+    },
+    "110001": {
+      "hexagram_title_no": "Quẻ 41",
+      "charset": "䷨",
+      "name": "Sơn Trạch Tổn",
+      "subtitle": "--"
+    },
+    "100011": {
+      "hexagram_title_no": "Quẻ 42",
+      "charset": "䷩",
+      "name": "Phong Lôi Ích",
+      "subtitle": "--"
+    },
+    "111110": {
+      "hexagram_title_no": "Quẻ 43",
+      "charset": "䷪",
+      "name": "Trạch Thiên Quải",
+      "subtitle": "--"
+    },
+    "011111": {
+      "hexagram_title_no": "Quẻ 44",
+      "charset": "䷫",
+      "name": "Thiên Phong Cấu",
+      "subtitle": "--"
+    },
+    "000110": {
+      "hexagram_title_no": "Quẻ 45",
+      "charset": "䷬",
+      "name": "Trạch Địa Tụy",
+      "subtitle": "--"
+    },
+    "011000": {
+      "hexagram_title_no": "Quẻ 46",
+      "charset": "䷭",
+      "name": "Địa Phong Thăng",
+      "subtitle": "--"
+    },
+    "010110": {
+      "hexagram_title_no": "Quẻ 47",
+      "charset": "䷮",
+      "name": "Trạch Thủy Khốn",
+      "subtitle": "--"
+    },
+    "011010": {
+      "hexagram_title_no": "Quẻ 48",
+      "charset": "䷯",
+      "name": "Thủy Phong Tỉnh",
+      "subtitle": "--"
+    },
+    "101110": {
+      "hexagram_title_no": "Quẻ 49",
+      "charset": "䷰",
+      "name": "Trạch Hỏa Cách",
+      "subtitle": "--"
+    },
+    "011101": {
+      "hexagram_title_no": "Quẻ 50",
+      "charset": "䷱",
+      "name": "Hỏa Phong Đỉnh",
+      "subtitle": "--"
+    },
+    "100100": {
+      "hexagram_title_no": "Quẻ 51",
+      "charset": "䷲",
+      "name": "Thuần Chấn",
+      "subtitle": "--"
+    },
+    "001001": {
+      "hexagram_title_no": "Quẻ 52",
+      "charset": "䷳",
+      "name": "Thuần Cấn",
+      "subtitle": "--"
+    },
+    "001011": {
+      "hexagram_title_no": "Quẻ 53",
+      "charset": "䷴",
+      "name": "Phong Sơn Tiệm",
+      "subtitle": "--"
+    },
+    "110100": {
+      "hexagram_title_no": "Quẻ 54",
+      "charset": "䷵",
+      "name": "Lôi Trạch Quy Muội",
+      "subtitle": "--"
+    },
+    "101100": {
+      "hexagram_title_no": "Quẻ 55",
+      "charset": "䷶",
+      "name": "Lôi Hỏa Phong",
+      "subtitle": "--"
+    },
+    "001101": {
+      "hexagram_title_no": "Quẻ 56",
+      "charset": "䷷",
+      "name": "Hỏa Sơn Lữ",
+      "subtitle": "--"
+    },
+    "011011": {
+      "hexagram_title_no": "Quẻ 57",
+      "charset": "䷸",
+      "name": "Thuần Tốn",
+      "subtitle": "--"
+    },
+    "110110": {
+      "hexagram_title_no": "Quẻ 58",
+      "charset": "䷹",
+      "name": "Thuần Đoài",
+      "subtitle": "--"
+    },
+    "010011": {
+      "hexagram_title_no": "Quẻ 59",
+      "charset": "䷺",
+      "name": "Phong Thủy Hoán",
+      "subtitle": "--"
+    },
+    "110010": {
+      "hexagram_title_no": "Quẻ 60",
+      "charset": "䷻",
+      "name": "Thủy Trạch Tiết",
+      "subtitle": "--"
+    },
+    "110011": {
+      "hexagram_title_no": "Quẻ 61",
+      "charset": "䷼",
+      "name": "Phong Trạch Trung Phu",
+      "subtitle": "--"
+    },
+    "001100": {
+      "hexagram_title_no": "Quẻ 62",
+      "charset": "䷽",
+      "name": "Lôi Sơn Tiểu Quá",
+      "subtitle": "--"
+    },
+    "101010": {
+      "hexagram_title_no": "Quẻ 63",
+      "charset": "䷾",
+      "name": "Thủy Hỏa Ký Tế",
+      "subtitle": "--"
+    },
+    "010101": {
+      "hexagram_title_no": "Quẻ 64",
+      "charset": "䷿",
+      "name": "Hỏa Thủy Vị Tế",
+      "subtitle": "--"
+    }
+  },
+  "trigrams": {
+    "111": {
+      "charset": "☰",
+      "name": "Càn",
+      "lines": "111",
+      "meaning": "Thiên (trời)",
+      "direction": "Tây Bắc",
+      "family_relationship": "Cha",
+      "body_part": "Đầu",
+      "characteristics": "Cứng, mạnh, khỏe",
+      "stage_state": "Sáng tạo",
+      "spirit_animal": "Rồng"
+    },
+    "110": {
+      "charset": "☱",
+      "name": "Đoài",
+      "lines": "110",
+      "meaning": "Trạch (đầm, hồ)",
+      "direction": "Tây",
+      "family_relationship": "Con gái út",
+      "body_part": "Miệng",
+      "characteristics": "Dễ chịu",
+      "stage_state": "Vui sướng",
+      "spirit_animal": "Dê"
+    },
+    "101": {
+      "charset": "☲",
+      "name": "Ly",
+      "lines": "101",
+      "meaning": "Hỏa (lửa)",
+      "direction": "Nam",
+      "family_relationship": "Con gái thứ",
+      "body_part": "Mắt",
+      "characteristics": "Soi sáng, sự phụ thuộc",
+      "stage_state": "Bám lấy",
+      "spirit_animal": "Chim trĩ"
+    },
+    "100": {
+      "charset": "☳",
+      "name": "Chấn",
+      "lines": "100",
+      "meaning": "Lôi (sấm sét)",
+      "direction": "Đông",
+      "family_relationship": "Con trai trưởng",
+      "body_part": "Chân",
+      "characteristics": "Di chuyển có tác động",
+      "stage_state": "Khơi dậy",
+      "spirit_animal": "Rồng"
+    },
+    "011": {
+      "charset": "☴",
+      "name": "Tốn",
+      "lines": "011",
+      "meaning": "Phong (gió)",
+      "direction": "Đông Nam",
+      "family_relationship": "Con gái trưởng",
+      "body_part": "Bắp đùi",
+      "characteristics": "Thông suốt (hiểu rõ)",
+      "stage_state": "Dịu dàng",
+      "spirit_animal": "Gà"
+    },
+    "010": {
+      "charset": "☵",
+      "name": "Khảm",
+      "lines": "010",
+      "meaning": "Thủy (nước)",
+      "direction": "Bắc",
+      "family_relationship": "Con trai thứ",
+      "body_part": "Tai",
+      "characteristics": "Nguy hiểm",
+      "stage_state": "Không đáy",
+      "spirit_animal": "Heo"
+    },
+    "001": {
+      "charset": "☶",
+      "name": "Cấn",
+      "lines": "001",
+      "meaning": "Sơn (núi)",
+      "direction": "Đông Bắc",
+      "family_relationship": "Con trai út",
+      "body_part": "Tay",
+      "characteristics": "Thư giãn, đứng vững",
+      "stage_state": "Vững chắc",
+      "spirit_animal": "Chó"
+    },
+    "000": {
+      "charset": "☷",
+      "name": "Khôn",
+      "lines": "000",
+      "meaning": "Địa (đất)",
+      "direction": "Tây Nam",
+      "family_relationship": "Mẹ",
+      "body_part": "Bụng",
+      "characteristics": "Hết lòng (tận tụy), dễ tính",
+      "stage_state": "Tiếp thu",
+      "spirit_animal": "Trâu"
+    }
+  }
+}
