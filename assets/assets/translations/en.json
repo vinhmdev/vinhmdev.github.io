@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "Saver"
+  },
+  "app_description": "Effective time management application.",
+  "error_screen_nothing": "Nothing screen",
+  "lang": {
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "loading_message": {
+    "default": "Please wait..."
+  },
+  "splash_message": {
+    "init": "...",
+    "empty": "Please wait...",
+    "loading_configs": "Validate and download config...",
+    "success": "Check completed..."
+  },
+  "connect_info": {
+    "no_internet_toast": "No internet access!",
+    "no_internet_toast_close_button": "Close",
+    "no_internet_title": "No internet access!",
+    "no_internet_content": "Please check your connections and settings.\nYou can also use the app offline, but the app will not be able to download the latest data for you.",
+    "no_internet_banner": "Offline"
+  },
+  "input_validators": {
+    "email_empty": "Email empty.",
+    "email_not_match": "Email not validate.",
+    "password_empty": "Password empty.",
+    "password_weak": "Password must have at least 8 characters.",
+    "password_cant_have_space": "Password can't have space.",
+    "re_password_empty": "Re-password empty.",
+    "re_password_not_match": "Re-password not match.",
+    "not_validate": "Validation failed. Required information is missing or not valid."
+  },
+  "licenses": {
+    "button_show_licenses": "Licenses",
+    "term_and_conditions_title": "Term and Conditions",
+    "term_of_service_label": "Term of Service",
+    "privacy_policy_label": "Privacy Policy",
+    "term_of_service": "# Terms and Conditions for the Daily Tasks Application\n\nWelcome to the Daily Tasks app! To ensure a safe and effective user experience, please carefully read and understand the\nfollowing terms and conditions. These are important\nregulations covering copyright, usage rights, advertising, and user data privacy. The mDev developer is committed to\nproviding a useful and reliable application for the user\ncommunity. If you have any questions or suggestions, please contact us using the information at the end of the page.\nThank you for choosing and using our Daily Tasks\n\n## Copyright\n\nThe Daily Tasks application is the intellectual property of mDev. All intellectual property rights in the application,\nincluding but not limited to source code, user interface,\ncontent, and information, are owned by mDev.\n\n## Terms\n\n* The application refers to the Daily Tasks application developed and provided by mDev.\n* The developer is mDev, the individual who owns and develops the application.\n* The user is any individual or organization using the application.\n\n## Developer's Responsibility\n\nThe developer commits to making every effort to provide the Daily Tasks application safely and efficiently. However,\nmDev cannot guarantee that the application will always function\nnormally or be error-free. If you encounter any issues with the application, please contact the developer for\nassistance.\n\n## Advertising\n\nThe application may display ads created by third parties. Users agree to view ads while using the application. The\ndeveloper is not responsible for the content or any damages\narising from viewing ads.\n\n## User Data\n\nThe Daily Tasks application may collect user data, which is used to improve the application and provide advertising\nservices.\n\n* User data will be stored in the cloud and on the device simultaneously.\n* Data may be encrypted or not, depending on the importance of the data.\n* Please refer to the Privacy Policy for more details.\n\n## Privacy Policy\n\nmDev respects the user's privacy. The privacy policy of the Daily Tasks application describes how the developer\ncollects, uses, and anonymously shares data regarding the use of the\napplication. Please refer to the privacy policy for more information.\n\n## Limitation of Liability\n\nThe developer is not responsible for any damages arising from the use of the Daily Tasks application, including but not\nlimited to the following:\n\n* Property damage, including but not limited to damage to devices, data, or income.\n* Health damage, including but not limited to physical or mental harm.\n* Damage from the use of third-party services, including but not limited to copyright infringement, intellectual\n  property infringement, or legal violations.\n* The developer also does not guarantee or intervene in third-party services. Please see the \"Software License\" section\n  for more information.\n\n## Changes to Terms of Use\n\nThe developer may change these terms of use at any time. Users should regularly check the terms of use for the latest\nupdates.\n\n## Contact Information\n\nIf you have any questions about this privacy policy, please contact mDev via email: mvinhle22@gmail.com.\n",
+    "privacy_policy": "# Daily Tasks Application Privacy Policy\n\nWe value your privacy. This privacy policy describes how we collect, use, and share your data when you use the Daily\nTasks application.\n\n## Terms\n\n* The application refers to the Daily Tasks application developed and provided by mDev.\n* The developer is mDev, the individual who owns and develops the application.\n* The user is any individual or organization using the application.\n\n## User Data Collection:\n\n* Activity Data: This includes information about how the application is used, such as tasks performed, usage time, and\n  device information. Activity data is collected anonymously,\n  meaning it cannot be traced or identified to users. This data is used by the developer to optimize the application.\n* Generated Data: This includes information created when using the application, such as user-generated content or\n  comments and posts. Generated data may be traceable to users. This\n  data is used for personalizing the application and advertising.\n\n## Use of Data for Purposes:\n\n* Improve the Application: We use activity data and generated data to enhance the application, such as adding new\n  features or fixing errors.\n* Provide Advertising Services: We may share activity data with third parties to provide targeted advertising services.\n\n## Data Sharing:\n\n* Activity Data: We may share activity data with third parties to provide targeted advertising services (via advertising\n  identifier on the device).\n* Generated Data: We do not share generated data with third parties.\n\n## Personal Information:\n\n* The developer may store your personal information, such as name, email address, and phone number.\n* Personal information is not shared with third parties.\n* After you delete your account, all your data, including generated data, will be erased.\n\n## User Rights:\n\nUsers have the right to access, edit, or delete their generated data. To exercise this right, please access the Daily\nTasks app, go to Personal Information (Profile), and choose\nDelete Account (May take additional time to complete the deletion).\n\n## Changes to Privacy Policy:\n\nWe may change this privacy policy at any time. You should regularly check the privacy policy for the latest updates.\n\n## Contact Information:\n\nIf you have any questions about this privacy policy, please contact the developer via email: mvinhle22@gmail.com.\n"
+  },
+  "index": {
+    "tabs": {
+      "home": "Home",
+      "account": "Account"
+    }
+  }
+}
