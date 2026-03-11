@@ -3,7 +3,7 @@
  * Provides a clean API for the main app to interact with.
  */
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, rectangularSelection } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, EditorSelection } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -201,6 +201,21 @@ export function setValue(text: string): void {
   editorView.dispatch({
     changes: { from: 0, to: editorView.state.doc.length, insert: text },
   });
+}
+
+/**
+ * Insert text at the current cursor/selection position.
+ * If there is a selection, it will be replaced by the inserted text.
+ * If there are multiple selections, all are replaced.
+ */
+export function insertAtCursor(text: string): void {
+  if (!editorView) return;
+  const { state } = editorView;
+  const changes = state.changeByRange((range) => ({
+    changes: { from: range.from, to: range.to, insert: text },
+    range: EditorSelection.cursor(range.from + text.length),
+  }));
+  editorView.dispatch(state.update(changes, { scrollIntoView: true }));
 }
 
 /** Register a callback for content changes. */

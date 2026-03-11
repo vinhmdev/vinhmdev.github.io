@@ -10,7 +10,7 @@ import { init as initI18n, t } from './i18n-client';
 import { showToast, copyToClipboard, downloadBlob } from './utils';
 import { initTheme } from './theme';
 import { initTabs } from './tabs';
-import { createEditor, getValue, setValue, onUpdate, onScroll, getScrollDOM, scrollTo } from './codemirror-editor';
+import { createEditor, getValue, setValue, insertAtCursor, onUpdate, onScroll, getScrollDOM, scrollTo } from './codemirror-editor';
 
 // @ts-ignore — loaded via CDN
 const lucide = window.lucide;
@@ -134,14 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
     lastPasteCache.html = htmlData;
     lastPasteCache.plain = plainData;
 
+    const hasExistingContent = getValue().length > 0;
+
     if (isAutoConvert && htmlData) {
       const result = convert(htmlData);
       lastPasteCache.converted = result;
       showToast('clipboard', t('toast_html_success'));
-      updateContent(result);
+      if (hasExistingContent) {
+        insertAtCursor(result);
+      } else {
+        updateContent(result);
+      }
     } else if (plainData) {
       showToast('type', t('toast_plain_text'));
-      updateContent(plainData);
+      if (hasExistingContent) {
+        insertAtCursor(plainData);
+      } else {
+        updateContent(plainData);
+      }
     }
   });
 
