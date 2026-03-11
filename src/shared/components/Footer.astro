@@ -1,0 +1,23 @@
+---
+/**
+ * Footer — Shared site footer with copyright text and optional Privacy Policy link.
+ * Positioned fixed at the bottom of the viewport.
+ */
+interface Props {
+  text: string;
+  privacyLabel?: string;
+  privacyUrl?: string;
+}
+const { text, privacyLabel, privacyUrl } = Astro.props;
+---
+<footer class="fixed bottom-6 z-1 text-neutral-500 text-xs opacity-60 flex items-center gap-3">
+  <span>{text}</span>
+  {privacyUrl && privacyLabel && (
+    <>
+      <span aria-hidden="true">·</span>
+      <a href={privacyUrl} target="_blank" class="hover:opacity-100 hover:text-neutral-300 transition-colors underline-offset-2 hover:underline">
+        {privacyLabel}
+      </a>
+    </>
+  )}
+</footer>

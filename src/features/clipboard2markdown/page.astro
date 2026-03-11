@@ -1,0 +1,215 @@
+---
+/**
+ * Clipboard2Markdown — Paste to Markdown tool page.
+ * VSA slice: self-contained tool with its own styles, scripts, and i18n.
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Paste to Markdown | VinhMDev"
+  description="Convert clipboard content to Markdown instantly. Supports Google Docs, Word, Excel, VS Code and Web."
+  lang="en"
+  bodyClass="bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 min-h-screen transition-colors duration-300"
+  showFooter={false}
+>
+  <Fragment slot="head">
+    <!-- Google Fonts: Inter (preview pane typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- CDN libraries (no ESM builds available) -->
+    <script is:inline src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"></script>
+
+    <!-- KaTeX: LaTeX math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" crossorigin="anonymous" />
+    <script is:inline defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script is:inline defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+    <!-- Mermaid: diagram rendering -->
+    <script is:inline src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  </Fragment>
+
+  <div class="flex flex-col h-screen">
+
+    <!-- ===== Header ===== -->
+    <header class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-2 flex-shrink-0 z-10 relative">
+      <a href="/" class="flex items-center gap-3 no-underline text-inherit hover:opacity-80 transition-opacity ml-2 mt-1">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent" data-i18n="heading">Paste to Markdown</h1>
+          <p class="text-neutral-400 text-sm hidden sm:block" data-i18n="subtitle">Convert copied text (from Word, Web, etc.) to Markdown instantly ⚡</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <!-- Settings Button + Dropdown -->
+        <div class="settings-dropdown">
+          <button id="settings-btn"
+            class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+            title="Settings">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+          </button>
+          <div id="settings-panel" class="settings-panel">
+            <label class="settings-item">
+              <span class="toggle-switch">
+                <input type="checkbox" id="auto-convert-toggle" checked />
+                <span class="toggle-slider"></span>
+              </span>
+              <span class="text-xs font-medium text-neutral-600 dark:text-neutral-300" data-i18n="toggle_auto_convert">Auto-convert to Markdown on Paste</span>
+            </label>
+            <label class="settings-item">
+              <span class="toggle-switch">
+                <input type="checkbox" id="render-mermaid-toggle" checked />
+                <span class="toggle-slider"></span>
+              </span>
+              <span class="text-xs font-medium text-neutral-600 dark:text-neutral-300" data-i18n="toggle_render_mermaid">Mermaid</span>
+            </label>
+            <label class="settings-item">
+              <span class="toggle-switch">
+                <input type="checkbox" id="render-latex-toggle" checked />
+                <span class="toggle-slider"></span>
+              </span>
+              <span class="text-xs font-medium text-neutral-600 dark:text-neutral-300" data-i18n="toggle_render_latex">LaTeX</span>
+            </label>
+            <label class="settings-item">
+              <span class="toggle-switch">
+                <input type="checkbox" id="sync-scroll-toggle" checked />
+                <span class="toggle-slider"></span>
+              </span>
+              <span class="text-xs font-medium text-neutral-600 dark:text-neutral-300" data-i18n="toggle_sync_scroll">Sync Scroll</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn"
+          class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+          title="Toggle dark/light mode">
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+
+        <!-- Language Switcher -->
+        <button id="lang-switch-btn"
+          class="flex items-center justify-center gap-1.5 h-8 px-4 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+          title="Switch language">
+          <span class="text-base">🇻🇳</span><span class="text-xs font-semibold">VI</span>
+        </button>
+
+        <!-- Clear Button -->
+        <button id="clear-btn"
+          class="flex items-center justify-center w-8 h-8 mr-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+          data-i18n="btn_clear_title" data-i18n-attr="title"
+          title="Clear content">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+    <!-- ===== Mobile Tab Buttons ===== -->
+    <div class="tab-buttons-mobile flex lg:hidden p-1 bg-neutral-200/50 dark:bg-neutral-800/50 rounded-xl w-fit mx-auto flex-shrink-0 my-1">
+      <button id="tab-edit-btn" data-active="true">
+        <i data-lucide="code-2" class="w-4 h-4"></i>
+        <span data-i18n="tab_markdown">Markdown</span>
+      </button>
+      <button id="tab-preview-btn" data-active="false">
+        <i data-lucide="eye" class="w-4 h-4"></i>
+        <span data-i18n="tab_preview">Preview</span>
+      </button>
+    </div>
+
+    <!-- ===== Main Editor ===== -->
+    <main class="overflow-hidden flex-1 min-h-0 border-t border-neutral-300 dark:border-neutral-700">
+      <div class="editor-container">
+
+        <!-- ===== Editor Pane ===== -->
+        <div id="editor-pane" class="editor-pane">
+          <div class="pane-header">
+            <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
+            <span data-i18n="label_editor">Editor</span>
+          </div>
+          <div class="pane-body">
+            <div id="codemirror-host"></div>
+            <div id="empty-state" class="empty-state">
+              <div class="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-4">
+                <i data-lucide="clipboard-type" class="w-7 h-7 text-primary"></i>
+              </div>
+              <div class="text-neutral-600 dark:text-neutral-300 text-sm space-y-2 max-w-sm text-center leading-relaxed">
+                <p data-i18n="tip_paste">💡 Tip: Paste (Ctrl+V) text copied from Word, Excel, or the Web to convert it to Markdown.</p>
+                <p data-i18n="tip_autoconvert">💡 In the ⚙️ Settings, you can find 'Auto-convert to Markdown on Paste'. Turn it off to paste content as plain text without conversion.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pane-actions">
+            <button id="format-md-btn" class="action-btn action-btn-secondary">
+              <i data-lucide="wand-sparkles" class="w-3.5 h-3.5"></i>
+              <span data-i18n="btn_format_md">Pretty</span>
+            </button>
+            <button id="copy-md-btn" class="action-btn action-btn-primary">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span data-i18n="btn_copy_md">Copy Markdown</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== Preview Pane ===== -->
+        <div id="preview-pane" class="preview-pane">
+          <div class="pane-header">
+            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+            <span data-i18n="label_preview">Preview</span>
+          </div>
+          <div class="pane-body">
+            <div id="preview-content"></div>
+            <div id="preview-empty-state" class="empty-state">
+              <div class="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-3">
+                <i data-lucide="eye" class="w-6 h-6 text-neutral-400"></i>
+              </div>
+              <p class="text-neutral-400 font-medium text-sm" data-i18n="empty_state">Paste (Ctrl+V) your content here...</p>
+            </div>
+          </div>
+          <div class="pane-actions">
+            <button id="export-md-btn" class="action-btn action-btn-secondary">
+              <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+              <span data-i18n="btn_export_md">Export MD</span>
+            </button>
+            <button id="export-doc-btn" class="action-btn action-btn-secondary"
+              data-i18n="tooltip_export_doc_wip" data-i18n-attr="title"
+              title="This feature is incomplete. To preserve complex data (images, formulas), please Export MD and upload that Markdown file to Google Docs.">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span data-i18n="btn_export_doc">Export Word</span>
+            </button>
+            <button id="export-pdf-btn" class="action-btn action-btn-secondary">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+              <span data-i18n="btn_export_pdf">Export PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== Toast ===== -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-neutral-800 dark:bg-neutral-700 text-white rounded-2xl shadow-2xl transition-all translate-y-20 opacity-0 flex items-center gap-3 z-50 px-4 py-2">
+      <span id="toast-icon"></span>
+      <span id="toast-msg"></span>
+    </div>
+
+  </div>
+
+  <!-- App script (bundled by Astro/Vite) -->
+  <script>
+    import './scripts/app';
+  </script>
+
+  <!-- Tool-specific styles -->
+  <style>
+    @import './styles/editor.css';
+  </style>
+
+  <!-- Preview theme must be global: content is injected dynamically via innerHTML -->
+  <style is:global>
+    @import './styles/preview-theme.css';
+  </style>
+</BaseLayout>

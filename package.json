@@ -1,0 +1,25 @@
+{
+  "name": "vinhmdev-tools",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Developer utility toolkit by VinhMDev",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.1",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language-data": "^6.5.2",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^6.0.2",
+    "codemirror": "^6.0.2",
+    "firebase": "^12.10.0",
+    "tailwindcss": "^4.2.1"
+  }
+}

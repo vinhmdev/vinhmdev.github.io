@@ -1,0 +1,37 @@
+{
+    "name": "VinhMDev",
+    "short_name": "VinhMDev",
+    "description": "Developer utility toolkit by VinhMDev",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/internal/favicon/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/internal/favicon/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/internal/favicon-dark/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable",
+            "media": "(prefers-color-scheme: dark)"
+        },
+        {
+            "src": "/internal/favicon-dark/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable",
+            "media": "(prefers-color-scheme: dark)"
+        }
+    ]
+}

@@ -1,0 +1,48 @@
+---
+/**
+ * SeoHead — Reusable SEO meta tags for all pages.
+ * Renders: canonical, Open Graph, Twitter Card, author, generator.
+ */
+interface Props {
+  title: string;
+  description: string;
+  canonicalUrl?: string;
+  ogImage?: string;
+  ogType?: string;
+  siteName?: string;
+  locale?: string;
+  twitterCard?: string;
+}
+
+const {
+  title,
+  description,
+  canonicalUrl = Astro.url.href,
+  ogImage,
+  ogType = 'website',
+  siteName = 'VinhMDev Tools',
+  locale = 'en',
+  twitterCard = 'summary',
+} = Astro.props;
+---
+<!-- SEO: Canonical -->
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- SEO: Open Graph -->
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content={locale} />
+{ogImage && <meta property="og:image" content={ogImage} />}
+
+<!-- SEO: Twitter Card -->
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}
+
+<!-- SEO: Author & Generator -->
+<meta name="author" content="VinhMDev" />
+<meta name="generator" content={Astro.generator} />

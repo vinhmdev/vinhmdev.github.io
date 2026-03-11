@@ -1,0 +1,18 @@
+{
+  "site_title": "VinhMDev Tools",
+  "site_subtitle": "Bộ công cụ dành cho nhà phát triển ✨",
+  "site_description": "Tuyển tập các công cụ thiết yếu dành cho lập trình viên.",
+  "nav_vinhmdev": "vinhmdev.com",
+  "nav_vinhmdev_desc": "Truy cập trang blog & portfolio.",
+  "nav_privacy_policy": "Chính sách bảo mật",
+  "nav_privacy_policy_url": "https://vinhmdev.com/vi/privacy-policy/",
+  "home_tools_section": "Công cụ",
+  "tool_clipboard2md": "Paste to Markdown",
+  "tool_clipboard2md_desc": "Tự động chuyển định dạng văn bản bạn vừa copy sang chuẩn Markdown.",
+  "footer_copyright": "© 2026 VinhMDev",
+  "cookie_title": "Trang này dùng cookie",
+  "cookie_body": "Cookie được dùng để thống kê lượt truy cập ẩn danh, giúp chúng tôi cải thiện nội dung. Dữ liệu không được liên kết với danh tính của bạn.",
+  "cookie_link": "Chính sách bảo mật",
+  "cookie_dismiss": "Đã hiểu",
+  "cookie_privacy_url": "https://vinhmdev.com/vi/privacy-policy/"
+}

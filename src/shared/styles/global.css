@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* Override dark: variant to use .dark class instead of prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Tailwind v4 Theme — synced with docs/Themes.md (vinhmetal) ===== */
+@theme {
+  /* Neutral: "Pure Titanium" — zero blue undertones */
+  --color-neutral-50: #FAFAFA;
+  --color-neutral-100: #F5F5F5;
+  --color-neutral-200: #E5E5E5;
+  --color-neutral-300: #D4D4D4;
+  --color-neutral-400: #A3A3A3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0A0A0A;
+
+  /* Primary: "Academic Cinnabar" — brand orange */
+  --color-primary-50: #FFF7ED;
+  --color-primary-100: #FFEDD5;
+  --color-primary-200: #FED7AA;
+  --color-primary-300: #FDBA74;
+  --color-primary-400: #FB923C;
+  --color-primary-500: #F97316;
+  --color-primary-600: #EA580C;
+  --color-primary-700: #C2410C;
+  --color-primary-800: #9A3412;
+  --color-primary-900: #7C2D12;
+  --color-primary-950: #431407;
+
+  /* Secondary: "Architectural Stone" */
+  --color-secondary-200: #E7E5E4;
+  --color-secondary-300: #D6D3D1;
+  --color-secondary-400: #A8A29E;
+  --color-secondary-500: #78716C;
+  --color-secondary-600: #57534E;
+  --color-secondary-700: #44403C;
+  --color-secondary-800: #292524;
+  --color-secondary-900: #1C1917;
+
+  /* Shorthand aliases for convenience */
+  --color-primary: #F97316;
+  --color-primary-hover: #EA580C;
+  --color-accent-amber: #FBBF24;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ===== Base Reset ===== */
+/* Note: Tailwind Preflight handles element-level margin/padding resets.
+   Only box-sizing is set here — adding margin/padding would override Tailwind utilities
+   due to CSS cascade layer priority (unlayered CSS beats layered CSS). */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D4D4D4; border-radius: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: #525252; }
+
+@layer components {
+
+  /* ===== Cookie Consent Banner ===== */
+  .cookie-notice {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 1rem;
+    pointer-events: none;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+  }
+  .cookie-notice--visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .cookie-notice--hide {
+    animation: cookieSlideOut 0.35s ease forwards;
+  }
+  @keyframes cookieSlideOut {
+    to { transform: translateY(100%); opacity: 0; }
+  }
+  .cookie-notice__inner {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  .dark .cookie-notice__inner {
+    background: rgba(30, 30, 28, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .cookie-notice__text {
+    flex: 1;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: #525252;
+  }
+  .dark .cookie-notice__text { color: #A3A3A3; }
+  .cookie-notice__title {
+    display: block;
+    font-weight: 600;
+    color: #262626;
+    margin-bottom: 0.15rem;
+  }
+  .dark .cookie-notice__title { color: #E5E5E5; }
+  .cookie-notice__link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .cookie-notice__link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+  .cookie-notice__btn {
+    flex-shrink: 0;
+    padding: 0.5rem 1.25rem;
+    background: var(--color-primary);
+    color: white;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+    white-space: nowrap;
+  }
+  .cookie-notice__btn:hover { background: var(--color-primary-hover); }
+  .cookie-notice__btn:active { transform: scale(0.95); }
+
+  @media (max-width: 480px) {
+    .cookie-notice__inner {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.75rem;
+      padding: 1rem;
+    }
+    .cookie-notice__btn { width: 100%; }
+  }
+
+} /* end @layer components */

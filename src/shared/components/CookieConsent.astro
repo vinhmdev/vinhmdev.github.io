@@ -1,0 +1,63 @@
+---
+/**
+ * CookieConsent — Shared cookie consent banner.
+ * Unified logic from homepage and clipboard2markdown.
+ */
+interface Props {
+  title: string;
+  body: string;
+  linkText: string;
+  linkUrl: string;
+  dismissText: string;
+}
+const { title, body, linkText, linkUrl, dismissText } = Astro.props;
+---
+<div id="cookie-notice" class="cookie-notice" hidden>
+  <div class="cookie-notice__inner">
+    <div class="cookie-notice__text">
+      <strong class="cookie-notice__title">{title}</strong>
+      <span>{body} </span>
+      <a id="cookie-privacy-link" href={linkUrl} class="cookie-notice__link" target="_blank">{linkText}</a>
+    </div>
+    <button id="cookie-dismiss" class="cookie-notice__btn" type="button">{dismissText}</button>
+  </div>
+</div>
+
+<script>
+  import { loadAnalytics } from '@shared/analytics/firebase';
+
+  (function () {
+    'use strict';
+    const KEY = 'cookie-notice-dismissed=1';
+
+    if (document.cookie.indexOf(KEY) !== -1) {
+      loadAnalytics();
+      return;
+    }
+
+    const notice = document.getElementById('cookie-notice');
+    if (notice) {
+      notice.hidden = false;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          notice.classList.add('cookie-notice--visible');
+        });
+      });
+    }
+
+    const dismissBtn = document.getElementById('cookie-dismiss');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        const maxAge = 60 * 60 * 24 * 365;
+        document.cookie = KEY + '; path=/; domain=.vinhmdev.com; max-age=' + maxAge + '; SameSite=Lax';
+        notice?.classList.add('cookie-notice--hide');
+        notice?.addEventListener('animationend', () => {
+          if (notice) notice.hidden = true;
+        }, { once: true });
+        window.dispatchEvent(new Event('cookie-consent-given'));
+      });
+    }
+
+    window.addEventListener('cookie-consent-given', () => loadAnalytics(), { once: true });
+  })();
+</script>

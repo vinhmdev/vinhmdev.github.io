@@ -1,0 +1,65 @@
+---
+/**
+ * BaseLayout — Shared HTML shell for all pages.
+ * Includes: meta, favicons, SEO tags, global CSS, cookie consent, footer.
+ */
+import '@styles/global.css';
+import FaviconHead from '@components/FaviconHead.astro';
+import SeoHead from '@components/SeoHead.astro';
+import CookieConsent from '@components/CookieConsent.astro';
+import Footer from '@components/Footer.astro';
+import { t } from '@i18n/ui';
+
+interface Props {
+  title: string;
+  description: string;
+  lang?: string;
+  bodyClass?: string;
+  showFooter?: boolean;
+  ogImage?: string;
+  ogType?: string;
+}
+
+const {
+  title,
+  description,
+  lang = 'en',
+  bodyClass = 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 min-h-screen transition-colors duration-300',
+  showFooter = true,
+  ogImage,
+  ogType,
+} = Astro.props;
+---
+<!DOCTYPE html>
+<html lang={lang}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <SeoHead title={title} description={description} locale={lang} ogImage={ogImage} ogType={ogType} />
+  <FaviconHead />
+  <!-- Theme detection — must run before paint to avoid flash -->
+  <script is:inline>
+    (function() {
+      var savedTheme = localStorage.getItem('c2md-theme');
+      var dark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (dark) document.documentElement.classList.add('dark');
+    })();
+  </script>
+  <slot name="head" />
+</head>
+<body class={bodyClass}>
+  <slot />
+
+  {showFooter && <Footer text={t(lang, 'footer_copyright')} privacyLabel={t(lang, 'nav_privacy_policy')} privacyUrl={t(lang, 'nav_privacy_policy_url')} />}
+
+  <CookieConsent
+    title={t(lang, 'cookie_title')}
+    body={t(lang, 'cookie_body')}
+    linkText={t(lang, 'cookie_link')}
+    linkUrl={t(lang, 'cookie_privacy_url')}
+    dismissText={t(lang, 'cookie_dismiss')}
+  />
+</body>
+</html>

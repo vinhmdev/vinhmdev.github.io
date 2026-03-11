@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://utils.vinhmdev.com/sitemap-index.xml

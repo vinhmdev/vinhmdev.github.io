@@ -1,0 +1,18 @@
+{
+  "site_title": "VinhMDev Tools",
+  "site_subtitle": "Developer Toolkit ✨",
+  "site_description": "Developer utility toolkit by VinhMDev.",
+  "nav_vinhmdev": "vinhmdev.com",
+  "nav_vinhmdev_desc": "Visit the main blog & portfolio site.",
+  "nav_privacy_policy": "Privacy Policy",
+  "nav_privacy_policy_url": "https://vinhmdev.com/privacy-policy/",
+  "home_tools_section": "Tools",
+  "tool_clipboard2md": "Paste to Markdown",
+  "tool_clipboard2md_desc": "Instantly convert copied text into Markdown format.",
+  "footer_copyright": "© 2026 VinhMDev",
+  "cookie_title": "This site uses cookies",
+  "cookie_body": "Cookies help us understand how visitors use this site so we can improve it. Data is not linked to your identity.",
+  "cookie_link": "Privacy Policy",
+  "cookie_dismiss": "Got it",
+  "cookie_privacy_url": "https://vinhmdev.com/privacy-policy/"
+}

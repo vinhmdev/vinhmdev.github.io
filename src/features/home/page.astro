@@ -1,0 +1,67 @@
+---
+/**
+ * Homepage — VinhMDev Tools landing page.
+ * Lists all available developer tools.
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import ArrowIcon from '@components/ArrowIcon.astro';
+import { t, defaultLang } from '@i18n/ui';
+
+const lang = defaultLang;
+---
+<BaseLayout
+  title={t(lang, 'site_title')}
+  description={t(lang, 'site_description')}
+  lang={lang}
+  bodyClass="font-sans bg-[#0e0c0a] text-[#f5f5f5] min-h-screen flex flex-col items-center relative"
+>
+  <!-- Animated gradient background -->
+  <div class="bg-gradient"></div>
+
+  <!-- Floating orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="relative z-10 text-center w-full max-w-[640px] mx-auto px-8 pt-16 pb-24 mt-12">
+    <!-- Logo -->
+    <div class="logo-ring">
+      <picture>
+        <source srcset="/internal/favicon-dark/web-app-manifest-192x192.png" media="(prefers-color-scheme: dark)" />
+        <img src="/internal/favicon/web-app-manifest-192x192.png" alt="VinhMDev" width="80" height="80" class="rounded-full block" />
+      </picture>
+    </div>
+
+    <h1 class="text-[2.5rem] font-extrabold tracking-tight bg-gradient-to-br from-[#f5f5f5] to-[#a3a3a3] bg-clip-text text-transparent mb-2">
+      {t(lang, 'site_title')}
+    </h1>
+
+    <!-- Parent site reference — subtle, inline -->
+    <p class="text-[#a3a3a3] text-sm mb-10 leading-relaxed">
+      {t(lang, 'site_subtitle')} &mdash;
+      <a href="https://vinhmdev.com" target="_blank" class="parent-ref">{t(lang, 'nav_vinhmdev')}</a>
+    </p>
+
+    <!-- Tools section label -->
+    <div class="section-divider">
+      <span class="section-label">{t(lang, 'home_tools_section')}</span>
+    </div>
+
+    <!-- Tools Grid -->
+    <div class="flex flex-col gap-4">
+
+      <a href="/clipboard2markdown/" class="tool-card" id="tool-clipboard2md">
+        <div class="tool-icon">📋</div>
+        <div class="tool-info">
+          <h3>{t(lang, 'tool_clipboard2md')}</h3>
+          <p>{t(lang, 'tool_clipboard2md_desc')}</p>
+        </div>
+        <ArrowIcon />
+      </a>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  @import './styles/home.css';
+</style>
