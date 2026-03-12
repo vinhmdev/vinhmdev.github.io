@@ -210,12 +210,13 @@ export function setValue(text: string): void {
  */
 export function insertAtCursor(text: string): void {
   if (!editorView) return;
-  const { state } = editorView;
-  const changes = state.changeByRange((range) => ({
-    changes: { from: range.from, to: range.to, insert: text },
-    range: EditorSelection.cursor(range.from + text.length),
-  }));
-  editorView.dispatch(state.update(changes, { scrollIntoView: true }));
+  
+  // Use CodeMirror 6 built-in replaceSelection which correctly deletes
+  // the current selection before inserting the text.
+  editorView.dispatch(
+    editorView.state.replaceSelection(text),
+    { scrollIntoView: true, userEvent: 'input.paste' }
+  );
 }
 
 /** Register a callback for content changes. */

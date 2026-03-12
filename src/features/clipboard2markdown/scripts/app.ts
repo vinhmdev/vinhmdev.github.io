@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateContent(plainData);
       }
     }
-  });
+  }, { capture: true });
 
   // --- Content update ---
   function updateContent(md: string): void {
