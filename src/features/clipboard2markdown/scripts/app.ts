@@ -54,9 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const RENDER_LATEX_KEY = 'c2md-render-latex';
   const SYNC_SCROLL_KEY = 'c2md-sync-scroll';
 
-  // --- State ---
-  let lastPasteCache = { html: '', plain: '', converted: '' };
-
   // --- Toggle state (shared for all boolean localStorage settings) ---
   function loadToggleState(key: string): boolean {
     const saved = localStorage.getItem(key);
@@ -65,18 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   autoConvertToggle.checked = loadToggleState(AUTOCONVERT_KEY);
   autoConvertToggle.addEventListener('change', () => {
-    const isOn = autoConvertToggle.checked;
-    localStorage.setItem(AUTOCONVERT_KEY, String(isOn));
-
-    if (lastPasteCache.html || lastPasteCache.plain) {
-      if (isOn && lastPasteCache.html) {
-        const result = convert(lastPasteCache.html);
-        lastPasteCache.converted = result;
-        updateContent(result);
-      } else if (!isOn && lastPasteCache.plain) {
-        updateContent(lastPasteCache.plain);
-      }
-    }
+    localStorage.setItem(AUTOCONVERT_KEY, String(autoConvertToggle.checked));
   });
 
   renderMermaidToggle.checked = loadToggleState(RENDER_MERMAID_KEY);
@@ -131,14 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const htmlData = types.includes('text/html') ? clipboard.getData('text/html') : '';
     const plainData = types.includes('text/plain') ? clipboard.getData('text/plain') : '';
 
-    lastPasteCache.html = htmlData;
-    lastPasteCache.plain = plainData;
-
     const hasExistingContent = getValue().length > 0;
 
     if (isAutoConvert && htmlData) {
       const result = convert(htmlData);
-      lastPasteCache.converted = result;
       showToast('clipboard', t('toast_html_success'));
       if (hasExistingContent) {
         insertAtCursor(result);
@@ -415,7 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
     previewContent.innerHTML = '';
     emptyState.style.opacity = '1';
     previewEmptyState.style.opacity = '1';
-    lastPasteCache = { html: '', plain: '', converted: '' };
     showToast('trash', t('toast_cleared'));
   });
 
