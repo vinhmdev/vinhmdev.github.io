@@ -178,37 +178,7 @@ function preprocessHTML(html: string): string {
   return doc.body.innerHTML;
 }
 
-// @ts-ignore
-const originalEscape = TurndownService.prototype.escape;
 
-// @ts-ignore
-TurndownService.prototype.escape = function (string: string) {
-  const mathRegex = /(\$\$.+?\$\$|\$.+?\$)/gs;
-
-  let result = '';
-  let lastIndex = 0;
-  let match;
-
-  while ((match = mathRegex.exec(string)) !== null) {
-    // Escape the text before the math block natively
-    const before = string.slice(lastIndex, match.index);
-    if (before) {
-      result += originalEscape.call(this, before);
-    }
-
-    // Append the math block exactly as is, completely un-escaped
-    result += match[0];
-    lastIndex = mathRegex.lastIndex;
-  }
-
-  // Escape any remaining text at the end of the string
-  const remaining = string.slice(lastIndex);
-  if (remaining) {
-    result += originalEscape.call(this, remaining);
-  }
-
-  return result;
-};
 
 /**
  * Create and configure Turndown instance with custom rules.

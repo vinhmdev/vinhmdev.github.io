@@ -19,13 +19,9 @@ import JSZip from 'jszip';
 // @ts-ignore — loaded via CDN
 const lucide = window.lucide;
 // @ts-ignore
-const marked = window.marked;
-// @ts-ignore
 const DOMPurify = window.DOMPurify;
 // @ts-ignore
 const mermaid = window.mermaid;
-// @ts-ignore
-const renderMathInElement = window.renderMathInElement;
 
 // @ts-ignore
 const prettier = window.prettier;
@@ -131,12 +127,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // --- Preview rendering ---
+  // @ts-ignore
+  const markdownit = window.markdownit;
+  // @ts-ignore
+  const texmath = window.texmath;
+  // @ts-ignore
+  const katex = window.katex;
+  // @ts-ignore
+  const markdownitTaskLists = window.markdownitTaskLists;
+
+  let mdParser: any = null;
   let mermaidIdCounter = 0;
 
   async function renderPreview(md: string): Promise<void> {
-    if (typeof marked === 'undefined') return;
-    const rawHtml = marked.parse(md || '');
-    const cleanHtml = DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG);
+    if (typeof markdownit === 'undefined') return;
+    
+    // Initialize parser lazily or re-initialize if settings change
+    // Using a simple instance for now that recreates if needed to capture toggle state,
+    // though optimizing to a single instance with dynamic config is also possible.
+    mdParser = markdownit({
+      html: true,
+      breaks: true,
+      linkify: true,
+      typographer: true
+    });
+
+    if (typeof markdownitTaskLists !== 'undefined') {
+      mdParser.use(markdownitTaskLists);
+    }
+
+    if (renderLatexToggle.checked && typeof texmath !== 'undefined' && typeof katex !== 'undefined') {
+      mdParser.use(texmath, { engine: katex, delimiters: 'dollars' });
+    }
+
+    const rawHtml = mdParser.render(md || '');
+    let cleanHtml = DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG);
+
     previewContent.innerHTML = cleanHtml;
 
     // --- Mermaid: find ```mermaid code blocks and render them ---
@@ -169,19 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
           // Silently handle mermaid parse errors (user may still be typing)
         }
       }
-    }
-
-    // --- KaTeX: render LaTeX math expressions ---
-    if (renderLatexToggle.checked && typeof renderMathInElement !== 'undefined') {
-      renderMathInElement(previewContent, {
-        delimiters: [
-          { left: '$$', right: '$$', display: true },
-          { left: '$', right: '$', display: false },
-          { left: '\\(', right: '\\)', display: false },
-          { left: '\\[', right: '\\]', display: true },
-        ],
-        throwOnError: false,
-      });
     }
   }
 
@@ -220,6 +233,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // --- Helper: Lazy Load CDN Script ---
+  const loadedScripts = new Set<string>();
+  async function loadScript(url: string): Promise<void> {
+    if (loadedScripts.has(url)) return;
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = () => {
+        loadedScripts.add(url);
+        resolve();
+      };
+      script.onerror = () => reject(new Error(`Failed to load script ${url}`));
+      document.head.appendChild(script);
+    });
+  }
+
   // --- Copy Markdown ---
   document.getElementById('copy-md-btn')?.addEventListener('click', () => {
     const text = getValue();
@@ -233,10 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
     
+    showToast('loader', 'Formatting...');
     try {
-      const formatted = await prettier.format(text, {
+      // @ts-ignore
+      if (typeof window.prettier === 'undefined') {
+        await loadScript('https://unpkg.com/prettier@3.2.5/standalone.js');
+        await loadScript('https://unpkg.com/prettier@3.2.5/plugins/markdown.js');
+      }
+      // @ts-ignore
+      const formatted = await window.prettier.format(text, {
         parser: "markdown",
-        plugins: prettierPlugins,
+        // @ts-ignore
+        plugins: window.prettierPlugins,
       });
       setValue(formatted);
       showToast('wand-sparkles', t('toast_formatted'));
