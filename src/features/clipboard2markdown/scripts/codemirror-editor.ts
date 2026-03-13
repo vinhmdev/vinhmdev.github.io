@@ -124,6 +124,7 @@ function getHighlightExtensions() {
 let editorView: EditorView | null = null;
 let updateCallbacks: Array<(value: string) => void> = [];
 let scrollCallbacks: Array<(info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void> = [];
+let pasteCallback: ((html: string, plain: string) => string | null) | null = null;
 
 /**
  * Create and mount the CodeMirror editor.
@@ -153,6 +154,23 @@ export function createEditor(parent: HTMLElement): EditorView {
           const value = update.state.doc.toString();
           for (const cb of updateCallbacks) cb(value);
         }
+      }),
+      // Listen for paste events — route through our converter
+      EditorView.domEventHandlers({
+        paste: (e: ClipboardEvent, view: EditorView) => {
+          if (!pasteCallback) return false;
+          const clipboard = e.clipboardData;
+          if (!clipboard) return false;
+
+          const html = clipboard.types.includes('text/html') ? clipboard.getData('text/html') : '';
+          const plain = clipboard.types.includes('text/plain') ? clipboard.getData('text/plain') : '';
+          const result = pasteCallback(html, plain);
+          if (result === null) return false;
+
+          e.preventDefault();
+          view.dispatch(view.state.replaceSelection(result));
+          return true;
+        },
       }),
       // Listen for scroll events
       EditorView.domEventHandlers({
@@ -203,25 +221,21 @@ export function setValue(text: string): void {
   });
 }
 
-/**
- * Insert text at the current cursor/selection position.
- * If there is a selection, it will be replaced by the inserted text.
- * If there are multiple selections, all are replaced.
- */
-export function insertAtCursor(text: string): void {
-  if (!editorView) return;
-  
-  // Use CodeMirror 6 built-in replaceSelection which correctly deletes
-  // the current selection before inserting the text.
-  editorView.dispatch(
-    editorView.state.replaceSelection(text),
-    { scrollIntoView: true, userEvent: 'input.paste' }
-  );
-}
 
 /** Register a callback for content changes. */
 export function onUpdate(callback: (value: string) => void): void {
   updateCallbacks.push(callback);
+}
+
+/**
+ * Register a paste handler. The callback receives (html, plain) clipboard strings
+ * and should return the markdown string to insert, or null to let CodeMirror
+ * handle the paste natively.
+ * CodeMirror automatically places the result at the current cursor / replaces
+ * any active selection — no manual cursor logic needed.
+ */
+export function onPaste(callback: (html: string, plain: string) => string | null): void {
+  pasteCallback = callback;
 }
 
 /** Register a callback for scroll events. */

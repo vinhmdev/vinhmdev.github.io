@@ -10,7 +10,7 @@ import { init as initI18n, t } from './i18n-client';
 import { showToast, copyToClipboard, downloadBlob } from './utils';
 import { initTheme } from './theme';
 import { initTabs } from './tabs';
-import { createEditor, getValue, setValue, insertAtCursor, onUpdate, onScroll, getScrollDOM, scrollTo } from './codemirror-editor';
+import { createEditor, getValue, setValue, onUpdate, onPaste, onScroll, getScrollDOM, scrollTo } from './codemirror-editor';
 
 // @ts-ignore — loaded via CDN
 const lucide = window.lucide;
@@ -105,45 +105,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Paste handler ---
-  document.addEventListener('paste', (e: ClipboardEvent) => {
-    e.preventDefault();
-    const clipboard = e.clipboardData;
-    if (!clipboard) return;
-
-    const types = clipboard.types;
-    const isAutoConvert = autoConvertToggle.checked;
-
-    const htmlData = types.includes('text/html') ? clipboard.getData('text/html') : '';
-    const plainData = types.includes('text/plain') ? clipboard.getData('text/plain') : '';
-
-    const hasExistingContent = getValue().length > 0;
-
-    if (isAutoConvert && htmlData) {
-      const result = convert(htmlData);
+  // --- Paste handler (scoped to editor via CodeMirror domEventHandlers) ---
+  // Return the markdown string to insert, or null to let CodeMirror handle natively.
+  // Cursor placement and selection replacement are handled automatically by CodeMirror.
+  onPaste((html, plain) => {
+    if (autoConvertToggle.checked && html) {
       showToast('clipboard', t('toast_html_success'));
-      if (hasExistingContent) {
-        insertAtCursor(result);
-      } else {
-        updateContent(result);
-      }
-    } else if (plainData) {
-      showToast('type', t('toast_plain_text'));
-      if (hasExistingContent) {
-        insertAtCursor(plainData);
-      } else {
-        updateContent(plainData);
-      }
+      return convert(html);
     }
-  }, { capture: true });
+    if (plain) {
+      showToast('type', t('toast_plain_text'));
+      return plain;
+    }
+    return null;
+  });
 
-  // --- Content update ---
-  function updateContent(md: string): void {
-    setValue(md);
-    emptyState.style.opacity = '0';
-    previewEmptyState.style.opacity = '0';
-    renderPreview(md);
-  }
 
   // --- Preview rendering ---
   let mermaidIdCounter = 0;
