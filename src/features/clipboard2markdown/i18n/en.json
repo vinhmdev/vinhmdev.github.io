@@ -9,7 +9,6 @@
   "btn_export_md": "Export MD",
   "btn_export_pdf": "Export PDF",
   "btn_export_doc": "Export Word",
-  "tooltip_export_doc_wip": "This feature is incomplete. To preserve complex data (images, formulas), please Export MD and upload that Markdown file to Google Docs.",
   "btn_clear_title": "Clear content",
   "empty_state": "Paste (Ctrl+V) your content here...",
   "toast_html_success": "Successfully converted from HTML!",

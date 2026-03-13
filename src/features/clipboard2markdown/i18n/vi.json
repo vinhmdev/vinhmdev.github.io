@@ -9,7 +9,6 @@
   "btn_export_md": "Xuất MD",
   "btn_export_pdf": "Xuất PDF",
   "btn_export_doc": "Xuất Word",
-  "tooltip_export_doc_wip": "Chức năng này chưa hoàn thiện. Để giữ nguyên dữ liệu phức tạp (biểu đồ, công thức), vui lòng Xuất MD và tải file Markdown đó lên Google Docs.",
   "btn_clear_title": "Xóa nội dung",
   "empty_state": "Hãy dán (Ctrl+V) nội dung vào đây...",
   "toast_html_success": "Đã chuyển đổi từ HTML thành công!",
