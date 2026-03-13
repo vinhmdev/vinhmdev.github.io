@@ -135,6 +135,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const katex = window.katex;
   // @ts-ignore
   const markdownitTaskLists = window.markdownitTaskLists;
+  // @ts-ignore
+  const markdownitDeflist = window.markdownitDeflist;
+  // @ts-ignore
+  const markdownitFootnote = window.markdownitFootnote;
+  // @ts-ignore
+  const markdownitMark = window.markdownitMark;
+  // @ts-ignore
+  const markdownitSub = window.markdownitSub;
+  // @ts-ignore
+  const markdownitSup = window.markdownitSup;
+  // @ts-ignore
+  const markdownitIns = window.markdownitIns;
+  // @ts-ignore
+  const markdownitAbbr = window.markdownitAbbr;
+  // @ts-ignore
+  const markdownitContainer = window.markdownitContainer;
+  // @ts-ignore
+  const markdownitEmoji = window.markdownitEmoji;
+  // @ts-ignore
+  const markdownItAnchor = window.markdownItAnchor;
+  // @ts-ignore
+  const markdownItTocDoneRight = window.markdownItTocDoneRight;
 
   let mdParser: any = null;
   let mermaidIdCounter = 0;
@@ -154,6 +176,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof markdownitTaskLists !== 'undefined') {
       mdParser.use(markdownitTaskLists);
+    }
+    
+    // Add support for definition lists
+    if (typeof markdownitDeflist !== 'undefined') {
+      mdParser.use(markdownitDeflist);
+    }
+
+    // Add support for footnotes
+    if (typeof markdownitFootnote !== 'undefined') {
+      mdParser.use(markdownitFootnote);
+    }
+
+    if (typeof markdownitMark !== 'undefined') mdParser.use(markdownitMark);
+    if (typeof markdownitSub !== 'undefined') mdParser.use(markdownitSub);
+    if (typeof markdownitSup !== 'undefined') mdParser.use(markdownitSup);
+    if (typeof markdownitIns !== 'undefined') mdParser.use(markdownitIns);
+    if (typeof markdownitAbbr !== 'undefined') mdParser.use(markdownitAbbr);
+    if (typeof markdownitEmoji !== 'undefined') mdParser.use(markdownitEmoji);
+    
+    // Add custom containers (similar to VuePress/VitePress)
+    if (typeof markdownitContainer !== 'undefined') {
+      ['info', 'warning', 'danger', 'success', 'details'].forEach((type) => {
+        mdParser.use(markdownitContainer, type);
+      });
+    }
+
+    // Anchor and TOC 
+    if (typeof markdownItAnchor !== 'undefined') {
+      mdParser.use(markdownItAnchor, {
+        permalink: markdownItAnchor.permalink.headerLink()
+      });
+    }
+    if (typeof markdownItTocDoneRight !== 'undefined') {
+      mdParser.use(markdownItTocDoneRight);
     }
 
     if (renderLatexToggle.checked && typeof texmath !== 'undefined' && typeof katex !== 'undefined') {
@@ -175,7 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.createElement('div');
         container.className = 'mermaid';
         container.id = `mermaid-${mermaidIdCounter++}`;
-        container.textContent = codeEl.textContent || '';
+        const codeText = codeEl.textContent || '';
+        container.textContent = codeText;
+        container.setAttribute('data-original-code', codeText);
         pre.replaceWith(container);
       }
 
@@ -203,6 +261,13 @@ document.addEventListener('DOMContentLoaded', () => {
     emptyState.style.opacity = val ? '0' : '1';
     previewEmptyState.style.opacity = val ? '0' : '1';
     renderPreview(val);
+  });
+
+  // Re-render when theme changes (for Mermaid to redraw in the new theme)
+  window.addEventListener('themechange', () => {
+    if (renderMermaidToggle.checked && getValue()) {
+       renderPreview(getValue());
+    }
   });
 
   // --- Synchronized scrolling ---
@@ -294,12 +359,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Export PDF ---
-  document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
-    const content = previewContent.innerHTML;
-    if (!content) return showToast('alert-triangle', t('toast_nothing_to_copy'));
-
+  document.getElementById('export-pdf-btn')?.addEventListener('click', async () => {
+    if (!previewContent.innerHTML) return showToast('alert-triangle', t('toast_nothing_to_copy'));
+    
+    // Always export as light mode to allow browser to handle margins cleanly
+    // Open the print window synchronously to avoid popup blockers
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = previewContent.innerHTML;
+
+    // If the UI is dark, Mermaid SVGs inside `tempDiv` are dark. We must re-render them in light theme.
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark && typeof mermaid !== 'undefined') {
+      const mermaidNodes = tempDiv.querySelectorAll('.mermaid');
+      if (mermaidNodes.length > 0) {
+        mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+        let i = 0;
+        for (const node of mermaidNodes) {
+          const code = node.getAttribute('data-original-code');
+          if (code) {
+            try {
+              const id = `mermaid-pdf-${Date.now()}-${i++}`;
+              const { svg } = await mermaid.render(id, code);
+              node.innerHTML = svg;
+            } catch (e) {
+              console.error('Mermaid PDF render error', e);
+            }
+          }
+        }
+        // Restore the dark theme configuration for the live preview
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+      }
+    }
+
+    const content = tempDiv.innerHTML;
+    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -310,8 +406,31 @@ document.addEventListener('DOMContentLoaded', () => {
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: 'Inter', 'Segoe UI', sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; color: #1e293b; }
-          @media print { body { padding: 0; } }
+          /* Base print layout */
+          body { 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            padding: 2rem;
+            max-width: 800px; 
+            margin: 0 auto; 
+            color: #1e293b; 
+            background: white; 
+          }
+          
+          /* Enforce image centering */
+          img { display: block; margin: 1em auto; max-width: 100%; border-radius: 8px; }
+          /* Enforce mermaid/svg centering */
+          .mermaid { display: flex; justify-content: center; margin: 1.2em 0; }
+          .mermaid svg { max-width: 100%; height: auto; }
+          
+          /* We also copy over some critical typography tokens for Light Theme */
+          h1 { color: #262626; border-bottom: 2px solid #e5e5e5; }
+          h2 { color: #262626; border-bottom: 1px solid #e5e5e5; }
+          a { color: #c2410c; }
+          pre { background: #e5e5e5; padding: 1em; border-radius: 8px; overflow-x: auto; font-family: monospace; }
+          blockquote { border-left: 4px solid #c2410c; padding-left: 1em; color: #525252; background: #f9f9f9; border-radius: 4px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; }
+          th, td { border: 1px solid #d4d4d4; padding: 0.5em; }
+          th { background: #e5e5e5; text-align: left; }
         </style>
       </head>
       <body>
@@ -517,6 +636,21 @@ document.addEventListener('DOMContentLoaded', () => {
       // 5) Deduplicate oMathPara wrappers (safety net)
       docXml = docXml.replace(/<m:oMathPara><m:oMathPara>/g, '<m:oMathPara>');
       docXml = docXml.replace(/<\/m:oMathPara><\/m:oMathPara>/g, '</m:oMathPara>');
+
+      // 6) Center align paragraphs containing images
+      // markdown-docx puts images in standard left-aligned paragraphs. We want them centered.
+      // We look for a paragraph <w:p> that contains <w:drawing> without crossing into other paragraphs
+      docXml = docXml.replace(
+        /<w:p>(?:(?!<w:p>)[\s\S])*?<w:drawing>(?:(?!<w:p>)[\s\S])*?<\/w:p>/g,
+        (match) => {
+          if (match.includes('<w:jc w:val="center"/>')) return match;
+          if (match.includes('<w:pPr>')) {
+             return match.replace('<w:pPr>', '<w:pPr><w:jc w:val="center"/>');
+          } else {
+             return match.replace('<w:p>', '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>');
+          }
+        }
+      );
 
       zip.file('word/document.xml', docXml);
 
