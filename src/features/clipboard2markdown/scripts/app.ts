@@ -11,6 +11,10 @@ import { showToast, copyToClipboard, downloadBlob } from './utils';
 import { initTheme } from './theme';
 import { initTabs } from './tabs';
 import { createEditor, getValue, setValue, onUpdate, onPaste, onScroll, getScrollDOM, scrollTo } from './codemirror-editor';
+// Import the native ESM bundler-compatible markdown to docx handler
+import markdownDocx, { Packer } from 'markdown-docx';
+
+import JSZip from 'jszip';
 
 // @ts-ignore — loaded via CDN
 const lucide = window.lucide;
@@ -22,6 +26,11 @@ const DOMPurify = window.DOMPurify;
 const mermaid = window.mermaid;
 // @ts-ignore
 const renderMathInElement = window.renderMathInElement;
+
+// @ts-ignore
+const prettier = window.prettier;
+// @ts-ignore
+const prettierPlugins = window.prettierPlugins;
 
 document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
@@ -219,80 +228,22 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('check-circle', t('toast_copied'));
   });
 
-  // --- Format Markdown ---
-  function formatMarkdown(md: string): string {
-    const lines = md.split('\n');
-    const out: string[] = [];
-    let prevWasBlank = false;
-    let inFence = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-
-      // Detect fenced code block boundaries (``` or ~~~)
-      if (/^(`{3,}|~{3,})/.test(line.trimStart())) {
-        inFence = !inFence;
-        out.push(line);
-        prevWasBlank = false;
-        continue;
-      }
-
-      // Don't touch content inside code blocks
-      if (inFence) {
-        out.push(line);
-        continue;
-      }
-
-      // Strip trailing whitespace
-      line = line.trimEnd();
-
-      // Blank line: collapse multiple consecutive blanks into one
-      if (line === '') {
-        if (!prevWasBlank && out.length > 0) out.push('');
-        prevWasBlank = true;
-        continue;
-      }
-
-      // Fix ATX headings: ensure exactly one space after #'s (e.g. "#Heading" → "# Heading")
-      const headingHashMatch = line.match(/^(#{1,6})([^#\s].*)?$/);
-      if (headingHashMatch) {
-        const hashes = headingHashMatch[1];
-        const rest = line.slice(hashes.length).trimStart();
-        line = `${hashes} ${rest}`;
-      }
-
-      // Normalise unordered bullet markers to "-" (preserve indentation)
-      line = line.replace(/^(\s*)[*+](\s+)/, '$1-$2');
-
-      const isHeading = /^#{1,6}\s/.test(line);
-      const isHR = /^(-{3,}|\*{3,}|_{3,})\s*$/.test(line);
-
-      // Ensure a blank line before headings and HRs
-      if ((isHeading || isHR) && !prevWasBlank && out.length > 0) {
-        out.push('');
-      }
-
-      out.push(line);
-      prevWasBlank = false;
-
-      // Ensure a blank line after headings and HRs (peek ahead)
-      if ((isHeading || isHR) && i + 1 < lines.length && lines[i + 1].trim() !== '') {
-        out.push('');
-        prevWasBlank = true;
-      }
-    }
-
-    // Remove trailing blank lines, end with single newline
-    while (out.length > 0 && out[out.length - 1] === '') out.pop();
-    return out.join('\n') + '\n';
-  }
-
-  document.getElementById('format-md-btn')?.addEventListener('click', () => {
+  // --- Format Markdown using Prettier (Standalone) ---
+  document.getElementById('format-md-btn')?.addEventListener('click', async () => {
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
-    const formatted = formatMarkdown(text);
-    setValue(formatted);
-    showToast('wand-sparkles', t('toast_formatted'));
+    
+    try {
+      const formatted = await prettier.format(text, {
+        parser: "markdown",
+        plugins: prettierPlugins,
+      });
+      setValue(formatted);
+      showToast('wand-sparkles', t('toast_formatted'));
+    } catch (err) {
+      console.error('Prettier format error:', err);
+      showToast('alert-triangle', 'Failed to format Markdown');
+    }
   });
 
 
@@ -336,35 +287,224 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('printer', t('toast_exported_pdf'));
   });
 
-  // --- Export Word (DOC) ---
-  document.getElementById('export-doc-btn')?.addEventListener('click', () => {
-    const content = previewContent.innerHTML;
-    if (!content) return showToast('alert-triangle', t('toast_nothing_to_copy'));
+  // --- Mermaid to PNG Interceptor for DOCX ---
+  const convertMermaidToImageText = async (markdownText: string): Promise<string> => {
+    const mermaidRegex = /```mermaid\n([\s\S]*?)\n```/g;
+    if (!mermaidRegex.test(markdownText)) return markdownText;
+    mermaidRegex.lastIndex = 0;
 
-    const htmlContent = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
-        <meta charset='utf-8'>
-        <title>Exported Document</title>
-        <style>
-          body { font-family: 'Inter', 'Segoe UI', sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; color: #000; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-          blockquote { border-left: 4px solid #ccc; padding-left: 1rem; color: #666; font-style: italic; }
-          pre { background-color: #f3f4f6; padding: 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
-          code { font-family: monospace; background-color: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 3px; }
-          img { max-width: 100%; height: auto; }
-        </style>
-      </head>
-      <body>
-        ${content}
-      </body>
-      </html>
-    `;
+    let processedText = markdownText;
+    const replacements: { oldMatch: string, newImage: string }[] = [];
 
-    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword;charset=utf-8' });
-    downloadBlob(blob, 'document.doc');
-    showToast('file-text', t('toast_exported_doc'));
+    // @ts-ignore
+    if (!window.mermaid) return markdownText;
+    // Disable HTML labels to prevent <foreignObject> tags which taint HTML canvases
+    // @ts-ignore
+    window.mermaid.initialize({ startOnLoad: false, htmlLabels: false });
+
+    let match;
+    let i = 0;
+    while ((match = mermaidRegex.exec(markdownText)) !== null) {
+      const fullMatch = match[0];
+      const mermaidCode = match[1];
+
+      try {
+        const id = `mermaid-export-${Date.now()}-${i++}`;
+        // @ts-ignore
+        const { svg } = await window.mermaid.render(id, mermaidCode);
+
+        const imgBase64 = await new Promise<string>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous'; // Prevent canvas tainting
+          
+          // Encode SVG natively to base64 Data URI instead of blob to improve security context handling
+          const svgBase64 = btoa(unescape(encodeURIComponent(svg)));
+          
+          img.onload = () => {
+             const canvas = document.createElement('canvas');
+             // Scale up 2x to ensure high-resolution rendering inside DOCX
+             const pixelRatio = 2;
+             const realWidth = img.width || 800;
+             const realHeight = img.height || 600;
+             
+             canvas.width = realWidth * pixelRatio;
+             canvas.height = realHeight * pixelRatio;
+             
+             const ctx = canvas.getContext('2d');
+             if(ctx) {
+               ctx.fillStyle = 'white'; 
+               ctx.fillRect(0, 0, canvas.width, canvas.height);
+               // Explicitly tell drawImage to draw with the scaled dimensions
+               ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+               try {
+                 resolve(canvas.toDataURL('image/png'));
+               } catch (err) {
+                 reject(new Error('Canvas tainted or export failed: ' + err));
+               }
+             } else {
+               reject(new Error('Canvas context failed'));
+             }
+          };
+          img.onerror = () => {
+             reject(new Error('Image failed to load SVG'));
+          };
+          
+          img.src = `data:image/svg+xml;base64,${svgBase64}`;
+        });
+
+        replacements.push({
+          oldMatch: fullMatch,
+          newImage: `![Mermaid Diagram](${imgBase64})`
+        });
+      } catch (err) {
+        console.error('Failed to parse a Mermaid diagram for export:', err);
+      }
+    }
+
+    for (const r of replacements) {
+      processedText = processedText.replace(r.oldMatch, r.newImage);
+    }
+    return processedText;
+  };
+
+  // --- Export Word (DOCX) ---
+  document.getElementById('export-doc-btn')?.addEventListener('click', async () => {
+    let text = getValue();
+    if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
+
+    try {
+      showToast('loader', 'Generating DOCX...');
+      // Substitute Mermaid Blocks to Inline PNGs natively
+      text = await convertMermaidToImageText(text);
+      // Prevent `markdown-docx` from failing to parse `$$` blocks that are glued to Headings or Paragraphs.
+      // We safely pad `$$` with empty lines, ONLY if it starts on a new line, to force block-parsing, without touching inner equation lines.
+      text = text.replace(/(^#+[^\n]+)\n+(^\$\$)/gm, '$1\n\n$2'); 
+      text = text.replace(/(?<!\n\n)(^\$\$)/gm, '\n\n$1');
+
+      const doc = await markdownDocx(text, {
+        document: {
+          title: 'Exported Document',
+        },
+        math: {
+          engine: 'katex',
+        },
+        imageAdapter: async (token) => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = async () => {
+              // Word page standard text width is ~600px
+              const MAX_WIDTH = 600; 
+              let finalWidth = img.width;
+              let finalHeight = img.height;
+
+              // Enforce scale down if the fetched image is larger than word page width
+              if (finalWidth > MAX_WIDTH) {
+                const ratio = MAX_WIDTH / finalWidth;
+                finalWidth = MAX_WIDTH;
+                finalHeight = img.height * ratio;
+              }
+
+              // Handle fetching data securely for DOCX packing
+              try {
+                // Determine format
+                let typeStr = 'png';
+                if (token.href.endsWith('.jpg') || token.href.endsWith('.jpeg')) typeStr = 'jpg';
+                if (token.href.endsWith('.gif')) typeStr = 'gif';
+                // Data URIs are inherently parsed automatically by fetch 
+                const rsp = await fetch(token.href);
+                const buf = await rsp.arrayBuffer();
+                resolve({
+                  type: typeStr as any,
+                  data: buf,
+                  width: finalWidth,
+                  height: finalHeight
+                });
+              } catch (e) {
+                 console.warn("Failed to fetch image for DOCX export", token.href, e);
+                 resolve(null);
+              }
+            };
+            img.onerror = () => resolve(null);
+            img.src = token.href;
+          });
+        }
+      });
+      // ============================================================
+      // Post-serialization: Fix structural issues in the DOCX XML
+      // ============================================================
+      // The markdown-docx library generates structurally broken OOXML:
+      //   1) Heading paragraphs have duplicate <w:pStyle> → invalid OOXML
+      //   2) Custom Md* styles cause style inheritance bugs in Word
+      //   3) Block math uses <m:oMath> (inline) instead of <m:oMathPara> (block)
+      //   4) No <m:mathPr> in settings.xml → Word has no math defaults
+      // User doesn't need complex styling — just correct content with defaults.
+      let blob = await Packer.toBlob(doc);
+      const zip = await JSZip.loadAsync(blob);
+
+      // --- Fix document.xml ---
+      let docXml = await zip.file('word/document.xml')!.async('string');
+
+      // 1) Remove duplicate <w:pStyle> in heading paragraphs
+      //    Keep only the standard Heading style, remove Md-prefixed duplicates
+      docXml = docXml.replace(
+        /<w:pStyle w:val="Heading(\d+)"\/><w:pStyle w:val="Md[^"]*"\/>/g,
+        '<w:pStyle w:val="Heading$1"/>'
+      );
+
+      // 2) Strip all custom Md* styles — use standard Word defaults instead
+      docXml = docXml.replace(/<w:pStyle w:val="MdParagraph"\/>/g, '');
+      docXml = docXml.replace(/<w:pStyle w:val="MdSpace"\/>/g, '');
+      docXml = docXml.replace(
+        /<w:pStyle w:val="ListParagraph"\/><w:pStyle w:val="MdListItem"\/>/g,
+        '<w:pStyle w:val="ListParagraph"/>'
+      );
+      docXml = docXml.replace(/<w:pStyle w:val="MdListItem"\/>/g, '<w:pStyle w:val="ListParagraph"/>');
+      docXml = docXml.replace(/<w:rStyle w:val="MdStrong"\/>/g, '');
+
+      // 3) Remove empty <w:pPr></w:pPr> left after stripping styles
+      docXml = docXml.replace(/<w:pPr><\/w:pPr>/g, '');
+
+      // 4) Wrap BLOCK math in <m:oMathPara>
+      //    Block = <m:oMath>...</m:oMath> is the ONLY content in a <w:p>
+      //    This does NOT touch inline math mixed with text runs
+      docXml = docXml.replace(
+        /<w:p>(<m:oMath>[\s\S]*?<\/m:oMath>)<\/w:p>/g,
+        '<w:p><m:oMathPara>$1</m:oMathPara></w:p>'
+      );
+      docXml = docXml.replace(
+        /(<w:p><w:pPr>[\s\S]*?<\/w:pPr>)(<m:oMath>[\s\S]*?<\/m:oMath>)<\/w:p>/g,
+        '$1<m:oMathPara>$2</m:oMathPara></w:p>'
+      );
+
+      // 5) Deduplicate oMathPara wrappers (safety net)
+      docXml = docXml.replace(/<m:oMathPara><m:oMathPara>/g, '<m:oMathPara>');
+      docXml = docXml.replace(/<\/m:oMathPara><\/m:oMathPara>/g, '</m:oMathPara>');
+
+      zip.file('word/document.xml', docXml);
+
+      // --- Fix 2: Add <m:mathPr> to word/settings.xml ---
+      const settingsXml = await zip.file('word/settings.xml')!.async('string');
+      if (!settingsXml.includes('m:mathPr')) {
+        const mathPr = '<m:mathPr xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">'
+          + '<m:mathFont m:val="Cambria Math"/>'
+          + '<m:brkBin m:val="before"/>'
+          + '<m:defJc m:val="centerGroup"/>'
+          + '<m:lMargin m:val="0"/>'
+          + '<m:rMargin m:val="0"/>'
+          + '<m:wrapIndent m:val="1440"/>'
+          + '</m:mathPr>';
+        zip.file('word/settings.xml', settingsXml.replace('</w:settings>', mathPr + '</w:settings>'));
+      }
+
+      blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+
+      downloadBlob(blob, 'document.docx');
+      showToast('file-text', t('toast_exported_doc'));
+    } catch (err) {
+      console.error('DOCX export error:', err);
+      showToast('alert-triangle', 'Failed to export DOCX');
+    }
   });
 
   // --- Clear ---

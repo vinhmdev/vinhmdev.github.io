@@ -20,6 +20,8 @@
     "astro": "^6.0.2",
     "codemirror": "^6.0.2",
     "firebase": "^12.10.0",
+    "jszip": "^3.10.1",
+    "markdown-docx": "^1.5.1",
     "tailwindcss": "^4.2.1"
   }
 }

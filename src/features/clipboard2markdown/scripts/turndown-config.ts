@@ -178,17 +178,37 @@ function preprocessHTML(html: string): string {
   return doc.body.innerHTML;
 }
 
-/**
- * Post-process Markdown output.
- */
-function postprocessMarkdown(md: string): string {
-  return md
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]+$/gm, '')
-    .replace(/([^\n])\n(#{1,6} )/g, '$1\n\n$2')
-    .replace(/(#{1,6} .+)\n([^\n#])/g, '$1\n\n$2')
-    .trim();
-}
+// @ts-ignore
+const originalEscape = TurndownService.prototype.escape;
+
+// @ts-ignore
+TurndownService.prototype.escape = function (string: string) {
+  const mathRegex = /(\$\$.+?\$\$|\$.+?\$)/gs;
+
+  let result = '';
+  let lastIndex = 0;
+  let match;
+
+  while ((match = mathRegex.exec(string)) !== null) {
+    // Escape the text before the math block natively
+    const before = string.slice(lastIndex, match.index);
+    if (before) {
+      result += originalEscape.call(this, before);
+    }
+
+    // Append the math block exactly as is, completely un-escaped
+    result += match[0];
+    lastIndex = mathRegex.lastIndex;
+  }
+
+  // Escape any remaining text at the end of the string
+  const remaining = string.slice(lastIndex);
+  if (remaining) {
+    result += originalEscape.call(this, remaining);
+  }
+
+  return result;
+};
 
 /**
  * Create and configure Turndown instance with custom rules.
@@ -262,5 +282,5 @@ export function convert(html: string): string {
   const cleanedHTML = preprocessHTML(html);
   const instance = getInstance();
   const rawMD = instance.turndown(cleanedHTML);
-  return postprocessMarkdown(rawMD);
+  return rawMD.trim();
 }
