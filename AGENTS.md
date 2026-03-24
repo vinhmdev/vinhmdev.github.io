@@ -1,4 +1,4 @@
-# Vinh Nguyen AI Agent Context
+# AI Agent Context
 
 ## System Prompts
 
