@@ -183,15 +183,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
     showToast('loader', 'Formatting...');
     try {
-      // @ts-ignore
-      if (typeof window.prettier === 'undefined') {
+      if (typeof (window as any).prettier === 'undefined') {
         await loadScript('https://unpkg.com/prettier@3.2.5/standalone.js');
         await loadScript('https://unpkg.com/prettier@3.2.5/plugins/markdown.js');
       }
-      // @ts-ignore
-      const formatted = await window.prettier.format(text, {
+      const formatted = await (window as any).prettier.format(text, {
         parser: 'markdown',
-        plugins: window.prettierPlugins,
+        plugins: (window as any).prettierPlugins,
       });
       setValue(formatted);
       focus();
@@ -212,19 +210,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const compacted = text
       .split('\n')
       .map((line) => {
+        const matchIndent = line.match(/^\s*/);
+        const indent = matchIndent ? matchIndent[0] : '';
         const trimmed = line.trim();
+
         if (trimmed.startsWith('```')) {
           inCodeBlock = !inCodeBlock;
           return line.trimEnd();
         }
         if (inCodeBlock) return line.trimEnd();
 
+        // Skip standard Markdown indented code blocks (>= 4 spaces or tab)
+        if (indent.length >= 4 || indent.includes('\t')) return line.trimEnd();
+
         if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-          const cells = trimmed.split(/(?<!\\)\|/).map((c) => c.trim());
-          const compactedCells = cells.map((c) =>
-            /^:?-+:?$/.test(c) ? c.replace(/-+/g, '---') : c.replace(/ {2,}/g, ' ')
-          );
-          return compactedCells.join(' | ').trim();
+          const cells = trimmed.split(/(?<!\\)\|/);
+          // Ensure it's a valid table row format (at least 1 column -> 3 elements: ['', 'cell', ''])
+          if (
+            cells.length >= 3 &&
+            cells[0].trim() === '' &&
+            cells[cells.length - 1].trim() === ''
+          ) {
+            const compactedCells = cells.map((c) => {
+              const tc = c.trim();
+              return /^:?-+:?$/.test(tc) ? tc.replace(/-+/g, '---') : tc.replace(/ {2,}/g, ' ');
+            });
+            // Keep the original indentation
+            return indent + compactedCells.join(' | ').trim();
+          }
         }
         return line.trimEnd();
       })
