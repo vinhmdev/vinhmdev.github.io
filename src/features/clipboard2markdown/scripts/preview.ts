@@ -48,11 +48,14 @@ const DOMPURIFY_CONFIG: Parameters<typeof DOMPurify.sanitize>[1] = {
   ],
 };
 
-// Open all links from preview in a new tab
+// Open all external links from preview in a new tab (skip internal anchors)
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (node.tagName === 'A') {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
+    const href = node.getAttribute('href') || '';
+    if (!href.startsWith('#')) {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer');
+    }
   }
 });
 
@@ -82,7 +85,7 @@ function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
     .use(resolvePlugin(container), 'danger')
     .use(resolvePlugin(container), 'success')
     .use(resolvePlugin(container), 'details')
-    .use(resolvePlugin(anchor), { permalink: resolvePlugin(anchor).permalink?.headerLink?.() })
+    .use(resolvePlugin(anchor))
     .use(resolvePlugin(toc));
 
   if (renderLatex) {
