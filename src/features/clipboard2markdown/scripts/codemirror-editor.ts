@@ -2,12 +2,26 @@
  * CodeMirror 6 wrapper for Clipboard2Markdown editor.
  * Provides a clean API for the main app to interact with.
  */
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, rectangularSelection } from '@codemirror/view';
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  drawSelection,
+  rectangularSelection,
+} from '@codemirror/view';
 import { EditorState, Compartment, EditorSelection } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle, indentOnInput, bracketMatching } from '@codemirror/language';
+import {
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  HighlightStyle,
+  indentOnInput,
+  bracketMatching,
+} from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 
@@ -23,9 +37,24 @@ interface HighlightColors {
 
 function buildHighlightStyle(colors: HighlightColors) {
   return HighlightStyle.define([
-    { tag: tags.heading1, fontWeight: '700', fontSize: '1.4em', color: colors.heading },
-    { tag: tags.heading2, fontWeight: '700', fontSize: '1.25em', color: colors.heading },
-    { tag: tags.heading3, fontWeight: '600', fontSize: '1.1em', color: colors.heading },
+    {
+      tag: tags.heading1,
+      fontWeight: '700',
+      fontSize: '1.4em',
+      color: colors.heading,
+    },
+    {
+      tag: tags.heading2,
+      fontWeight: '700',
+      fontSize: '1.25em',
+      color: colors.heading,
+    },
+    {
+      tag: tags.heading3,
+      fontWeight: '600',
+      fontSize: '1.1em',
+      color: colors.heading,
+    },
     { tag: tags.heading4, fontWeight: '600', color: colors.heading },
     { tag: tags.heading5, fontWeight: '600', color: colors.heading },
     { tag: tags.heading6, fontWeight: '600', color: colors.heading },
@@ -34,7 +63,12 @@ function buildHighlightStyle(colors: HighlightColors) {
     { tag: tags.strikethrough, textDecoration: 'line-through' },
     { tag: tags.link, color: colors.link, textDecoration: 'underline' },
     { tag: tags.url, color: colors.link },
-    { tag: tags.monospace, fontFamily: "'JetBrains Mono', monospace", backgroundColor: colors.monoBg, borderRadius: '3px' },
+    {
+      tag: tags.monospace,
+      fontFamily: "'JetBrains Mono', monospace",
+      backgroundColor: colors.monoBg,
+      borderRadius: '3px',
+    },
     { tag: tags.quote, color: colors.quote, fontStyle: 'italic' },
     { tag: tags.meta, color: colors.meta },
     { tag: tags.processingInstruction, color: colors.meta }, // markdown markers like **, ##
@@ -123,7 +157,9 @@ function getHighlightExtensions() {
 // --- Singleton module state — one editor instance per page ---
 let editorView: EditorView | null = null;
 let updateCallbacks: Array<(value: string) => void> = [];
-let scrollCallbacks: Array<(info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void> = [];
+let scrollCallbacks: Array<
+  (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void
+> = [];
 let pasteCallback: ((html: string, plain: string) => string | null) | null = null;
 
 /**
@@ -143,12 +179,7 @@ export function createEditor(parent: HTMLElement): EditorView {
       bracketMatching(),
       highlightSelectionMatches(),
       markdown({ base: markdownLanguage, codeLanguages: languages }),
-      keymap.of([
-        ...defaultKeymap,
-        ...historyKeymap,
-        ...searchKeymap,
-        indentWithTab,
-      ]),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const value = update.state.doc.toString();
@@ -163,7 +194,9 @@ export function createEditor(parent: HTMLElement): EditorView {
           if (!clipboard) return false;
 
           const html = clipboard.types.includes('text/html') ? clipboard.getData('text/html') : '';
-          const plain = clipboard.types.includes('text/plain') ? clipboard.getData('text/plain') : '';
+          const plain = clipboard.types.includes('text/plain')
+            ? clipboard.getData('text/plain')
+            : '';
           const result = pasteCallback(html, plain);
           if (result === null) return false;
 
@@ -221,7 +254,6 @@ export function setValue(text: string): void {
   });
 }
 
-
 /** Register a callback for content changes. */
 export function onUpdate(callback: (value: string) => void): void {
   updateCallbacks.push(callback);
@@ -239,7 +271,9 @@ export function onPaste(callback: (html: string, plain: string) => string | null
 }
 
 /** Register a callback for scroll events. */
-export function onScroll(callback: (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void): void {
+export function onScroll(
+  callback: (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void
+): void {
   scrollCallbacks.push(callback);
 }
 

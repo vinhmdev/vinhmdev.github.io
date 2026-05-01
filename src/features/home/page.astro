@@ -9,6 +9,7 @@ import { t, defaultLang } from '@i18n/ui';
 
 const lang = defaultLang;
 ---
+
 <BaseLayout
   title={t(lang, 'site_title')}
   description={t(lang, 'site_description')}
@@ -26,19 +27,31 @@ const lang = defaultLang;
     <!-- Logo -->
     <div class="logo-ring">
       <picture>
-        <source srcset="/internal/favicon-dark/web-app-manifest-192x192.png" media="(prefers-color-scheme: dark)" />
-        <img src="/internal/favicon/web-app-manifest-192x192.png" alt="VinhMDev" width="80" height="80" class="rounded-full block" />
+        <source
+          srcset="/internal/favicon-dark/web-app-manifest-192x192.png"
+          media="(prefers-color-scheme: dark)"
+        />
+        <img
+          src="/internal/favicon/web-app-manifest-192x192.png"
+          alt="VinhMDev"
+          width="80"
+          height="80"
+          class="rounded-full block"
+        />
       </picture>
     </div>
 
-    <h1 class="text-[2.5rem] font-extrabold tracking-tight bg-gradient-to-br from-[#f5f5f5] to-[#a3a3a3] bg-clip-text text-transparent mb-2">
+    <h1
+      class="text-[2.5rem] font-extrabold tracking-tight bg-gradient-to-br from-[#f5f5f5] to-[#a3a3a3] bg-clip-text text-transparent mb-2"
+    >
       {t(lang, 'site_title')}
     </h1>
 
     <!-- Parent site reference — subtle, inline -->
     <p class="text-[#a3a3a3] text-sm mb-10 leading-relaxed">
       {t(lang, 'site_subtitle')} &mdash;
-      <a href="https://vinhmdev.com" target="_blank" class="parent-ref">{t(lang, 'nav_vinhmdev')}</a>
+      <a href="https://vinhmdev.com" target="_blank" class="parent-ref">{t(lang, 'nav_vinhmdev')}</a
+      >
     </p>
 
     <!-- Tools section label -->
@@ -48,7 +61,6 @@ const lang = defaultLang;
 
     <!-- Tools Grid -->
     <div class="flex flex-col gap-4">
-
       <a href="/clipboard2markdown/" class="tool-card" id="tool-clipboard2md">
         <div class="tool-icon">📋</div>
         <div class="tool-info">
@@ -57,7 +69,6 @@ const lang = defaultLang;
         </div>
         <ArrowIcon />
       </a>
-
     </div>
   </div>
 </BaseLayout>

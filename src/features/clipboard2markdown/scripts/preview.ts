@@ -12,39 +12,104 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 import katex from 'katex';
-import * as texmath    from 'markdown-it-texmath';
-import taskLists       from 'markdown-it-task-lists';
-import deflist         from 'markdown-it-deflist';
-import footnote        from 'markdown-it-footnote';
-import mark            from 'markdown-it-mark';
-import sub             from 'markdown-it-sub';
-import sup             from 'markdown-it-sup';
-import ins             from 'markdown-it-ins';
-import abbr            from 'markdown-it-abbr';
-import container       from 'markdown-it-container';
+import * as texmath from 'markdown-it-texmath';
+import taskLists from 'markdown-it-task-lists';
+import deflist from 'markdown-it-deflist';
+import footnote from 'markdown-it-footnote';
+import mark from 'markdown-it-mark';
+import sub from 'markdown-it-sub';
+import sup from 'markdown-it-sup';
+import ins from 'markdown-it-ins';
+import abbr from 'markdown-it-abbr';
+import container from 'markdown-it-container';
 import { full as emoji } from 'markdown-it-emoji';
-import anchor          from 'markdown-it-anchor';
-import toc             from 'markdown-it-toc-done-right';
-import githubAlerts    from 'markdown-it-github-alerts';
-import attrs           from 'markdown-it-attrs';
+import anchor from 'markdown-it-anchor';
+import toc from 'markdown-it-toc-done-right';
+import githubAlerts from 'markdown-it-github-alerts';
+import attrs from 'markdown-it-attrs';
 import { PreviewRenderer } from './preview-renderer';
 
 // ─── DOMPurify config — allow SVG/math elements for Mermaid + KaTeX ──────────
 const DOMPURIFY_CONFIG: Parameters<typeof DOMPurify.sanitize>[1] = {
   ADD_TAGS: [
-    'svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline',
-    'polygon', 'text', 'tspan', 'defs', 'marker', 'foreignObject', 'use',
-    'clipPath', 'style', 'span', 'math', 'mrow', 'mi', 'mo', 'mn', 'msup',
-    'msub', 'mfrac', 'mover', 'munder', 'msqrt', 'mtext', 'semantics', 'annotation',
+    'svg',
+    'g',
+    'path',
+    'rect',
+    'circle',
+    'ellipse',
+    'line',
+    'polyline',
+    'polygon',
+    'text',
+    'tspan',
+    'defs',
+    'marker',
+    'foreignObject',
+    'use',
+    'clipPath',
+    'style',
+    'span',
+    'math',
+    'mrow',
+    'mi',
+    'mo',
+    'mn',
+    'msup',
+    'msub',
+    'mfrac',
+    'mover',
+    'munder',
+    'msqrt',
+    'mtext',
+    'semantics',
+    'annotation',
   ],
   ADD_ATTR: [
-    'viewBox', 'xmlns', 'fill', 'stroke', 'stroke-width', 'd', 'transform',
-    'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry',
-    'width', 'height', 'points', 'marker-end', 'refX', 'refY', 'orient',
-    'markerWidth', 'markerHeight', 'text-anchor', 'dominant-baseline',
-    'font-size', 'font-family', 'font-weight', 'class', 'id', 'style',
-    'clip-path', 'aria-label', 'role', 'tabindex', 'xmlns:xlink',
-    'xlink:href', 'href', 'overflow', 'preserveAspectRatio',
+    'viewBox',
+    'xmlns',
+    'fill',
+    'stroke',
+    'stroke-width',
+    'd',
+    'transform',
+    'x',
+    'y',
+    'x1',
+    'y1',
+    'x2',
+    'y2',
+    'cx',
+    'cy',
+    'r',
+    'rx',
+    'ry',
+    'width',
+    'height',
+    'points',
+    'marker-end',
+    'refX',
+    'refY',
+    'orient',
+    'markerWidth',
+    'markerHeight',
+    'text-anchor',
+    'dominant-baseline',
+    'font-size',
+    'font-family',
+    'font-weight',
+    'class',
+    'id',
+    'style',
+    'clip-path',
+    'aria-label',
+    'role',
+    'tabindex',
+    'xmlns:xlink',
+    'xlink:href',
+    'href',
+    'overflow',
+    'preserveAspectRatio',
   ],
 };
 

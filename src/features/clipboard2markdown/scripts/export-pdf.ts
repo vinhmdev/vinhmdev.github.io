@@ -10,8 +10,7 @@ import { downloadBlob } from './utils';
 // PDF always uses light theme for print quality
 const PDF_GITHUB_MD_URL =
   'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.css';
-const PDF_KATEX_URL =
-  'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css';
+const PDF_KATEX_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css';
 
 function buildPrintDocument(content: string): string {
   return `<!DOCTYPE html>
@@ -62,7 +61,7 @@ export function initExportPDF(
   getPreviewHTML: () => string,
   isDark: () => boolean,
   showToast: (icon: string, msg: string) => void,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): void {
   document.getElementById('export-pdf-btn')?.addEventListener('click', async () => {
     const html = getPreviewHTML();
@@ -83,7 +82,11 @@ export function initExportPDF(
 
       const wrappers = tempDiv.querySelectorAll('.mermaid-wrapper[data-original-code]');
       if (wrappers.length > 0) {
-        mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+        });
         let i = 0;
         for (const wrapper of wrappers) {
           const code = wrapper.getAttribute('data-original-code');
@@ -97,7 +100,11 @@ export function initExportPDF(
           }
         }
         // Restore dark theme for live preview
-        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          securityLevel: 'loose',
+        });
         content = tempDiv.innerHTML;
       }
     }

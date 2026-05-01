@@ -27,7 +27,7 @@ export function t(lang: string, key: string): string {
  */
 export function mergeTranslations(
   lang: string,
-  toolStrings: Record<string, Record<string, string>>,
+  toolStrings: Record<string, Record<string, string>>
 ): Record<string, string> {
   const l = (lang in languages ? lang : defaultLang) as Lang;
   return {

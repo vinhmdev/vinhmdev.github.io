@@ -27,7 +27,13 @@ import {
   scrollTo,
 } from './codemirror-editor';
 import { initSettings } from './settings';
-import { initPreview, renderPreview, syncPreviewTheme, invalidateParser, getRenderer } from './preview';
+import {
+  initPreview,
+  renderPreview,
+  syncPreviewTheme,
+  invalidateParser,
+  getRenderer,
+} from './preview';
 import { initExportPDF } from './export-pdf';
 import { initExportDocx } from './export-docx';
 
@@ -46,11 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const isDark = (): boolean => document.documentElement.classList.contains('dark');
 
   // ─── Empty-state visibility helpers ─────────────────────────────────────────
-  const emptyState        = document.getElementById('empty-state') as HTMLDivElement;
+  const emptyState = document.getElementById('empty-state') as HTMLDivElement;
   const previewEmptyState = document.getElementById('preview-empty-state') as HTMLDivElement;
 
   function updateEmptyStates(val: string): void {
-    emptyState.style.opacity        = val ? '0' : '1';
+    emptyState.style.opacity = val ? '0' : '1';
     previewEmptyState.style.opacity = val ? '0' : '1';
   }
 
@@ -58,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function getRenderOpts() {
     return {
       renderMermaid: settings.get('renderMermaid'),
-      renderLatex:   settings.get('renderLatex'),
-      isDark:        isDark(),
+      renderLatex: settings.get('renderLatex'),
+      isDark: isDark(),
     };
   }
 
@@ -83,7 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Re-render when toggle settings change
-  settings.onChange('renderLatex',   () => { invalidateParser(); renderPreview(getValue(), getRenderOpts()); });
+  settings.onChange('renderLatex', () => {
+    invalidateParser();
+    renderPreview(getValue(), getRenderOpts());
+  });
   settings.onChange('renderMermaid', () => renderPreview(getValue(), getRenderOpts()));
 
   // ─── Theme change ────────────────────────────────────────────────────────────
@@ -95,8 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (settings.get('renderMermaid') && getValue()) {
       renderPreview(getValue(), {
         renderMermaid: settings.get('renderMermaid'),
-        renderLatex:   settings.get('renderLatex'),
-        isDark:        newThemeIsDark,
+        renderLatex: settings.get('renderLatex'),
+        isDark: newThemeIsDark,
       });
     }
   });
@@ -109,26 +118,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!settings.get('syncScroll') || isSyncingScroll) return;
     isSyncingScroll = true;
     const ratio = info.scrollTop / (info.scrollHeight - info.clientHeight || 1);
-    previewScrollEl.scrollTop = ratio * (previewScrollEl.scrollHeight - previewScrollEl.clientHeight);
-    requestAnimationFrame(() => { isSyncingScroll = false; });
+    previewScrollEl.scrollTop =
+      ratio * (previewScrollEl.scrollHeight - previewScrollEl.clientHeight);
+    requestAnimationFrame(() => {
+      isSyncingScroll = false;
+    });
   });
 
   previewScrollEl.addEventListener('scroll', () => {
     if (!settings.get('syncScroll') || isSyncingScroll) return;
     isSyncingScroll = true;
-    const ratio = previewScrollEl.scrollTop / (previewScrollEl.scrollHeight - previewScrollEl.clientHeight || 1);
+    const ratio =
+      previewScrollEl.scrollTop /
+      (previewScrollEl.scrollHeight - previewScrollEl.clientHeight || 1);
     const scrollDOM = getScrollDOM();
     if (scrollDOM) scrollTo(ratio * (scrollDOM.scrollHeight - scrollDOM.clientHeight));
-    requestAnimationFrame(() => { isSyncingScroll = false; });
+    requestAnimationFrame(() => {
+      isSyncingScroll = false;
+    });
   });
 
   // ─── Export handlers ─────────────────────────────────────────────────────────
-  initExportPDF(
-    () => getRenderer()?.getHTML() ?? '',
-    isDark,
-    showToast,
-    t,
-  );
+  initExportPDF(() => getRenderer()?.getHTML() ?? '', isDark, showToast, t);
 
   initExportDocx(getValue, showToast, t);
 
@@ -156,7 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = url;
-      script.onload = () => { loadedScripts.add(url); resolve(); };
+      script.onload = () => {
+        loadedScripts.add(url);
+        resolve();
+      };
       script.onerror = () => reject(new Error(`Failed to load script ${url}`));
       document.head.appendChild(script);
     });
@@ -173,7 +187,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadScript('https://unpkg.com/prettier@3.2.5/plugins/markdown.js');
       }
       // @ts-ignore
-      const formatted = await window.prettier.format(text, { parser: 'markdown', plugins: window.prettierPlugins });
+      const formatted = await window.prettier.format(text, {
+        parser: 'markdown',
+        plugins: window.prettierPlugins,
+      });
       setValue(formatted);
       showToast('wand-sparkles', t('toast_formatted'));
     } catch (err) {
@@ -186,13 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clear-btn')?.addEventListener('click', () => {
     setValue('');
     getRenderer()?.clear();
-    emptyState.style.opacity        = '1';
+    emptyState.style.opacity = '1';
     previewEmptyState.style.opacity = '1';
     showToast('trash', t('toast_cleared'));
   });
 
   // ─── Settings dropdown ────────────────────────────────────────────────────────
-  const settingsBtn   = document.getElementById('settings-btn');
+  const settingsBtn = document.getElementById('settings-btn');
   const settingsPanel = document.getElementById('settings-panel');
   if (settingsBtn && settingsPanel) {
     settingsBtn.addEventListener('click', (e) => {

@@ -23,7 +23,7 @@ const HEADING_PX_THRESHOLDS = [
  */
 function matchHeadingTag(
   size: number,
-  thresholds: ReadonlyArray<{ minSize: number; tag: string }>,
+  thresholds: ReadonlyArray<{ minSize: number; tag: string }>
 ): string | null {
   for (const { minSize, tag } of thresholds) {
     if (size >= minSize) return tag;
@@ -177,8 +177,6 @@ function preprocessHTML(html: string): string {
 
   return doc.body.innerHTML;
 }
-
-
 
 /**
  * Create and configure Turndown instance with custom rules.

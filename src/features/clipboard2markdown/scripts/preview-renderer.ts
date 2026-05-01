@@ -17,11 +17,11 @@
 // ─── CSS imports (bundled by Vite as inline strings) ─────────────────────────
 // These are injected into the shadow root — global CSS cannot affect them.
 import githubMdLight from 'github-markdown-css/github-markdown-light.css?inline';
-import githubMdDark  from 'github-markdown-css/github-markdown-dark.css?inline';
-import hljsLight     from 'highlight.js/styles/github.min.css?inline';
-import hljsDark      from 'highlight.js/styles/github-dark.min.css?inline';
-import katexCss      from 'katex/dist/katex.min.css?inline';
-import alertsCss     from 'markdown-it-github-alerts/styles/github-base.css?inline';
+import githubMdDark from 'github-markdown-css/github-markdown-dark.css?inline';
+import hljsLight from 'highlight.js/styles/github.min.css?inline';
+import hljsDark from 'highlight.js/styles/github-dark.min.css?inline';
+import katexCss from 'katex/dist/katex.min.css?inline';
+import alertsCss from 'markdown-it-github-alerts/styles/github-base.css?inline';
 import previewOverridesCss from '../styles/preview-overrides.css?inline';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,13 +39,13 @@ export class PreviewRenderer {
 
     // Inject all styles as <style> elements (bundled CSS strings, zero CDN requests)
     this.githubMdStyle = this._mkStyle(githubMdLight);
-    this.hljsStyle     = this._mkStyle(hljsLight);
+    this.hljsStyle = this._mkStyle(hljsLight);
     this.shadow.append(
       this.githubMdStyle,
       this.hljsStyle,
       this._mkStyle(katexCss),
       this._mkStyle(alertsCss),
-      this._mkStyle(previewOverridesCss),
+      this._mkStyle(previewOverridesCss)
     );
 
     // Content container
@@ -62,8 +62,8 @@ export class PreviewRenderer {
    * The 'dark' class on .markdown-body drives supplemental dark overrides.
    */
   setColorMode(isDark: boolean): void {
-    this.githubMdStyle.textContent = isDark ? githubMdDark  : githubMdLight;
-    this.hljsStyle.textContent     = isDark ? hljsDark      : hljsLight;
+    this.githubMdStyle.textContent = isDark ? githubMdDark : githubMdLight;
+    this.hljsStyle.textContent = isDark ? hljsDark : hljsLight;
     this.bodyEl.classList.toggle('dark', isDark);
   }
 

@@ -19,7 +19,7 @@ import { downloadBlob } from './utils';
 export function initExportDocx(
   getValue: () => string,
   showToast: (icon: string, msg: string) => void,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): void {
   document.getElementById('export-doc-btn')?.addEventListener('click', async () => {
     const text = getValue();
@@ -28,9 +28,13 @@ export function initExportDocx(
     // Temporarily intercept fetch to bypass CORS for online images
     const originalFetch = window.fetch;
     window.fetch = async (input, init) => {
-      let url = typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
+      let url =
+        typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
       // Prefix with cors-proxy to bypass CORS restrictions if it's an external HTTP/HTTPS URL
-      if ((url.startsWith('http://') || url.startsWith('https://')) && !url.includes('cors-proxy.vinhmdev.com')) {
+      if (
+        (url.startsWith('http://') || url.startsWith('https://')) &&
+        !url.includes('cors-proxy.vinhmdev.com')
+      ) {
         url = `https://cors-proxy.vinhmdev.com/?url=${encodeURIComponent(url)}`;
       }
       return originalFetch(url, init);
@@ -39,7 +43,7 @@ export function initExportDocx(
     try {
       showToast('loader', 'Generating DOCX...');
 
-      const blob = await md2docx(
+      const blob = (await md2docx(
         text,
         {
           document: {
@@ -55,7 +59,7 @@ export function initExportDocx(
             },
           },
         }
-      ) as Blob;
+      )) as Blob;
 
       downloadBlob(blob, 'document.docx');
       showToast('file-text', t('toast_exported_doc'));

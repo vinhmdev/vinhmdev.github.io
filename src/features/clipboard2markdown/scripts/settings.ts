@@ -6,20 +6,20 @@
  */
 
 const STORAGE_KEYS = {
-  autoConvert:   'c2md-autoconvert',
+  autoConvert: 'c2md-autoconvert',
   renderMermaid: 'c2md-render-mermaid',
-  renderLatex:   'c2md-render-latex',
-  syncScroll:    'c2md-sync-scroll',
+  renderLatex: 'c2md-render-latex',
+  syncScroll: 'c2md-sync-scroll',
 } as const;
 
 type SettingKey = keyof typeof STORAGE_KEYS;
 
 // Map setting key → checkbox element ID
 const ELEMENT_IDS: Record<SettingKey, string> = {
-  autoConvert:   'auto-convert-toggle',
+  autoConvert: 'auto-convert-toggle',
   renderMermaid: 'render-mermaid-toggle',
-  renderLatex:   'render-latex-toggle',
-  syncScroll:    'sync-scroll-toggle',
+  renderLatex: 'render-latex-toggle',
+  syncScroll: 'sync-scroll-toggle',
 };
 
 function loadFromStorage(key: SettingKey): boolean {
