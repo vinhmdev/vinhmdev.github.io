@@ -1,3 +1,3 @@
 run:
-	npm run dev
+	npx astro dev
 	

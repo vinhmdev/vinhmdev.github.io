@@ -16,6 +16,7 @@
     "@astrojs/sitemap": "^3.7.1",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/language-data": "^6.5.2",
+    "@m2d/md2docx": "^0.0.1",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^6.0.2",
     "codemirror": "^6.0.2",

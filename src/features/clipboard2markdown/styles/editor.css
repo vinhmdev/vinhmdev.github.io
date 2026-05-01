@@ -1,5 +1,10 @@
 /* ===== Clipboard2Markdown Editor Styles =====
-   Wrapped in @layer components so Tailwind utilities can override.
+   UI chrome styles for the editor/preview shell.
+   Uses CSS variables from global.css @theme — changes to the website's
+   color palette automatically propagate here.
+
+   NOTE: Preview pane CSS is NOT here. It lives inside the Shadow DOM
+   managed by PreviewRenderer — fully isolated from these styles.
    ========================================== */
 
 @layer components {
@@ -21,10 +26,10 @@
       min-width: 0;
     }
     .editor-pane {
-      border-right: 1px solid #D4D4D4;
+      border-right: 1px solid var(--color-neutral-300);
     }
     :global(.dark) .editor-pane {
-      border-right-color: #404040;
+      border-right-color: var(--color-neutral-700);
     }
     .tab-buttons-mobile {
       display: none !important;
@@ -48,17 +53,17 @@
     transition: all 0.15s;
     border: none;
     background: transparent;
-    color: #737373;
+    color: var(--color-neutral-500);
     cursor: pointer;
   }
   :global(.dark) .tab-buttons-mobile button {
-    color: #A3A3A3;
+    color: var(--color-neutral-400);
   }
   .tab-buttons-mobile button:hover {
-    color: #404040;
+    color: var(--color-neutral-700);
   }
   :global(.dark) .tab-buttons-mobile button:hover {
-    color: #D4D4D4;
+    color: var(--color-neutral-300);
   }
   .tab-buttons-mobile button[data-active="true"] {
     background: white;
@@ -66,7 +71,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   :global(.dark) .tab-buttons-mobile button[data-active="true"] {
-    background: #525252;
+    background: var(--color-neutral-600);
   }
 
   /* Pane structure */
@@ -90,12 +95,12 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #A3A3A3;
-    border-bottom: 1px solid #D4D4D4;
+    color: var(--color-neutral-400);
+    border-bottom: 1px solid var(--color-neutral-300);
     flex-shrink: 0;
   }
   :global(.dark) .pane-header {
-    border-bottom-color: #404040;
+    border-bottom-color: var(--color-neutral-700);
   }
   @media (min-width: 1024px) {
     .pane-header { display: flex; }
@@ -122,13 +127,21 @@
     background-color: transparent;
   }
   :global(.dark) #codemirror-host .cm-editor .cm-content {
-    caret-color: #fb923c;
+    caret-color: var(--color-primary-400);
   }
   :global(.dark) #codemirror-host .cm-editor .cm-cursor {
-    border-left-color: #fb923c;
+    border-left-color: var(--color-primary-400);
   }
   :global(.dark) #codemirror-host .cm-editor .cm-activeLine {
-    background-color: rgba(251, 146, 60, 0.06);
+    background-color: color-mix(in srgb, var(--color-primary-400) 6%, transparent);
+  }
+
+  /* preview-host: Shadow DOM host — fills pane-body, scroll handled inside shadow root */
+  #preview-host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
 
   /* ===== Action Bars ===== */
@@ -137,11 +150,11 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-top: 1px solid #D4D4D4;
+    border-top: 1px solid var(--color-neutral-300);
     flex-shrink: 0;
   }
   :global(.dark) .pane-actions {
-    border-top-color: #404040;
+    border-top-color: var(--color-neutral-700);
   }
 
   /* ===== Settings Dropdown ===== */
@@ -155,8 +168,8 @@
     right: 0;
     min-width: 220px;
     padding: 0.5rem;
-    background: white;
-    border: 1px solid #D4D4D4;
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-300);
     border-radius: 0.75rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     z-index: 100;
@@ -164,8 +177,8 @@
     gap: 0.25rem;
   }
   :global(.dark) .settings-panel {
-    background: #262626;
-    border-color: #404040;
+    background: var(--color-neutral-800);
+    border-color: var(--color-neutral-700);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
   .settings-panel.open {
@@ -181,10 +194,10 @@
     cursor: pointer;
   }
   .settings-item:hover {
-    background: #F5F5F5;
+    background: var(--color-neutral-100);
   }
   :global(.dark) .settings-item:hover {
-    background: #404040;
+    background: var(--color-neutral-700);
   }
 
   /* ===== Toggle Switch ===== */
@@ -203,7 +216,7 @@
     position: absolute;
     cursor: pointer;
     inset: 0;
-    background: #D4D4D4;
+    background: var(--color-neutral-300);
     border-radius: 20px;
     transition: background 0.25s;
   }
@@ -219,7 +232,7 @@
     transition: transform 0.25s;
   }
   .toggle-switch input:checked + .toggle-slider {
-    background: #f97316;
+    background: var(--color-primary);
   }
   .toggle-switch input:checked + .toggle-slider::before {
     transform: translateX(16px);
@@ -254,29 +267,29 @@
   .action-btn:active { transform: scale(0.95); }
 
   .action-btn-primary {
-    background: #f97316;
+    background: var(--color-primary);
     color: white;
-    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
   }
-  .action-btn-primary:hover { background: #ea580c; }
+  .action-btn-primary:hover { background: var(--color-primary-hover); }
 
   .action-btn-secondary {
-    background: #F5F5F5;
-    color: #525252;
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-600);
   }
   :global(.dark) .action-btn-secondary {
-    background: #262626;
-    color: #A3A3A3;
+    background: var(--color-neutral-800);
+    color: var(--color-neutral-400);
   }
-  .action-btn-secondary:hover { background: #D4D4D4; }
-  :global(.dark) .action-btn-secondary:hover { background: #404040; }
+  .action-btn-secondary:hover { background: var(--color-neutral-300); }
+  :global(.dark) .action-btn-secondary:hover { background: var(--color-neutral-700); }
 
   .action-btn-ghost {
     background: transparent;
-    color: #737373;
+    color: var(--color-neutral-500);
     padding: 0.375rem;
   }
-  .action-btn-ghost:hover { background: #F5F5F5; }
-  :global(.dark) .action-btn-ghost:hover { background: #262626; }
+  .action-btn-ghost:hover { background: var(--color-neutral-100); }
+  :global(.dark) .action-btn-ghost:hover { background: var(--color-neutral-800); }
 
 } /* end @layer components */

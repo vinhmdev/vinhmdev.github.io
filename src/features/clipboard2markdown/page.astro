@@ -13,7 +13,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   showFooter={false}
 >
   <Fragment slot="head">
-    <!-- Google Fonts: Inter (preview pane typography) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -37,13 +37,13 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     <script is:inline src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
     <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"></script>
 
-
-
-    <!-- KaTeX and markdown-it-texmath: LaTeX math rendering -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" crossorigin="anonymous" />
+    <!-- KaTeX: LaTeX math rendering (script only — CSS injected by PreviewRenderer into shadow DOM) -->
     <script is:inline src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/css/texmath.css" crossorigin="anonymous" />
     <script is:inline src="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/texmath.js" crossorigin="anonymous"></script>
+
+    <!-- highlight.js: syntax highlighting for code blocks (injected into shadow DOM by PreviewRenderer) -->
+    <script is:inline src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
 
     <!-- Mermaid: diagram rendering -->
     <script is:inline src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
@@ -124,6 +124,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         </button>
       </div>
     </header>
+
     <!-- ===== Mobile Tab Buttons ===== -->
     <div class="tab-buttons-mobile flex lg:hidden p-1 bg-neutral-200/50 dark:bg-neutral-800/50 rounded-xl w-fit mx-auto flex-shrink-0 my-1">
       <button id="tab-edit-btn" data-active="true">
@@ -176,14 +177,22 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
             <span data-i18n="label_preview">Preview</span>
           </div>
-          <div class="pane-body">
-            <div id="preview-content"></div>
-            <div id="preview-empty-state" class="empty-state">
-              <div class="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-3">
-                <i data-lucide="eye" class="w-6 h-6 text-neutral-400"></i>
-              </div>
-              <p class="text-neutral-400 font-medium text-sm" data-i18n="empty_state">Paste (Ctrl+V) your content here...</p>
+          <!--
+            preview-host: Shadow DOM host element.
+            PreviewRenderer attaches a shadow root here and injects:
+              - github-markdown-css (scoped typography)
+              - highlight.js theme (syntax highlighting)
+              - katex.css (math rendering)
+            Global CSS cannot enter the shadow root — full CSS isolation.
+            Scroll is handled by .markdown-body INSIDE the shadow root (overflow-y: auto).
+            This outer div must NOT have overflow:auto — it would create a second scroll container.
+          -->
+          <div id="preview-host" class="pane-body"></div>
+          <div id="preview-empty-state" class="empty-state pointer-events-none">
+            <div class="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-3">
+              <i data-lucide="eye" class="w-6 h-6 text-neutral-400"></i>
             </div>
+            <p class="text-neutral-400 font-medium text-sm" data-i18n="empty_state">Paste (Ctrl+V) your content here...</p>
           </div>
           <div class="pane-actions">
             <button id="export-md-btn" class="action-btn action-btn-secondary">
@@ -216,13 +225,14 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     import './scripts/app';
   </script>
 
-  <!-- Tool-specific styles -->
+  <!-- Editor UI styles (scoped to this page) -->
   <style>
     @import './styles/editor.css';
   </style>
 
-  <!-- Preview theme must be global: content is injected dynamically via innerHTML -->
-  <style is:global>
-    @import './styles/preview-theme.css';
-  </style>
+  <!--
+    NOTE: preview-theme.css has been removed.
+    Preview CSS is now injected by PreviewRenderer directly into the Shadow DOM.
+    This provides full isolation — global styles cannot affect the preview pane.
+  -->
 </BaseLayout>
