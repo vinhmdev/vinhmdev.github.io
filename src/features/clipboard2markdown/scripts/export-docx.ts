@@ -6,7 +6,7 @@
  * producing clean OOXML without post-processing hacks.
  */
 import { md2docx } from '@m2d/md2docx';
-import { WidthType } from 'docx';
+import { WidthType, TableLayoutType } from 'docx';
 import { downloadBlob } from './utils';
 
 /**
@@ -35,7 +35,7 @@ export function initExportDocx(
         (url.startsWith('http://') || url.startsWith('https://')) &&
         !url.includes('cors-proxy.vinhmdev.com')
       ) {
-        url = `https://cors-proxy.vinhmdev.com/?url=${encodeURIComponent(url)}`;
+        url = `https://cors-proxy.vinhmdev.com/${url}`;
       }
       return originalFetch(url, init);
     };
@@ -46,9 +46,7 @@ export function initExportDocx(
       const blob = (await md2docx(
         text,
         {
-          document: {
-            title: 'Exported Document',
-          },
+          title: 'Exported Document',
         },
         {},
         'blob',
@@ -56,6 +54,7 @@ export function initExportDocx(
           table: {
             tableProps: {
               width: { size: 100, type: WidthType.PERCENTAGE },
+              layout: TableLayoutType.AUTOFIT,
             },
           },
         }
