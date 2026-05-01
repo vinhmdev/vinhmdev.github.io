@@ -22,59 +22,7 @@ import hljsLight     from 'highlight.js/styles/github.min.css?inline';
 import hljsDark      from 'highlight.js/styles/github-dark.min.css?inline';
 import katexCss      from 'katex/dist/katex.min.css?inline';
 import alertsCss     from 'markdown-it-github-alerts/styles/github-base.css?inline';
-
-// ─── Scoped overrides ─────────────────────────────────────────────────────────
-// Uses literal color values — intentionally NOT using var(--color-*) from global.css.
-// This is the CSS firewall between the preview and the website theme.
-const PREVIEW_OVERRIDES = `
-  .markdown-body {
-    padding: 1.5rem;
-    box-sizing: border-box;
-    height: 100%;
-    min-height: 100%;
-    overflow-y: auto;
-  }
-
-  /* Mermaid diagram wrapper */
-  .mermaid-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 1.2em 0;
-    padding: 1em;
-    background: #f6f8fa;
-    border-radius: 6px;
-    overflow-x: auto;
-  }
-  .mermaid-wrapper svg {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* Dark mode: 'dark' class on .markdown-body drives all dark overrides */
-  .markdown-body.dark {
-    background-color: #0d1117;
-    color: #e6edf3;
-  }
-  .markdown-body.dark .mermaid-wrapper {
-    background: #161b22;
-  }
-
-  /* KaTeX block math */
-  .katex-display {
-    overflow-x: auto;
-    overflow-y: hidden;
-    margin: 1em 0;
-    padding: 0.25em 0;
-  }
-  .katex { font-size: 1.1em; }
-
-  /* highlight.js code blocks */
-  pre.hljs { margin: 0; }
-  pre .hljs { margin: 0; padding: 0; background: transparent; }
-
-  /* Hide raw mermaid code blocks before renderMermaid() processes them */
-  pre:has(> code.language-mermaid) { display: none; }
-`;
+import previewOverridesCss from '../styles/preview-overrides.css?inline';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -97,7 +45,7 @@ export class PreviewRenderer {
       this.hljsStyle,
       this._mkStyle(katexCss),
       this._mkStyle(alertsCss),
-      this._mkStyle(PREVIEW_OVERRIDES),
+      this._mkStyle(previewOverridesCss),
     );
 
     // Content container

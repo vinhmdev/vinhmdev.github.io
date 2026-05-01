@@ -1,0 +1,47 @@
+.markdown-body {
+  padding: 1.5rem;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 100%;
+  overflow-y: auto;
+}
+
+/* Mermaid diagram wrapper */
+.mermaid-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1.2em 0;
+  padding: 1em;
+  background: #f6f8fa;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.mermaid-wrapper svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Dark mode: 'dark' class on .markdown-body drives all dark overrides */
+.markdown-body.dark {
+  background-color: #0d1117;
+  color: #e6edf3;
+}
+.markdown-body.dark .mermaid-wrapper {
+  background: #161b22;
+}
+
+/* KaTeX block math */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1em 0;
+  padding: 0.25em 0;
+}
+.katex { font-size: 1.1em; }
+
+/* highlight.js code blocks */
+pre.hljs { margin: 0; }
+pre .hljs { margin: 0; padding: 0; background: transparent; }
+
+/* Hide raw mermaid code blocks before renderMermaid() processes them */
+pre:has(> code.language-mermaid) { display: none; }
