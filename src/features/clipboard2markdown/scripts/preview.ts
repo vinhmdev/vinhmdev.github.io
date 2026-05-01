@@ -3,16 +3,34 @@
  *
  * Responsibilities:
  * - Singleton markdown-it parser (rebuilt only when latex toggle changes)
- * - highlight.js syntax highlighting integration
- * - DOMPurify sanitization
- * - Delegates rendering to PreviewRenderer (Shadow DOM)
- *
- * Does NOT touch the DOM directly — all DOM operations go through PreviewRenderer.
+ * - All plugins imported as npm packages — no window.xxx globals
+ * - highlight.js syntax highlighting (bundled)
+ * - DOMPurify sanitization (bundled)
+ * - Delegates all DOM operations to PreviewRenderer (Shadow DOM)
  */
+import MarkdownIt from 'markdown-it';
+import hljs from 'highlight.js';
+import DOMPurify from 'dompurify';
+import katex from 'katex';
+import * as texmath    from 'markdown-it-texmath';
+import taskLists       from 'markdown-it-task-lists';
+import deflist         from 'markdown-it-deflist';
+import footnote        from 'markdown-it-footnote';
+import mark            from 'markdown-it-mark';
+import sub             from 'markdown-it-sub';
+import sup             from 'markdown-it-sup';
+import ins             from 'markdown-it-ins';
+import abbr            from 'markdown-it-abbr';
+import container       from 'markdown-it-container';
+import { full as emoji } from 'markdown-it-emoji';
+import anchor          from 'markdown-it-anchor';
+import toc             from 'markdown-it-toc-done-right';
+import githubAlerts    from 'markdown-it-github-alerts';
+import attrs           from 'markdown-it-attrs';
 import { PreviewRenderer } from './preview-renderer';
 
 // ─── DOMPurify config — allow SVG/math elements for Mermaid + KaTeX ──────────
-const DOMPURIFY_CONFIG = {
+const DOMPURIFY_CONFIG: Parameters<typeof DOMPurify.sanitize>[1] = {
   ADD_TAGS: [
     'svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline',
     'polygon', 'text', 'tspan', 'defs', 'marker', 'foreignObject', 'use',
@@ -30,68 +48,63 @@ const DOMPURIFY_CONFIG = {
   ],
 };
 
+// Open all links from preview in a new tab
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
 // ─── Module state ─────────────────────────────────────────────────────────────
 let renderer: PreviewRenderer | null = null;
-let mdParser: any = null;
+let mdParser: MarkdownIt | null = null;
 let latexEnabledState = true;
 
-// ─── Plugin attachment (called once per parser instance) ──────────────────────
-function attachPlugins(md: any, renderLatex: boolean): void {
-  // @ts-ignore — CDN globals
-  const {
-    markdownitTaskLists, markdownitDeflist, markdownitFootnote,
-    markdownitMark, markdownitSub, markdownitSup, markdownitIns,
-    markdownitAbbr, markdownitContainer, markdownitEmoji,
-    markdownItAnchor, markdownItTocDoneRight, texmath, katex,
-  } = window as any;
+// ─── Plugin attachment ────────────────────────────────────────────────────────
+function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
+  // Helper to safely resolve CJS/ESM interop differences
+  const resolvePlugin = (p: any) => p.default || p;
 
-  if (typeof markdownitTaskLists !== 'undefined')    md.use(markdownitTaskLists);
-  if (typeof markdownitDeflist   !== 'undefined')    md.use(markdownitDeflist);
-  if (typeof markdownitFootnote  !== 'undefined')    md.use(markdownitFootnote);
-  if (typeof markdownitMark      !== 'undefined')    md.use(markdownitMark);
-  if (typeof markdownitSub       !== 'undefined')    md.use(markdownitSub);
-  if (typeof markdownitSup       !== 'undefined')    md.use(markdownitSup);
-  if (typeof markdownitIns       !== 'undefined')    md.use(markdownitIns);
-  if (typeof markdownitAbbr      !== 'undefined')    md.use(markdownitAbbr);
-  if (typeof markdownitEmoji     !== 'undefined')    md.use(markdownitEmoji);
+  md.use(resolvePlugin(taskLists))
+    .use(resolvePlugin(deflist))
+    .use(resolvePlugin(footnote))
+    .use(resolvePlugin(mark))
+    .use(resolvePlugin(sub))
+    .use(resolvePlugin(sup))
+    .use(resolvePlugin(ins))
+    .use(resolvePlugin(abbr))
+    .use(resolvePlugin(emoji))
+    .use(resolvePlugin(githubAlerts))
+    .use(resolvePlugin(attrs))
+    .use(resolvePlugin(container), 'info')
+    .use(resolvePlugin(container), 'warning')
+    .use(resolvePlugin(container), 'danger')
+    .use(resolvePlugin(container), 'success')
+    .use(resolvePlugin(container), 'details')
+    .use(resolvePlugin(anchor), { permalink: resolvePlugin(anchor).permalink?.headerLink?.() })
+    .use(resolvePlugin(toc));
 
-  if (typeof markdownitContainer !== 'undefined') {
-    ['info', 'warning', 'danger', 'success', 'details'].forEach((type) => {
-      md.use(markdownitContainer, type);
-    });
-  }
-  if (typeof markdownItAnchor !== 'undefined') {
-    md.use(markdownItAnchor, { permalink: markdownItAnchor.permalink.headerLink() });
-  }
-  if (typeof markdownItTocDoneRight !== 'undefined') {
-    md.use(markdownItTocDoneRight);
-  }
-  if (renderLatex && typeof texmath !== 'undefined' && typeof katex !== 'undefined') {
-    md.use(texmath, { engine: katex, delimiters: 'dollars' });
+  if (renderLatex) {
+    md.use(resolvePlugin(texmath), { engine: katex, delimiters: 'dollars' });
   }
 }
 
 // ─── Parser factory ───────────────────────────────────────────────────────────
-function buildParser(renderLatex: boolean): any {
-  // @ts-ignore — CDN global
-  const markdownit = window.markdownit;
-  if (typeof markdownit === 'undefined') return null;
-
-  const md = markdownit({
+function buildParser(renderLatex: boolean): MarkdownIt {
+  const md = new MarkdownIt({
     html: true,
     breaks: true,
     linkify: true,
     typographer: true,
     highlight: (str: string, lang: string): string => {
-      // Mermaid blocks MUST keep the language-mermaid class so that
+      // Mermaid blocks must keep language-mermaid class so that
       // PreviewRenderer.renderMermaid() can find them via querySelectorAll.
-      // Do NOT run them through hljs — mermaid.render() handles them separately.
+      // Do NOT run through hljs — mermaid.render() handles them separately.
       if (lang === 'mermaid') {
         return `<pre><code class="language-mermaid">${md.utils.escapeHtml(str)}</code></pre>`;
       }
-      // @ts-ignore — CDN global
-      const hljs = window.hljs;
-      if (lang && hljs?.getLanguage(lang)) {
+      if (lang && hljs.getLanguage(lang)) {
         try {
           return (
             '<pre class="hljs"><code>' +
@@ -103,18 +116,6 @@ function buildParser(renderLatex: boolean): any {
       return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
     },
   });
-
-  // Open links in new tab
-  // @ts-ignore
-  const DOMPurify = window.DOMPurify;
-  if (DOMPurify) {
-    DOMPurify.addHook('afterSanitizeAttributes', (node: Element) => {
-      if (node.tagName === 'A') {
-        node.setAttribute('target', '_blank');
-        node.setAttribute('rel', 'noopener noreferrer');
-      }
-    });
-  }
 
   attachPlugins(md, renderLatex);
   return md;
@@ -147,30 +148,28 @@ export interface RenderOptions {
 
 /**
  * Render markdown to the preview pane.
- * Rebuilds the parser only when latex toggle changes.
+ * Rebuilds the parser only when the latex setting changes.
  */
 export async function renderPreview(markdown: string, opts: RenderOptions): Promise<void> {
   if (!renderer) return;
 
-  // Rebuild parser only when latex setting changes
-  if (opts.renderLatex !== latexEnabledState || !mdParser) {
-    latexEnabledState = opts.renderLatex;
-    mdParser = buildParser(opts.renderLatex);
-  }
-  if (!mdParser) return;
+  try {
+    // Rebuild parser only when the latex setting changes
+    if (opts.renderLatex !== latexEnabledState || !mdParser) {
+      latexEnabledState = opts.renderLatex;
+      mdParser = buildParser(opts.renderLatex);
+    }
 
-  const rawHtml = mdParser.render(markdown || '');
+    const rawHtml = mdParser.render(markdown || '');
+    const cleanHtml = DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG) as string;
 
-  // @ts-ignore — CDN global
-  const DOMPurify = window.DOMPurify;
-  const cleanHtml = DOMPurify
-    ? DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG)
-    : rawHtml;
+    renderer.setContent(cleanHtml);
 
-  renderer.setContent(cleanHtml);
-
-  if (opts.renderMermaid) {
-    await renderer.renderMermaid(opts.isDark);
+    if (opts.renderMermaid) {
+      await renderer.renderMermaid(opts.isDark);
+    }
+  } catch (error) {
+    console.error('[preview] ERROR during render pipeline:', error);
   }
 }
 

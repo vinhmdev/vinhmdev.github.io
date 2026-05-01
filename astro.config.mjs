@@ -10,5 +10,10 @@ export default defineConfig({
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      // Force re-optimize on each dev server start to avoid stale dep hash
+      // mismatches (504 errors) when many new packages are added at once.
+      force: true,
+    },
   },
 });

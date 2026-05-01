@@ -2,9 +2,10 @@
  * PreviewRenderer — Shadow DOM wrapper for the preview pane.
  *
  * Provides full CSS isolation from the global website theme:
- * - Stylesheets are injected INSIDE the shadow root (global CSS cannot enter)
- * - Preview styles cannot leak out to the rest of the page
- * - Theme switching = swap link.href + toggle class, zero side-effects outside
+ * - All stylesheets are BUNDLED by Vite (?inline imports) and injected
+ *   into the shadow root as <style> elements — zero CDN requests on mount.
+ * - Preview styles cannot leak out to the rest of the page.
+ * - Theme switching = swap <style> textContent, instant, no network.
  *
  * Usage:
  *   const renderer = new PreviewRenderer(hostEl);
@@ -13,18 +14,16 @@
  *   await renderer.renderMermaid(isDark);
  */
 
-// ─── CDN URLs (pinned versions) ───────────────────────────────────────────────
-const CDN = {
-  // Use pinned light/dark variants — avoids prefers-color-scheme media query
-  // which can't be controlled by JS inside a shadow root.
-  githubMdLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.css',
-  githubMdDark:  'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-dark.css',
-  hljsLight:     'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css',
-  hljsDark:      'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github-dark.min.css',
-  katex:         'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css',
-} as const;
+// ─── CSS imports (bundled by Vite as inline strings) ─────────────────────────
+// These are injected into the shadow root — global CSS cannot affect them.
+import githubMdLight from 'github-markdown-css/github-markdown-light.css?inline';
+import githubMdDark  from 'github-markdown-css/github-markdown-dark.css?inline';
+import hljsLight     from 'highlight.js/styles/github.min.css?inline';
+import hljsDark      from 'highlight.js/styles/github-dark.min.css?inline';
+import katexCss      from 'katex/dist/katex.min.css?inline';
+import alertsCss     from 'markdown-it-github-alerts/styles/github-base.css?inline';
 
-// ─── Scoped overrides inside shadow DOM ───────────────────────────────────────
+// ─── Scoped overrides ─────────────────────────────────────────────────────────
 // Uses literal color values — intentionally NOT using var(--color-*) from global.css.
 // This is the CSS firewall between the preview and the website theme.
 const PREVIEW_OVERRIDES = `
@@ -51,7 +50,7 @@ const PREVIEW_OVERRIDES = `
     height: auto;
   }
 
-  /* Dark mode: toggle class 'dark' on .markdown-body drives all dark overrides */
+  /* Dark mode: 'dark' class on .markdown-body drives all dark overrides */
   .markdown-body.dark {
     background-color: #0d1117;
     color: #e6edf3;
@@ -82,27 +81,24 @@ const PREVIEW_OVERRIDES = `
 export class PreviewRenderer {
   private readonly shadow: ShadowRoot;
   private readonly bodyEl: HTMLElement;
-  private readonly githubMdLink: HTMLLinkElement;
-  private readonly hljsLink: HTMLLinkElement;
+  private readonly githubMdStyle: HTMLStyleElement;
+  private readonly hljsStyle: HTMLStyleElement;
 
   private mermaidIdCounter = 0;
 
   constructor(hostEl: HTMLElement) {
     this.shadow = hostEl.attachShadow({ mode: 'open' });
 
-    // Inject stylesheets INTO shadow root — fully isolated from global CSS.
-    // Using explicit light/dark variants so JS controls the theme directly,
-    // without relying on prefers-color-scheme (unreliable inside shadow roots).
-    this.githubMdLink = this._mkLink(CDN.githubMdLight);
-    this.shadow.appendChild(this.githubMdLink);
-    this.hljsLink = this._mkLink(CDN.hljsLight);
-    this.shadow.appendChild(this.hljsLink);
-    this.shadow.appendChild(this._mkLink(CDN.katex));
-
-    // Scoped overrides — self-contained, no dependency on outer page styles
-    const style = document.createElement('style');
-    style.textContent = PREVIEW_OVERRIDES;
-    this.shadow.appendChild(style);
+    // Inject all styles as <style> elements (bundled CSS strings, zero CDN requests)
+    this.githubMdStyle = this._mkStyle(githubMdLight);
+    this.hljsStyle     = this._mkStyle(hljsLight);
+    this.shadow.append(
+      this.githubMdStyle,
+      this.hljsStyle,
+      this._mkStyle(katexCss),
+      this._mkStyle(alertsCss),
+      this._mkStyle(PREVIEW_OVERRIDES),
+    );
 
     // Content container
     this.bodyEl = document.createElement('div');
@@ -114,13 +110,12 @@ export class PreviewRenderer {
 
   /**
    * Sync preview color mode with the app theme toggle.
-   * Swaps both the GitHub Markdown and highlight.js theme stylesheets,
-   * and toggles the 'dark' class on the content container.
-   * The 'dark' class drives all dark overrides in PREVIEW_OVERRIDES.
+   * Swaps CSS content of the theme style elements — no network requests.
+   * The 'dark' class on .markdown-body drives supplemental dark overrides.
    */
   setColorMode(isDark: boolean): void {
-    this.githubMdLink.href = isDark ? CDN.githubMdDark  : CDN.githubMdLight;
-    this.hljsLink.href     = isDark ? CDN.hljsDark      : CDN.hljsLight;
+    this.githubMdStyle.textContent = isDark ? githubMdDark  : githubMdLight;
+    this.hljsStyle.textContent     = isDark ? hljsDark      : hljsLight;
     this.bodyEl.classList.toggle('dark', isDark);
   }
 
@@ -134,11 +129,10 @@ export class PreviewRenderer {
 
   /**
    * Render Mermaid diagrams via mermaid.render() — the SVG string API.
-   * This is the correct approach for Shadow DOM: get SVG string, inject manually.
-   * mermaid.run() (DOM scan) is NOT used — it has known issues inside shadow roots.
+   * Uses mermaid.render() (not mermaid.run()) — correct approach for Shadow DOM.
    */
   async renderMermaid(isDark: boolean): Promise<void> {
-    // @ts-ignore — loaded via CDN
+    // @ts-ignore — Mermaid loaded via CDN (too large to bundle ~3MB)
     const mermaid = window.mermaid;
     if (typeof mermaid === 'undefined') return;
 
@@ -170,7 +164,7 @@ export class PreviewRenderer {
 
   /**
    * Return the scroll container for synchronized scrolling.
-   * The .markdown-body element handles its own overflow-y inside the shadow root.
+   * .markdown-body handles its own overflow-y inside the shadow root.
    */
   getScrollEl(): HTMLElement {
     return this.bodyEl;
@@ -193,10 +187,9 @@ export class PreviewRenderer {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private _mkLink(href: string): HTMLLinkElement {
-    const el = document.createElement('link');
-    el.rel = 'stylesheet';
-    el.href = href;
+  private _mkStyle(css: string): HTMLStyleElement {
+    const el = document.createElement('style');
+    el.textContent = css;
     return el;
   }
 }
