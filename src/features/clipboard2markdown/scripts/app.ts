@@ -25,6 +25,7 @@ import {
   onScroll,
   getScrollDOM,
   scrollTo,
+  focus,
 } from './codemirror-editor';
 import { initSettings } from './settings';
 import {
@@ -85,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Live preview ────────────────────────────────────────────────────────────
   onUpdate(async (val) => {
     updateEmptyStates(val);
+    localStorage.setItem('clipboard2markdown_content', val);
     await renderPreview(val, getRenderOpts());
   });
 
@@ -192,11 +194,47 @@ document.addEventListener('DOMContentLoaded', () => {
         plugins: window.prettierPlugins,
       });
       setValue(formatted);
+      focus();
       showToast('wand-sparkles', t('toast_formatted'));
     } catch (err) {
       console.error('Prettier format error:', err);
       showToast('alert-triangle', 'Failed to format Markdown');
     }
+  });
+
+  // ─── Compact Markdown ──────────────────────────────────────────────────────────
+  document.getElementById('compact-md-btn')?.addEventListener('click', () => {
+    const text = getValue();
+    if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
+
+    // Compact: remove trailing spaces, compact tables, replace 3+ newlines with 2 newlines
+    let inCodeBlock = false;
+    const compacted = text
+      .split('\n')
+      .map((line) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('```')) {
+          inCodeBlock = !inCodeBlock;
+          return line.trimEnd();
+        }
+        if (inCodeBlock) return line.trimEnd();
+
+        if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+          const cells = trimmed.split(/(?<!\\)\|/).map((c) => c.trim());
+          const compactedCells = cells.map((c) =>
+            /^:?-+:?$/.test(c) ? c.replace(/-+/g, '---') : c.replace(/ {2,}/g, ' ')
+          );
+          return compactedCells.join(' | ').trim();
+        }
+        return line.trimEnd();
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    setValue(compacted);
+    focus();
+    showToast('minimize', t('toast_compacted') || 'Compacted!');
   });
 
   // ─── Clear ───────────────────────────────────────────────────────────────────
@@ -205,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getRenderer()?.clear();
     emptyState.style.opacity = '1';
     previewEmptyState.style.opacity = '1';
+    localStorage.removeItem('clipboard2markdown_content');
     showToast('trash', t('toast_cleared'));
   });
 
@@ -225,4 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initI18n();
   syncPreviewTheme(isDark()); // set initial preview color mode
+
+  // Restore saved content (this triggers onUpdate automatically)
+  const savedContent = localStorage.getItem('clipboard2markdown_content');
+  if (savedContent) {
+    setValue(savedContent);
+  }
 });

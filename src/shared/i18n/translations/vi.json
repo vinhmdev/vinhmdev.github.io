@@ -14,5 +14,7 @@
   "cookie_body": "Cookie được dùng để thống kê lượt truy cập ẩn danh, giúp chúng tôi cải thiện nội dung. Dữ liệu không được liên kết với danh tính của bạn.",
   "cookie_link": "Chính sách bảo mật",
   "cookie_dismiss": "Đã hiểu",
-  "cookie_privacy_url": "https://vinhmdev.com/vi/privacy-policy/"
+  "cookie_privacy_url": "https://vinhmdev.com/vi/privacy-policy/",
+  "btn_compact_md": "Làm Gọn",
+  "toast_compacted": "Đã làm gọn!"
 }

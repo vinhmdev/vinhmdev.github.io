@@ -14,5 +14,7 @@
   "cookie_body": "Cookies help us understand how visitors use this site so we can improve it. Data is not linked to your identity.",
   "cookie_link": "Privacy Policy",
   "cookie_dismiss": "Got it",
-  "cookie_privacy_url": "https://vinhmdev.com/privacy-policy/"
+  "cookie_privacy_url": "https://vinhmdev.com/privacy-policy/",
+  "btn_compact_md": "Compact",
+  "toast_compacted": "Compacted!"
 }

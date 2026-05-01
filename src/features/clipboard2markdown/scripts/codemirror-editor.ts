@@ -249,8 +249,23 @@ export function getValue(): string {
 /** Set editor content (replaces all). */
 export function setValue(text: string): void {
   if (!editorView) return;
+
+  const scroller = editorView.scrollDOM;
+  const top = scroller.scrollTop;
+  const left = scroller.scrollLeft;
+
   editorView.dispatch({
     changes: { from: 0, to: editorView.state.doc.length, insert: text },
+  });
+
+  // Preserve scroll position across full document replacements
+  scroller.scrollTop = top;
+  scroller.scrollLeft = left;
+  requestAnimationFrame(() => {
+    if (editorView) {
+      editorView.scrollDOM.scrollTop = top;
+      editorView.scrollDOM.scrollLeft = left;
+    }
   });
 }
 

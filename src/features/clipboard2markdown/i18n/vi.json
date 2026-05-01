@@ -28,5 +28,7 @@
   "label_editor": "Soạn thảo",
   "label_preview": "Xem trước",
   "tip_paste": "💡 Mẹo: Hãy copy văn bản từ Word, Excel, hay Website và dán (Ctrl+V) vào đây để tự động tạo Markdown.",
-  "tip_autoconvert": "💡 Trong ⚙️ Cài đặt có mục 'Tự động chuyển thành Markdown khi dán'. Nếu muốn dán nội dung trực tiếp mà không cần chuyển đổi, hãy tắt mục này."
+  "tip_autoconvert": "💡 Trong ⚙️ Cài đặt có mục 'Tự động chuyển thành Markdown khi dán'. Nếu muốn dán nội dung trực tiếp mà không cần chuyển đổi, hãy tắt mục này.",
+  "btn_compact_md": "Làm Gọn",
+  "toast_compacted": "Đã làm gọn!"
 }

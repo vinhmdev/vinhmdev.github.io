@@ -28,5 +28,7 @@
   "label_editor": "Editor",
   "label_preview": "Preview",
   "tip_paste": "💡 Tip: Paste (Ctrl+V) text copied from Word, Excel, or the Web to convert it to Markdown.",
-  "tip_autoconvert": "💡 In the ⚙️ Settings, you can find 'Auto-convert to Markdown on Paste'. Turn it off to paste content as plain text without conversion."
+  "tip_autoconvert": "💡 In the ⚙️ Settings, you can find 'Auto-convert to Markdown on Paste'. Turn it off to paste content as plain text without conversion.",
+  "btn_compact_md": "Compact",
+  "toast_compacted": "Compacted!"
 }

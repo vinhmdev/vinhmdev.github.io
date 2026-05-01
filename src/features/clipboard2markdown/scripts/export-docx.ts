@@ -35,7 +35,17 @@ export function initExportDocx(
         (url.startsWith('http://') || url.startsWith('https://')) &&
         !url.includes('cors-proxy.vinhmdev.com')
       ) {
-        url = `https://cors-proxy.vinhmdev.com/${url}`;
+        let targetUrl = url;
+        if (targetUrl.startsWith('https://')) {
+          targetUrl = targetUrl.replace('https://', '');
+          targetUrl = targetUrl.includes('/')
+            ? targetUrl.replace('/', ':443/')
+            : targetUrl + ':443';
+        } else if (targetUrl.startsWith('http://')) {
+          targetUrl = targetUrl.replace('http://', '');
+          targetUrl = targetUrl.includes('/') ? targetUrl.replace('/', ':80/') : targetUrl + ':80';
+        }
+        url = `https://cors-proxy.vinhmdev.com/${targetUrl}`;
       }
       return originalFetch(url, init);
     };
@@ -53,9 +63,16 @@ export function initExportDocx(
         {
           table: {
             tableProps: {
-              width: { size: 100, type: WidthType.PERCENTAGE },
+              // MS Word parses w:w="100%" as 100 fiftieths of a percent (2%). We must use 5000 for 100%.
+              width: { size: 5000, type: WidthType.PERCENTAGE },
               layout: TableLayoutType.AUTOFIT,
             },
+            cellProps: {
+              width: { size: 0, type: WidthType.AUTO },
+            },
+          },
+          image: {
+            maxAgeMinutes: 0,
           },
         }
       )) as Blob;
