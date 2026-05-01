@@ -4,7 +4,7 @@
  * Provides full CSS isolation from the global website theme:
  * - Stylesheets are injected INSIDE the shadow root (global CSS cannot enter)
  * - Preview styles cannot leak out to the rest of the page
- * - Theme switching = swap link.href, zero side-effects outside this class
+ * - Theme switching = swap link.href + toggle class, zero side-effects outside
  *
  * Usage:
  *   const renderer = new PreviewRenderer(hostEl);
@@ -19,21 +19,21 @@ const CDN = {
   // which can't be controlled by JS inside a shadow root.
   githubMdLight: 'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.css',
   githubMdDark:  'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-dark.css',
-  hljsLight: 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css',
-  hljsDark:  'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github-dark.min.css',
-  katex:     'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css',
+  hljsLight:     'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css',
+  hljsDark:      'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github-dark.min.css',
+  katex:         'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css',
 } as const;
 
 // ─── Scoped overrides inside shadow DOM ───────────────────────────────────────
-// Uses literal values — intentionally NOT using var(--color-*) from global.css.
-// This is the CSS firewall between preview and the website theme.
+// Uses literal color values — intentionally NOT using var(--color-*) from global.css.
+// This is the CSS firewall between the preview and the website theme.
 const PREVIEW_OVERRIDES = `
   .markdown-body {
     padding: 1.5rem;
     box-sizing: border-box;
+    height: 100%;
     min-height: 100%;
     overflow-y: auto;
-    height: 100%;
   }
 
   /* Mermaid diagram wrapper */
@@ -50,9 +50,15 @@ const PREVIEW_OVERRIDES = `
     max-width: 100%;
     height: auto;
   }
-  /* Dark mode wrapper: background set via JS inline style on bodyEl,
-     which github-markdown-dark.css inherits via color-scheme vars */
 
+  /* Dark mode: toggle class 'dark' on .markdown-body drives all dark overrides */
+  .markdown-body.dark {
+    background-color: #0d1117;
+    color: #e6edf3;
+  }
+  .markdown-body.dark .mermaid-wrapper {
+    background: #161b22;
+  }
 
   /* KaTeX block math */
   .katex-display {
@@ -71,7 +77,6 @@ const PREVIEW_OVERRIDES = `
   pre:has(> code.language-mermaid) { display: none; }
 `;
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export class PreviewRenderer {
@@ -85,16 +90,16 @@ export class PreviewRenderer {
   constructor(hostEl: HTMLElement) {
     this.shadow = hostEl.attachShadow({ mode: 'open' });
 
-    // Inject stylesheets INTO shadow root — fully isolated from global CSS
-    // Using light/dark variants explicitly so JS can control theme without
-    // relying on prefers-color-scheme media queries (unreliable in shadow roots).
+    // Inject stylesheets INTO shadow root — fully isolated from global CSS.
+    // Using explicit light/dark variants so JS controls the theme directly,
+    // without relying on prefers-color-scheme (unreliable inside shadow roots).
     this.githubMdLink = this._mkLink(CDN.githubMdLight);
     this.shadow.appendChild(this.githubMdLink);
     this.hljsLink = this._mkLink(CDN.hljsLight);
     this.shadow.appendChild(this.hljsLink);
     this.shadow.appendChild(this._mkLink(CDN.katex));
 
-    // Scoped overrides
+    // Scoped overrides — self-contained, no dependency on outer page styles
     const style = document.createElement('style');
     style.textContent = PREVIEW_OVERRIDES;
     this.shadow.appendChild(style);
@@ -109,17 +114,14 @@ export class PreviewRenderer {
 
   /**
    * Sync preview color mode with the app theme toggle.
-   * Swaps highlight.js theme stylesheet + sets data-color-mode attribute.
+   * Swaps both the GitHub Markdown and highlight.js theme stylesheets,
+   * and toggles the 'dark' class on the content container.
+   * The 'dark' class drives all dark overrides in PREVIEW_OVERRIDES.
    */
   setColorMode(isDark: boolean): void {
-    // Swap both theme stylesheets for reliable dark/light mode control
-    this.githubMdLink.href = isDark ? CDN.githubMdDark : CDN.githubMdLight;
-    this.hljsLink.href     = isDark ? CDN.hljsDark     : CDN.hljsLight;
-    // github-markdown-dark.css sets --color-canvas-default on :root,
-    // but :root inside a shadow DOM is the shadow root, not document root.
-    // Set the background explicitly to ensure it applies correctly.
-    this.bodyEl.style.backgroundColor = isDark ? '#0d1117' : '';
-    this.bodyEl.style.color           = isDark ? '#e6edf3' : '';
+    this.githubMdLink.href = isDark ? CDN.githubMdDark  : CDN.githubMdLight;
+    this.hljsLink.href     = isDark ? CDN.hljsDark      : CDN.hljsLight;
+    this.bodyEl.classList.toggle('dark', isDark);
   }
 
   /**
@@ -167,8 +169,8 @@ export class PreviewRenderer {
   }
 
   /**
-   * Return the markdown-body element for synchronized scrolling.
-   * Scroll events on this element are accessible from outside the shadow root.
+   * Return the scroll container for synchronized scrolling.
+   * The .markdown-body element handles its own overflow-y inside the shadow root.
    */
   getScrollEl(): HTMLElement {
     return this.bodyEl;
