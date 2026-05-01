@@ -63,12 +63,15 @@ export function initExportDocx(
         {
           table: {
             tableProps: {
-              // MS Word parses w:w="100%" as 100 fiftieths of a percent (2%). We must use 5000 for 100%.
-              width: { size: 5000, type: WidthType.PERCENTAGE },
+              width: { size: 100, type: WidthType.PERCENTAGE },
               layout: TableLayoutType.AUTOFIT,
+              // MUST explicitly pass empty columnWidths to bypass docx library's hardcoded fallback
+              // which blindly creates a 100-DXA grid column for every cell if undefined.
+              columnWidths: [],
             },
             cellProps: {
-              width: { size: 0, type: WidthType.AUTO },
+              // Completely strip the width property so Word uses pure Autofit (simulating "uncheck preferred width")
+              width: undefined as any,
             },
           },
           image: {
