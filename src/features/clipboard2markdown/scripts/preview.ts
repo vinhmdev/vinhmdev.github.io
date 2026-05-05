@@ -128,6 +128,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 let renderer: PreviewRenderer | null = null;
 let mdParser: MarkdownIt | null = null;
 let latexEnabledState = true;
+let mermaidEnabledState = true;
 
 // ─── Plugin attachment ────────────────────────────────────────────────────────
 function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
@@ -159,7 +160,7 @@ function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
 }
 
 // ─── Parser factory ───────────────────────────────────────────────────────────
-function buildParser(renderLatex: boolean): MarkdownIt {
+function buildParser(renderLatex: boolean, renderMermaid: boolean): MarkdownIt {
   const md = new MarkdownIt({
     html: true,
     breaks: true,
@@ -169,7 +170,7 @@ function buildParser(renderLatex: boolean): MarkdownIt {
       // Mermaid blocks must keep language-mermaid class so that
       // PreviewRenderer.renderMermaid() can find them via querySelectorAll.
       // Do NOT run through hljs — mermaid.render() handles them separately.
-      if (lang === 'mermaid') {
+      if (lang === 'mermaid' && renderMermaid) {
         return `<pre><code class="language-mermaid">${md.utils.escapeHtml(str)}</code></pre>`;
       }
       if (lang && hljs.getLanguage(lang)) {
@@ -216,16 +217,17 @@ export interface RenderOptions {
 
 /**
  * Render markdown to the preview pane.
- * Rebuilds the parser only when the latex setting changes.
+ * Rebuilds the parser only when the latex or mermaid setting changes.
  */
 export async function renderPreview(markdown: string, opts: RenderOptions): Promise<void> {
   if (!renderer) return;
 
   try {
-    // Rebuild parser only when the latex setting changes
-    if (opts.renderLatex !== latexEnabledState || !mdParser) {
+    // Rebuild parser only when the latex or mermaid setting changes
+    if (opts.renderLatex !== latexEnabledState || opts.renderMermaid !== mermaidEnabledState || !mdParser) {
       latexEnabledState = opts.renderLatex;
-      mdParser = buildParser(opts.renderLatex);
+      mermaidEnabledState = opts.renderMermaid;
+      mdParser = buildParser(opts.renderLatex, opts.renderMermaid);
     }
 
     const rawHtml = mdParser.render(markdown || '');
