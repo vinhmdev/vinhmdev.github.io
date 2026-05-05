@@ -39,6 +39,44 @@ function preprocessHTML(html: string): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 
+  // --- Extract math BEFORE removing scripts (MathJax v2 uses <script> tags) ---
+
+  // KaTeX display math: .katex-display wraps the outer span
+  doc.querySelectorAll('.katex-display').forEach((el) => {
+    const latex = el.querySelector('annotation[encoding="application/x-tex"]')?.textContent?.trim();
+    if (!latex) return;
+    const span = doc.createElement('span');
+    span.textContent = `$$${latex}$$`;
+    el.replaceWith(span);
+  });
+
+  // KaTeX inline math: .katex not already replaced above
+  doc.querySelectorAll('.katex').forEach((el) => {
+    const latex = el.querySelector('annotation[encoding="application/x-tex"]')?.textContent?.trim();
+    if (!latex) return;
+    const span = doc.createElement('span');
+    span.textContent = `$${latex}$`;
+    el.replaceWith(span);
+  });
+
+  // MathJax v2 — display math
+  doc.querySelectorAll('script[type="math/tex; mode=display"]').forEach((el) => {
+    const latex = el.textContent?.trim();
+    if (!latex) return;
+    const span = doc.createElement('span');
+    span.textContent = `$$${latex}$$`;
+    el.replaceWith(span);
+  });
+
+  // MathJax v2 — inline math
+  doc.querySelectorAll('script[type="math/tex"]').forEach((el) => {
+    const latex = el.textContent?.trim();
+    if (!latex) return;
+    const span = doc.createElement('span');
+    span.textContent = `$${latex}$`;
+    el.replaceWith(span);
+  });
+
   // Remove <meta>, <style>, <script>, comments
   doc.querySelectorAll('meta, style, script, link').forEach((el) => el.remove());
 
@@ -199,6 +237,10 @@ function createInstance(): any {
     service.use(turndownPluginGfm.gfm);
   }
 
+  // Step 2: override escape() after all plugins — protects $latex$ text nodes
+  // placed by preprocessHTML() from having _, \, ^ etc. escaped.
+  installLatexEscape(service);
+
   service.addRule('lineBreak', {
     filter: 'br',
     replacement: (_content: string, node: HTMLElement) => {
@@ -243,12 +285,52 @@ function getInstance(): any {
   return turndownInstance;
 }
 
+// ─── LaTeX-aware escape override ─────────────────────────────────────────────
+// Step 1 (preprocessHTML) extracts KaTeX/MathJax elements → places $latex$ text.
+// Step 2 (here) overrides Turndown's escape() so those text nodes are not
+// corrupted (Turndown would otherwise escape _, \, * inside them).
+//
+// Technique: String.split(captureRegex) keeps captured groups at odd indices,
+// giving alternating [prose, latex, prose, latex, …] — escape only prose parts.
+
+/**
+ * Regex for LaTeX delimiter pairs used in split().
+ *
+ * Inline $...$ heuristic (avoids false-positives on currency like $1,200):
+ *   - Not followed by space or digit
+ *   - Content must contain at least one LaTeX-specific char: \ ^ _ { }
+ *     → "$1,200 revenue" never matches; "$x^2 + y_1$" always matches
+ *   - Closing $ not preceded by space
+ *
+ * No /g flag — split() handles all occurrences; /g would corrupt lastIndex
+ * across repeated escape() calls on different text nodes.
+ */
+const LATEX_DELIMITERS_RE =
+  /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<!\$)\$(?![\s\d])(?=[^\n$]*?[\\^_{}])[^\n$]+?(?<!\s)\$(?!\$))/;
+
+/** Override Turndown's escape() to pass LaTeX delimiters through verbatim. */
+function installLatexEscape(service: any): void {
+  const defaultEscape: (s: string) => string = service.escape.bind(service);
+  service.escape = (string: string): string =>
+    string
+      .split(LATEX_DELIMITERS_RE)
+      .map((part, i) => (i % 2 === 1 ? part : defaultEscape(part)))
+      .join('');
+}
+
 /**
  * Convert HTML to Markdown (full pipeline).
+ *
+ *   Step 1 — preprocessHTML(): semantic math extraction
+ *     KaTeX  → <annotation encoding="application/x-tex"> → $latex$ / $$latex$$
+ *     MathJax v2 → <script type="math/tex">             → $latex$ / $$latex$$
+ *
+ *   Step 2 — installLatexEscape(): protect extracted math from Turndown escaping
+ *     Turndown calls escape() on every text node; without this, _ and \ inside
+ *     $latex$ would be escaped to \_ and \\ in the Markdown output.
  */
 export function convert(html: string): string {
   const cleanedHTML = preprocessHTML(html);
-  const instance = getInstance();
-  const rawMD = instance.turndown(cleanedHTML);
-  return rawMD.trim();
+  return getInstance().turndown(cleanedHTML).trim();
 }
+
