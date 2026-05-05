@@ -16,5 +16,7 @@
   "cookie_dismiss": "Đã hiểu",
   "cookie_privacy_url": "https://vinhmdev.com/vi/privacy-policy/",
   "btn_compact_md": "Làm Gọn",
-  "toast_compacted": "Đã làm gọn!"
+  "toast_compacted": "Đã làm gọn!",
+  "tool_llm_profiler": "LLM Hardware Profiler",
+  "tool_llm_profiler_desc": "Công cụ tính toán VRAM và ước lượng phần cứng cho Large Language Models (LLM)."
 }

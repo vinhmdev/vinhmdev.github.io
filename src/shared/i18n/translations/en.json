@@ -16,5 +16,7 @@
   "cookie_dismiss": "Got it",
   "cookie_privacy_url": "https://vinhmdev.com/privacy-policy/",
   "btn_compact_md": "Compact",
-  "toast_compacted": "Compacted!"
+  "toast_compacted": "Compacted!",
+  "tool_llm_profiler": "LLM Hardware Profiler",
+  "tool_llm_profiler_desc": "Calculate VRAM requirements and estimate hardware performance for LLMs."
 }

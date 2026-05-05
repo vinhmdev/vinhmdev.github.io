@@ -85,25 +85,66 @@ function preprocessHTML(html: string): string {
     return !!el.closest('td, th');
   }
 
-  // --- Google Docs / Web: Clean up tables for Turndown GFM ---
-  // Unwrap <p> inside <td>/<th> → inline content separated by <br>
-  doc.querySelectorAll('td, th').forEach((cell) => {
-    const paragraphs = cell.querySelectorAll('p');
-    if (paragraphs.length === 0) return;
+  // --- 1. GLOBAL UI CRUFT REMOVAL ---
+  // Core issue: App-generated HTML (Confluence, Notion) contains UI chrome
+  // like copy buttons, sort icons, and tooltips. These turn into garbage text in Markdown.
+  // Solution: Globally remove elements marked as decorative or known UI classes.
+  const uiCruftSelectors = [
+    '[aria-hidden="true"]', // Standard way to hide decorative icons globally
+    '.ak-renderer-tableHeader-sorting-icon__wrapper' // Atlassian specific UI cruft
+  ];
+  doc.querySelectorAll(uiCruftSelectors.join(', ')).forEach((el) => el.remove());
 
-    const fragment = doc.createDocumentFragment();
-    paragraphs.forEach((p, i) => {
-      // Move children of <p> into the cell directly
-      while (p.firstChild) {
-        fragment.appendChild(p.firstChild);
+  // --- 2. TABLE STRUCTURE FLATTENING ---
+  // Core issue: Markdown table syntax (| cell | cell |) breaks if there are newlines.
+  // Turndown will insert newlines for block elements (<div>, <p>, <ul>, <li>).
+  // Solution: We must completely flatten everything inside <th> and <td> into inline content.
+
+  // Remove duplicate sticky header tables from Atlassian
+  // Confluence creates a duplicate sticky table header before the actual wrapper
+  doc.querySelectorAll('table[data-testid="renderer-table"]').forEach(table => {
+    // If table has only headers and no data cells, it's a sticky header artifact
+    if (!table.querySelector('td')) {
+      table.remove();
+    }
+  });
+
+  doc.querySelectorAll('td, th').forEach((cell) => {
+    // 1. Remove empty block elements that add spacing
+    cell.querySelectorAll('p, div, ul, ol, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+      if (!el.textContent?.trim() && !el.querySelector('img')) {
+        el.remove();
       }
-      // Add <br> between paragraphs (not after the last one)
-      if (i < paragraphs.length - 1) {
-        fragment.appendChild(doc.createElement('br'));
-      }
-      p.remove();
     });
-    cell.appendChild(fragment);
+
+    // 2. Convert list items to inline with <br>•
+    cell.querySelectorAll('li').forEach(li => {
+      const isOrdered = li.closest('ol');
+      const bullet = isOrdered ? '1. ' : '• ';
+      li.replaceWith(doc.createElement('br'), doc.createTextNode(bullet), ...Array.from(li.childNodes));
+    });
+    // Unwrap ul/ol containers
+    cell.querySelectorAll('ul, ol').forEach(list => list.replaceWith(...Array.from(list.childNodes)));
+
+    // 3. Convert other blocks to content + <br>
+    cell.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre').forEach(block => {
+      block.replaceWith(...Array.from(block.childNodes), doc.createElement('br'));
+    });
+
+    // 4. Unwrap divs
+    cell.querySelectorAll('div').forEach(div => div.replaceWith(...Array.from(div.childNodes)));
+
+    // 5. Clean up the resulting HTML
+    let html = cell.innerHTML;
+    // Replace literal newlines with space to prevent Markdown table break
+    html = html.replace(/\n/g, ' ');
+    // Remove leading/trailing <br> and spaces
+    html = html.replace(/^(?:<br\s*\/?>|\s|&nbsp;)+/gi, '');
+    html = html.replace(/(?:<br\s*\/?>|\s|&nbsp;)+$/gi, '');
+    // Collapse multiple <br> into one
+    html = html.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
+    
+    cell.innerHTML = html;
 
     // Clean inline styles on the cell itself (keep only basic structure)
     cell.removeAttribute('style');

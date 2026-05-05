@@ -77,6 +77,12 @@ export function initExportDocx(
           image: {
             maxAgeMinutes: 0,
           },
+          mermaid: {
+            mermaidConfig: {
+              htmlLabels: false, // Prevents tainted canvas security error caused by <foreignObject> during SVG to PNG conversion
+            },
+            maxAgeMinutes: 0,
+          },
         }
       )) as Blob;
 
