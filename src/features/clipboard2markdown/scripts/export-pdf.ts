@@ -37,8 +37,17 @@ function buildPrintDocument(content: string): string {
       justify-content: center;
       margin: 1.2em 0;
     }
+    /* Subtle background for table headers */
+    .markdown-body table th {
+      background-color: #f6f8fa;
+    }
     @media print {
       body { margin: 0; }
+      /* Ensure background colors are printed */
+      .markdown-body table th, .markdown-body table tr:nth-child(2n) {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   </style>
 </head>
