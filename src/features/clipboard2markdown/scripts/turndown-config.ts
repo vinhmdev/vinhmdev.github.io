@@ -91,7 +91,7 @@ function preprocessHTML(html: string): string {
   // Solution: Globally remove elements marked as decorative or known UI classes.
   const uiCruftSelectors = [
     '[aria-hidden="true"]', // Standard way to hide decorative icons globally
-    '.ak-renderer-tableHeader-sorting-icon__wrapper' // Atlassian specific UI cruft
+    '.ak-renderer-tableHeader-sorting-icon__wrapper', // Atlassian specific UI cruft
   ];
   doc.querySelectorAll(uiCruftSelectors.join(', ')).forEach((el) => el.remove());
 
@@ -102,7 +102,7 @@ function preprocessHTML(html: string): string {
 
   // Remove duplicate sticky header tables from Atlassian
   // Confluence creates a duplicate sticky table header before the actual wrapper
-  doc.querySelectorAll('table[data-testid="renderer-table"]').forEach(table => {
+  doc.querySelectorAll('table[data-testid="renderer-table"]').forEach((table) => {
     // If table has only headers and no data cells, it's a sticky header artifact
     if (!table.querySelector('td')) {
       table.remove();
@@ -111,28 +111,34 @@ function preprocessHTML(html: string): string {
 
   doc.querySelectorAll('td, th').forEach((cell) => {
     // 1. Remove empty block elements that add spacing
-    cell.querySelectorAll('p, div, ul, ol, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+    cell.querySelectorAll('p, div, ul, ol, li, h1, h2, h3, h4, h5, h6').forEach((el) => {
       if (!el.textContent?.trim() && !el.querySelector('img')) {
         el.remove();
       }
     });
 
     // 2. Convert list items to inline with <br>•
-    cell.querySelectorAll('li').forEach(li => {
+    cell.querySelectorAll('li').forEach((li) => {
       const isOrdered = li.closest('ol');
       const bullet = isOrdered ? '1. ' : '• ';
-      li.replaceWith(doc.createElement('br'), doc.createTextNode(bullet), ...Array.from(li.childNodes));
+      li.replaceWith(
+        doc.createElement('br'),
+        doc.createTextNode(bullet),
+        ...Array.from(li.childNodes)
+      );
     });
     // Unwrap ul/ol containers
-    cell.querySelectorAll('ul, ol').forEach(list => list.replaceWith(...Array.from(list.childNodes)));
+    cell
+      .querySelectorAll('ul, ol')
+      .forEach((list) => list.replaceWith(...Array.from(list.childNodes)));
 
     // 3. Convert other blocks to content + <br>
-    cell.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre').forEach(block => {
+    cell.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre').forEach((block) => {
       block.replaceWith(...Array.from(block.childNodes), doc.createElement('br'));
     });
 
     // 4. Unwrap divs
-    cell.querySelectorAll('div').forEach(div => div.replaceWith(...Array.from(div.childNodes)));
+    cell.querySelectorAll('div').forEach((div) => div.replaceWith(...Array.from(div.childNodes)));
 
     // 5. Clean up the resulting HTML
     let html = cell.innerHTML;
@@ -143,7 +149,7 @@ function preprocessHTML(html: string): string {
     html = html.replace(/(?:<br\s*\/?>|\s|&nbsp;)+$/gi, '');
     // Collapse multiple <br> into one
     html = html.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
-    
+
     cell.innerHTML = html;
 
     // Clean inline styles on the cell itself (keep only basic structure)
@@ -374,4 +380,3 @@ export function convert(html: string): string {
   const cleanedHTML = preprocessHTML(html);
   return getInstance().turndown(cleanedHTML).trim();
 }
-

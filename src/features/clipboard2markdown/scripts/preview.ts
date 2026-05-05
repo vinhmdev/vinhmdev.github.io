@@ -224,7 +224,11 @@ export async function renderPreview(markdown: string, opts: RenderOptions): Prom
 
   try {
     // Rebuild parser only when the latex or mermaid setting changes
-    if (opts.renderLatex !== latexEnabledState || opts.renderMermaid !== mermaidEnabledState || !mdParser) {
+    if (
+      opts.renderLatex !== latexEnabledState ||
+      opts.renderMermaid !== mermaidEnabledState ||
+      !mdParser
+    ) {
       latexEnabledState = opts.renderLatex;
       mermaidEnabledState = opts.renderMermaid;
       mdParser = buildParser(opts.renderLatex, opts.renderMermaid);
