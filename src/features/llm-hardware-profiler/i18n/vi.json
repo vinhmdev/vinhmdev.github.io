@@ -1,1 +1,106 @@
-{}
+{
+  "page_title": "Ước tính Phần cứng LLM | VinhMDev",
+
+  "heading": "Ước tính Phần cứng LLM",
+  "subtitle": "Lập kế hoạch hạ tầng suy luận theo Roofline Model — chạy hoàn toàn trên trình duyệt",
+
+  "mode_forward":     "⚡ Dự báo",
+  "mode_matchmaking": "🔍 Ghép phần cứng",
+  "mode_discovery":   "🧩 Khám phá model",
+  "mode_forward_desc":     "Model + Phần cứng → VRAM & Tốc độ",
+  "mode_matchmaking_desc": "Model + Traffic + SLA → Phần cứng tối ưu",
+  "mode_discovery_desc":   "Phần cứng + Traffic → Model tối đa",
+
+  "section_model":    "Thông số Model",
+  "section_hardware": "Cấu hình Phần cứng",
+  "section_runtime":  "Cấu hình Runtime",
+  "section_workload": "Traffic & Tải",
+  "section_advanced": "Tối ưu nâng cao",
+  "section_sla":      "Ràng buộc SLA",
+
+  "label_model_preset":       "Preset Model",
+  "label_total_params":       "Tổng tham số (B)",
+  "label_active_params":      "Tham số hoạt động (B)",
+  "label_hidden_size":        "Hidden Size (d_model)",
+  "label_num_layers":         "Số Layers",
+  "label_num_query_heads":    "Query Heads (n_q)",
+  "label_num_kv_heads":       "KV Heads (n_kv)",
+  "label_vocab_size":         "Vocab Size",
+  "label_max_context_window": "Context Window tối đa (tokens)",
+
+  "label_hardware_preset":  "Preset Phần cứng",
+  "label_vram_total_gb":    "VRAM Tổng (GB)",
+  "label_bandwidth_gbps":   "Băng thông (GB/s)",
+  "label_compute_tflops":   "Tính toán (TFLOPS FP16)",
+  "label_gpu_count":        "Số GPU",
+
+  "label_weight_quant":    "Lượng tử hóa Weights",
+  "label_kv_quant":        "Lượng tử hóa KV Cache",
+  "label_context_limit":   "Giới hạn Context Length (tokens)",
+  "label_engine":          "Inference Engine",
+  "engine_standard_hf":    "Standard HuggingFace",
+  "engine_vllm":           "vLLM / TGI (PagedAttention)",
+
+  "label_concurrent_reqs":    "Số yêu cầu đồng thời tối đa",
+  "label_avg_input_tokens":   "Avg Input Tokens",
+  "label_avg_output_tokens":  "Avg Output Tokens",
+  "label_shared_prefix":      "Shared Prefix Length (tokens)",
+  "hint_shared_prefix":       "Tokens dùng chung cho tất cả users (vd: system prompt RAG)",
+
+  "toggle_apc":             "Automatic Prefix Caching (APC)",
+  "toggle_spec_decoding":   "Speculative Decoding",
+  "label_draft_params":     "Tham số Draft Model (B)",
+  "label_acceptance_rate":  "Tỷ lệ chấp nhận",
+  "toggle_chunked_prefill": "Chunked Prefill",
+  "label_chunk_size":       "Chunk Size (tokens)",
+
+  "label_min_tps":  "Min Tok/s / User",
+  "label_max_ttft": "Max TTFT (ms)",
+
+  "btn_calculate":    "Tính toán",
+  "btn_find_hw":      "Tìm phần cứng",
+  "btn_discover":     "Khám phá",
+
+  "result_vram_title":    "Phân tích VRAM",
+  "result_weights":       "Weights Model",
+  "result_kv_cache":      "KV Cache",
+  "result_overhead":      "Overhead & Buffer",
+  "result_total":         "Tổng yêu cầu",
+  "result_available":     "Khả dụng (sau OS reserve)",
+  "result_utilization":   "Mức sử dụng",
+  "badge_oom":            "⚠ OOM — Không đủ bộ nhớ",
+  "badge_fit":            "✓ Vừa bộ nhớ",
+
+  "result_speed_title":   "Ước tính Tốc độ",
+  "result_prefill_ttft":  "Prefill TTFT",
+  "result_system_tps":    "Throughput hệ thống",
+  "result_user_tps":      "Tốc độ mỗi user",
+  "unit_ms":    "ms",
+  "unit_tps":   "tok/s",
+
+  "result_match_title":   "Phần cứng phù hợp (sắp xếp theo giá)",
+  "col_hardware":         "Phần cứng",
+  "col_vram_fit":         "VRAM Fit",
+  "col_user_tps":         "Tok/s / User",
+  "col_ttft":             "TTFT",
+  "col_cost":             "$/giờ",
+  "col_roi":              "ROI Score",
+  "badge_best_roi":       "★ ROI tốt nhất",
+  "no_match_found":       "Không có phần cứng nào đáp ứng SLA. Hãy thử nới lỏng yêu cầu hoặc giảm concurrency.",
+
+  "result_discovery_title":   "Kích thước Model Tối đa",
+  "discovery_max_params":     "Tham số tối đa",
+  "discovery_est_hidden":     "Ước tính Hidden Size",
+  "discovery_est_layers":     "Ước tính Số Layers",
+  "discovery_bottleneck":     "Nút thắt cổ chai",
+  "discovery_recommended":    "Quantization khuyến nghị",
+  "bottleneck_weights":       "Weights Model",
+  "bottleneck_kv_cache":      "KV Cache",
+  "bottleneck_both":          "Weights + KV Cache",
+
+  "preset_custom": "— Tùy chỉnh —",
+  "hint_moe":      "Mô hình MoE: active_params quyết định tốc độ decode, total_params quyết định VRAM",
+
+  "toast_calculated": "Kết quả đã cập nhật",
+  "toast_no_input":   "Vui lòng điền đầy đủ thông tin trước"
+}

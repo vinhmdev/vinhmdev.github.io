@@ -1,0 +1,317 @@
+[
+  {
+    "hardware_id": "mac_mini_m4_pro_48",
+    "display_name": "Mac Mini M4 Pro (48GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 273.0,
+      "compute_tflops_fp16": 54.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.62,
+      "mfu_factor": 0.30,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.50
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m3_max_128",
+    "display_name": "Mac Studio M3 Max (128GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 400.0,
+      "compute_tflops_fp16": 100.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.63,
+      "mfu_factor": 0.30,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.50
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m2_ultra_192",
+    "display_name": "Mac Studio M2 Ultra (192GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 192.0,
+      "raw_bandwidth_gbps": 800.0,
+      "compute_tflops_fp16": 134.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.30,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 2.50
+    }
+  },
+  {
+    "hardware_id": "mac_pro_m2_ultra_192",
+    "display_name": "Mac Pro M2 Ultra (192GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 192.0,
+      "raw_bandwidth_gbps": 800.0,
+      "compute_tflops_fp16": 134.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.30,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 3.20
+    }
+  },
+  {
+    "hardware_id": "rtx_3090_1x",
+    "display_name": "RTX 3090 ×1 (24GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 936.0,
+      "compute_tflops_fp16": 35.6
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.72,
+      "mfu_factor": 0.35,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.35
+    }
+  },
+  {
+    "hardware_id": "rtx_4090_1x",
+    "display_name": "RTX 4090 ×1 (24GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 1008.0,
+      "compute_tflops_fp16": 82.6
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.38,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.55
+    }
+  },
+  {
+    "hardware_id": "rtx_4090_2x_pcie",
+    "display_name": "RTX 4090 ×2 PCIe (48GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 1008.0,
+      "compute_tflops_fp16": 165.2
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.38,
+      "interconnect_penalty": 0.80
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.10
+    }
+  },
+  {
+    "hardware_id": "rtx_4090_4x_pcie",
+    "display_name": "RTX 4090 ×4 PCIe (96GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 4,
+    "specs": {
+      "vram_total_gb": 96.0,
+      "raw_bandwidth_gbps": 1008.0,
+      "compute_tflops_fp16": 330.4
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.38,
+      "interconnect_penalty": 0.80
+    },
+    "economics": {
+      "est_hourly_cost_usd": 2.20
+    }
+  },
+  {
+    "hardware_id": "a100_sxm_80_1x",
+    "display_name": "A100 SXM 80GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 80.0,
+      "raw_bandwidth_gbps": 2000.0,
+      "compute_tflops_fp16": 312.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.82,
+      "mfu_factor": 0.47,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 2.80
+    }
+  },
+  {
+    "hardware_id": "a100_sxm_80_4x_nvlink",
+    "display_name": "A100 SXM 80GB ×4 NVLink (320GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 4,
+    "specs": {
+      "vram_total_gb": 320.0,
+      "raw_bandwidth_gbps": 2000.0,
+      "compute_tflops_fp16": 1248.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.82,
+      "mfu_factor": 0.47,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 11.20
+    }
+  },
+  {
+    "hardware_id": "a100_sxm_80_8x_nvlink",
+    "display_name": "A100 SXM 80GB ×8 NVLink (640GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 8,
+    "specs": {
+      "vram_total_gb": 640.0,
+      "raw_bandwidth_gbps": 2000.0,
+      "compute_tflops_fp16": 2496.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.82,
+      "mfu_factor": 0.47,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 22.40
+    }
+  },
+  {
+    "hardware_id": "h100_sxm_80_1x",
+    "display_name": "H100 SXM 80GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 80.0,
+      "raw_bandwidth_gbps": 3350.0,
+      "compute_tflops_fp16": 989.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.83,
+      "mfu_factor": 0.48,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 8.00
+    }
+  },
+  {
+    "hardware_id": "h100_sxm_80_4x_nvlink",
+    "display_name": "H100 SXM 80GB ×4 NVLink (320GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 4,
+    "specs": {
+      "vram_total_gb": 320.0,
+      "raw_bandwidth_gbps": 3350.0,
+      "compute_tflops_fp16": 3956.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.83,
+      "mfu_factor": 0.48,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 32.00
+    }
+  },
+  {
+    "hardware_id": "h100_sxm_80_8x_nvlink",
+    "display_name": "H100 SXM 80GB ×8 NVLink (640GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 8,
+    "specs": {
+      "vram_total_gb": 640.0,
+      "raw_bandwidth_gbps": 3350.0,
+      "compute_tflops_fp16": 7912.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.83,
+      "mfu_factor": 0.48,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 64.00
+    }
+  },
+  {
+    "hardware_id": "h200_sxm_141_1x",
+    "display_name": "H200 SXM 141GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 141.0,
+      "raw_bandwidth_gbps": 4800.0,
+      "compute_tflops_fp16": 989.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.83,
+      "mfu_factor": 0.48,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 12.00
+    }
+  }
+]

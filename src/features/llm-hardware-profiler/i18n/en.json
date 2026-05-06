@@ -1,1 +1,106 @@
-{}
+{
+  "page_title": "LLM Hardware Estimator | VinhMDev",
+
+  "heading": "LLM Hardware Estimator",
+  "subtitle": "Roofline-based inference capacity planning — runs entirely in your browser",
+
+  "mode_forward":     "⚡ Forward",
+  "mode_matchmaking": "🔍 Matchmaking",
+  "mode_discovery":   "🧩 Discovery",
+  "mode_forward_desc":     "Model + Hardware → VRAM & Speed",
+  "mode_matchmaking_desc": "Model + Traffic + SLA → Best Hardware",
+  "mode_discovery_desc":   "Hardware + Traffic → Max Model Size",
+
+  "section_model":    "Model Specifications",
+  "section_hardware": "Hardware Configuration",
+  "section_runtime":  "Runtime Config",
+  "section_workload": "Traffic & Workload",
+  "section_advanced": "Advanced Optimisations",
+  "section_sla":      "SLA Constraints",
+
+  "label_model_preset":       "Model Preset",
+  "label_total_params":       "Total Parameters (B)",
+  "label_active_params":      "Active Parameters (B)",
+  "label_hidden_size":        "Hidden Size (d_model)",
+  "label_num_layers":         "Num Layers",
+  "label_num_query_heads":    "Query Heads (n_q)",
+  "label_num_kv_heads":       "KV Heads (n_kv)",
+  "label_vocab_size":         "Vocab Size",
+  "label_max_context_window": "Max Context Window (tokens)",
+
+  "label_hardware_preset":  "Hardware Preset",
+  "label_vram_total_gb":    "VRAM Total (GB)",
+  "label_bandwidth_gbps":   "Bandwidth (GB/s)",
+  "label_compute_tflops":   "Compute (TFLOPS FP16)",
+  "label_gpu_count":        "GPU Count",
+
+  "label_weight_quant":    "Weight Quantization",
+  "label_kv_quant":        "KV Cache Quantization",
+  "label_context_limit":   "Context Length Limit (tokens)",
+  "label_engine":          "Inference Engine",
+  "engine_standard_hf":    "Standard HuggingFace",
+  "engine_vllm":           "vLLM / TGI (PagedAttention)",
+
+  "label_concurrent_reqs":    "Max Concurrent Requests",
+  "label_avg_input_tokens":   "Avg Input Tokens",
+  "label_avg_output_tokens":  "Avg Output Tokens",
+  "label_shared_prefix":      "Shared Prefix Length (tokens)",
+  "hint_shared_prefix":       "Tokens shared across all users (e.g. system prompt for RAG)",
+
+  "toggle_apc":             "Automatic Prefix Caching (APC)",
+  "toggle_spec_decoding":   "Speculative Decoding",
+  "label_draft_params":     "Draft Model Params (B)",
+  "label_acceptance_rate":  "Acceptance Rate",
+  "toggle_chunked_prefill": "Chunked Prefill",
+  "label_chunk_size":       "Chunk Size (tokens)",
+
+  "label_min_tps":  "Min Tok/s per User",
+  "label_max_ttft": "Max TTFT (ms)",
+
+  "btn_calculate":    "Calculate",
+  "btn_find_hw":      "Find Hardware",
+  "btn_discover":     "Discover",
+
+  "result_vram_title":    "VRAM Breakdown",
+  "result_weights":       "Model Weights",
+  "result_kv_cache":      "KV Cache",
+  "result_overhead":      "Overhead & Fragmentation",
+  "result_total":         "Total Required",
+  "result_available":     "Available (OS-adjusted)",
+  "result_utilization":   "Utilisation",
+  "badge_oom":            "⚠ OOM — Out of Memory",
+  "badge_fit":            "✓ Fits in Memory",
+
+  "result_speed_title":   "Speed Estimates",
+  "result_prefill_ttft":  "Prefill TTFT",
+  "result_system_tps":    "System Throughput",
+  "result_user_tps":      "Per-User Speed",
+  "unit_ms":    "ms",
+  "unit_tps":   "tok/s",
+
+  "result_match_title":   "Hardware Options (sorted by cost)",
+  "col_hardware":         "Hardware",
+  "col_vram_fit":         "VRAM Fit",
+  "col_user_tps":         "Tok/s / User",
+  "col_ttft":             "TTFT",
+  "col_cost":             "$/hr",
+  "col_roi":              "ROI Score",
+  "badge_best_roi":       "★ Best ROI",
+  "no_match_found":       "No hardware meets your SLA constraints. Try relaxing the requirements or lowering concurrency.",
+
+  "result_discovery_title":   "Maximum Model Size",
+  "discovery_max_params":     "Max Parameters",
+  "discovery_est_hidden":     "Est. Hidden Size",
+  "discovery_est_layers":     "Est. Layers",
+  "discovery_bottleneck":     "Bottleneck",
+  "discovery_recommended":    "Recommended Quantization",
+  "bottleneck_weights":       "Model Weights",
+  "bottleneck_kv_cache":      "KV Cache",
+  "bottleneck_both":          "Weights + KV Cache",
+
+  "preset_custom": "— Custom —",
+  "hint_moe":      "MoE model: active_params govern decode speed, total_params govern VRAM",
+
+  "toast_calculated": "Results updated",
+  "toast_no_input":   "Fill in the required fields first"
+}

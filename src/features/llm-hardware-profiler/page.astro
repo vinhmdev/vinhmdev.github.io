@@ -1,11 +1,719 @@
 ---
-// LLM Hardware Profiler
+import BaseLayout from '@layouts/BaseLayout.astro';
 ---
 
-<div id="llm-hardware-profiler">
-  <!-- TODO: implement -->
-</div>
+<BaseLayout
+  title="LLM Hardware Estimator | VinhMDev"
+  description="Roofline-based LLM inference capacity planning. Estimate VRAM, speed, and find the optimal hardware for any open-source model."
+  lang="en"
+  bodyClass="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-[100dvh] overflow-hidden transition-colors duration-300"
+  showFooter={false}
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"
+    ></script>
+  </Fragment>
 
-<script>
-  import './scripts/app';
-</script>
+  <div class="profiler-layout">
+    <!-- ===== Header ===== -->
+    <header class="profiler-header">
+      <a href="/" class="profiler-header-title" style="text-decoration:none;color:inherit;">
+        <h1 data-i18n="heading">LLM Hardware Estimator</h1>
+        <p data-i18n="subtitle">Roofline-based inference capacity planning</p>
+      </a>
+      <div class="profiler-header-actions">
+        <button id="theme-toggle-btn" class="icon-btn" title="Toggle theme">
+          <i data-lucide="sun" style="width:1rem;height:1rem;display:none;" class="dark:block"></i>
+          <i data-lucide="moon" style="width:1rem;height:1rem;" class="dark:hidden"></i>
+        </button>
+        <button id="lang-switch-btn" class="lang-btn">
+          <span>🇬🇧</span><span>EN</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== Mode Selector ===== -->
+    <nav class="mode-selector" role="tablist">
+      <button
+        id="mode-btn-forward"
+        class="mode-btn"
+        data-mode="forward"
+        data-active="true"
+        role="tab"
+        aria-selected="true"
+      >
+        <i data-lucide="zap" style="width:.875rem;height:.875rem;"></i>
+        <span data-i18n="mode_forward">⚡ Forward</span>
+      </button>
+      <button
+        id="mode-btn-matchmaking"
+        class="mode-btn"
+        data-mode="matchmaking"
+        data-active="false"
+        role="tab"
+        aria-selected="false"
+      >
+        <i data-lucide="search" style="width:.875rem;height:.875rem;"></i>
+        <span data-i18n="mode_matchmaking">🔍 Matchmaking</span>
+      </button>
+      <button
+        id="mode-btn-discovery"
+        class="mode-btn"
+        data-mode="discovery"
+        data-active="false"
+        role="tab"
+        aria-selected="false"
+      >
+        <i data-lucide="puzzle" style="width:.875rem;height:.875rem;"></i>
+        <span data-i18n="mode_discovery">🧩 Discovery</span>
+      </button>
+      <span
+        id="mode-desc"
+        style="margin-left:auto;font-size:.7rem;color:var(--profiler-text-muted);align-self:center;"
+        data-i18n="mode_forward_desc">Model + Hardware → VRAM &amp; Speed</span
+      >
+    </nav>
+
+    <!-- ===== Main Split ===== -->
+    <main class="profiler-main">
+      <!-- ─── Input Panel ─── -->
+      <aside class="input-panel">
+        <div class="input-panel-inner">
+          <!-- Group 1: Model -->
+          <section class="form-section" id="section-model">
+            <div class="form-section-header">
+              <i data-lucide="brain" class="section-icon"></i>
+              <span data-i18n="section_model">Model Specifications</span>
+            </div>
+            <div class="form-section-body single-col">
+              <div class="form-field">
+                <label class="form-label" for="model-preset" data-i18n="label_model_preset"
+                  >Model Preset</label
+                >
+                <select id="model-preset" class="form-select">
+                  <option value="">— Custom —</option>
+                </select>
+              </div>
+              <div class="form-section-body" style="padding:0;border:none;">
+                <div class="form-field">
+                  <label class="form-label" for="total-params" data-i18n="label_total_params"
+                    >Total Params (B)</label
+                  >
+                  <input
+                    id="total-params"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    class="form-input"
+                    placeholder="e.g. 70"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="active-params" data-i18n="label_active_params"
+                    >Active Params (B)</label
+                  >
+                  <input
+                    id="active-params"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    class="form-input"
+                    placeholder="= total for dense"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="hidden-size" data-i18n="label_hidden_size"
+                    >Hidden Size</label
+                  >
+                  <input
+                    id="hidden-size"
+                    type="number"
+                    min="64"
+                    step="64"
+                    class="form-input"
+                    placeholder="e.g. 4096"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="num-layers" data-i18n="label_num_layers"
+                    >Num Layers</label
+                  >
+                  <input
+                    id="num-layers"
+                    type="number"
+                    min="1"
+                    class="form-input"
+                    placeholder="e.g. 32"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="num-query-heads" data-i18n="label_num_query_heads"
+                    >Query Heads (n_q)</label
+                  >
+                  <input
+                    id="num-query-heads"
+                    type="number"
+                    min="1"
+                    class="form-input"
+                    placeholder="e.g. 32"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="num-kv-heads" data-i18n="label_num_kv_heads"
+                    >KV Heads (n_kv)</label
+                  >
+                  <input
+                    id="num-kv-heads"
+                    type="number"
+                    min="1"
+                    class="form-input"
+                    placeholder="e.g. 8"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="vocab-size" data-i18n="label_vocab_size"
+                    >Vocab Size</label
+                  >
+                  <input
+                    id="vocab-size"
+                    type="number"
+                    min="1000"
+                    class="form-input"
+                    placeholder="e.g. 128256"
+                  />
+                </div>
+                <div class="form-field">
+                  <label
+                    class="form-label"
+                    for="max-context-window"
+                    data-i18n="label_max_context_window">Max Context (tokens)</label
+                  >
+                  <input
+                    id="max-context-window"
+                    type="number"
+                    min="512"
+                    class="form-input"
+                    placeholder="e.g. 8192"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Group 2: Hardware (hidden in Mode 3, shown in Mode 1 & 2) -->
+          <section
+            class="form-section"
+            id="section-hardware"
+            data-visible-modes="forward,matchmaking"
+          >
+            <div class="form-section-header">
+              <i data-lucide="cpu" class="section-icon"></i>
+              <span data-i18n="section_hardware">Hardware Configuration</span>
+            </div>
+            <div class="form-section-body single-col">
+              <div class="form-field">
+                <label class="form-label" for="hardware-preset" data-i18n="label_hardware_preset"
+                  >Hardware Preset</label
+                >
+                <select id="hardware-preset" class="form-select">
+                  <option value="">— Custom —</option>
+                </select>
+              </div>
+              <div class="form-section-body" style="padding:0;border:none;">
+                <div class="form-field">
+                  <label class="form-label" for="vram-total-gb" data-i18n="label_vram_total_gb"
+                    >VRAM Total (GB)</label
+                  >
+                  <input
+                    id="vram-total-gb"
+                    type="number"
+                    min="1"
+                    step="0.5"
+                    class="form-input"
+                    placeholder="e.g. 80"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="bandwidth-gbps" data-i18n="label_bandwidth_gbps"
+                    >Bandwidth (GB/s)</label
+                  >
+                  <input
+                    id="bandwidth-gbps"
+                    type="number"
+                    min="1"
+                    class="form-input"
+                    placeholder="e.g. 2000"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="compute-tflops" data-i18n="label_compute_tflops"
+                    >Compute (TFLOPS)</label
+                  >
+                  <input
+                    id="compute-tflops"
+                    type="number"
+                    min="1"
+                    class="form-input"
+                    placeholder="e.g. 312"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="gpu-count" data-i18n="label_gpu_count"
+                    >GPU Count</label
+                  >
+                  <input
+                    id="gpu-count"
+                    type="number"
+                    min="1"
+                    max="16"
+                    class="form-input"
+                    value="1"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Group 3: Runtime -->
+          <section class="form-section" id="section-runtime">
+            <div class="form-section-header">
+              <i data-lucide="settings-2" class="section-icon"></i>
+              <span data-i18n="section_runtime">Runtime Config</span>
+            </div>
+            <div class="form-section-body">
+              <div class="form-field span-2">
+                <label class="form-label" for="weight-quant" data-i18n="label_weight_quant"
+                  >Weight Quantization</label
+                >
+                <select id="weight-quant" class="form-select">
+                  <option value="FP16">FP16 / BF16 (2.00 B/param)</option>
+                  <option value="INT8">INT8 / FP8 (1.05 B/param)</option>
+                  <option value="AWQ">AWQ / GPTQ / EXL2 (0.60 B/param)</option>
+                  <option value="GGUF_Q4_K_M">GGUF Q4_K_M (0.62 B/param)</option>
+                  <option value="GGUF_Q5_K_M">GGUF Q5_K_M (0.72 B/param)</option>
+                  <option value="GGUF_Q8_0">GGUF Q8_0 (1.10 B/param)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="kv-quant" data-i18n="label_kv_quant"
+                  >KV Cache Quant</label
+                >
+                <select id="kv-quant" class="form-select">
+                  <option value="FP16">FP16 (2.0 B/param)</option>
+                  <option value="FP8">FP8 (1.0 B/param)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="context-limit" data-i18n="label_context_limit"
+                  >Context Limit (tokens)</label
+                >
+                <input
+                  id="context-limit"
+                  type="number"
+                  min="512"
+                  class="form-input"
+                  placeholder="e.g. 4096"
+                />
+              </div>
+              <div class="form-field span-2">
+                <label class="form-label" for="inference-engine" data-i18n="label_engine"
+                  >Inference Engine</label
+                >
+                <select id="inference-engine" class="form-select">
+                  <option value="vLLM">vLLM / TGI (PagedAttention, 4% frag)</option>
+                  <option value="Standard_HF">Standard HuggingFace (20% frag)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Group 4: Workload -->
+          <section class="form-section" id="section-workload">
+            <div class="form-section-header">
+              <i data-lucide="users" class="section-icon"></i>
+              <span data-i18n="section_workload">Traffic &amp; Workload</span>
+            </div>
+            <div class="form-section-body">
+              <div class="form-field span-2">
+                <label
+                  class="form-label"
+                  for="max-concurrent-reqs"
+                  data-i18n="label_concurrent_reqs">Max Concurrent Requests</label
+                >
+                <input
+                  id="max-concurrent-reqs"
+                  type="number"
+                  min="1"
+                  max="1000"
+                  class="form-input"
+                  value="10"
+                />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="avg-input-tokens" data-i18n="label_avg_input_tokens"
+                  >Avg Input Tokens</label
+                >
+                <input id="avg-input-tokens" type="number" min="1" class="form-input" value="512" />
+              </div>
+              <div class="form-field">
+                <label
+                  class="form-label"
+                  for="avg-output-tokens"
+                  data-i18n="label_avg_output_tokens">Avg Output Tokens</label
+                >
+                <input
+                  id="avg-output-tokens"
+                  type="number"
+                  min="1"
+                  class="form-input"
+                  value="256"
+                />
+              </div>
+              <div class="form-field span-2">
+                <label class="form-label" for="shared-prefix" data-i18n="label_shared_prefix"
+                  >Shared Prefix (tokens)</label
+                >
+                <input id="shared-prefix" type="number" min="0" class="form-input" value="0" />
+                <span class="form-hint" data-i18n="hint_shared_prefix"
+                  >Tokens shared across all users (e.g. RAG system prompt)</span
+                >
+              </div>
+            </div>
+          </section>
+
+          <!-- Advanced Optimisations -->
+          <section class="form-section" id="section-advanced">
+            <div class="form-section-header">
+              <i data-lucide="sliders-horizontal" class="section-icon"></i>
+              <span data-i18n="section_advanced">Advanced Optimisations</span>
+            </div>
+            <div class="form-section-body single-col" style="gap:.25rem;">
+              <!-- APC -->
+              <label class="toggle-item">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="toggle-apc" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span class="toggle-label" data-i18n="toggle_apc"
+                  >Automatic Prefix Caching (APC)</span
+                >
+              </label>
+
+              <!-- Speculative Decoding -->
+              <label class="toggle-item">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="toggle-spec-decoding" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span class="toggle-label" data-i18n="toggle_spec_decoding"
+                  >Speculative Decoding</span
+                >
+              </label>
+              <div id="spec-decoding-fields" class="sub-fields hidden">
+                <div class="form-field">
+                  <label class="form-label" for="draft-params" data-i18n="label_draft_params"
+                    >Draft Params (B)</label
+                  >
+                  <input
+                    id="draft-params"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    class="form-input"
+                    value="1.5"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="acceptance-rate" data-i18n="label_acceptance_rate"
+                    >Acceptance Rate</label
+                  >
+                  <input
+                    id="acceptance-rate"
+                    type="number"
+                    min="1.0"
+                    max="3.0"
+                    step="0.1"
+                    class="form-input"
+                    value="1.8"
+                  />
+                </div>
+              </div>
+
+              <!-- Chunked Prefill -->
+              <label class="toggle-item">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="toggle-chunked-prefill" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span class="toggle-label" data-i18n="toggle_chunked_prefill">Chunked Prefill</span>
+              </label>
+              <div id="chunked-prefill-fields" class="sub-fields hidden">
+                <div class="form-field span-2">
+                  <label class="form-label" for="chunk-size" data-i18n="label_chunk_size"
+                    >Chunk Size (tokens)</label
+                  >
+                  <input
+                    id="chunk-size"
+                    type="number"
+                    min="64"
+                    step="64"
+                    class="form-input"
+                    value="512"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SLA Constraints (Mode 2 only) -->
+          <section class="form-section hidden" id="section-sla" data-visible-modes="matchmaking">
+            <div class="form-section-header">
+              <i data-lucide="gauge" class="section-icon"></i>
+              <span data-i18n="section_sla">SLA Constraints</span>
+            </div>
+            <div class="form-section-body">
+              <div class="form-field">
+                <label class="form-label" for="min-tps" data-i18n="label_min_tps"
+                  >Min Tok/s per User</label
+                >
+                <input id="min-tps" type="number" min="1" class="form-input" value="10" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="max-ttft" data-i18n="label_max_ttft"
+                  >Max TTFT (ms)</label
+                >
+                <input id="max-ttft" type="number" min="100" class="form-input" value="5000" />
+              </div>
+            </div>
+          </section>
+
+          <!-- Hardware Selector (Mode 3 only) -->
+          <section class="form-section hidden" id="section-hardware-discovery">
+            <div class="form-section-header">
+              <i data-lucide="cpu" class="section-icon"></i>
+              <span data-i18n="section_hardware">Hardware Configuration</span>
+            </div>
+            <div class="form-section-body single-col">
+              <div class="form-field">
+                <label
+                  class="form-label"
+                  for="hardware-preset-discovery"
+                  data-i18n="label_hardware_preset">Hardware Preset</label
+                >
+                <select id="hardware-preset-discovery" class="form-select">
+                  <option value="">— Select Hardware —</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Calculate Button -->
+          <button id="btn-calculate" class="btn-calculate">
+            <i data-lucide="calculator" style="width:1rem;height:1rem;"></i>
+            <span id="btn-calculate-label" data-i18n="btn_calculate">Calculate</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ─── Results Panel ─── -->
+      <section class="results-panel" id="results-panel">
+        <div id="results-empty" class="results-empty">
+          <i data-lucide="bar-chart-2" class="results-empty-icon"></i>
+          <p>
+            Fill in the model &amp; hardware details on the left, then click <strong
+              >Calculate</strong
+            >.
+          </p>
+        </div>
+        <div id="results-content" class="results-panel-inner hidden">
+          <!-- VRAM Result (Mode 1 & 2) -->
+          <div id="result-vram" class="result-card">
+            <div class="result-card-header">
+              <i
+                data-lucide="memory-stick"
+                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+              <span data-i18n="result_vram_title">VRAM Breakdown</span>
+              <span
+                id="vram-status-badge"
+                class="status-badge fit"
+                style="margin-left:auto;"
+                data-i18n="badge_fit">✓ Fits</span
+              >
+            </div>
+            <div class="result-card-body">
+              <div class="vram-bar-wrapper">
+                <div class="vram-bar" id="vram-bar">
+                  <div id="vram-seg-weights" class="vram-bar-segment weights" style="width:0%">
+                  </div>
+                  <div id="vram-seg-kv" class="vram-bar-segment kv" style="width:0%"></div>
+                  <div id="vram-seg-overhead" class="vram-bar-segment overhead" style="width:0%">
+                  </div>
+                </div>
+                <div class="vram-legend">
+                  <span class="vram-legend-item"
+                    ><span class="vram-legend-dot weights"></span><span data-i18n="result_weights"
+                      >Weights</span
+                    ></span
+                  >
+                  <span class="vram-legend-item"
+                    ><span class="vram-legend-dot kv"></span><span data-i18n="result_kv_cache"
+                      >KV Cache</span
+                    ></span
+                  >
+                  <span class="vram-legend-item"
+                    ><span class="vram-legend-dot overhead"></span><span data-i18n="result_overhead"
+                      >Overhead</span
+                    ></span
+                  >
+                </div>
+              </div>
+              <div class="vram-stats">
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="vram-total">—</div>
+                  <div class="vram-stat-label" data-i18n="result_total">Total Required</div>
+                </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="vram-available">—</div>
+                  <div class="vram-stat-label" data-i18n="result_available">Available</div>
+                </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="vram-utilization">—</div>
+                  <div class="vram-stat-label" data-i18n="result_utilization">Utilisation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Speed Result (Mode 1) -->
+          <div id="result-speed" class="result-card">
+            <div class="result-card-header">
+              <i
+                data-lucide="gauge"
+                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+              <span data-i18n="result_speed_title">Speed Estimates</span>
+            </div>
+            <div class="result-card-body">
+              <div class="speed-grid">
+                <div class="speed-card">
+                  <div class="speed-card-value" id="speed-ttft">—</div>
+                  <div class="speed-card-unit" data-i18n="unit_ms">ms</div>
+                  <div class="speed-card-label" data-i18n="result_prefill_ttft">Prefill TTFT</div>
+                </div>
+                <div class="speed-card">
+                  <div class="speed-card-value" id="speed-system-tps">—</div>
+                  <div class="speed-card-unit" data-i18n="unit_tps">tok/s</div>
+                  <div class="speed-card-label" data-i18n="result_system_tps">
+                    System Throughput
+                  </div>
+                </div>
+                <div class="speed-card">
+                  <div class="speed-card-value" id="speed-user-tps">—</div>
+                  <div class="speed-card-unit" data-i18n="unit_tps">tok/s</div>
+                  <div class="speed-card-label" data-i18n="result_user_tps">Per-User Speed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Matchmaking Table (Mode 2) -->
+          <div id="result-matchmaking" class="result-card hidden">
+            <div class="result-card-header">
+              <i
+                data-lucide="list-ordered"
+                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+              <span data-i18n="result_match_title">Hardware Options</span>
+            </div>
+            <div class="result-card-body" style="padding:0;overflow-x:auto;">
+              <table class="match-table" id="match-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="col_hardware">Hardware</th>
+                    <th data-i18n="col_vram_fit">VRAM Fit</th>
+                    <th data-i18n="col_user_tps">Tok/s / User</th>
+                    <th data-i18n="col_ttft">TTFT</th>
+                    <th data-i18n="col_cost">$/hr</th>
+                    <th data-i18n="col_roi">ROI</th>
+                  </tr>
+                </thead>
+                <tbody id="match-table-body"></tbody>
+              </table>
+              <p
+                id="match-no-result"
+                class="hidden"
+                style="padding:.875rem;font-size:.8rem;color:var(--profiler-text-muted);"
+                data-i18n="no_match_found"
+              >
+                No hardware meets your SLA constraints.
+              </p>
+            </div>
+          </div>
+
+          <!-- Discovery Result (Mode 3) -->
+          <div id="result-discovery" class="result-card hidden">
+            <div class="result-card-header">
+              <i
+                data-lucide="package-search"
+                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+              <span data-i18n="result_discovery_title">Maximum Model Size</span>
+            </div>
+            <div class="result-card-body">
+              <div class="vram-stats">
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="discovery-max-params">—</div>
+                  <div class="vram-stat-label" data-i18n="discovery_max_params">Max Params</div>
+                </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="discovery-hidden">—</div>
+                  <div class="vram-stat-label" data-i18n="discovery_est_hidden">
+                    Est. Hidden Size
+                  </div>
+                </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="discovery-layers">—</div>
+                  <div class="vram-stat-label" data-i18n="discovery_est_layers">Est. Layers</div>
+                </div>
+              </div>
+              <div
+                style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;"
+              >
+                <span
+                  style="font-size:.7rem;color:var(--profiler-text-muted);"
+                  data-i18n="discovery_bottleneck">Bottleneck:</span
+                >
+                <span
+                  id="discovery-bottleneck"
+                  style="font-size:.75rem;font-weight:600;color:var(--profiler-accent);">—</span
+                >
+                <span
+                  style="font-size:.7rem;color:var(--profiler-text-muted);margin-left:.5rem;"
+                  data-i18n="discovery_recommended">Recommended Quant:</span
+                >
+                <span id="discovery-quant" style="font-size:.75rem;font-weight:600;">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="profiler-toast">
+    <span id="profiler-toast-icon"></span>
+    <span id="profiler-toast-msg"></span>
+  </div>
+
+  <script>
+    import './scripts/app';
+  </script>
+
+  <style>
+    @import './styles/profiler.css';
+  </style>
+</BaseLayout>
