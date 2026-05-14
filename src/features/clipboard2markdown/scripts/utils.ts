@@ -3,8 +3,8 @@
  * Toast notifications, clipboard, and file download helpers.
  */
 
-// @ts-ignore — loaded via CDN
-const lucide = window.lucide;
+// Lucide is loaded via CDN — see clipboard2markdown/page.astro.
+// Typed via src/shared/globals.d.ts (Window.lucide).
 
 // --- Toast notification ---
 
@@ -21,11 +21,18 @@ export function showToast(icon: string, msg: string): void {
 
   const iconEl = document.getElementById('toast-icon');
   if (iconEl) {
-    iconEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
+    // Build the <i> element via DOM API to avoid an innerHTML sink — even
+    // though every current caller passes a trusted icon name, this keeps the
+    // helper safe if future callers ever forward unvalidated input.
+    iconEl.textContent = '';
+    const iEl = document.createElement('i');
+    iEl.setAttribute('data-lucide', icon);
+    iEl.className = 'w-5 h-5';
+    iconEl.appendChild(iEl);
   }
   const msgEl = document.getElementById('toast-msg');
   if (msgEl) msgEl.innerText = msg;
-  lucide.createIcons();
+  window.lucide.createIcons();
 
   toast.classList.remove('translate-y-20', 'opacity-0');
   toast.classList.add('translate-y-0', 'opacity-100');

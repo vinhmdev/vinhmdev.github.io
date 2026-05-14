@@ -10,7 +10,7 @@
  * Usage:
  *   const renderer = new PreviewRenderer(hostEl);
  *   renderer.setColorMode(isDark);
- *   renderer.setContent(sanitizedHtml);
+ *   renderer.setSafeHTML(sanitizedHtml);
  *   await renderer.renderMermaid(isDark);
  */
 
@@ -68,19 +68,23 @@ export class PreviewRenderer {
   }
 
   /**
-   * Inject sanitized HTML into the shadow DOM.
-   * Caller is responsible for sanitizing before passing here.
+   * Inject pre-sanitized HTML into the shadow DOM.
+   *
+   * SAFETY CONTRACT: the caller MUST sanitize before passing here.
+   * The custom DOMPurify config used by preview.ts allows SVG/MathML for
+   * Mermaid + KaTeX output, so this method cannot do a second sanitization
+   * pass with default config without stripping those legitimate elements.
    */
-  setContent(sanitizedHtml: string): void {
+  setSafeHTML(sanitizedHtml: string): void {
     this.bodyEl.innerHTML = sanitizedHtml;
   }
 
   /**
    * Render Mermaid diagrams via mermaid.render() — the SVG string API.
    * Uses mermaid.render() (not mermaid.run()) — correct approach for Shadow DOM.
+   * Mermaid is loaded via CDN — typed in src/shared/globals.d.ts.
    */
   async renderMermaid(isDark: boolean): Promise<void> {
-    // @ts-ignore — Mermaid loaded via CDN (too large to bundle ~3MB)
     const mermaid = window.mermaid;
     if (typeof mermaid === 'undefined') return;
 

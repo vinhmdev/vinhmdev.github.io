@@ -266,9 +266,11 @@ function preprocessHTML(html: string): string {
 /**
  * Create and configure Turndown instance with custom rules.
  * Singleton — created once and reused.
+ *
+ * TurndownService and turndownPluginGfm are loaded via CDN UMD bundles
+ * (see clipboard2markdown/page.astro) and typed in src/shared/globals.d.ts.
  */
-function createInstance(): any {
-  // @ts-ignore — loaded via CDN
+function createInstance(): TurndownServiceInstance {
   const service = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
@@ -278,9 +280,7 @@ function createInstance(): any {
     emDelimiter: '*',
   });
 
-  // @ts-ignore — loaded via CDN
   if (typeof turndownPluginGfm !== 'undefined') {
-    // @ts-ignore
     service.use(turndownPluginGfm.gfm);
   }
 
@@ -323,9 +323,9 @@ function createInstance(): any {
 }
 
 /** Singleton Turndown instance — created on first use. */
-let turndownInstance: any = null;
+let turndownInstance: TurndownServiceInstance | null = null;
 
-function getInstance(): any {
+function getInstance(): TurndownServiceInstance {
   if (!turndownInstance) {
     turndownInstance = createInstance();
   }
@@ -356,10 +356,10 @@ const LATEX_DELIMITERS_RE =
   /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<!\$)\$(?![\s\d])(?=[^\n$]*?[\\^_{}])[^\n$]+?(?<!\s)\$(?!\$))/;
 
 /** Override Turndown's escape() to pass LaTeX delimiters through verbatim. */
-function installLatexEscape(service: any): void {
+function installLatexEscape(service: TurndownServiceInstance): void {
   const defaultEscape: (s: string) => string = service.escape.bind(service);
-  service.escape = (string: string): string =>
-    string
+  service.escape = (input: string): string =>
+    input
       .split(LATEX_DELIMITERS_RE)
       .map((part, i) => (i % 2 === 1 ? part : defaultEscape(part)))
       .join('');

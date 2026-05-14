@@ -39,7 +39,7 @@ import { initExportPDF } from './export-pdf';
 import { initExportDocx } from './export-docx';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // @ts-ignore — CDN global
+  // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
   window.lucide.createIcons();
 
   // ─── Initialize core modules ────────────────────────────────────────────────
@@ -163,40 +163,47 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── Format Markdown (Prettier — lazy loaded) ────────────────────────────────
-  const loadedScripts = new Set<string>();
-  async function loadScript(url: string): Promise<void> {
-    if (loadedScripts.has(url)) return;
-    return new Promise((resolve, reject) => {
+  // Cache the in-flight load Promise per URL. A plain Set wouldn't help if the
+  // user clicked "Pretty" twice before the first <script> finished loading —
+  // we'd inject the tag a second time. With a Map<url, Promise>, repeated
+  // calls await the same promise and the tag is appended exactly once.
+  const scriptLoads = new Map<string, Promise<void>>();
+  function loadScript(url: string): Promise<void> {
+    const existing = scriptLoads.get(url);
+    if (existing) return existing;
+    const promise = new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
       script.src = url;
-      script.onload = () => {
-        loadedScripts.add(url);
-        resolve();
+      script.onload = () => resolve();
+      script.onerror = () => {
+        scriptLoads.delete(url); // Allow a retry after a transient failure.
+        reject(new Error(`Failed to load script ${url}`));
       };
-      script.onerror = () => reject(new Error(`Failed to load script ${url}`));
       document.head.appendChild(script);
     });
+    scriptLoads.set(url, promise);
+    return promise;
   }
 
   document.getElementById('format-md-btn')?.addEventListener('click', async () => {
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
-    showToast('loader', 'Formatting...');
+    showToast('loader', t('toast_formatting'));
     try {
-      if (typeof (window as any).prettier === 'undefined') {
+      if (typeof window.prettier === 'undefined') {
         await loadScript('https://unpkg.com/prettier@3.2.5/standalone.js');
         await loadScript('https://unpkg.com/prettier@3.2.5/plugins/markdown.js');
       }
-      const formatted = await (window as any).prettier.format(text, {
+      const formatted = await window.prettier.format(text, {
         parser: 'markdown',
-        plugins: (window as any).prettierPlugins,
+        plugins: Object.values(window.prettierPlugins),
       });
       setValue(formatted);
       focus();
       showToast('wand-sparkles', t('toast_formatted'));
     } catch (err) {
       console.error('Prettier format error:', err);
-      showToast('alert-triangle', 'Failed to format Markdown');
+      showToast('alert-triangle', t('toast_format_failed'));
     }
   });
 

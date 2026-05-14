@@ -237,7 +237,7 @@ export async function renderPreview(markdown: string, opts: RenderOptions): Prom
     const rawHtml = mdParser.render(markdown || '');
     const cleanHtml = DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG) as string;
 
-    renderer.setContent(cleanHtml);
+    renderer.setSafeHTML(cleanHtml);
 
     if (opts.renderMermaid) {
       await renderer.renderMermaid(opts.isDark);

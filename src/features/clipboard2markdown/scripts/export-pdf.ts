@@ -5,12 +5,17 @@
  * styled with github-markdown-light.css (always light for print clarity).
  * Handles Mermaid re-render in light theme if the app was in dark mode.
  */
-import { downloadBlob } from './utils';
-
 // PDF always uses light theme for print quality
 const PDF_GITHUB_MD_URL =
   'https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.css';
 const PDF_KATEX_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css';
+
+/**
+ * Delay before triggering print() in the popup window. Gives the browser
+ * time to fetch external stylesheets (github-markdown-css, KaTeX, Inter font)
+ * so the printed output isn't a flash of unstyled content.
+ */
+const PRINT_DIALOG_DELAY_MS = 600;
 
 function buildPrintDocument(content: string): string {
   return `<!DOCTYPE html>
@@ -53,7 +58,7 @@ function buildPrintDocument(content: string): string {
 </head>
 <body class="markdown-body">
   ${content}
-  <script>setTimeout(() => { window.print(); window.close(); }, 600);<\/script>
+  <script>setTimeout(() => { window.print(); window.close(); }, ${PRINT_DIALOG_DELAY_MS});<\/script>
 </body>
 </html>`;
 }
@@ -82,8 +87,8 @@ export function initExportPDF(
 
     let content = html;
 
-    // Re-render Mermaid diagrams in light theme if currently in dark mode
-    // @ts-ignore — CDN global
+    // Re-render Mermaid diagrams in light theme if currently in dark mode.
+    // Mermaid is loaded via CDN — typed in src/shared/globals.d.ts.
     const mermaid = window.mermaid;
     if (isDark() && typeof mermaid !== 'undefined') {
       const tempDiv = document.createElement('div');
