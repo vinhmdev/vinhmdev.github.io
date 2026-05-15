@@ -5,13 +5,11 @@
 import {
   EditorView,
   keymap,
-  lineNumbers,
   highlightActiveLine,
-  highlightActiveLineGutter,
   drawSelection,
   rectangularSelection,
 } from '@codemirror/view';
-import { EditorState, Compartment, EditorSelection } from '@codemirror/state';
+import { EditorState, Compartment } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';

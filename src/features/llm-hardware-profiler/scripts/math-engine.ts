@@ -299,9 +299,6 @@ export function runDiscovery(
   wl: WorkloadSpec,
   opts: AdvancedOpts
 ): ModelConstraints {
-  const allocatable_gb =
-    hw.specs.vram_total_gb * hw.empirical_constraints.os_vram_allocatable_factor;
-
   // Binary search: find max params_b that fits
   let lo = 0.5; // minimum 500M
   let hi = 1000.0; // max 1T

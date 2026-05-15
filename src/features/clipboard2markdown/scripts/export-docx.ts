@@ -11,11 +11,8 @@
  * arbitrary hosts. We route those fetches through a custom proxy by
  * temporarily replacing `window.fetch` while the export is running.
  *
- * The patch is reference-counted at module scope so that overlapping export
- * clicks (a real possibility — DOCX generation is slow) cannot corrupt
- * `window.fetch`. The previous per-call implementation captured the patched
- * fetch as "original" on the second click, then permanently froze the
- * wrapper onto `window.fetch` when both `finally` blocks ran.
+ * Re-entry is prevented by disabling the export button while a run is in
+ * flight, so only one fetch patch is ever active at a time.
  */
 import { md2docx } from '@m2d/md2docx';
 import { WidthType, TableLayoutType } from 'docx';
@@ -28,33 +25,27 @@ const CORS_PROXY_BASE = `https://${CORS_PROXY_HOST}/`;
 // pointing at a previously installed wrapper.
 const realFetch: typeof window.fetch = window.fetch.bind(window);
 
-let activeExports = 0;
-
 /** Wrap an arbitrary URL with the CORS proxy unless it already points there. */
 function withCorsProxy(url: string): string {
   if (!url.startsWith('http://') && !url.startsWith('https://')) return url;
 
-  let hostname: string;
+  let u: URL;
   try {
-    hostname = new URL(url).hostname;
+    u = new URL(url);
   } catch {
     return url;
   }
   // Exact hostname match — a substring check would let `not-cors-proxy.vinhmdev.com` bypass.
-  if (hostname === CORS_PROXY_HOST) return url;
+  if (u.hostname === CORS_PROXY_HOST) return url;
 
-  // The proxy expects the target as `host:port/path`. Strip the scheme and
-  // synthesize the explicit port the proxy expects (443 for https, 80 for http).
-  const isHttps = url.startsWith('https://');
-  const stripped = url.replace(isHttps ? 'https://' : 'http://', '');
-  const port = isHttps ? ':443' : ':80';
-  const target = stripped.includes('/')
-    ? stripped.replace('/', `${port}/`)
-    : stripped + port;
+  // The proxy expects the target as `host:port/path`. Preserve any explicit
+  // port in the URL; otherwise default to the protocol's standard port.
+  const port = u.port || (u.protocol === 'https:' ? '443' : '80');
+  const target = `${u.hostname}:${port}${u.pathname}${u.search}${u.hash}`;
   return `${CORS_PROXY_BASE}${target}`;
 }
 
-/** Shared wrapper installed once across all concurrent exports. */
+/** Routes fetches through the CORS proxy. Installed on window.fetch during export. */
 async function patchedFetch(
   input: RequestInfo | URL,
   init?: RequestInit
@@ -62,8 +53,7 @@ async function patchedFetch(
   let url: string;
   if (typeof input === 'string') url = input;
   else if (input instanceof URL) url = input.toString();
-  else if (input instanceof Request) url = input.url;
-  else url = String(input);
+  else url = input.url; // RequestInfo | URL narrows to Request here
   return realFetch(withCorsProxy(url), init);
 }
 
@@ -79,14 +69,14 @@ export function initExportDocx(
   showToast: (icon: string, msg: string) => void,
   t: (key: string) => string
 ): void {
-  document.getElementById('export-doc-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('export-doc-btn') as HTMLButtonElement | null;
+  btn?.addEventListener('click', async () => {
+    if (btn.disabled) return; // Prevent re-entry while an export is in flight.
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
 
-    // First concurrent export installs the wrapper; subsequent ones share it.
-    if (activeExports++ === 0) {
-      window.fetch = patchedFetch;
-    }
+    btn.disabled = true;
+    window.fetch = patchedFetch;
 
     try {
       showToast('loader', t('toast_generating_doc'));
@@ -132,10 +122,8 @@ export function initExportDocx(
       console.error('DOCX export error:', err);
       showToast('alert-triangle', t('toast_doc_failed'));
     } finally {
-      // Last concurrent export restores the real fetch.
-      if (--activeExports === 0) {
-        window.fetch = realFetch;
-      }
+      window.fetch = realFetch;
+      btn.disabled = false;
     }
   });
 }
