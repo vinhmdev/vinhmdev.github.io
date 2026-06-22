@@ -27,11 +27,32 @@ const DELIMITER_CELL = /^\s*:?-+:?\s*$/;
 
 /**
  * Split a table row into its inner cells, dropping the optional leading and
- * trailing pipes. A negative lookbehind keeps escaped pipes (`\|`) inside a
- * cell. `"| a | b |"` → `[" a ", " b "]`.
+ * trailing pipes. Escaped sequences (`\|` and `\\`) are kept intact, so a cell
+ * ending in an escaped backslash (`...\\|`) still splits on the trailing pipe.
+ * `"| a | b |"` → `[" a ", " b "]`.
  */
 function splitCells(line: string): string[] {
-  const parts = line.trim().split(/(?<!\\)\|/);
+  const trimmed = line.trim();
+  const parts: string[] = [];
+  let current = '';
+
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (ch === '\\' && i + 1 < trimmed.length) {
+      // Keep the backslash escape (covers both `\|` and `\\`) inside the cell.
+      current += ch + trimmed[i + 1];
+      i++;
+      continue;
+    }
+    if (ch === '|') {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  parts.push(current);
+
   if (parts.length && parts[0].trim() === '') parts.shift();
   if (parts.length && parts[parts.length - 1].trim() === '') parts.pop();
   return parts;
@@ -51,23 +72,32 @@ function buildRow(cells: string[], indent: string): string {
 /**
  * Normalize each GFM table so its body rows have exactly as many cells as the
  * header row — truncating excess cells and padding short rows. Tables inside
- * fenced code blocks are left untouched.
+ * fenced code blocks are left untouched. The input's line endings (LF or CRLF)
+ * are preserved.
  */
 export function normalizeTableColumns(markdown: string): string {
-  const lines = markdown.split('\n');
+  const eol = markdown.includes('\r\n') ? '\r\n' : '\n';
+  const lines = markdown.split(/\r?\n/);
   let inFence = false;
   let fenceChar = '';
+  let fenceLength = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
 
     // Track fenced code blocks so table-like content inside them is preserved.
+    // Per the GFM spec a closing fence must use the same character and be at
+    // least as long as the opening fence, so a shorter inner fence of the same
+    // character does not close the block prematurely.
     const fence = trimmed.match(/^(`{3,}|~{3,})/);
     if (fence) {
+      const char = fence[1][0];
+      const len = fence[1].length;
       if (!inFence) {
         inFence = true;
-        fenceChar = fence[1][0];
-      } else if (fence[1][0] === fenceChar) {
+        fenceChar = char;
+        fenceLength = len;
+      } else if (char === fenceChar && len >= fenceLength) {
         inFence = false;
       }
       continue;
@@ -76,8 +106,11 @@ export function normalizeTableColumns(markdown: string): string {
 
     // A table is a header line immediately followed by a delimiter line whose
     // cell count matches — the same condition GFM uses to recognize a table.
+    // The header may omit pipes (single-column tables), but the delimiter row
+    // must contain at least one pipe; otherwise `text` over `---` would be a
+    // setext heading, not a table.
     const next = lines[i + 1];
-    if (next === undefined || !trimmed.includes('|') || !isDelimiterRow(next)) {
+    if (next === undefined || !next.includes('|') || !isDelimiterRow(next)) {
       continue;
     }
     const colCount = splitCells(lines[i]).length;
@@ -97,5 +130,5 @@ export function normalizeTableColumns(markdown: string): string {
     i = j - 1; // Skip the rows already processed.
   }
 
-  return lines.join('\n');
+  return lines.join(eol);
 }
