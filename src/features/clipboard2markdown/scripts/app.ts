@@ -12,6 +12,7 @@
  *   - i18n (i18n-client.ts)
  */
 import { convert } from './turndown-config';
+import { normalizeTableColumns } from './markdown-tables';
 import { init as initI18n, t } from './i18n-client';
 import { showToast, copyToClipboard, downloadBlob } from './utils';
 import { initTheme } from './theme';
@@ -194,7 +195,12 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadScript('https://unpkg.com/prettier@3.2.5/standalone.js');
         await loadScript('https://unpkg.com/prettier@3.2.5/plugins/markdown.js');
       }
-      const formatted = await window.prettier.format(text, {
+      // Normalize table columns first: Prettier expands a table's delimiter/body
+      // rows to the widest row but leaves the header untouched, so a body row
+      // with extra cells yields a header≠delimiter mismatch that GFM refuses to
+      // render. Pre-trimming to the header's column count keeps the rendered
+      // output identical while giving Prettier a consistent table to format.
+      const formatted = await window.prettier.format(normalizeTableColumns(text), {
         parser: 'markdown',
         plugins: Object.values(window.prettierPlugins),
       });
