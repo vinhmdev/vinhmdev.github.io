@@ -86,9 +86,10 @@ export function normalizeTableColumns(markdown: string): string {
     const trimmed = lines[i].trim();
 
     // Track fenced code blocks so table-like content inside them is preserved.
-    // Per the GFM spec a closing fence must use the same character and be at
-    // least as long as the opening fence, so a shorter inner fence of the same
-    // character does not close the block prematurely.
+    // Per the GFM spec a closing fence must use the same character, be at least
+    // as long as the opening fence, and contain nothing but the fence characters
+    // (no info string) — so a shorter inner fence or an info-string line of the
+    // same character does not close the block prematurely.
     const fence = trimmed.match(/^(`{3,}|~{3,})/);
     if (fence) {
       const char = fence[1][0];
@@ -97,7 +98,7 @@ export function normalizeTableColumns(markdown: string): string {
         inFence = true;
         fenceChar = char;
         fenceLength = len;
-      } else if (char === fenceChar && len >= fenceLength) {
+      } else if (char === fenceChar && len >= fenceLength && len === trimmed.length) {
         inFence = false;
       }
       continue;
