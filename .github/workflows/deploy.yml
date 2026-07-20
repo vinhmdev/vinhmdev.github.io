@@ -32,6 +32,10 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    # The Firebase PUBLIC_FIREBASE_* values are stored as *environment*
+    # variables under this environment, so the build job must join it to
+    # read them via the `vars` context.
+    environment: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,16 +81,18 @@ jobs:
         working-directory: ${{ env.BUILD_PATH }}
         # Firebase web config (Analytics + Encrypted Paste). These PUBLIC_*
         # values are project identifiers, not secrets — access is enforced by
-        # firestore.rules. Stored as repo secrets purely for convenience; the
-        # build still succeeds with them empty (the features degrade gracefully).
+        # firestore.rules — and are stored as environment *variables*, so they
+        # come from the `vars` context (the build job joins the environment
+        # above). The build still succeeds if any are empty; the features just
+        # degrade and show a clear "not configured" message.
         env:
-          PUBLIC_FIREBASE_API_KEY: ${{ secrets.PUBLIC_FIREBASE_API_KEY }}
-          PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.PUBLIC_FIREBASE_PROJECT_ID }}
-          PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          PUBLIC_FIREBASE_APP_ID: ${{ secrets.PUBLIC_FIREBASE_APP_ID }}
-          PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.PUBLIC_FIREBASE_MEASUREMENT_ID }}
+          PUBLIC_FIREBASE_API_KEY: ${{ vars.PUBLIC_FIREBASE_API_KEY }}
+          PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.PUBLIC_FIREBASE_PROJECT_ID }}
+          PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          PUBLIC_FIREBASE_APP_ID: ${{ vars.PUBLIC_FIREBASE_APP_ID }}
+          PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ vars.PUBLIC_FIREBASE_MEASUREMENT_ID }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
