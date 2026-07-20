@@ -1,8 +1,19 @@
-# Encrypted Paste
+# Encrypted Paste & Markdown Share
 
-An end-to-end encrypted pastebin, inspired by [paste.sh](https://github.com/dgl/paste.sh)
-but rebuilt on the native Web Crypto API + Firebase Firestore so it runs on
-a static GitHub Pages site with no server of our own.
+Two end-to-end encrypted sharing features, inspired by
+[paste.sh](https://github.com/dgl/paste.sh) but rebuilt on the native Web
+Crypto API + Firebase Firestore so they run on a static GitHub Pages site
+with no server of our own:
+
+- **Encrypted Paste** (`/paste/`) — quick immutable (read-only) notes.
+- **Paste-to-Markdown share** (`/clipboard2markdown/`) — save the markdown
+  you're editing to a link and, if you choose the **editable** mode, let
+  anyone with the link open it and save changes back to the *same* link.
+  Read-only shares stay frozen; editing one forks a new link. "My shared
+  docs" (with local version snapshots) live in `localStorage` — no account.
+
+Shared code lives in `src/shared/paste/` (crypto, payload, Firestore store);
+each tool adds its own UI. Both use the same `pastes` collection + rules.
 
 ## How it works
 
@@ -42,6 +53,9 @@ new env vars). To enable it:
    Create database*. Production mode is fine; the rules below lock it down.
 2. **Publish the rules** — copy `firestore.rules` into Console → *Firestore →
    Rules → Publish*, or run `firebase deploy --only firestore:rules`.
+   > ⚠️ The rules are now **v2** (they add the `mode` field and allow
+   > content-only updates to `editable` pastes). If you published an earlier
+   > version, **re-publish** — otherwise editable saves are rejected.
 3. **Enable TTL cleanup** — Console → *Firestore → TTL → Create policy*, on
    collection `pastes`, field `expireAt`. Firestore then deletes expired
    pastes automatically (deletion can lag a few hours; the client also

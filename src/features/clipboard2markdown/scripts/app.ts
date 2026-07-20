@@ -38,6 +38,7 @@ import {
 } from './preview';
 import { initExportPDF } from './export-pdf';
 import { initExportDocx } from './export-docx';
+import { initShare, notifyChange as shareNotify, hasShareLink } from './share';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onUpdate(async (val) => {
     updateEmptyStates(val);
     localStorage.setItem('clipboard2markdown_content', val);
+    shareNotify(); // refresh the share bar's unsaved indicator
     await renderPreview(val, getRenderOpts());
   });
 
@@ -291,9 +293,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initI18n();
   syncPreviewTheme(isDark()); // set initial preview color mode
 
-  // Restore saved content (this triggers onUpdate automatically)
+  // Share layer (encrypt + share link, open shared docs, local history).
+  initShare({ getValue, setValue, showToast, t });
+
+  // Restore saved content (this triggers onUpdate automatically). Skip when a
+  // share link is present — initShare() loads that doc into the editor instead.
   const savedContent = localStorage.getItem('clipboard2markdown_content');
-  if (savedContent) {
+  if (savedContent && !hasShareLink()) {
     setValue(savedContent);
   }
 });

@@ -70,6 +70,8 @@ export function setLang(lang: Lang): void {
   applyToDOM();
   updateSwitcherUI();
   updatePrivacyLink();
+  // Let JS-built UI (e.g. the share layer) re-translate itself.
+  window.dispatchEvent(new CustomEvent('c2md:langchange', { detail: { lang } }));
 }
 
 export function toggle(): void {

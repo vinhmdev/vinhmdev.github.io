@@ -12,9 +12,9 @@
  * remembered locally (recents.ts) — no account needed. The key lives ONLY
  * in the fragment and never reaches any server.
  */
-import { encrypt, decrypt, generateKey, keyToString, keyFromString } from './crypto';
-import { createPaste, fetchPaste } from './firestore';
-import { encodePayload, decodePayload } from './payload';
+import { encrypt, decrypt, generateKey, keyToString, keyFromString } from '@shared/paste/crypto';
+import { createPaste, fetchPaste } from '@shared/paste/store';
+import { encodePayload, decodePayload } from '@shared/paste/payload';
 import { getRecents, addRecent, removeRecent, clearRecents, type RecentPaste } from './recents';
 import { initTheme } from './theme';
 import { init as initI18n, t, getCurrentLang } from './i18n-client';
@@ -139,7 +139,7 @@ function initCreate(): void {
       const ttlDays = Number(expiry.value);
       const key = generateKey();
       const enc = await encrypt(encodePayload(title.value.trim(), body), key);
-      const id = await createPaste(enc, ttlDays);
+      const id = await createPaste(enc, { ttlDays, mode: 'readonly' });
 
       const url = `${location.origin}/paste/#${id}.${keyToString(key)}`;
       addRecent({

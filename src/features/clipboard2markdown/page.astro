@@ -70,6 +70,25 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       </a>
 
       <div class="flex items-center gap-3">
+        <!-- Share + My Docs -->
+        <button
+          id="share-btn"
+          class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
+          title="Share"
+        >
+          <i data-lucide="share-2" class="w-4 h-4"></i>
+          <span data-i18n="share_btn">Share</span>
+        </button>
+        <button
+          id="mydocs-btn"
+          class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+          data-i18n="mydocs_btn_title"
+          data-i18n-attr="title"
+          title="My shared docs"
+        >
+          <i data-lucide="folder" class="w-4 h-4"></i>
+        </button>
+
         <!-- Settings Button + Dropdown -->
         <div class="settings-dropdown">
           <button
@@ -283,5 +302,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   <!-- Editor UI styles (scoped to this page) -->
   <style>
     @import './styles/editor.css';
+  </style>
+
+  <!-- Share UI styles — global because the modal/drawer/bar are built in JS
+       (createElement), so they don't carry Astro's scoping attribute. -->
+  <style is:global>
+    @import './styles/share.css';
   </style>
 </BaseLayout>
