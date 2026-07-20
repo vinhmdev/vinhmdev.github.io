@@ -21,9 +21,11 @@
   "status_not_found": "Không tìm thấy paste này. Có thể đã hết hạn hoặc link sai.",
   "status_bad_link": "Link không hợp lệ — thiếu mã paste hoặc khóa giải mã.",
   "status_decrypt_failed": "Không giải mã được. Khóa trong link sai hoặc dữ liệu đã bị thay đổi.",
+  "status_not_configured": "Kho lưu trữ chưa được cấu hình (thiếu Firebase projectId). Hãy set các secret PUBLIC_FIREBASE_* khi deploy.",
   "toast_empty": "Chưa có nội dung để mã hóa",
   "toast_created": "Đã tạo link mã hóa",
   "toast_create_failed": "Không tạo được paste. Vui lòng thử lại.",
+  "toast_not_configured": "Chưa cấu hình kho lưu trữ — thiếu secret Firebase projectId.",
   "toast_copied": "Đã sao chép",
   "toast_copy_failed": "Sao chép thất bại — hãy chọn và copy thủ công"
 }

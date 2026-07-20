@@ -13,6 +13,7 @@ import { encrypt, decrypt, generateKey, keyToString, keyFromString } from './cry
 import { createPaste, fetchPaste } from './firestore';
 import { initTheme } from './theme';
 import { init as initI18n, t, getCurrentLang } from './i18n-client';
+import { isFirebaseConfigured } from '@shared/firebase/config';
 
 // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
 const lucide = window.lucide;
@@ -91,6 +92,10 @@ function initCreate(): void {
       showToast('alert-triangle', t('toast_empty'));
       return;
     }
+    if (!isFirebaseConfigured) {
+      showToast('alert-triangle', t('toast_not_configured'));
+      return;
+    }
 
     createBtn.disabled = true;
     createBtn.classList.add('is-loading');
@@ -159,6 +164,10 @@ async function openPaste(hash: string): Promise<void> {
   const parsed = parseFragment(hash);
   if (!parsed) {
     renderStatus('link-2-off', 'status_bad_link');
+    return;
+  }
+  if (!isFirebaseConfigured) {
+    renderStatus('server-off', 'status_not_configured');
     return;
   }
 

@@ -17,6 +17,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getFirebaseApp } from '@shared/firebase/app';
+import { isFirebaseConfigured } from '@shared/firebase/config';
 import type { Encrypted } from './crypto';
 
 const COLLECTION = 'pastes';
@@ -25,6 +26,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 let db: Firestore | null = null;
 function getDb(): Firestore {
+  // Fail fast on a missing projectId — otherwise the Firestore SDK retries
+  // against `projects//databases/(default)` forever and the caller hangs.
+  if (!isFirebaseConfigured) {
+    throw new Error(
+      'Firebase is not configured (missing projectId/apiKey). Set the ' +
+        'PUBLIC_FIREBASE_* secrets in the deploy workflow, then redeploy.'
+    );
+  }
   if (!db) db = getFirestore(getFirebaseApp());
   return db;
 }

@@ -15,3 +15,11 @@ export const firebaseConfig = {
   appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
   measurementId: import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID,
 } as const;
+
+/**
+ * True when the config has the fields Firestore actually needs.
+ * `projectId` is critical: without it the SDK builds requests against
+ * `projects//databases/(default)` and retries forever instead of failing,
+ * so features must check this before touching Firestore.
+ */
+export const isFirebaseConfigured = Boolean(firebaseConfig.projectId && firebaseConfig.apiKey);

@@ -21,9 +21,11 @@
   "status_not_found": "This paste was not found. It may have expired or the link is wrong.",
   "status_bad_link": "This link is malformed — the paste id or key is missing.",
   "status_decrypt_failed": "Could not decrypt. The key in the link is wrong or the data was altered.",
+  "status_not_configured": "Storage is not configured yet (missing Firebase projectId). Set the PUBLIC_FIREBASE_* deploy secrets.",
   "toast_empty": "Nothing to encrypt",
   "toast_created": "Encrypted link created",
   "toast_create_failed": "Could not create the paste. Please try again.",
+  "toast_not_configured": "Storage not configured — missing Firebase projectId secret.",
   "toast_copied": "Copied to clipboard",
   "toast_copy_failed": "Copy failed — select and copy manually"
 }
