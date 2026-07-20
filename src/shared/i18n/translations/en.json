@@ -18,5 +18,7 @@
   "btn_compact_md": "Compact",
   "toast_compacted": "Compacted!",
   "tool_llm_profiler": "LLM Hardware Profiler",
-  "tool_llm_profiler_desc": "Calculate VRAM requirements and estimate hardware performance for LLMs."
+  "tool_llm_profiler_desc": "Calculate VRAM requirements and estimate hardware performance for LLMs.",
+  "tool_paste": "Encrypted Paste",
+  "tool_paste_desc": "Share notes with end-to-end encryption. Text is encrypted in your browser; the key stays in the link."
 }

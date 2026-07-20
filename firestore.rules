@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Security Rules for the Encrypted Paste tool (features/encrypted-paste).
+//
+// Threat model: the frontend is a public static site, so the `pastes`
+// collection is effectively a public write endpoint. Content is already
+// encrypted client-side (AES-256-GCM) before it arrives here, so these
+// rules do NOT protect confidentiality — the encryption does. Their job is
+// to stop abuse: cap size, keep documents immutable, forbid enumeration,
+// and require a bounded self-expiry so storage can't grow without limit.
+//
+// Deploy: paste into Firebase Console → Firestore → Rules, or
+//   firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /pastes/{pasteId} {
+      // Read a single paste by its unguessable auto-id. No decryption key
+      // is stored here, so serving ciphertext to anyone is safe.
+      allow get: if true;
+
+      // No listing / enumeration of the collection.
+      allow list: if false;
+
+      // Create-only, with strict shape + size validation.
+      allow create: if
+        request.resource.data.keys().hasOnly(['ct', 'iv', 'v', 'createdAt', 'expireAt'])
+        && request.resource.data.v == 1
+        && request.resource.data.ct is string
+        && request.resource.data.ct.size() > 0
+        && request.resource.data.ct.size() <= 262144            // 256 KB ciphertext cap
+        && request.resource.data.iv is string
+        && request.resource.data.iv.size() > 0
+        && request.resource.data.iv.size() <= 32
+        && request.resource.data.createdAt == request.time      // must be serverTimestamp()
+        && request.resource.data.expireAt is timestamp
+        && request.resource.data.expireAt > request.time
+        && request.resource.data.expireAt < request.time + duration.value(366, 'd');
+
+      // Pastes are immutable and self-expiring.
+      allow update, delete: if false;
+    }
+
+    // Everything else is denied by default.
+  }
+}

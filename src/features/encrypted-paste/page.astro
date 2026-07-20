@@ -1,0 +1,175 @@
+---
+/**
+ * Encrypted Paste — end-to-end encrypted pastebin.
+ * VSA slice: self-contained tool with its own styles, scripts, and i18n.
+ *
+ * The note is encrypted in the browser (AES-256-GCM) before storage; the
+ * key lives only in the share link's `#fragment`, so the server only ever
+ * holds ciphertext. Inspired by paste.sh, rebuilt on Web Crypto + Firestore.
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Encrypted Paste | VinhMDev"
+  description="Share notes with end-to-end encryption. Text is encrypted in your browser; the key never leaves the link."
+  lang="en"
+  bodyClass="bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 min-h-[100dvh] flex flex-col transition-colors duration-300"
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"
+    ></script>
+  </Fragment>
+
+  <!-- ===== Header ===== -->
+  <header class="flex items-center justify-between gap-3 px-4 py-3 max-w-3xl w-full mx-auto">
+    <a
+      href="/"
+      class="flex items-center gap-2 no-underline text-inherit hover:opacity-80 transition-opacity"
+    >
+      <i data-lucide="lock" class="w-5 h-5 text-primary"></i>
+      <h1
+        class="text-xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
+        data-i18n="heading"
+      >
+        Encrypted Paste
+      </h1>
+    </a>
+
+    <div class="flex items-center gap-2">
+      <button
+        id="theme-toggle-btn"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        title="Toggle dark/light mode"
+      >
+        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+        <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+      </button>
+      <button
+        id="lang-switch-btn"
+        class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        title="Switch language"
+      >
+        <span class="text-base">🇻🇳</span><span class="text-xs font-semibold">VI</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <main class="flex-1 w-full max-w-3xl mx-auto px-4 pb-16">
+    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4 flex items-center gap-1.5">
+      <i data-lucide="shield-check" class="w-4 h-4 text-primary flex-shrink-0"></i>
+      <span data-i18n="subtitle">
+        Encrypted in your browser. The server only ever sees ciphertext.
+      </span>
+    </p>
+
+    <!-- ── CREATE ── -->
+    <section id="create-view" class="paste-card">
+      <textarea
+        id="paste-input"
+        class="paste-textarea"
+        rows="12"
+        placeholder="Type or paste your text here…"
+        data-i18n="placeholder_input"
+        data-i18n-attr="placeholder"
+        autofocus></textarea>
+
+      <div class="paste-toolbar">
+        <label class="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
+          <span data-i18n="label_expiry">Expires</span>
+          <select id="expiry-select" class="paste-select">
+            <option value="1" data-i18n="expiry_1d">1 day</option>
+            <option value="7" data-i18n="expiry_7d">1 week</option>
+            <option value="30" selected data-i18n="expiry_30d">1 month</option>
+            <option value="365" data-i18n="expiry_365d">1 year</option>
+          </select>
+          <span class="text-xs text-neutral-400"><span id="char-count">0</span>&nbsp;<span
+              data-i18n="chars">chars</span
+            ></span>
+        </label>
+
+        <button id="create-btn" class="paste-btn paste-btn-primary">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span data-i18n="btn_create">Encrypt &amp; create link</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── RESULT ── -->
+    <section id="result-view" class="paste-card" hidden>
+      <div class="flex items-center gap-2 mb-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span data-i18n="result_title">Your encrypted link is ready</span>
+      </div>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-3" data-i18n="result_hint">
+        Anyone with this link can read the note. The decryption key is in the link itself — share it
+        over a trusted channel.
+      </p>
+
+      <div class="flex gap-2">
+        <input id="share-url" class="paste-url" readonly />
+        <button id="copy-url-btn" class="paste-btn paste-btn-primary" title="Copy">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-2 mt-4">
+        <a id="open-url-btn" class="paste-btn paste-btn-secondary" target="_blank" rel="noopener">
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+          <span data-i18n="btn_open">Open</span>
+        </a>
+        <button id="new-btn" class="paste-btn paste-btn-secondary">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span data-i18n="btn_new">New paste</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── VIEW (existing paste) ── -->
+    <section id="view-view" class="paste-card" hidden>
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <span
+          id="view-meta"
+          class="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5"
+        ></span>
+        <div class="flex gap-2">
+          <button id="copy-content-btn" class="paste-btn paste-btn-secondary" title="Copy">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span data-i18n="btn_copy_content">Copy</span>
+          </button>
+          <a href="/paste/" class="paste-btn paste-btn-primary">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span data-i18n="btn_new">New paste</span>
+          </a>
+        </div>
+      </div>
+      <pre id="paste-output" class="paste-output"></pre>
+    </section>
+
+    <!-- ── STATUS (loading / errors) ── -->
+    <section id="status-view" class="paste-card paste-status" hidden>
+      <div id="status-body" class="flex flex-col items-center gap-3 py-10 text-neutral-500"></div>
+    </section>
+  </main>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast" role="status" aria-live="polite" class="paste-toast">
+    <span id="toast-icon" aria-hidden="true"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script>
+    import './scripts/app';
+  </script>
+
+  <style>
+    @import './styles/paste.css';
+  </style>
+</BaseLayout>

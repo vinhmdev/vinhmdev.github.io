@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://utils.vinhmdev.com',
+  site: 'https://tools.vinhmdev.com',
   output: 'static',
   integrations: [sitemap()],
   // Prefetch links only when they enter the viewport — cheap network usage,

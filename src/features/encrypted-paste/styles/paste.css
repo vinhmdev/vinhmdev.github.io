@@ -1,0 +1,173 @@
+/* ===== Encrypted Paste — tool styles =====
+   Only what Tailwind utilities can't express cleanly. Layout/spacing in
+   page.astro. Wrapped in @layer components so utilities can override.
+   ========================================= */
+
+@layer components {
+
+  .paste-card {
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  .dark .paste-card {
+    background: var(--color-neutral-900);
+    border-color: var(--color-neutral-700);
+    box-shadow: none;
+  }
+
+  .paste-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 16rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-neutral-200);
+    background: #fff;
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .paste-textarea:focus {
+    border-color: var(--color-primary-400);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  }
+  .dark .paste-textarea {
+    background: var(--color-neutral-950);
+    border-color: var(--color-neutral-700);
+  }
+
+  .paste-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.875rem;
+  }
+
+  .paste-select {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-neutral-200);
+    background: #fff;
+    color: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+  .dark .paste-select {
+    background: var(--color-neutral-800);
+    border-color: var(--color-neutral-700);
+  }
+
+  /* ===== Buttons ===== */
+  .paste-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s, opacity 0.15s;
+  }
+  .paste-btn:active { transform: scale(0.97); }
+  .paste-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .paste-btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+  }
+  .paste-btn-primary:hover { background: var(--color-primary-hover); }
+
+  .paste-btn-secondary {
+    background: transparent;
+    color: var(--color-neutral-600);
+    border-color: var(--color-neutral-300);
+  }
+  .paste-btn-secondary:hover { background: var(--color-neutral-100); }
+  .dark .paste-btn-secondary {
+    color: var(--color-neutral-300);
+    border-color: var(--color-neutral-700);
+  }
+  .dark .paste-btn-secondary:hover { background: var(--color-neutral-800); }
+
+  /* Spinner while a paste is being created. */
+  .paste-btn.is-loading > i { animation: paste-spin 0.8s linear infinite; }
+  @keyframes paste-spin { to { transform: rotate(360deg); } }
+
+  /* ===== Share URL ===== */
+  .paste-url {
+    flex: 1;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-100);
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    outline: none;
+  }
+  .dark .paste-url {
+    background: var(--color-neutral-950);
+    border-color: var(--color-neutral-700);
+  }
+
+  /* ===== Decrypted output ===== */
+  .paste-output {
+    margin: 0;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    background: #fff;
+    border: 1px solid var(--color-neutral-200);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+    max-height: 70vh;
+  }
+  .dark .paste-output {
+    background: var(--color-neutral-950);
+    border-color: var(--color-neutral-700);
+  }
+
+  .paste-status i { color: var(--color-primary); }
+  .paste-status.paste-card { text-align: center; }
+
+  /* ===== Toast ===== */
+  .paste-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate(-50%, 5rem);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    border-radius: 1rem;
+    background: var(--color-neutral-800);
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    font-size: 0.8125rem;
+  }
+  .paste-toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+} /* end @layer components */

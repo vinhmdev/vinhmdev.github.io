@@ -5,20 +5,10 @@
  * Usage: Call `loadAnalytics()` after the user accepts cookies.
  * The module is tree-shaken — only analytics code is included.
  */
-import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
+import { getFirebaseApp } from '@shared/firebase/app';
+import { firebaseConfig } from '@shared/firebase/config';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
-  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
-  measurementId: import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID,
-};
-
-let app: FirebaseApp | null = null;
 let analytics: Analytics | null = null;
 
 /**
@@ -41,8 +31,7 @@ export async function loadAnalytics(): Promise<Analytics | null> {
       return null;
     }
 
-    app = initializeApp(firebaseConfig);
-    analytics = getAnalytics(app);
+    analytics = getAnalytics(getFirebaseApp());
     console.log('[Firebase] Analytics initialized.');
     return analytics;
   } catch (error) {

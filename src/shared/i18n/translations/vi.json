@@ -18,5 +18,7 @@
   "btn_compact_md": "Làm Gọn",
   "toast_compacted": "Đã làm gọn!",
   "tool_llm_profiler": "LLM Hardware Profiler",
-  "tool_llm_profiler_desc": "Công cụ tính toán VRAM và ước lượng phần cứng cho Large Language Models (LLM)."
+  "tool_llm_profiler_desc": "Công cụ tính toán VRAM và ước lượng phần cứng cho Large Language Models (LLM).",
+  "tool_paste": "Paste Mã Hóa",
+  "tool_paste_desc": "Chia sẻ ghi chú với mã hóa đầu-cuối. Nội dung được mã hóa ngay trên trình duyệt, khóa nằm trong link."
 }
