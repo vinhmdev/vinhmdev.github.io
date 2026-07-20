@@ -4,8 +4,9 @@
  * light/dark choice carries across tools (BaseLayout reads the same key).
  */
 
-// Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
-const lucide = window.lucide;
+// Lucide is loaded via CDN — typed in src/shared/globals.d.ts. Guard against a
+// failed CDN load so the theme toggle still works without icons.
+const lucide = window.lucide ?? { createIcons: () => {} };
 
 const THEME_KEY = 'c2md-theme';
 

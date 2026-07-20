@@ -1,30 +1,39 @@
 /**
  * app.ts — entry point for the encrypted-paste tool.
  *
- * One page, three views driven by the URL fragment:
- *   - no fragment            → CREATE  (compose + encrypt a new paste)
+ * One page, four views driven by the URL fragment:
+ *   - no fragment            → CREATE  (compose title + note, encrypt)
  *   - after create           → RESULT  (share link with the key in `#`)
  *   - fragment `#id.key`      → VIEW    (fetch, decrypt, display)
+ *   - loading / errors        → STATUS
  *
- * The decryption key lives ONLY in the fragment and never reaches any
- * server. See crypto.ts / firestore.ts for the storage + crypto details.
+ * Title + note are encrypted together (payload.ts) so the title is E2E
+ * encrypted too but still reaches whoever opens the link. Created links are
+ * remembered locally (recents.ts) — no account needed. The key lives ONLY
+ * in the fragment and never reaches any server.
  */
 import { encrypt, decrypt, generateKey, keyToString, keyFromString } from './crypto';
 import { createPaste, fetchPaste } from './firestore';
+import { encodePayload, decodePayload } from './payload';
+import { getRecents, addRecent, removeRecent, clearRecents, type RecentPaste } from './recents';
 import { initTheme } from './theme';
 import { init as initI18n, t, getCurrentLang } from './i18n-client';
 import { isFirebaseConfigured } from '@shared/firebase/config';
 
-// Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
-const lucide = window.lucide;
+// Lucide is loaded via CDN — typed in src/shared/globals.d.ts. Fall back to a
+// no-op if the CDN failed to load so a missing icon library can't take down
+// the whole tool.
+const lucide = window.lucide ?? { createIcons: () => {} };
 
 type ViewName = 'create' | 'result' | 'view' | 'status';
 
-/** Show exactly one top-level view, hide the rest. */
+/** Show exactly one top-level view; recents only ride along with CREATE. */
 function showView(name: ViewName): void {
   for (const v of ['create', 'result', 'view', 'status'] as ViewName[]) {
     document.getElementById(`${v}-view`)?.toggleAttribute('hidden', v !== name);
   }
+  if (name === 'create') refreshRecents();
+  else document.getElementById('recents')?.setAttribute('hidden', '');
 }
 
 // ─── Toast ──────────────────────────────────────────────────────────────────
@@ -51,14 +60,34 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-/** Format an expiry date for display, or a fallback when there is none. */
+const locale = (): string => (getCurrentLang() === 'vi' ? 'vi-VN' : 'en-US');
+
+/** Absolute expiry string, or a fallback when there is none. */
 function formatExpiry(expireAt: Date | null): string {
   if (!expireAt) return t('meta_no_expiry');
-  const dateStr = expireAt.toLocaleString(getCurrentLang() === 'vi' ? 'vi-VN' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  const dateStr = expireAt.toLocaleString(locale(), { dateStyle: 'medium', timeStyle: 'short' });
   return `${t('meta_expires')} ${dateStr}`;
+}
+
+/** Coarse relative time ("3 minutes ago") for the recents list. */
+function relativeTime(ms: number): string {
+  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' });
+  const diff = ms - Date.now();
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['day', 86400_000],
+    ['hour', 3600_000],
+    ['minute', 60_000],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(diff) >= size) return rtf.format(Math.round(diff / size), unit);
+  }
+  return rtf.format(0, 'minute');
+}
+
+/** Auto-grow the editor so the page scrolls instead of an inner box. */
+function autoGrow(el: HTMLTextAreaElement): void {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 // State needed to re-render language-dependent text after a language switch.
@@ -75,20 +104,27 @@ function renderStatus(icon: string, key: string): void {
 
 // ─── CREATE ───────────────────────────────────────────────────────────────
 function initCreate(): void {
+  const title = document.getElementById('paste-title') as HTMLInputElement;
   const input = document.getElementById('paste-input') as HTMLTextAreaElement;
   const expiry = document.getElementById('expiry-select') as HTMLSelectElement;
   const createBtn = document.getElementById('create-btn') as HTMLButtonElement;
   const charCount = document.getElementById('char-count');
 
-  const updateCount = (): void => {
+  const onInput = (): void => {
     if (charCount) charCount.textContent = String(input.value.length);
+    autoGrow(input);
   };
-  input.addEventListener('input', updateCount);
-  updateCount();
+  input.addEventListener('input', onInput);
+  autoGrow(input);
+
+  // Ctrl/Cmd+Enter to create.
+  input.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') createBtn.click();
+  });
 
   createBtn.addEventListener('click', async () => {
-    const text = input.value;
-    if (!text.trim()) {
+    const body = input.value;
+    if (!body.trim()) {
       showToast('alert-triangle', t('toast_empty'));
       return;
     }
@@ -100,11 +136,19 @@ function initCreate(): void {
     createBtn.disabled = true;
     createBtn.classList.add('is-loading');
     try {
+      const ttlDays = Number(expiry.value);
       const key = generateKey();
-      const enc = await encrypt(text, key);
-      const id = await createPaste(enc, Number(expiry.value));
+      const enc = await encrypt(encodePayload(title.value.trim(), body), key);
+      const id = await createPaste(enc, ttlDays);
 
       const url = `${location.origin}/paste/#${id}.${keyToString(key)}`;
+      addRecent({
+        id,
+        title: title.value.trim(),
+        url,
+        createdAt: Date.now(),
+        expireAt: Date.now() + ttlDays * 86400_000,
+      });
       showResult(url);
       showToast('check-circle', t('toast_created'));
     } catch (err) {
@@ -114,6 +158,84 @@ function initCreate(): void {
       createBtn.disabled = false;
       createBtn.classList.remove('is-loading');
     }
+  });
+}
+
+function resetCreate(): void {
+  const title = document.getElementById('paste-title') as HTMLInputElement;
+  const input = document.getElementById('paste-input') as HTMLTextAreaElement;
+  title.value = '';
+  input.value = '';
+  document.getElementById('char-count')!.textContent = '0';
+  autoGrow(input);
+}
+
+// ─── RECENTS (localStorage) ────────────────────────────────────────────────
+function refreshRecents(): void {
+  const section = document.getElementById('recents');
+  const list = document.getElementById('recents-list');
+  if (!section || !list) return;
+
+  const items = getRecents();
+  section.toggleAttribute('hidden', items.length === 0);
+  list.replaceChildren(...items.map(renderRecentItem));
+  lucide.createIcons();
+}
+
+function renderRecentItem(item: RecentPaste): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'paste-recents-item';
+
+  const link = document.createElement('a');
+  link.className = 'paste-recents-main';
+  link.href = item.url;
+
+  const titleEl = document.createElement('span');
+  titleEl.className = 'paste-recents-link';
+  titleEl.textContent = item.title || t('untitled');
+
+  const sub = document.createElement('span');
+  sub.className = 'paste-recents-sub';
+  const exp = item.expireAt
+    ? `${t('meta_expires')} ${new Date(item.expireAt).toLocaleDateString(locale())}`
+    : t('meta_no_expiry');
+  sub.textContent = `${relativeTime(item.createdAt)} · ${exp}`;
+
+  link.append(titleEl, sub);
+
+  const actions = document.createElement('div');
+  actions.className = 'paste-recents-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'paste-icon-btn';
+  copyBtn.title = t('btn_copy_link');
+  copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+  copyBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const ok = await copyText(item.url);
+    showToast(ok ? 'check-circle' : 'alert-triangle', ok ? t('toast_copied') : t('toast_copy_failed'));
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'paste-icon-btn';
+  delBtn.title = t('btn_remove');
+  delBtn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+  delBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    removeRecent(item.id);
+    refreshRecents();
+  });
+
+  actions.append(copyBtn, delBtn);
+  li.append(link, actions);
+  return li;
+}
+
+function initRecents(): void {
+  document.getElementById('recents-clear')?.addEventListener('click', () => {
+    clearRecents();
+    refreshRecents();
+    showToast('trash-2', t('toast_recents_cleared'));
   });
 }
 
@@ -137,9 +259,9 @@ function initResult(): void {
     showToast(ok ? 'check-circle' : 'alert-triangle', ok ? t('toast_copied') : t('toast_copy_failed'));
   });
   document.getElementById('new-btn')?.addEventListener('click', () => {
-    (document.getElementById('paste-input') as HTMLTextAreaElement).value = '';
-    document.getElementById('char-count')!.textContent = '0';
+    resetCreate();
     showView('create');
+    (document.getElementById('paste-title') as HTMLInputElement).focus();
   });
 }
 
@@ -180,11 +302,15 @@ async function openPaste(hash: string): Promise<void> {
     }
 
     const key = keyFromString(parsed.key);
-    const text = await decrypt(stored.enc, key);
+    const { title, body } = decodePayload(await decrypt(stored.enc, key));
 
     viewedExpiry = stored.expireAt;
-    (document.getElementById('paste-output') as HTMLElement).textContent = text;
+    const titleEl = document.getElementById('view-title') as HTMLElement;
+    titleEl.textContent = title;
+    titleEl.setAttribute('data-empty', t('untitled'));
+    document.getElementById('paste-output')!.textContent = body;
     document.getElementById('view-meta')!.textContent = formatExpiry(stored.expireAt);
+    document.title = title ? `${title} — ${t('heading')}` : t('page_title');
     currentStatus = null;
     showView('view');
     lucide.createIcons();
@@ -201,16 +327,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initI18n();
   initCreate();
+  initRecents();
   initResult();
   initView();
 
   // Re-render language-dependent dynamic text on language switch.
   window.addEventListener('langchange', () => {
     if (currentStatus) renderStatus(currentStatus.icon, currentStatus.key);
-    const meta = document.getElementById('view-meta');
-    if (meta && !document.getElementById('view-view')?.hasAttribute('hidden')) {
-      meta.textContent = formatExpiry(viewedExpiry);
+    const viewOpen = !document.getElementById('view-view')?.hasAttribute('hidden');
+    if (viewOpen) {
+      document.getElementById('view-meta')!.textContent = formatExpiry(viewedExpiry);
+      document.getElementById('view-title')?.setAttribute('data-empty', t('untitled'));
     }
+    if (!document.getElementById('recents')?.hasAttribute('hidden')) refreshRecents();
   });
 
   if (location.hash.length > 1) {
