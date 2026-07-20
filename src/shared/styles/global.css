@@ -5,6 +5,12 @@
 /* Override dark: variant to use .dark class instead of prefers-color-scheme */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Native controls (select popups, scrollbars, date pickers) follow the theme.
+   Without this a <select> renders its dropdown with a white background in dark
+   mode regardless of CSS `background`. */
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
 /* ===== Tailwind v4 Theme — synced with docs/Themes.md (vinhmetal) ===== */
 @theme {
   /* Neutral: "Pure Titanium" — zero blue undertones */
