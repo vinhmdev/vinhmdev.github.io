@@ -7,8 +7,10 @@ interface Props {
   text: string;
   privacyLabel?: string;
   privacyUrl?: string;
+  sourceLabel?: string;
+  sourceUrl?: string;
 }
-const { text, privacyLabel, privacyUrl } = Astro.props;
+const { text, privacyLabel, privacyUrl, sourceLabel, sourceUrl } = Astro.props;
 ---
 
 <footer class="fixed bottom-6 z-1 text-neutral-500 text-xs opacity-60 flex items-center gap-3">
@@ -23,6 +25,21 @@ const { text, privacyLabel, privacyUrl } = Astro.props;
           class="hover:opacity-100 hover:text-neutral-300 transition-colors underline-offset-2 hover:underline"
         >
           {privacyLabel}
+        </a>
+      </>
+    )
+  }
+  {
+    sourceUrl && sourceLabel && (
+      <>
+        <span aria-hidden="true">·</span>
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener"
+          class="hover:opacity-100 hover:text-neutral-300 transition-colors underline-offset-2 hover:underline"
+        >
+          {sourceLabel}
         </a>
       </>
     )

@@ -6,6 +6,8 @@
   "nav_vinhmdev_desc": "Truy cập trang blog & portfolio.",
   "nav_privacy_policy": "Chính sách bảo mật",
   "nav_privacy_policy_url": "https://vinhmdev.com/vi/privacy-policy/",
+  "nav_source": "Mã nguồn",
+  "nav_source_url": "https://github.com/vinhmdev/vinhmdev.github.io",
   "home_tools_section": "Công cụ",
   "tool_clipboard2md": "Paste to Markdown",
   "tool_clipboard2md_desc": "Tự động chuyển định dạng văn bản bạn vừa copy sang chuẩn Markdown.",
