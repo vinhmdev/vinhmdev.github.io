@@ -346,12 +346,17 @@ function buildModal(): void {
         <div class="md-row">
           <label class="md-field-label" data-i18n="share_expiry_label">Expires</label>
           <select id="md-expiry" class="md-select">
-            <option value="1" data-i18n="expiry_1d">1 day</option>
-            <option value="7" data-i18n="expiry_7d">1 week</option>
-            <option value="30" selected data-i18n="expiry_30d">1 month</option>
-            <option value="365" data-i18n="expiry_365d">1 year</option>
+            <option value="60" data-i18n="expiry_1h">1 hour</option>
+            <option value="1440" data-i18n="expiry_1d">1 day</option>
+            <option value="10080" data-i18n="expiry_7d">1 week</option>
+            <option value="43200" selected data-i18n="expiry_30d">1 month</option>
+            <option value="525600" data-i18n="expiry_365d">1 year</option>
           </select>
         </div>
+        <p class="md-expiry-note">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+          <span data-i18n="share_expiry_note">Once shared, it stays live until it expires and can't be deleted manually — pick a lifetime that fits. For sensitive data, choose a short one (e.g. 1 hour).</span>
+        </p>
 
         <button id="md-modal-create" class="md-btn md-btn-primary md-btn-block">
           <i data-lucide="lock" class="w-4 h-4"></i><span data-i18n="share_create">Encrypt &amp; create link</span>
@@ -392,7 +397,8 @@ function buildModal(): void {
     'readonly'
       ? 'readonly'
       : 'editable') as PasteMode;
-    const ttlDays = Number(modal.querySelector<HTMLSelectElement>('#md-expiry')!.value);
+    // Option values are in minutes so short lifetimes (1 hour) are exact.
+    const ttlDays = Number(modal.querySelector<HTMLSelectElement>('#md-expiry')!.value) / (60 * 24);
     const createBtn = modal.querySelector<HTMLButtonElement>('#md-modal-create')!;
     createBtn.disabled = true;
     createBtn.classList.add('is-loading');
