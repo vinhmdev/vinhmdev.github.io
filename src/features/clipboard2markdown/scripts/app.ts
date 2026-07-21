@@ -15,7 +15,7 @@ import { convert } from './turndown-config';
 import { normalizeTableColumns } from './markdown-tables';
 import { init as initI18n, t } from './i18n-client';
 import { showToast, copyToClipboard, downloadBlob } from './utils';
-import { initTheme } from './theme';
+import { initTheme } from '@shared/theme/toggle';
 import { initTabs } from './tabs';
 import {
   createEditor,
@@ -301,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
     t,
     linkBase: '/clipboard2markdown/',
     storageKey: 'md:docs',
-    langChangeEvent: 'c2md:langchange',
   });
 
   // Restore saved content (this triggers onUpdate automatically). Skip when a
