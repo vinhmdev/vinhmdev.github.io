@@ -1,8 +1,16 @@
-/* ===== Paste-to-Markdown — Share UI =====
+/* ===== Encrypted Share UI (shared) =====
    Modal, "my docs" drawer, and the bottom share status bar. Built in JS
-   (share.ts) and styled here. Imported via <style is:global> in page.astro
-   because JS-created elements don't carry Astro's scoping attribute, so
-   plain (unscoped) selectors are required.
+   (share.ts) and styled here. Imported via <style is:global> in each tool's
+   page.astro because JS-created elements don't carry Astro's scoping
+   attribute, so plain (unscoped) selectors are required.
+
+   Shared by clipboard2markdown and encrypted-paste — the class names keep
+   the `md-` prefix as a stable namespace for this widget.
+
+   NOTE: reserving bottom space for the fixed status bar is tool-specific
+   (each page has a different shell), so that rule lives in each tool's own
+   CSS. This file only sets the `--md-sharebar-h` custom property + the
+   `.md-has-sharebar` body flag via share.ts.
    ========================================= */
 
 @layer components {
@@ -216,16 +224,6 @@
     font-size: 0.8125rem;
   }
   .md-sharebar[hidden] { display: none; }
-
-  /* Reserve space so the fixed status bar doesn't cover the panes' action
-     buttons at the bottom of the shell. The shell is a fixed-height
-     (100dvh) flex column, so bottom padding shrinks the content area and
-     lifts the action bars above the status bar instead of behind it.
-     --md-sharebar-h is set from the bar's measured height (share.ts); the
-     fallback covers the moment before the first measurement lands. */
-  body.md-has-sharebar #c2md-shell {
-    padding-bottom: var(--md-sharebar-h, 3.25rem);
-  }
   .md-sharebar-info { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
   .md-sharebar-info > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .md-sharebar-state { color: var(--color-neutral-400); }

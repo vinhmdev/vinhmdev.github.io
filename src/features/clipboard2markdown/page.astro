@@ -307,6 +307,14 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   <!-- Share UI styles — global because the modal/drawer/bar are built in JS
        (createElement), so they don't carry Astro's scoping attribute. -->
   <style is:global>
-    @import './styles/share.css';
+    @import '../../shared/paste-share/share.css';
+  </style>
+  <!-- Reserve space so the fixed status bar doesn't cover the panes' action
+       buttons. The shell is a fixed-height (100dvh) flex column, so bottom
+       padding shrinks the content area and lifts the action bars above the
+       status bar. --md-sharebar-h is set from the bar's measured height
+       (share.ts); the fallback covers the moment before the first measure. -->
+  <style is:global>
+    body.md-has-sharebar #c2md-shell { padding-bottom: var(--md-sharebar-h, 3.25rem); }
   </style>
 </BaseLayout>
