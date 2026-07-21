@@ -85,10 +85,9 @@ function deriveTitle(md: string): string {
   return line.replace(/^#+\s*/, '').replace(/[*_`>#[\]]/g, '').trim().slice(0, 80);
 }
 
-/** The doc title: an explicit title field if the tool has one, else derived. */
-function resolveTitle(body: string): string {
-  const explicit = deps.getTitle?.().trim();
-  return explicit || deriveTitle(body);
+/** The tool's explicit title field, trimmed (empty string if it has none). */
+function explicitTitleOf(): string {
+  return deps.getTitle?.()?.trim() ?? '';
 }
 
 function parseHash(): { id: string; key: string } | null {
@@ -213,8 +212,8 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
   // The payload stores the EXPLICIT title (possibly empty) so reopening keeps
   // the title field exactly as the author left it. The resolved title (an
   // explicit one, else derived from the body) is only for local metadata.
-  const explicitTitle = deps.getTitle?.().trim() ?? '';
-  const historyTitle = resolveTitle(body);
+  const explicitTitle = explicitTitleOf();
+  const historyTitle = explicitTitle || deriveTitle(body);
   const key = generateKey();
   const enc = await encrypt(encodePayload(explicitTitle, body), key);
   const id = await createPaste(enc, { ttlDays, mode });
@@ -245,8 +244,8 @@ async function saveInPlace(): Promise<void> {
   primary.disabled = true;
   try {
     const body = deps.getValue();
-    const explicitTitle = deps.getTitle?.().trim() ?? '';
-    const historyTitle = resolveTitle(body);
+    const explicitTitle = explicitTitleOf();
+    const historyTitle = explicitTitle || deriveTitle(body);
     const enc = await encrypt(encodePayload(explicitTitle, body), current.key);
     await updatePaste(current.id, enc);
     lastSaved = body;
