@@ -210,15 +210,19 @@ export function notifyChange(): void {
 // ─── create / save ───────────────────────────────────────────────────────────
 async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
   const body = deps.getValue();
-  const title = resolveTitle(body);
+  // The payload stores the EXPLICIT title (possibly empty) so reopening keeps
+  // the title field exactly as the author left it. The resolved title (an
+  // explicit one, else derived from the body) is only for local metadata.
+  const explicitTitle = deps.getTitle?.().trim() ?? '';
+  const historyTitle = resolveTitle(body);
   const key = generateKey();
-  const enc = await encrypt(encodePayload(title, body), key);
+  const enc = await encrypt(encodePayload(explicitTitle, body), key);
   const id = await createPaste(enc, { ttlDays, mode });
   const now = Date.now();
   const doc: MyDoc = {
     id,
     key: keyToString(key),
-    title,
+    title: historyTitle,
     url: linkFor(id, key),
     mode,
     createdAt: now,
@@ -227,9 +231,9 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
     versions: [],
   };
   store.saveDoc({ ...doc }, body);
-  current = { id, key, mode, title };
+  current = { id, key, mode, title: historyTitle };
   lastSaved = body;
-  lastSavedTitle = title;
+  lastSavedTitle = explicitTitle;
   if (mode === 'editable') history.replaceState(null, '', `#${id}.${keyToString(key)}`);
   updateBar();
   return doc;
@@ -241,18 +245,19 @@ async function saveInPlace(): Promise<void> {
   primary.disabled = true;
   try {
     const body = deps.getValue();
-    const title = resolveTitle(body);
-    const enc = await encrypt(encodePayload(title, body), current.key);
+    const explicitTitle = deps.getTitle?.().trim() ?? '';
+    const historyTitle = resolveTitle(body);
+    const enc = await encrypt(encodePayload(explicitTitle, body), current.key);
     await updatePaste(current.id, enc);
     lastSaved = body;
-    lastSavedTitle = title;
-    current.title = title;
+    lastSavedTitle = explicitTitle;
+    current.title = historyTitle;
     const existing = store.getDoc(current.id);
     store.saveDoc(
       {
         id: current.id,
         key: keyToString(current.key),
-        title,
+        title: historyTitle,
         url: linkFor(current.id, current.key),
         mode: 'editable',
         createdAt: existing?.createdAt ?? Date.now(),
@@ -290,7 +295,9 @@ async function loadShared(): Promise<void> {
     deps.setValue(body);
     deps.setTitle?.(title);
     lastSaved = body;
-    lastSavedTitle = resolveTitle(body);
+    // Match the (possibly empty) loaded title, not a derived one, so a paste
+    // saved with a blank title doesn't read as dirty the moment it opens.
+    lastSavedTitle = title.trim();
     current = { id: parsed.id, key, mode: stored.mode, title: title || deriveTitle(body) };
     store.saveDoc(
       {
