@@ -128,9 +128,26 @@ function buildBar(): void {
   });
 }
 
+/** Reserve space at the bottom of the shell so the fixed status bar doesn't
+ * overlay the panes' action buttons ("footer"). Measured after layout because
+ * the bar's height depends on its (translated) content and can wrap on mobile. */
+function syncBarSpacing(): void {
+  if (!bar || bar.hidden) {
+    document.body.classList.remove('md-has-sharebar');
+    document.body.style.removeProperty('--md-sharebar-h');
+    return;
+  }
+  document.body.classList.add('md-has-sharebar');
+  requestAnimationFrame(() => {
+    if (bar.hidden) return;
+    document.body.style.setProperty('--md-sharebar-h', `${bar.offsetHeight}px`);
+  });
+}
+
 function updateBar(): void {
   if (!current) {
     bar.hidden = true;
+    syncBarSpacing();
     return;
   }
   bar.hidden = false;
@@ -150,6 +167,7 @@ function updateBar(): void {
   primary.disabled = current.mode === 'editable' && !dirty;
   bar.querySelector<HTMLButtonElement>('#md-bar-detach')!.title = t('bar_detach');
   lucide.createIcons();
+  syncBarSpacing();
 }
 
 /** Called by app.ts on every editor change to refresh the dirty indicator. */
@@ -474,6 +492,9 @@ export function initShare(d: ShareDeps): void {
     translateTree(drawer);
     updateBar();
   });
+
+  // The bar can wrap at narrow widths, changing its height.
+  window.addEventListener('resize', syncBarSpacing);
 
   if (hasShareLink()) void loadShared();
 }
