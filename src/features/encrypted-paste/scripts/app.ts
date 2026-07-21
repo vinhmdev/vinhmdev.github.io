@@ -14,7 +14,7 @@
  * storage; the key lives only in the link fragment, so the server only ever
  * sees ciphertext.
  */
-import { initTheme } from './theme';
+import { initTheme } from '@shared/theme/toggle';
 import { init as initI18n, t } from './i18n-client';
 import { initShare, notifyChange as shareNotify, hasShareLink } from '@shared/paste-share/share';
 
@@ -91,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     t,
     linkBase: '/paste/',
     storageKey: 'paste:docs',
-    langChangeEvent: 'langchange',
   });
 
   // Nothing to restore on a fresh page — a share link (if present) is loaded

@@ -535,7 +535,7 @@ export function initShare(d: ShareDeps): void {
   });
 
   // Re-translate all JS-built UI when the language switches.
-  window.addEventListener(d.langChangeEvent ?? 'c2md:langchange', () => {
+  window.addEventListener(d.langChangeEvent ?? 'langchange', () => {
     translateTree(bar);
     translateTree(modal);
     translateTree(drawer);

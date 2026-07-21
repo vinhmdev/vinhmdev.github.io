@@ -6,7 +6,7 @@
  * Phase 3: runMatchmaking() + runDiscovery() wired to mode tabs
  */
 import { init as initI18n, t } from './i18n-client';
-import { initTheme } from './theme';
+import { initTheme } from '@shared/theme/toggle';
 import { runForward, runMatchmaking, runDiscovery } from './math-engine';
 import type {
   ModelPreset,
