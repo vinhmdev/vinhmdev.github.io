@@ -6,7 +6,12 @@
  * Title + note are encrypted in the browser (AES-256-GCM) before storage;
  * the key lives only in the share link's `#fragment`, so the server only
  * ever holds ciphertext. Inspired by paste.sh, rebuilt on Web Crypto +
- * Firestore. Recent links are kept in localStorage (no account needed).
+ * Firestore.
+ *
+ * The share model (dialog to pick editable / read-only, in-place save,
+ * fork, bottom status bar, and the "My pastes" drawer with local version
+ * history) is the shared layer used by clipboard2markdown — same logic in
+ * both tools.
  *
  * Layout is full-bleed (like clipboard2markdown): no max-width, no card
  * chrome — the editor spans the viewport and the PAGE scrolls as it grows.
@@ -49,6 +54,25 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     </a>
 
     <div class="flex items-center gap-2">
+      <!-- Share + My pastes (share layer wires these by id) -->
+      <button
+        id="share-btn"
+        class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
+        title="Share"
+      >
+        <i data-lucide="share-2" class="w-4 h-4"></i>
+        <span data-i18n="share_btn">Share</span>
+      </button>
+      <button
+        id="mydocs-btn"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        data-i18n="mydocs_btn_title"
+        data-i18n-attr="title"
+        title="My pastes"
+      >
+        <i data-lucide="folder" class="w-4 h-4"></i>
+      </button>
+
       <button
         id="theme-toggle-btn"
         class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
@@ -67,120 +91,38 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     </div>
   </header>
 
-  <!-- ===== Main (full width) ===== -->
+  <!-- ===== Main: single compose editor ===== -->
   <main class="flex-1 w-full flex flex-col">
-    <!-- ── CREATE ── -->
-    <section id="create-view" class="flex-1 flex flex-col">
-      <!-- Top control bar: title + expiry + create -->
-      <div class="paste-titlebar">
-        <input
-          id="paste-title"
-          class="paste-title-input"
-          type="text"
-          maxlength="200"
-          placeholder="Untitled note"
-          data-i18n="placeholder_title"
-          data-i18n-attr="placeholder"
-        />
-        <div class="paste-titlebar-actions">
-          <select id="expiry-select" class="paste-select" title="Expiry">
-            <option value="1" data-i18n="expiry_1d">1 day</option>
-            <option value="7" data-i18n="expiry_7d">1 week</option>
-            <option value="30" selected data-i18n="expiry_30d">1 month</option>
-            <option value="365" data-i18n="expiry_365d">1 year</option>
-          </select>
-          <button id="create-btn" class="paste-btn paste-btn-primary">
-            <i data-lucide="lock" class="w-4 h-4"></i>
-            <span data-i18n="btn_create">Encrypt &amp; create link</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Auto-growing editor (page scrolls, not the box) -->
-      <textarea
-        id="paste-input"
-        class="paste-editor"
-        rows="16"
-        placeholder="Type or paste your text here…"
-        data-i18n="placeholder_input"
+    <!-- Title bar -->
+    <div class="paste-titlebar">
+      <input
+        id="paste-title"
+        class="paste-title-input"
+        type="text"
+        maxlength="200"
+        placeholder="Untitled note"
+        data-i18n="placeholder_title"
         data-i18n-attr="placeholder"
-        autofocus></textarea>
+      />
+    </div>
 
-      <div class="paste-editor-foot">
-        <span class="flex items-center gap-1.5">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary"></i>
-          <span data-i18n="subtitle">Encrypted in your browser — the server only sees ciphertext.</span>
-        </span>
-        <span><span id="char-count">0</span>&nbsp;<span data-i18n="chars">chars</span></span>
-      </div>
+    <!-- Auto-growing editor (page scrolls, not the box) -->
+    <textarea
+      id="paste-input"
+      class="paste-editor"
+      rows="16"
+      placeholder="Type or paste your text here…"
+      data-i18n="placeholder_input"
+      data-i18n-attr="placeholder"
+      autofocus></textarea>
 
-      <!-- ── RECENTS ── -->
-      <section id="recents" class="paste-block" hidden>
-        <div class="paste-recents-head">
-          <span class="flex items-center gap-1.5">
-            <i data-lucide="history" class="w-4 h-4"></i>
-            <span data-i18n="recents_title">Recent links</span>
-            <span class="paste-recents-note" data-i18n="recents_note">(saved on this device only)</span>
-          </span>
-          <button id="recents-clear" class="paste-link-btn" data-i18n="recents_clear">Clear all</button>
-        </div>
-        <ul id="recents-list" class="paste-recents-list"></ul>
-      </section>
-    </section>
-
-    <!-- ── RESULT ── -->
-    <section id="result-view" class="paste-block" hidden>
-      <div class="flex items-center gap-2 mb-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-        <i data-lucide="check-circle" class="w-5 h-5"></i>
-        <span data-i18n="result_title">Your encrypted link is ready</span>
-      </div>
-      <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4" data-i18n="result_hint">
-        Anyone with this link can read the note. The decryption key is in the link itself — share it
-        over a trusted channel.
-      </p>
-
-      <div class="flex gap-2 max-w-3xl">
-        <input id="share-url" class="paste-url" readonly />
-        <button id="copy-url-btn" class="paste-btn paste-btn-primary" title="Copy">
-          <i data-lucide="copy" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <div class="flex flex-wrap gap-2 mt-4">
-        <a id="open-url-btn" class="paste-btn paste-btn-secondary" target="_blank" rel="noopener">
-          <i data-lucide="external-link" class="w-4 h-4"></i>
-          <span data-i18n="btn_open">Open</span>
-        </a>
-        <button id="new-btn" class="paste-btn paste-btn-secondary">
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          <span data-i18n="btn_new">New paste</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- ── VIEW (existing paste) ── -->
-    <section id="view-view" class="paste-block" hidden>
-      <div class="paste-view-head">
-        <h2 id="view-title" class="paste-view-title"></h2>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="copy-content-btn" class="paste-btn paste-btn-secondary" title="Copy">
-            <i data-lucide="copy" class="w-4 h-4"></i>
-            <span data-i18n="btn_copy_content">Copy</span>
-          </button>
-          <a href="/paste/" class="paste-btn paste-btn-primary">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span data-i18n="btn_new">New paste</span>
-          </a>
-        </div>
-      </div>
-      <div id="view-meta" class="paste-view-meta"></div>
-      <pre id="paste-output" class="paste-output"></pre>
-    </section>
-
-    <!-- ── STATUS (loading / errors) ── -->
-    <section id="status-view" class="paste-block" hidden>
-      <div id="status-body" class="flex flex-col items-center gap-3 py-16 text-neutral-500"></div>
-    </section>
+    <div class="paste-editor-foot">
+      <span class="flex items-center gap-1.5">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary"></i>
+        <span data-i18n="subtitle">Encrypted in your browser — the server only sees ciphertext.</span>
+      </span>
+      <span><span id="char-count">0</span>&nbsp;<span data-i18n="chars">chars</span></span>
+    </div>
   </main>
 
   <!-- ===== Toast ===== -->
@@ -193,7 +135,21 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     import './scripts/app';
   </script>
 
+  <!-- Tool styles (scoped to this page) -->
   <style>
     @import './styles/paste.css';
+  </style>
+
+  <!-- Share UI styles — global because the modal/drawer/bar are built in JS
+       (createElement), so they don't carry Astro's scoping attribute. -->
+  <style is:global>
+    @import '../../shared/paste-share/share.css';
+  </style>
+  <!-- Reserve space so the fixed status bar doesn't cover the editor's foot.
+       This page scrolls (min-h flex column), so bottom padding on the body
+       lets content clear the bar. --md-sharebar-h is the bar's measured
+       height (share.ts); the fallback covers the first paint. -->
+  <style is:global>
+    body.md-has-sharebar { padding-bottom: var(--md-sharebar-h, 3.25rem); }
   </style>
 </BaseLayout>

@@ -1,7 +1,8 @@
 /**
- * Share layer for the Paste-to-Markdown editor.
+ * Shared share layer for the encrypted paste tools (Markdown + Encrypted
+ * Paste). One implementation, two tools — the logic is identical.
  *
- * Lets the user save the current markdown as an end-to-end encrypted paste
+ * Lets the user save the current content as an end-to-end encrypted paste
  * and share a link. The creator chooses the mode:
  *   - editable : opening the link and saving updates the SAME link in place.
  *   - readonly : the shared content is frozen; editing forks a new link.
@@ -10,29 +11,47 @@
  * holds ciphertext, and the key lives in the link fragment. "My docs" and
  * per-doc version snapshots are kept locally (history.ts); no account.
  *
- * UI (modal, status bar, docs drawer) is built here in JS to stay a
- * self-contained slice; it only needs #share-btn and #mydocs-btn in the page.
+ * The UI (modal, status bar, docs drawer) is built here in JS to stay a
+ * self-contained slice; a host page only needs #share-btn and #mydocs-btn.
+ *
+ * Host tools plug in their editor via `ShareDeps`:
+ *   - getValue/setValue  : read/write the body text.
+ *   - getTitle/setTitle  : optional explicit title field (Markdown derives
+ *                          the title from the first line instead).
+ *   - linkBase           : URL path prefix, e.g. '/paste/'.
+ *   - storageKey         : localStorage key for this tool's doc history.
+ *   - langChangeEvent    : the tool's language-switch event name.
  */
 import { encrypt, decrypt, generateKey, keyToString, keyFromString } from '@shared/paste/crypto';
 import { createPaste, updatePaste, fetchPaste, type PasteMode } from '@shared/paste/store';
 import { encodePayload, decodePayload } from '@shared/paste/payload';
 import { isFirebaseConfigured } from '@shared/firebase/config';
-import { getDocs, getDoc, saveDoc, removeDoc, clearDocs, type MyDoc } from './history';
+import { createDocStore, type MyDoc, type DocStore } from './history';
 
 const lucide = window.lucide ?? { createIcons: () => {} };
 const DAY_MS = 86400_000;
 
-interface ShareDeps {
+export interface ShareDeps {
   getValue: () => string;
   setValue: (s: string) => void;
+  getTitle?: () => string;
+  setTitle?: (s: string) => void;
   showToast: (icon: string, msg: string) => void;
   t: (key: string) => string;
+  /** URL path prefix for share links, e.g. '/clipboard2markdown/' or '/paste/'. */
+  linkBase: string;
+  /** localStorage key for this tool's "my docs" history. */
+  storageKey: string;
+  /** Language-switch event this tool dispatches (to re-translate JS-built UI). */
+  langChangeEvent?: string;
 }
 
 let deps: ShareDeps;
+let store: DocStore;
 let current: { id: string; key: Uint8Array<ArrayBuffer>; mode: PasteMode; title: string } | null =
   null;
 let lastSaved = '';
+let lastSavedTitle = '';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -66,6 +85,12 @@ function deriveTitle(md: string): string {
   return line.replace(/^#+\s*/, '').replace(/[*_`>#[\]]/g, '').trim().slice(0, 80);
 }
 
+/** The doc title: an explicit title field if the tool has one, else derived. */
+function resolveTitle(body: string): string {
+  const explicit = deps.getTitle?.().trim();
+  return explicit || deriveTitle(body);
+}
+
 function parseHash(): { id: string; key: string } | null {
   const raw = location.hash.replace(/^#/, '');
   const dot = raw.indexOf('.');
@@ -87,7 +112,14 @@ async function copy(text: string): Promise<boolean> {
 }
 
 function linkFor(id: string, key: Uint8Array<ArrayBuffer>): string {
-  return `${location.origin}/clipboard2markdown/#${id}.${keyToString(key)}`;
+  return `${location.origin}${deps.linkBase}#${id}.${keyToString(key)}`;
+}
+
+/** True when the editor content (or title) differs from the last saved state. */
+function isDirty(): boolean {
+  if (deps.getValue() !== lastSaved) return true;
+  if (deps.getTitle && deps.getTitle().trim() !== lastSavedTitle) return true;
+  return false;
 }
 
 // ─── status bar (shown while a shared doc is active) ─────────────────────────
@@ -128,9 +160,9 @@ function buildBar(): void {
   });
 }
 
-/** Reserve space at the bottom of the shell so the fixed status bar doesn't
- * overlay the panes' action buttons ("footer"). Measured after layout because
- * the bar's height depends on its (translated) content and can wrap on mobile. */
+/** Reserve space at the bottom of the page so the fixed status bar doesn't
+ * overlay the tool's own bottom controls. Measured after layout because the
+ * bar's height depends on its (translated) content and can wrap on mobile. */
 function syncBarSpacing(): void {
   if (!bar || bar.hidden) {
     document.body.classList.remove('md-has-sharebar');
@@ -154,7 +186,7 @@ function updateBar(): void {
   const modeEl = bar.querySelector<HTMLElement>('#md-bar-mode')!;
   modeEl.textContent = t(current.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
 
-  const dirty = deps.getValue() !== lastSaved;
+  const dirty = isDirty();
   const stateEl = bar.querySelector<HTMLElement>('#md-bar-state')!;
   stateEl.textContent = current.mode === 'editable' ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
   stateEl.classList.toggle('is-dirty', current.mode === 'editable' && dirty);
@@ -170,7 +202,7 @@ function updateBar(): void {
   syncBarSpacing();
 }
 
-/** Called by app.ts on every editor change to refresh the dirty indicator. */
+/** Called by the host on every editor change to refresh the dirty indicator. */
 export function notifyChange(): void {
   if (current) updateBar();
 }
@@ -178,7 +210,7 @@ export function notifyChange(): void {
 // ─── create / save ───────────────────────────────────────────────────────────
 async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
   const body = deps.getValue();
-  const title = deriveTitle(body);
+  const title = resolveTitle(body);
   const key = generateKey();
   const enc = await encrypt(encodePayload(title, body), key);
   const id = await createPaste(enc, { ttlDays, mode });
@@ -194,9 +226,10 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
     expireAt: now + ttlDays * DAY_MS,
     versions: [],
   };
-  saveDoc({ ...doc }, body);
+  store.saveDoc({ ...doc }, body);
   current = { id, key, mode, title };
   lastSaved = body;
+  lastSavedTitle = title;
   if (mode === 'editable') history.replaceState(null, '', `#${id}.${keyToString(key)}`);
   updateBar();
   return doc;
@@ -208,13 +241,14 @@ async function saveInPlace(): Promise<void> {
   primary.disabled = true;
   try {
     const body = deps.getValue();
-    const title = deriveTitle(body);
+    const title = resolveTitle(body);
     const enc = await encrypt(encodePayload(title, body), current.key);
     await updatePaste(current.id, enc);
     lastSaved = body;
+    lastSavedTitle = title;
     current.title = title;
-    const existing = getDoc(current.id);
-    saveDoc(
+    const existing = store.getDoc(current.id);
+    store.saveDoc(
       {
         id: current.id,
         key: keyToString(current.key),
@@ -254,9 +288,11 @@ async function loadShared(): Promise<void> {
     const key = keyFromString(parsed.key);
     const { title, body } = decodePayload(await decrypt(stored.enc, key));
     deps.setValue(body);
+    deps.setTitle?.(title);
     lastSaved = body;
+    lastSavedTitle = resolveTitle(body);
     current = { id: parsed.id, key, mode: stored.mode, title: title || deriveTitle(body) };
-    saveDoc(
+    store.saveDoc(
       {
         id: parsed.id,
         key: parsed.key,
@@ -414,7 +450,7 @@ function buildDrawer(): void {
   });
   drawer.querySelector('#md-drawer-close')!.addEventListener('click', close);
   drawer.querySelector('#md-drawer-clear')!.addEventListener('click', () => {
-    clearDocs();
+    store.clearDocs();
     renderDocs();
     deps.showToast('trash-2', t('toast_docs_cleared'));
   });
@@ -423,7 +459,7 @@ function buildDrawer(): void {
 function renderDocs(): void {
   const list = drawer.querySelector<HTMLUListElement>('#md-docs-list')!;
   const empty = drawer.querySelector<HTMLElement>('#md-docs-empty')!;
-  const docs = getDocs();
+  const docs = store.getDocs();
   empty.hidden = docs.length > 0;
   list.replaceChildren(...docs.map(renderDocItem));
   lucide.createIcons();
@@ -455,7 +491,7 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
   delBtn.title = t('mydocs_remove');
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    removeDoc(doc.id);
+    store.removeDoc(doc.id);
     renderDocs();
   });
   actions.append(copyBtn, delBtn);
@@ -472,6 +508,7 @@ function openDrawer(): void {
 // ─── init ─────────────────────────────────────────────────────────────────────
 export function initShare(d: ShareDeps): void {
   deps = d;
+  store = createDocStore(d.storageKey);
   buildBar();
   buildModal();
   buildDrawer();
@@ -486,7 +523,7 @@ export function initShare(d: ShareDeps): void {
   });
 
   // Re-translate all JS-built UI when the language switches.
-  window.addEventListener('c2md:langchange', () => {
+  window.addEventListener(d.langChangeEvent ?? 'c2md:langchange', () => {
     translateTree(bar);
     translateTree(modal);
     translateTree(drawer);
