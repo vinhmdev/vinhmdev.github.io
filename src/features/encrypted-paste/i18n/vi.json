@@ -7,10 +7,12 @@
   "untitled": "Ghi chú chưa đặt tên",
   "chars": "ký tự",
 
+  "expiry_1h": "1 giờ",
   "expiry_1d": "1 ngày",
   "expiry_7d": "1 tuần",
   "expiry_30d": "1 tháng",
   "expiry_365d": "1 năm",
+  "share_expiry_note": "Sau khi chia sẻ, paste tồn tại đến khi hết hạn và không thể xóa thủ công — hãy chọn thời hạn phù hợp. Với dữ liệu nhạy cảm, chọn thời hạn ngắn (vd 1 giờ).",
 
   "share_btn": "Chia sẻ",
   "mydocs_btn_title": "Paste của tôi",

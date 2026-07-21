@@ -99,6 +99,18 @@
   .md-row { display: flex; align-items: center; gap: 0.6rem; margin: 0.9rem 0; }
   .md-row .md-field-label { margin-bottom: 0; }
 
+  /* Expiry caveat: pastes are immutable + can't be hand-deleted. */
+  .md-expiry-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin: -0.35rem 0 0.2rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-neutral-500);
+  }
+  .md-expiry-note > i { flex-shrink: 0; margin-top: 0.1rem; color: var(--color-accent-amber); }
+
   .md-select {
     padding: 0.4rem 0.6rem;
     border-radius: 0.5rem;
