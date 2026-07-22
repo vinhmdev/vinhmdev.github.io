@@ -10,19 +10,22 @@
 
 /* ─── CSS Variables ─────────────────────────────────────────────────────────── */
 :root {
-  --profiler-accent:        #6366f1; /* indigo-500 */
-  --profiler-accent-hover:  #4f46e5; /* indigo-600 */
-  --profiler-accent-soft:   #6366f120;
-  --profiler-success:       #22c55e;
-  --profiler-danger:        #ef4444;
-  --profiler-warning:       #f59e0b;
-  --profiler-text:          #1e293b;
-  --profiler-text-muted:    #64748b;
-  --profiler-bg:            #f8fafc;
+  /* Brand tokens (Pure Titanium + Academic Cinnabar) drive everything — no
+     bespoke indigo/slate palette. Monochrome semantics: cinnabar = pass /
+     emphasis, muted titanium = insufficient. */
+  --profiler-accent:        var(--color-primary-500);
+  --profiler-accent-hover:  var(--color-primary-600);
+  --profiler-accent-soft:   color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+  --profiler-success:       var(--color-primary-500);
+  --profiler-danger:        var(--color-neutral-400);
+  --profiler-warning:       var(--color-accent-amber);
+  --profiler-text:          var(--color-neutral-700);
+  --profiler-text-muted:    var(--color-neutral-500);
+  --profiler-bg:            var(--color-neutral-50);
   --profiler-surface:       #ffffff;
-  --profiler-surface-2:     #f1f5f9;
-  --profiler-border:        #e2e8f0;
-  --profiler-border-focus:  #6366f1;
+  --profiler-surface-2:     var(--color-neutral-100);
+  --profiler-border:        var(--color-neutral-200);
+  --profiler-border-focus:  var(--color-primary-500);
   --profiler-shadow:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
   --profiler-shadow-md:     0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
   --profiler-radius:        0.5rem;
@@ -30,17 +33,17 @@
   --profiler-transition:    150ms ease;
 }
 
-.dark {
-  --profiler-accent:        #818cf8; /* indigo-400 */
-  --profiler-accent-hover:  #6366f1;
-  --profiler-accent-soft:   #6366f130;
-  --profiler-text:          #e2e8f0;
-  --profiler-text-muted:    #94a3b8;
-  --profiler-bg:            #0f172a;
-  --profiler-surface:       #1e293b;
-  --profiler-surface-2:     #0f172a;
-  --profiler-border:        #334155;
-  --profiler-border-focus:  #818cf8;
+:global(.dark) {
+  --profiler-accent:        var(--color-primary-400);
+  --profiler-accent-hover:  var(--color-primary-500);
+  --profiler-accent-soft:   color-mix(in srgb, var(--color-primary-400) 24%, transparent);
+  --profiler-text:          var(--color-neutral-300);
+  --profiler-text-muted:    var(--color-neutral-400);
+  --profiler-bg:            var(--color-neutral-900);
+  --profiler-surface:       var(--color-neutral-800);
+  --profiler-surface-2:     var(--color-neutral-900);
+  --profiler-border:        var(--color-neutral-700);
+  --profiler-border-focus:  var(--color-primary-400);
   --profiler-shadow:        0 1px 3px rgba(0,0,0,.3);
   --profiler-shadow-md:     0 4px 6px -1px rgba(0,0,0,.4);
 }
@@ -72,7 +75,7 @@
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-amber));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -323,14 +326,14 @@
   padding: 0.625rem 1rem;
   border: none;
   border-radius: var(--profiler-radius);
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-accent-amber));
   color: white;
   font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: opacity var(--profiler-transition), transform var(--profiler-transition);
-  box-shadow: 0 4px 14px rgba(99,102,241,.4);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, .35);
 }
 
 .btn-calculate:hover:not(:disabled) {
@@ -409,9 +412,10 @@
   transition: width 400ms ease;
 }
 
-.vram-bar-segment.weights  { background: #6366f1; }
-.vram-bar-segment.kv       { background: #8b5cf6; }
-.vram-bar-segment.overhead { background: #a78bfa; }
+/* Cinnabar sequential ramp — the model's footprint, deep → light. */
+.vram-bar-segment.weights  { background: var(--color-primary-700); }
+.vram-bar-segment.kv       { background: var(--color-primary-500); }
+.vram-bar-segment.overhead { background: var(--color-primary-300); }
 .vram-bar-segment.free     { background: transparent; }
 
 .vram-bar-overflow {
@@ -419,10 +423,11 @@
   right: 0;
   top: 0;
   height: 100%;
+  /* Over-capacity: muted titanium hatch = "beyond what you have". */
   background: repeating-linear-gradient(
     45deg,
-    #ef444440,
-    #ef444440 4px,
+    color-mix(in srgb, var(--color-neutral-500) 45%, transparent),
+    color-mix(in srgb, var(--color-neutral-500) 45%, transparent) 4px,
     transparent 4px,
     transparent 8px
   );
@@ -450,9 +455,9 @@
   flex-shrink: 0;
 }
 
-.vram-legend-dot.weights  { background: #6366f1; }
-.vram-legend-dot.kv       { background: #8b5cf6; }
-.vram-legend-dot.overhead { background: #a78bfa; }
+.vram-legend-dot.weights  { background: var(--color-primary-700); }
+.vram-legend-dot.kv       { background: var(--color-primary-500); }
+.vram-legend-dot.overhead { background: var(--color-primary-300); }
 
 .vram-stats {
   display: grid;
@@ -493,11 +498,20 @@
   font-weight: 600;
 }
 
-.status-badge.fit  { background: #22c55e20; color: #16a34a; border: 1px solid #22c55e40; }
-.status-badge.oom  { background: #ef444420; color: #dc2626; border: 1px solid #ef444440; }
+/* Monochrome semantics: fits = cinnabar (pass), OOM = muted titanium (faded). */
+.status-badge.fit {
+  background: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+  color: var(--color-primary-700);
+  border: 1px solid color-mix(in srgb, var(--color-primary-500) 35%, transparent);
+}
+.status-badge.oom {
+  background: color-mix(in srgb, var(--color-neutral-500) 14%, transparent);
+  color: var(--color-neutral-600);
+  border: 1px solid color-mix(in srgb, var(--color-neutral-500) 35%, transparent);
+}
 
-.dark .status-badge.fit  { color: #4ade80; }
-.dark .status-badge.oom  { color: #f87171; }
+:global(.dark) .status-badge.fit  { color: var(--color-primary-300); }
+:global(.dark) .status-badge.oom  { color: var(--color-neutral-300); }
 
 /* ─── Speed Cards ────────────────────────────────────────────────────────────── */
 .speed-grid {
@@ -652,7 +666,7 @@
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%) translateY(5rem);
-  background: #1e293b;
+  background: var(--color-neutral-800);
   color: white;
   border-radius: 1rem;
   padding: 0.5rem 1rem;
@@ -672,7 +686,7 @@
   opacity: 1;
 }
 
-.dark #profiler-toast { background: #334155; }
+:global(.dark) #profiler-toast { background: var(--color-neutral-700); }
 
 /* ─── Utility ────────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
