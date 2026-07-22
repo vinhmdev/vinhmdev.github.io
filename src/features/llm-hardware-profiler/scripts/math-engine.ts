@@ -188,13 +188,22 @@ export function estimateSpeed(
   const kv_total_bytes = vram.kv_cache_gb * 1e9;
   const bytes_per_token = active_weights_bytes + kv_total_bytes;
 
-  // System-wide decode speed (all users combined)
-  const decode_system_tps = (eff_bw_gbs * 1e9) / bytes_per_token;
+  // In one memory-bound decode step the GPU streams the active weights ONCE
+  // (reused across the whole batch) plus every sequence's KV, and emits one
+  // token per sequence. So `bytes_per_token` above already sums the batch's KV
+  // (kv_total), which means:
+  //   t_step   = (W + KV_total) / BW
+  //   per_user = 1 / t_step           = BW / (W + KV_total)
+  //   system   = batch / t_step       = batch × per_user
+  // i.e. adding users raises system throughput (weights amortise) until compute
+  // or bandwidth saturates — it must not fall as the old formula implied.
+  const decode_per_user_base = (eff_bw_gbs * 1e9) / bytes_per_token;
+  const decode_system_tps = decode_per_user_base * wl.max_concurrent_reqs;
 
-  // Per-user speed with continuous batching
-  let decode_per_user_tps = decode_system_tps / wl.max_concurrent_reqs;
-
-  // Speculative Decoding: acceptance rate multiplier boosts per-user speed
+  // Speculative Decoding boosts a single user's latency (spare compute verifies
+  // draft tokens) without raising aggregate throughput, so it multiplies the
+  // per-user rate only.
+  let decode_per_user_tps = decode_per_user_base;
   if (opts.spec_decoding_enabled && opts.spec_decoding_acceptance_rate > 1) {
     decode_per_user_tps *= opts.spec_decoding_acceptance_rate;
   }
@@ -270,17 +279,27 @@ export function runMatchmaking(
 // ─── Mode 3: Model Discovery ──────────────────────────────────────────────────
 
 /**
- * Estimate transformer architecture from total_params using scaling law heuristics.
- * hidden_size ≈ nearest multiple of 128 to sqrt(params_B × 4096)
- * num_layers  ≈ hidden_size / 128 (empirical ratio for dense models)
+ * Estimate transformer architecture from total_params using scaling-law
+ * heuristics.
+ *
+ * A dense transformer block holds ≈ 12·hidden² params (attention + FFN), and
+ * the standard aspect ratio is num_layers ≈ hidden / 128. So
+ *   params ≈ 12 · (hidden/128) · hidden² = (12/128) · hidden³
+ *   ⇒ hidden ≈ cbrt(params / (12/128)) = cbrt(params × 10.667)
+ * The relationship is CUBIC, not quadratic — a sqrt law gives wildly wrong
+ * shapes (e.g. an 8B model → hidden 128 / 4 layers instead of ~4096 / 32).
+ * head_dim is pinned at 128 (num_query_heads ≈ hidden/128).
  */
+const PARAMS_PER_HIDDEN_CUBED = 12 / 128; // 0.09375
+
 function paramsToArchitecture(params_b: number): {
   hidden_size: number;
   num_layers: number;
   num_query_heads: number;
   num_kv_heads: number;
 } {
-  const hidden_size = Math.max(64, Math.round(Math.sqrt(params_b * 4096) / 128) * 128);
+  const hidden_raw = Math.cbrt((params_b * 1e9) / PARAMS_PER_HIDDEN_CUBED);
+  const hidden_size = Math.max(128, Math.round(hidden_raw / 128) * 128);
   const num_layers = Math.max(4, Math.round(hidden_size / 128));
   const num_query_heads = Math.max(1, Math.round(hidden_size / 128));
   const num_kv_heads = Math.max(1, Math.round(num_query_heads * DISCOVERY_KV_HEADS_RATIO));
