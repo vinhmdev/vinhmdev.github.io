@@ -74,8 +74,8 @@ export const DEFAULT_MFU_FACTOR: Record<string, number> = {
 //
 // Used in Mode 3 to back-calculate plausible architecture from total_params.
 // These are rough heuristics based on standard transformer scaling relationships.
-// hidden_size ≈ 128 × round(sqrt(params_B × 1000 / 128))
-// num_layers  ≈ hidden_size / 128
+// params ≈ (12/128) × hidden³  ⇒  hidden ≈ cbrt(params × 10.667)  (CUBIC law)
+// num_layers ≈ hidden_size / 128  (see paramsToArchitecture in math-engine.ts)
 
 export const DISCOVERY_VOCAB_DEFAULT = 128000;
 export const DISCOVERY_KV_HEADS_RATIO = 0.25; // n_kv ≈ n_q × 0.25 (GQA assumption)
