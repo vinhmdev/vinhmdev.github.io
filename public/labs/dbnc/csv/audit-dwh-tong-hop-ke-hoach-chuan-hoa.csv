@@ -1,0 +1,17 @@
+nhom_thong_ke,hang_muc,so_cot
+vai trò,đặc trưng,265
+vai trò,cột kỹ thuật — không phải đặc trưng,227
+vai trò,khoá ngoại — dùng như biến phân loại,166
+vai trò,BỎ — hằng số,153
+vai trò,BỎ — rỗng hoàn toàn,65
+vai trò,thời gian — dẫn xuất đặc trưng,26
+vai trò,khoá của dòng — không dùng làm đặc trưng,23
+biến đổi phân phối,chuẩn hoá z,44
+biến đổi phân phối,Yeo-Johnson (có giá trị âm nên không log được),32
+biến đổi phân phối,log1p rồi chuẩn hoá z,31
+biến đổi phân phối,lệch trái — cân nhắc bình phương hoặc để nguyên,4
+mã hoá,mã hoá theo nhãn (target encoding),100
+mã hoá,one-hot,77
+mã hoá,gộp nhóm hiếm rồi mã hoá theo nhãn,74
+mã hoá,nhị phân 0/1,50
+mã hoá,không mã hoá được — chỉ dùng làm khoá,41

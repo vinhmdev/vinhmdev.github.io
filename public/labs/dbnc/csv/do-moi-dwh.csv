@@ -1,0 +1,19 @@
+bang,cot_thoi_gian,moi_nhat,tre_ngay,ghi_chu
+fact_order_lines,order_date_key,2026-08-28,0,
+fact_inventory_lot_snapshot,date_key,2026-08-28,0,
+fact_promo_budget_available,order_date_key,2026-08-28,0,
+fact_order_fulfillment,order_date_key,2026-08-28,0,
+fact_order_status_timeline,pending_at,2026-08-28,0,
+fact_inventory_transactions,date_key,2026-08-28,0,
+fact_asset_audits,audit_date,2026-08-28,0,
+fact_inventory_daily_balances,date_key,2026-08-28,0,
+fact_asset_inventory,source_updated_at,2026-08-28,0,
+fact_visits,date_key,2026-08-31,-3,
+fact_weather_forecast,date,2026-09-12,-15,
+fact_delivery_details,date_key,2030-08-13,-1446,NGÀY TƯƠNG LAI BẤT THƯỜNG — vượt hôm nay 1446 ngày
+fact_roadmap_stores,,,,
+fact_roadmaps,,,,
+fact_sales_targets,,,,
+fact_asset_placements,allocated_date,,,không đo được ngày
+fact_asset_activities,,,,
+fact_trade_promo,,,,

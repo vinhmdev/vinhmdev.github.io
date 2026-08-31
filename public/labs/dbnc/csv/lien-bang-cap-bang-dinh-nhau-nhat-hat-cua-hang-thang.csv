@@ -1,0 +1,7 @@
+bang_1,bang_2,so_cap_field,so_cap_lien_he_ro,manh_nhat
+fact_order_fulfillment,fact_order_lines,144,49,0.991
+fact_delivery_details,fact_order_lines,90,33,0.747
+fact_delivery_details,fact_order_fulfillment,40,24,0.741
+fact_order_fulfillment,fact_visits,24,0,0.351
+fact_order_lines,fact_visits,54,0,0.345
+fact_delivery_details,fact_visits,15,0,0.217

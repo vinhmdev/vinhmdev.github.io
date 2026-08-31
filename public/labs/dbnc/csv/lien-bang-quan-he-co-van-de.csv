@@ -1,0 +1,13 @@
+bang,cot,bang_dich,so_dong_co_khoa,khop_pct,dong_mo_coi_pct,so_gia_tri_mo_coi,dim_duoc_dung_pct,khoa_dim_duy_nhat,canh_bao
+fact_asset_activities,asset_key,dim_assets,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_asset_placements,asset_id,dim_assets,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_asset_placements,shop_id,dim_stores,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_order_lines,category_id,dim_categories,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_trade_promo,distributor_key,dim_distributors,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_trade_promo,product_key,dim_products,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_trade_promo,promotion_id,dim_promotions,0,100.0,0.0,0,,true,không có dòng nào mang khoá này
+fact_trade_promo,store_key,dim_stores,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,asm_employee_id,dim_employees,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,category_id,dim_categories,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,chain_key,dim_chains,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,supervisor_employee_id,dim_employees,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này

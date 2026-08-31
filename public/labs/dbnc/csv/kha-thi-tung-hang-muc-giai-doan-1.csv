@@ -1,0 +1,8 @@
+ma,hang_muc,du_lieu_can,so_do,ket_luan,chan_boi
+FR-01…04,Bảng phân tích MT · số ngày cơ hội · Base · cờ độ tin cậy,đơn hàng MT và mặt nạ tồn kho theo ngày,đơn hàng đủ; mặt nạ tồn chỉ phủ 10.47% số ngày của cửa sổ,KHẢ THI CÓ ĐIỀU KIỆN,OQ-01 — lịch sử tồn kho trước 09/06/2026
+FR-09,Mô hình hai phần,nhãn 0 phân biệt được vì sao bằng 0,59.016% dòng 0 không suy được nguyên nhân,KHẢ THI CÓ ĐIỀU KIỆN,phần lớn dòng 0 không suy được nguyên nhân
+FR-10,Dự báo M+1…M+3 ở mức cửa hàng × mã hàng,≥ 6 tháng huấn luyện và tự tương quan đủ mạnh,M+1: 3 mốc; M+2: 1 mốc; M+3: 0 mốc · tự tương quan trong cặp trễ 1 tháng = 0.1247; trễ 2 tháng = 0.0941; trễ 3 tháng = 0.0434,CHƯA KHẢ THI,khối liền mạch dài nhất 8 tháng
+FR-11,Phân rã dự báo thành 6 hệ số,mỗi hệ số một nguồn dữ liệu,1/6 hệ số có nguồn,CHƯA KHẢ THI,"K_mùa_vụ: khối liền mạch dài nhất 8 tháng / cần 12; K_sự_kiện: thiếu cột is_holiday, is_tet; K_chương_trình: bảng RỖNG; K_thị_trường: chưa có nguồn nào trong kho; hệ số thứ sáu: hồ sơ thi công chưa đặt tên"
+FR-15,WMAPE và bias theo 4 cấp × 3 tầm,đủ mốc backtest ở cả ba tầm,14 ô chấm điểm được trên 21 ô của lưới,CHƯA KHẢ THI,số mốc backtest quá ít ở tầm xa
+FR-19,Kiểm tổng cấp dưới không vượt cấp trên,cây gộp đứng yên và không thiếu khoá,"chuỗi: 990,414 dòng thiếu khoá; nhân viên bán hàng: 949,197 dòng thiếu khoá",KHẢ THI CÓ ĐIỀU KIỆN,một số cấp gộp có dòng thiếu khoá
+FR-23,Dự báo dài hạn 12 tháng ở mức mã hàng,≥ 12 tháng liền mạch để có một vòng mùa vụ,khối liền mạch dài nhất 8 tháng,CHƯA KHẢ THI,thiếu 4 tháng liền mạch

@@ -1,0 +1,926 @@
+bang,cot,kieu,dong,khuyet_pct,so_gia_tri_khac_nhau,luc_luong_pct,min,max,trung_binh,do_lech_chuan,p01,p25,trung_vi,p75,p95,p99,so_dong_bang_0,so_dong_am,so_dong_chuoi_rong,hang_so
+dim_account_channels,channel_code,character varying,127,0.0,127,100.0,2,6,,,,,,,,,,,0,false
+dim_account_channels,channel_name,character varying,127,0.0,94,74.016,6,50,,,,,,,,,,,0,false
+dim_account_channels,channel_level,integer,127,0.0,3,2.362,1,3,2.4488188976377954,0.7066463038168369,1.0,2.0,3.0,3.0,3.0,3.0,0,0,,false
+dim_account_channels,level_1_code,character varying,127,7.874,6,5.128,0,5,,,,,,,,,,,7,false
+dim_account_channels,level_2_code,character varying,127,7.874,39,33.333,0,5,,,,,,,,,,,45,false
+dim_account_channels,channel_path,character varying,127,0.0,127,100.0,4,19,,,,,,,,,,,0,false
+dim_account_channels,id,bigint,127,0.0,127,100.0,1,127,64.0,36.66060555964672,2.26,32.5,64.0,95.5,120.69999999999999,125.74,0,0,,false
+dim_account_channels,source_refs,jsonb,127,100.0,,,,,,,,,,,,,,,,false
+dim_account_channels,batch_id,bigint,127,7.874,1,0.855,241697,241697,241697.0,0.0,241697.0,241697.0,241697.0,241697.0,241697.0,241697.0,0,0,,true
+dim_account_channels,created_at,timestamp with time zone,127,0.0,4,3.15,2026-06-09 08:15:21.188057+00,2026-08-26 09:20:08.285168+00,,,,,,,,,,,,false
+dim_account_channels,updated_at,timestamp with time zone,127,0.0,3,2.362,2026-06-18 10:51:04.299497+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,false
+dim_assets,asset_code,character varying,32878,0.0,20179,61.375,1,34,,,,,,,,,,,0,false
+dim_assets,asset_name,character varying,32878,99.997,1,100.0,13,13,,,,,,,,,,,0,true
+dim_assets,asset_category,character varying,32878,3.726,53,0.167,0,10,,,,,,,,,,,3160,false
+dim_assets,asset_brand,character varying,32878,24.548,20,0.081,0,7,,,,,,,,,,,74,false
+dim_assets,asset_model,character varying,32878,0.0,85,0.259,0,12,,,,,,,,,,,10,false
+dim_assets,serial_number,character varying,32878,0.0,20179,61.375,1,34,,,,,,,,,,,0,false
+dim_assets,asset_supplier,character varying,32878,0.0,5,0.015,0,10,,,,,,,,,,,25,false
+dim_assets,row_hash,character varying,32878,0.0,32271,98.154,12,32,,,,,,,,,,,0,false
+dim_assets,id,bigint,32878,0.0,32878,100.0,-1,32971,16439.24378003528,9492.342051901787,328.77,8219.25,16438.5,24657.75,31233.149999999998,32555.359999999986,0,1,,false
+dim_assets,source_refs,jsonb,32878,0.0,,,,,,,,,,,,,,,,false
+dim_assets,batch_id,bigint,32878,0.0,833,2.534,0,241675,73002.8248372772,94011.75957837,22.0,22.0,22.0,200854.0,200854.0,211879.77999999892,1,0,,false
+dim_assets,valid_from,timestamp with time zone,32878,0.0,833,2.534,2026-06-09 08:10:04.332992+00,2026-08-28 09:01:10.183192+00,,,,,,,,,,,,false
+dim_assets,valid_to,timestamp with time zone,32878,61.375,825,6.497,2026-06-10 03:18:56.729691+00,2026-08-28 09:01:09.96316+00,,,,,,,,,,,,false
+dim_assets,is_current,boolean,32878,0.0,2,0.006,,,,,,,,,,,,,,false
+dim_assets,created_at,timestamp with time zone,32878,0.0,833,2.534,2026-06-09 08:10:04.332986+00,2026-08-28 09:01:10.183192+00,,,,,,,,,,,,false
+dim_assets,updated_at,timestamp with time zone,32878,0.0,1250,3.802,2026-06-09 08:10:04.332991+00,2026-08-28 09:01:10.183192+00,,,,,,,,,,,,false
+dim_categories,category_code,character varying,277,0.0,277,100.0,1,7,,,,,,,,,,,0,false
+dim_categories,category_name,character varying,277,0.0,276,99.639,3,89,,,,,,,,,,,0,false
+dim_categories,row_hash,character varying,277,0.0,277,100.0,12,32,,,,,,,,,,,0,false
+dim_categories,id,bigint,277,0.0,277,100.0,-1,276,137.99638989169677,79.96874381261168,2.7600000000000002,69.0,138.0,207.0,262.2,273.24,0,1,,false
+dim_categories,source_refs,jsonb,277,0.0,,,,,,,,,,,,,,,,false
+dim_categories,batch_id,bigint,277,0.0,2,0.722,0,11,10.96028880866426,0.659731859148728,11.0,11.0,11.0,11.0,11.0,11.0,1,0,,false
+dim_categories,valid_from,timestamp with time zone,277,0.0,2,0.722,2026-06-09 08:10:04.356712+00,2026-06-09 08:16:14.153408+00,,,,,,,,,,,,false
+dim_categories,valid_to,timestamp with time zone,277,100.0,0,,,,,,,,,,,,,,,true
+dim_categories,is_current,boolean,277,0.0,1,0.361,,,,,,,,,,,,,,true
+dim_categories,created_at,timestamp with time zone,277,0.0,2,0.722,2026-06-09 08:10:04.356706+00,2026-06-09 08:16:14.153408+00,,,,,,,,,,,,false
+dim_categories,updated_at,timestamp with time zone,277,0.0,2,0.722,2026-06-09 08:10:04.356711+00,2026-06-09 08:16:14.153408+00,,,,,,,,,,,,false
+dim_chains,chain_code,character varying,9638,0.0,9638,100.0,3,13,,,,,,,,,,,0,false
+dim_chains,chain_name,character varying,9638,0.0,9603,99.637,2,93,,,,,,,,,,,0,false
+dim_chains,is_active,boolean,9638,0.0,1,0.01,,,,,,,,,,,,,,true
+dim_chains,source_system,character varying,9638,99.585,1,2.5,3,3,,,,,,,,,,,0,true
+dim_chains,row_hash,character varying,9638,0.0,9638,100.0,32,32,,,,,,,,,,,0,false
+dim_chains,id,bigint,9638,0.0,9638,100.0,1,9699,4821.891886283462,2786.069682159411,97.37,2410.25,4819.5,7228.75,9185.15,9570.63,0,0,,false
+dim_chains,source_refs,jsonb,9638,100.0,,,,,,,,,,,,,,,,false
+dim_chains,batch_id,bigint,9638,0.0,155,1.608,16,241709,13598.073562979871,47077.3456984,16.0,16.0,16.0,16.0,110968.0,216070.0,0,0,,false
+dim_chains,valid_from,timestamp with time zone,9638,0.0,155,1.608,2026-06-09 08:16:46.798218+00,2026-08-28 09:11:15.869807+00,,,,,,,,,,,,false
+dim_chains,valid_to,timestamp with time zone,9638,100.0,0,,,,,,,,,,,,,,,true
+dim_chains,is_current,boolean,9638,0.0,1,0.01,,,,,,,,,,,,,,true
+dim_chains,created_at,timestamp with time zone,9638,0.0,155,1.608,2026-06-09 08:16:46.798218+00,2026-08-28 09:11:15.869807+00,,,,,,,,,,,,false
+dim_chains,updated_at,timestamp with time zone,9638,0.0,155,1.608,2026-06-09 08:16:46.798218+00,2026-08-28 09:11:15.869807+00,,,,,,,,,,,,false
+dim_dates,date_key,integer,4018,0.0,4018,100.0,20200101,20301231,20250660.528870083,31626.72953581,20200210.17,20221001.25,20250701.5,20280383.5,20300613.15,20301120.83,0,0,,false
+dim_dates,full_date,date,4018,0.0,4018,100.0,2020-01-01,2030-12-31,,,,,,,,,,,,false
+dim_dates,day,integer,4018,0.0,31,0.772,1,31,15.730462916874068,8.80044078010217,1.0,8.0,16.0,23.0,29.0,31.0,0,0,,false
+dim_dates,month,integer,4018,0.0,12,0.299,1,12,6.522648083623693,3.44878041740034,1.0,4.0,7.0,10.0,12.0,12.0,0,0,,false
+dim_dates,year,integer,4018,0.0,11,0.274,2020,2030,2024.9992533598806,3.162474322856651,2020.0,2022.0,2025.0,2028.0,2030.0,2030.0,0,0,,false
+dim_dates,quarter,integer,4018,0.0,4,0.1,1,4,2.5084619213539074,1.1171111652688974,1.0,2.0,3.0,4.0,4.0,4.0,0,0,,false
+dim_dates,week,integer,4018,0.0,53,1.319,1,53,26.59233449477352,15.063316210151013,1.0,14.0,27.0,40.0,50.0,52.0,0,0,,false
+dim_dates,fiscal_year,integer,4018,0.0,11,0.274,2020,2030,2024.9992533598806,3.162474322856651,2020.0,2022.0,2025.0,2028.0,2030.0,2030.0,0,0,,false
+dim_dates,is_working_day,boolean,4018,0.0,2,0.05,,,,,,,,,,,,,,false
+dim_dates,is_weekend,boolean,4018,0.0,2,0.05,,,,,,,,,,,,,,false
+dim_dates,id,bigint,4018,0.0,4018,100.0,1,4018,2009.5,1159.896654879218,41.17,1005.25,2009.5,3013.75,3817.1499999999996,3977.83,0,0,,false
+dim_dates,source_refs,jsonb,4018,100.0,,,,,,,,,,,,,,,,false
+dim_dates,batch_id,bigint,4018,100.0,0,,,,,,,,,,,,0,0,,true
+dim_dates,created_at,timestamp with time zone,4018,0.0,1,0.025,2026-06-09 08:15:22.138172+00,2026-06-09 08:15:22.138172+00,,,,,,,,,,,,true
+dim_dates,updated_at,timestamp with time zone,4018,0.0,1,0.025,2026-06-09 08:15:22.138172+00,2026-06-09 08:15:22.138172+00,,,,,,,,,,,,true
+dim_delivery_status,note_status,character varying,103,0.0,9,8.738,3,18,,,,,,,,,,,0,false
+dim_delivery_status,delivery_status,character varying,103,0.0,5,4.854,7,16,,,,,,,,,,,0,false
+dim_delivery_status,received_qty_status,character varying,103,0.0,2,1.942,4,7,,,,,,,,,,,0,false
+dim_delivery_status,payment_status,character varying,103,25.243,4,5.195,4,8,,,,,,,,,,,0,false
+dim_delivery_status,recon_status,character varying,103,0.0,2,1.942,7,8,,,,,,,,,,,0,false
+dim_delivery_status,document_status,character varying,103,0.0,3,2.913,7,17,,,,,,,,,,,0,false
+dim_delivery_status,line_status,character varying,103,50.485,3,5.882,7,13,,,,,,,,,,,0,false
+dim_delivery_status,is_mismatch,boolean,103,38.835,1,1.587,,,,,,,,,,,,,,true
+dim_delivery_status,row_hash,character varying,103,0.0,103,100.0,12,32,,,,,,,,,,,0,false
+dim_delivery_status,id,bigint,103,0.0,103,100.0,-1,40219,5315.097087378641,10544.660842428086,1.02,25.5,51.0,407.0,30290.9,38928.92000000001,0,1,,false
+dim_delivery_status,source_refs,jsonb,103,94.175,,,,,,,,,,,,,,,,false
+dim_delivery_status,batch_id,bigint,103,95.146,1,20.0,19,19,19.0,0.0,19.0,19.0,19.0,19.0,19.0,19.0,0,0,,true
+dim_delivery_status,created_at,timestamp with time zone,103,0.0,28,27.184,2026-06-09 08:16:48.384333+00,2026-08-27 10:07:47.761089+00,,,,,,,,,,,,false
+dim_delivery_status,updated_at,timestamp with time zone,103,0.0,28,27.184,2026-06-09 08:16:48.384333+00,2026-08-27 10:07:47.761089+00,,,,,,,,,,,,false
+dim_delivery_types,delivery_type_code,character varying,5,0.0,5,100.0,2,8,,,,,,,,,,,0,false
+dim_delivery_types,delivery_type_name,character varying,5,0.0,5,100.0,7,16,,,,,,,,,,,0,false
+dim_delivery_types,id,bigint,5,0.0,5,100.0,-1,4,1.8,1.7204650534085253,-0.92,1.0,2.0,3.0,3.8,3.96,0,1,,false
+dim_delivery_types,source_refs,jsonb,5,100.0,,,,,,,,,,,,,,,,false
+dim_delivery_types,batch_id,bigint,5,0.0,1,20.0,241698,241698,241698.0,0.0,241698.0,241698.0,241698.0,241698.0,241698.0,241698.0,0,0,,true
+dim_delivery_types,created_at,timestamp with time zone,5,0.0,2,40.0,2026-06-09 08:10:04.17611+00,2026-06-09 08:15:21.188057+00,,,,,,,,,,,,false
+dim_delivery_types,updated_at,timestamp with time zone,5,0.0,1,20.0,2026-08-28 09:10:15.388617+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,true
+dim_distributors,distributor_code,character varying,89,0.0,35,39.326,3,8,,,,,,,,,,,0,false
+dim_distributors,site_domain_id,bigint,89,1.124,19,21.591,12,79,25.693181818181817,20.12537857043454,12.0,12.0,14.0,28.0,68.0,72.03999999999996,0,0,,false
+dim_distributors,warehouse_key,bigint,89,69.663,26,96.296,8,38,23.0,9.128709291752768,8.26,15.5,23.0,30.5,36.7,37.739999999999995,0,0,,false
+dim_distributors,group_code,character varying,89,0.0,1,1.124,11,11,,,,,,,,,,,0,true
+dim_distributors,account_channel_id,bigint,89,98.876,1,100.0,55,55,55.0,0.0,55.0,55.0,55.0,55.0,55.0,55.0,0,0,,true
+dim_distributors,distributor_name,character varying,89,0.0,35,39.326,8,46,,,,,,,,,,,0,false
+dim_distributors,address,character varying,89,17.978,31,42.466,3,111,,,,,,,,,,,0,false
+dim_distributors,distributor_brand,character varying,89,100.0,0,,,,,,,,,,,,,,0,true
+dim_distributors,row_hash,character varying,89,0.0,37,41.573,12,32,,,,,,,,,,,0,false
+dim_distributors,id,bigint,89,0.0,89,100.0,-1,2675,1623.2808988764045,1263.435693874641,0.76,22.0,2599.0,2621.0,2638.6,2645.96,0,1,,false
+dim_distributors,source_refs,jsonb,89,0.0,,,,,,,,,,,,,,,,false
+dim_distributors,batch_id,bigint,89,0.0,39,43.82,0,238957,74955.46067415731,77858.06798806,11.44,13.0,60807.0,166134.0,167651.6,234483.08000000002,1,0,,false
+dim_distributors,valid_from,timestamp with time zone,89,0.0,4,4.494,-infinity,2026-08-27 10:22:46.148421+00,,,,,,,,,,,,false
+dim_distributors,valid_to,timestamp with time zone,89,31.461,38,62.295,2026-06-09 08:16:15.921542+00,2026-08-27 10:22:45.866567+00,,,,,,,,,,,,false
+dim_distributors,is_current,boolean,89,0.0,2,2.247,,,,,,,,,,,,,,false
+dim_distributors,created_at,timestamp with time zone,89,0.0,39,43.82,2026-06-09 08:10:04.224841+00,2026-08-27 10:22:45.866567+00,,,,,,,,,,,,false
+dim_distributors,updated_at,timestamp with time zone,89,0.0,39,43.82,2026-06-09 08:10:04.224842+00,2026-08-27 10:22:45.866567+00,,,,,,,,,,,,false
+dim_distributors,dms_site_number,character varying,89,15.73,28,37.333,7,7,,,,,,,,,,,0,false
+dim_employees,employee_code,character varying,6699,0.0,749,11.181,4,15,,,,,,,,,,,0,false
+dim_employees,site_account_id,bigint,6699,33.692,7,0.158,1,7,3.770598829356146,2.0868814862100455,1.0,2.0,2.0,6.0,7.0,7.0,0,0,,false
+dim_employees,group_code,character varying,6699,0.0,2,0.03,3,7,,,,,,,,,,,0,false
+dim_employees,account_channel_id,bigint,6699,32.751,2,0.044,1,100,1.0439511653718092,2.0854816390636386,1.0,1.0,1.0,1.0,1.0,1.0,0,0,,false
+dim_employees,employee_name,character varying,6699,0.0,767,11.449,6,48,,,,,,,,,,,0,false
+dim_employees,row_hash,character varying,6699,0.0,1473,21.988,12,32,,,,,,,,,,,0,false
+dim_employees,manager_user_id,bigint,6699,93.193,100,21.93,40,6731,3148.907894736842,2518.88113655907,54.0,344.0,4729.0,4828.5,6728.0,6731.0,0,0,,false
+dim_employees,user_level,character varying,6699,0.97,7,0.106,2,4,,,,,,,,,,,0,false
+dim_employees,power_level,integer,6699,0.97,6,0.09,1,6,1.1166716912873078,0.40192784427351524,1.0,1.0,1.0,1.0,2.0,3.0,0,0,,false
+dim_employees,management_path,character varying,6699,83.818,1084,100.0,3,31,,,,,,,,,,,0,false
+dim_employees,id,bigint,6699,0.0,6699,100.0,-1,6731,3359.5799373040754,1946.131070047387,66.98,1674.5,3349.0,5055.5,6395.099999999999,6663.0199999999995,0,1,,false
+dim_employees,source_refs,jsonb,6699,0.0,,,,,,,,,,,,,,,,false
+dim_employees,batch_id,bigint,6699,0.0,94,1.403,0,237311,142403.3221376325,50331.49102029,12.0,156130.0,156252.0,166049.0,166146.0,166146.0,1,0,,false
+dim_employees,valid_from,timestamp with time zone,6699,0.0,15,0.224,-infinity,2026-08-27 02:32:40.068029+00,,,,,,,,,,,,false
+dim_employees,valid_to,timestamp with time zone,6699,4.299,71,1.107,2026-06-09 08:16:14.681922+00,2026-08-27 02:32:39.651924+00,,,,,,,,,,,,false
+dim_employees,is_current,boolean,6699,0.0,2,0.03,,,,,,,,,,,,,,false
+dim_employees,created_at,timestamp with time zone,6699,0.0,96,1.433,2026-06-09 08:10:04.191429+00,2026-08-27 02:32:40.096495+00,,,,,,,,,,,,false
+dim_employees,updated_at,timestamp with time zone,6699,0.0,73,1.09,2026-06-09 08:16:14.422874+00,2026-08-28 09:10:35.510851+00,,,,,,,,,,,,false
+dim_employees,emp_id_hr,character varying,6699,100.0,0,,,,,,,,,,,,,,0,true
+dim_employees,is_active,boolean,6699,85.819,1,0.105,,,,,,,,,,,,,,true
+dim_employees,sales_channel,character varying,6699,88.909,2,0.269,3,5,,,,,,,,,,,0,false
+dim_employees,flat_sup_code,character varying,6699,96.119,37,14.231,0,7,,,,,,,,,,,10,false
+dim_employees,flat_asm_code,character varying,6699,96.044,12,4.528,0,7,,,,,,,,,,,2,false
+dim_inventory_policy,warehouse_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_inventory_policy,brand_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_inventory_policy,target_weeks,double precision,0,,0,,,,,,,,,,,,0,0,,true
+dim_inventory_policy,min_stock_qty,double precision,0,,0,,,,,,,,,,,,0,0,,true
+dim_inventory_policy,effective_from,date,0,,0,,,,,,,,,,,,,,,true
+dim_inventory_policy,effective_to,date,0,,0,,,,,,,,,,,,,,,true
+dim_inventory_policy,notes,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_inventory_policy,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_inventory_policy,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+dim_inventory_policy,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_inventory_policy,created_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_inventory_policy,updated_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_locators,id,bigint,315,0.0,315,100.0,-1,54212,328.6857142857143,3042.20557516121,3.14,78.5,157.0,235.5,298.3,310.86,0,1,,false
+dim_locators,batch_id,bigint,315,0.317,1,0.318,241684,241684,241684.0,0.0,241684.0,241684.0,241684.0,241684.0,241684.0,241684.0,0,0,,true
+dim_locators,source_refs,jsonb,315,100.0,,,,,,,,,,,,,,,,false
+dim_locators,created_at,timestamp with time zone,315,0.0,4,1.27,2026-08-07 08:55:36.612217+00,2026-08-14 10:49:53.679825+00,,,,,,,,,,,,false
+dim_locators,updated_at,timestamp with time zone,315,0.0,2,0.635,2026-08-07 08:55:36.612217+00,2026-08-28 09:01:45.183457+00,,,,,,,,,,,,false
+dim_locators,locator_code,character varying,315,0.0,315,100.0,7,23,,,,,,,,,,,0,false
+dim_locators,locator_name,character varying,315,0.0,314,99.683,10,55,,,,,,,,,,,0,false
+dim_locators,sub_inventory_key,bigint,315,98.73,2,50.0,72,73,72.5,0.5,72.0,72.0,72.5,73.0,73.0,73.0,0,0,,false
+dim_locators,sub_inventory_code,character varying,315,0.635,167,53.355,4,10,,,,,,,,,,,0,false
+dim_locators,purpose_code,character varying,315,0.0,9,2.857,2,7,,,,,,,,,,,0,false
+dim_locators,purpose_name,character varying,315,0.0,9,2.857,4,14,,,,,,,,,,,0,false
+dim_locators,site_type_code,character varying,315,0.0,4,1.27,7,9,,,,,,,,,,,0,false
+dim_locators,site_type_name,character varying,315,0.0,4,1.27,11,15,,,,,,,,,,,0,false
+dim_locators,is_sellable_stock,boolean,315,0.0,2,0.635,,,,,,,,,,,,,,false
+dim_locators,is_priced,boolean,315,0.0,2,0.635,,,,,,,,,,,,,,false
+dim_locators,location_code,character varying,315,12.698,77,28.0,2,18,,,,,,,,,,,0,false
+dim_locators,location_address,character varying,315,12.698,77,28.0,3,100,,,,,,,,,,,0,false
+dim_locators,organization_code,character varying,315,8.889,6,2.091,3,3,,,,,,,,,,,0,false
+dim_locators,is_from_master,boolean,315,0.0,2,0.635,,,,,,,,,,,,,,false
+dim_order_status,status_code,character varying,10,0.0,10,100.0,7,17,,,,,,,,,,,0,false
+dim_order_status,status_name,character varying,10,0.0,10,100.0,7,20,,,,,,,,,,,0,false
+dim_order_status,bucket_group,character varying,10,0.0,5,50.0,4,11,,,,,,,,,,,0,false
+dim_order_status,description,character varying,10,0.0,10,100.0,16,90,,,,,,,,,,,0,false
+dim_order_status,is_closed,boolean,10,0.0,2,20.0,,,,,,,,,,,,,,false
+dim_order_status,is_revenue_recognized,boolean,10,0.0,2,20.0,,,,,,,,,,,,,,false
+dim_order_status,is_cancelled,boolean,10,0.0,2,20.0,,,,,,,,,,,,,,false
+dim_order_status,sort_order,integer,10,0.0,10,100.0,1,99,14.4,28.30618307013505,1.09,3.25,5.5,7.75,58.4999999999999,90.9,0,0,,false
+dim_order_status,id,bigint,10,0.0,10,100.0,-1,9,4.4,3.0397368307141326,-0.8200000000000001,2.25,4.5,6.75,8.549999999999999,8.91,0,1,,false
+dim_order_status,source_refs,jsonb,10,100.0,,,,,,,,,,,,,,,,false
+dim_order_status,batch_id,bigint,10,0.0,2,20.0,0,241694,217524.6,72508.2,21752.46,241694.0,241694.0,241694.0,241694.0,241694.0,1,0,,false
+dim_order_status,created_at,timestamp with time zone,10,0.0,3,30.0,2026-06-09 08:10:04.281686+00,2026-07-30 04:46:12.922943+00,,,,,,,,,,,,false
+dim_order_status,updated_at,timestamp with time zone,10,0.0,2,20.0,2026-06-09 08:10:04.281691+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,false
+dim_order_types,order_type_code,character varying,15,0.0,15,100.0,7,12,,,,,,,,,,,0,false
+dim_order_types,order_type_name,character varying,15,0.0,15,100.0,6,15,,,,,,,,,,,0,false
+dim_order_types,description,character varying,15,0.0,15,100.0,16,57,,,,,,,,,,,0,false
+dim_order_types,is_free_order,boolean,15,0.0,2,13.333,,,,,,,,,,,,,,false
+dim_order_types,sort_order,integer,15,0.0,15,100.0,1,99,13.6,23.153977340117326,1.1400000000000001,4.5,8.0,11.5,39.49999999999991,87.09999999999995,0,0,,false
+dim_order_types,id,bigint,15,0.0,15,100.0,-1,14,6.933333333333334,4.434210439550904,-0.72,3.5,7.0,10.5,13.299999999999999,13.86,0,1,,false
+dim_order_types,source_refs,jsonb,15,100.0,,,,,,,,,,,,,,,,false
+dim_order_types,batch_id,bigint,15,0.0,2,13.333,0,241695,225582.0,60289.32547309,33837.3,241695.0,241695.0,241695.0,241695.0,241695.0,1,0,,false
+dim_order_types,created_at,timestamp with time zone,15,0.0,2,13.333,2026-06-09 08:10:04.293148+00,2026-06-09 08:15:21.188057+00,,,,,,,,,,,,false
+dim_order_types,updated_at,timestamp with time zone,15,0.0,2,13.333,2026-06-09 08:10:04.293153+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,false
+dim_otif_reason,reason_text,character varying,22,0.0,22,100.0,4,40,,,,,,,,,,,0,false
+dim_otif_reason,incharge_group,character varying,22,0.0,5,22.727,3,8,,,,,,,,,,,0,false
+dim_otif_reason,is_included_otif,boolean,22,0.0,2,9.091,,,,,,,,,,,,,,false
+dim_otif_reason,notes,character varying,22,95.455,1,100.0,71,71,,,,,,,,,,,0,true
+dim_otif_reason,id,bigint,22,0.0,22,100.0,1,22,11.5,6.34428877022476,1.21,6.25,11.5,16.75,20.95,21.79,0,0,,false
+dim_otif_reason,source_refs,jsonb,22,100.0,,,,,,,,,,,,,,,,false
+dim_otif_reason,batch_id,bigint,22,0.0,2,9.091,227558,241700,241057.18181818182,2945.762976275704,230527.82,241700.0,241700.0,241700.0,241700.0,241700.0,0,0,,false
+dim_otif_reason,created_at,timestamp with time zone,22,0.0,2,9.091,2026-06-09 08:15:21.188057+00,2026-06-23 03:32:20.063389+00,,,,,,,,,,,,false
+dim_otif_reason,updated_at,timestamp with time zone,22,0.0,2,9.091,2026-06-23 03:32:20.063389+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,false
+dim_otif_reason,impact_type,character varying,22,4.545,3,14.286,12,33,,,,,,,,,,,0,false
+dim_otif_reason,revenue_impact,character varying,22,4.545,3,14.286,2,8,,,,,,,,,,,0,false
+dim_otif_reason,cancel_nature,character varying,22,4.545,20,95.238,20,47,,,,,,,,,,,0,false
+dim_otif_reason,revenue_loss_level,character varying,22,4.545,6,28.571,3,17,,,,,,,,,,,0,false
+dim_otif_reason,classification_rationale,character varying,22,9.091,20,100.0,110,272,,,,,,,,,,,0,false
+dim_price_lists,price_list_code,character varying,364,0.0,362,99.451,5,11,,,,,,,,,,,0,false
+dim_price_lists,price_list_name,character varying,364,0.0,361,99.176,10,54,,,,,,,,,,,0,false
+dim_price_lists,currency,character varying,364,0.549,2,0.552,3,3,,,,,,,,,,,0,false
+dim_price_lists,effective_from,timestamp without time zone,364,99.725,1,100.0,-infinity,-infinity,,,,,,,,,,,,true
+dim_price_lists,effective_to,timestamp without time zone,364,100.0,0,,,,,,,,,,,,,,,true
+dim_price_lists,row_hash,character varying,364,0.0,364,100.0,12,32,,,,,,,,,,,0,false
+dim_price_lists,id,bigint,364,0.0,364,100.0,-1,363,181.49725274725276,105.082110715633,3.63,90.75,181.5,272.25,344.84999999999997,359.37,0,1,,false
+dim_price_lists,source_refs,jsonb,364,0.0,,,,,,,,,,,,,,,,false
+dim_price_lists,batch_id,bigint,364,0.0,6,1.648,0,177524,1732.2527472527472,14766.60634403,17.0,17.0,17.0,17.0,17.0,66963.06000000004,1,0,,false
+dim_price_lists,valid_from,timestamp with time zone,364,0.0,6,1.648,2026-06-09 08:10:04.34596+00,2026-08-13 12:06:51.899319+00,,,,,,,,,,,,false
+dim_price_lists,valid_to,timestamp with time zone,364,99.451,2,100.0,2026-08-12 12:15:13.139526+00,2026-08-13 12:06:51.882485+00,,,,,,,,,,,,false
+dim_price_lists,is_current,boolean,364,0.0,2,0.549,,,,,,,,,,,,,,false
+dim_price_lists,created_at,timestamp with time zone,364,0.0,6,1.648,2026-06-09 08:10:04.345955+00,2026-08-13 12:06:51.899319+00,,,,,,,,,,,,false
+dim_price_lists,updated_at,timestamp with time zone,364,0.0,8,2.198,2026-06-09 08:10:04.345959+00,2026-08-13 12:06:51.899319+00,,,,,,,,,,,,false
+dim_product_brands,brand_code,character varying,299431,0.0,203,0.068,4,9,,,,,,,,,,,0,false
+dim_product_brands,brand_name,character varying,299431,0.0,222,0.074,3,47,,,,,,,,,,,0,false
+dim_product_brands,description,character varying,299431,99.998,5,71.429,6,14,,,,,,,,,,,0,false
+dim_product_brands,row_hash,character varying,299431,0.0,274,0.092,12,32,,,,,,,,,,,0,false
+dim_product_brands,parent_brand_id,bigint,299431,1.464,54,0.018,1,119,53.689871882139656,36.38212266898438,1.0,22.0,52.0,85.0,113.0,119.0,0,0,,false
+dim_product_brands,brand_path,character varying,299431,0.0,299431,100.0,3,12,,,,,,,,,,,0,false
+dim_product_brands,id,bigint,299431,0.0,299431,100.0,-1,528595,262971.48355794075,152564.80084889,4755.17,131354.5,262209.0,394916.75,502821.14999999997,523511.83,0,1,,false
+dim_product_brands,source_refs,jsonb,299431,0.0,,,,,,,,,,,,,,,,false
+dim_product_brands,batch_id,bigint,299431,0.0,7279,2.431,0,241706,117803.54883799706,68773.73847611,3109.0,58579.0,116278.0,175981.0,229478.0,239290.0,1,0,,false
+dim_product_brands,valid_from,timestamp with time zone,299431,0.0,7279,2.431,2026-06-09 08:10:04.239121+00,2026-08-28 09:10:51.609869+00,,,,,,,,,,,,false
+dim_product_brands,valid_to,timestamp with time zone,299431,5.59,7231,2.558,2026-06-10 03:11:05.925387+00,2026-08-28 09:10:50.581655+00,,,,,,,,,,,,false
+dim_product_brands,is_current,boolean,299431,0.0,2,0.001,,,,,,,,,,,,,,false
+dim_product_brands,created_at,timestamp with time zone,299431,0.0,7279,2.431,2026-06-09 08:10:04.239126+00,2026-08-28 09:10:51.609869+00,,,,,,,,,,,,false
+dim_product_brands,updated_at,timestamp with time zone,299431,0.0,11068,3.696,2026-06-09 08:10:04.239127+00,2026-08-28 09:10:51.609869+00,,,,,,,,,,,,false
+dim_product_prices,id,bigint,9085,0.0,9085,100.0,675802,684886,680344.0,2622.613581906416,675892.84,678073.0,680344.0,682615.0,684431.8,684795.16,0,0,,false
+dim_product_prices,batch_id,bigint,9085,0.0,1,0.011,240246,240246,240246.0,0.0,240246.0,240246.0,240246.0,240246.0,240246.0,240246.0,0,0,,true
+dim_product_prices,source_refs,jsonb,9085,0.0,,,,,,,,,,,,,,,,false
+dim_product_prices,product_id,bigint,9085,0.0,678,7.463,901,2541,1896.6901485965877,261.077627646435,1347.84,1709.0,1913.0,2042.0,2347.0,2511.0,0,0,,false
+dim_product_prices,product_code,character varying,9085,0.0,678,7.463,8,12,,,,,,,,,,,0,false
+dim_product_prices,price_group_code,character varying,9085,0.0,183,2.014,5,11,,,,,,,,,,,0,false
+dim_product_prices,price_group_name,character varying,9085,0.0,182,2.003,17,21,,,,,,,,,,,0,false
+dim_product_prices,uom,character varying,9085,3.17,16,0.182,2,3,,,,,,,,,,,0,false
+dim_product_prices,price_incl_vat,numeric,9085,0.0,2045,22.51,1,2779920,117110.48252614199,262530.48187246,5498.28,15708.6,25134.84,94255.0,378000.0,1555200.0,0,0,,false
+dim_product_prices,tax_rate,numeric,9085,0.0,4,0.044,0,0.1,0.07951458447991194,0.006952621465721755,0.05,0.08,0.08,0.08,0.08,0.1,45,0,,false
+dim_product_prices,price_excl_vat,numeric,9085,0.0,2061,22.686,0.93,2574000,108657.75861860209,243471.57892194,5091.0,14545.0,23273.0,87273.15,350000.0,1440000.0,0,0,,false
+dim_product_prices,valid_from,timestamp with time zone,9085,0.0,200,2.201,2000-01-01 00:00:00+00,2026-09-28 00:00:00+00,,,,,,,,,,,,false
+dim_product_prices,valid_to,timestamp with time zone,9085,0.132,154,1.697,2025-01-01 00:00:00+00,2028-12-31 10:21:48+00,,,,,,,,,,,,false
+dim_product_prices,is_current,boolean,9085,0.0,2,0.022,,,,,,,,,,,,,,false
+dim_product_prices,created_at,timestamp with time zone,9085,0.0,1,0.011,2026-08-28 02:12:39.989884+00,2026-08-28 02:12:39.989884+00,,,,,,,,,,,,true
+dim_product_prices,updated_at,timestamp with time zone,9085,0.0,1,0.011,2026-08-28 02:12:39.989884+00,2026-08-28 02:12:39.989884+00,,,,,,,,,,,,true
+dim_products,product_code,character varying,2543,0.0,1275,50.138,6,12,,,,,,,,,,,0,false
+dim_products,product_name,character varying,2543,0.0,1259,49.508,5,100,,,,,,,,,,,0,false
+dim_products,brand_id,bigint,2543,0.118,217,8.543,149,245834,89052.41614173229,96864.62918572,149.0,247.0,102586.0,126152.0,245824.0,245832.0,0,0,,false
+dim_products,category_code,character varying,2543,0.039,77,3.029,2,5,,,,,,,,,,,0,false
+dim_products,category_id,bigint,2543,7.039,75,3.173,197,276,256.5537225042301,22.191599312613583,199.0,244.0,268.0,274.0,276.0,276.0,0,0,,false
+dim_products,supplier_id,bigint,2543,26.976,61,3.285,1,62,25.28486806677437,22.86737186850918,1.0,3.0,20.0,53.0,57.0,57.0,0,0,,false
+dim_products,shelf_life,character varying,2543,38.97,19,1.224,1,4,,,,,,,,,,,0,false
+dim_products,pack_size,double precision,2543,100.0,0,,,,,,,,,,,,0,0,,true
+dim_products,row_hash,character varying,2543,0.0,2543,100.0,12,32,,,,,,,,,,,0,false
+dim_products,id,bigint,2543,0.0,2543,100.0,-1,2542,1270.999606763665,734.101491620774,25.42,635.5,1271.0,1906.5,2414.9,2516.58,0,1,,false
+dim_products,source_refs,jsonb,2543,0.0,,,,,,,,,,,,,,,,false
+dim_products,batch_id,bigint,2543,0.0,14,0.551,0,108098,27382.3456547385,27379.23295775,20.0,20.0,38118.0,54604.0,54604.0,54604.0,1,0,,false
+dim_products,valid_from,timestamp with time zone,2543,0.0,2543,100.0,2026-06-09 08:10:04.159249+00,2026-07-23 04:08:08.804739+00,,,,,,,,,,,,false
+dim_products,valid_to,timestamp with time zone,2543,0.039,8,0.315,2026-06-25 01:43:31.070666+00,2099-12-31 00:00:00+00,,,,,,,,,,,,false
+dim_products,is_current,boolean,2543,0.0,2,0.079,,,,,,,,,,,,,,false
+dim_products,created_at,timestamp with time zone,2543,0.0,2543,100.0,2026-06-09 08:10:04.255195+00,2026-07-23 04:08:08.804758+00,,,,,,,,,,,,false
+dim_products,updated_at,timestamp with time zone,2543,0.0,1282,50.413,2026-06-09 08:10:04.255201+00,2026-07-23 04:08:08.804763+00,,,,,,,,,,,,false
+dim_products,sub_brand,character varying,2543,100.0,0,,,,,,,,,,,,,,0,true
+dim_products,uom,character varying,2543,32.442,17,0.99,2,3,,,,,,,,,,,0,false
+dim_products,conversion_rate,numeric,2543,27.527,54,2.93,1,280,27.74498100922409,27.604889407383755,1.0,12.0,24.0,36.0,64.0,150.0,0,0,,false
+dim_products,net_weight,numeric,2543,32.56,245,14.286,0.58,66.5,5.679923032069971,6.312806481540221,1.0,2.13,3.52,6.5,17.389999999999986,25.988999999999884,0,0,,false
+dim_products,volume,numeric,2543,100.0,0,,,,,,,,,,,,0,0,,true
+dim_products,unit_per_pack,character varying,2543,100.0,0,,,,,,,,,,,,,,0,true
+dim_products,mt_price_exc_vat,numeric,2543,99.725,1,14.286,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7,0,,true
+dim_products,mt_price_inc_vat,numeric,2543,99.725,1,14.286,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7,0,,true
+dim_products,tax_code,character varying,2543,50.138,4,0.315,4,5,,,,,,,,,,,0,false
+dim_products,tax_rate,numeric,2543,50.138,4,0.315,0,0.1,0.07971608832807571,0.0052310791539821435,0.05,0.08,0.08,0.08,0.08,0.08,3,0,,false
+dim_promotions,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_promotions,promo_code_dms,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,promo_code_orc,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,promo_name,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,mechanic_type,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,long_mechanic,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,promo_start,date,0,,0,,,,,,,,,,,,,,,true
+dim_promotions,promo_end,date,0,,0,,,,,,,,,,,,,,,true
+dim_promotions,target_channel,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,target_chain,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,budget_total,numeric,0,,0,,,,,,,,,,,,0,0,,true
+dim_promotions,notes,text,0,,0,,,,,,,,,,,,,,0,true
+dim_promotions,is_active,boolean,0,,0,,,,,,,,,,,,,,,true
+dim_promotions,created_at,timestamp without time zone,0,,0,,,,,,,,,,,,,,,true
+dim_promotions,updated_at,timestamp without time zone,0,,0,,,,,,,,,,,,,,,true
+dim_sales_positions,id,bigint,7,0.0,7,100.0,1,9,4.285714285714286,2.4907993963089563,1.06,2.5,4.0,5.5,8.099999999999998,8.819999999999999,0,0,,false
+dim_sales_positions,created_at,timestamp with time zone,7,0.0,2,28.571,2026-08-10 03:41:49.029566+00,2026-08-24 03:55:58.631316+00,,,,,,,,,,,,false
+dim_sales_positions,updated_at,timestamp with time zone,7,0.0,1,14.286,2026-08-28 09:10:15.388617+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,true
+dim_sales_positions,position_code,character varying,7,0.0,7,100.0,2,4,,,,,,,,,,,0,false
+dim_sales_positions,position_name,character varying,7,0.0,7,100.0,12,18,,,,,,,,,,,0,false
+dim_sales_positions,power_level,integer,7,0.0,6,85.714,1,6,3.142857142857143,1.8070158058105026,1.0,1.5,3.0,4.5,5.699999999999999,5.9399999999999995,0,0,,false
+dim_sales_positions,is_active,boolean,7,0.0,1,14.286,,,,,,,,,,,,,,true
+dim_shippers,shipper_code,character varying,57292,0.0,99,0.173,6,15,,,,,,,,,,,0,false
+dim_shippers,group_code,character varying,57292,0.0,1,0.002,7,7,,,,,,,,,,,0,true
+dim_shippers,shipper_name,character varying,57292,0.0,100,0.175,4,20,,,,,,,,,,,0,false
+dim_shippers,license_plate,character varying,57292,0.024,168,0.293,0,19,,,,,,,,,,,741,false
+dim_shippers,row_hash,character varying,57292,0.0,243,0.424,12,32,,,,,,,,,,,0,false
+dim_shippers,id,bigint,57292,0.0,57292,100.0,-1,57500,28688.06096837255,16579.82106912,572.91,14331.75,28672.5,43021.25,54611.45,56927.09,0,1,,false
+dim_shippers,source_refs,jsonb,57292,0.003,,,,,,,,,,,,,,,,false
+dim_shippers,batch_id,bigint,57292,0.005,4111,7.176,18,241711,116082.67007627992,79323.59170729,1354.0,38119.0,114031.0,194958.0,234521.0,240775.0,0,0,,false
+dim_shippers,valid_from,timestamp with time zone,57292,0.0,4112,7.177,-infinity,2026-08-28 09:11:20.969869+00,,,,,,,,,,,,false
+dim_shippers,valid_to,timestamp with time zone,57292,0.173,4109,7.184,2026-06-10 03:15:02.796945+00,2026-08-28 09:11:20.692945+00,,,,,,,,,,,,false
+dim_shippers,is_current,boolean,57292,0.0,2,0.003,,,,,,,,,,,,,,false
+dim_shippers,created_at,timestamp with time zone,57292,0.0,4113,7.179,2026-06-09 08:16:48.063652+00,2026-08-28 09:11:20.692945+00,,,,,,,,,,,,false
+dim_shippers,updated_at,timestamp with time zone,57292,0.0,4155,7.252,2026-06-09 08:16:48.063652+00,2026-08-28 09:11:46.636327+00,,,,,,,,,,,,false
+dim_site_accounts,site_account_code,character varying,7,0.0,7,100.0,4,4,,,,,,,,,,,0,false
+dim_site_accounts,site_account_name,character varying,7,0.0,7,100.0,6,11,,,,,,,,,,,0,false
+dim_site_accounts,description,character varying,7,100.0,0,,,,,,,,,,,,,,0,true
+dim_site_accounts,id,bigint,7,0.0,7,100.0,1,7,4.0,2.0,1.06,2.5,4.0,5.5,6.699999999999999,6.9399999999999995,0,0,,false
+dim_site_accounts,source_refs,jsonb,7,100.0,,,,,,,,,,,,,,,,false
+dim_site_accounts,batch_id,bigint,7,0.0,1,14.286,241696,241696,241696.0,0.0,241696.0,241696.0,241696.0,241696.0,241696.0,241696.0,0,0,,true
+dim_site_accounts,created_at,timestamp with time zone,7,0.0,1,14.286,2026-06-09 08:15:21.188057+00,2026-06-09 08:15:21.188057+00,,,,,,,,,,,,true
+dim_site_accounts,updated_at,timestamp with time zone,7,0.0,1,14.286,2026-08-28 09:10:15.388617+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,true
+dim_site_domains,site_domain_code,character varying,137,0.0,137,100.0,7,14,,,,,,,,,,,0,false
+dim_site_domains,site_domain_name,character varying,137,0.0,136,99.27,2,22,,,,,,,,,,,0,false
+dim_site_domains,site_domain_level,integer,137,0.0,5,3.65,0,4,3.510948905109489,0.9445718013471824,1.0,3.0,4.0,4.0,4.0,4.0,1,0,,false
+dim_site_domains,site_domain_path,character varying,137,0.0,137,100.0,9,33,,,,,,,,,,,0,false
+dim_site_domains,parent_code,character varying,137,0.73,28,20.588,0,7,,,,,,,,,,,10,false
+dim_site_domains,id,bigint,137,0.0,137,100.0,-1,136,67.99270072992701,39.56008021630715,1.36,34.0,68.0,102.0,129.2,134.64,0,1,,false
+dim_site_domains,source_refs,jsonb,137,100.0,,,,,,,,,,,,,,,,false
+dim_site_domains,batch_id,bigint,137,0.73,1,0.735,241699,241699,241699.0,0.0,241699.0,241699.0,241699.0,241699.0,241699.0,241699.0,0,0,,true
+dim_site_domains,created_at,timestamp with time zone,137,0.0,1,0.73,2026-06-09 08:15:21.188057+00,2026-06-09 08:15:21.188057+00,,,,,,,,,,,,true
+dim_site_domains,updated_at,timestamp with time zone,137,0.0,2,1.46,2026-06-09 08:15:21.188057+00,2026-08-28 09:10:15.388617+00,,,,,,,,,,,,false
+dim_site_domains,dms_city_code,character varying,137,0.73,63,46.324,0,2,,,,,,,,,,,74,false
+dim_site_domains,dms_city_name,character varying,137,0.73,63,46.324,0,17,,,,,,,,,,,74,false
+dim_stores,store_code,character varying,301391,0.0,56390,18.71,1,34,,,,,,,,,,,0,false
+dim_stores,site_domain_id,bigint,301391,45.076,63,0.038,12,86,34.57379254675097,20.922221162299294,12.0,17.0,28.0,57.0,70.0,79.0,0,0,,false
+dim_stores,group_code,character varying,301391,0.0,2,0.001,3,4,,,,,,,,,,,0,false
+dim_stores,account_channel_id,bigint,301391,5.017,75,0.026,1,127,71.10902540766023,10.133388033193292,27.0,69.0,69.0,69.0,84.0,106.0,0,0,,false
+dim_stores,store_name,character varying,301391,0.0,44612,14.802,0,174,,,,,,,,,,,2756,false
+dim_stores,address,character varying,301391,32.502,36787,18.083,1,248,,,,,,,,,,,0,false
+dim_stores,system,character varying,301391,61.379,9313,8.001,1,8,,,,,,,,,,,0,false
+dim_stores,is_legal_entity,boolean,301391,0.0,2,0.001,,,,,,,,,,,,,,false
+dim_stores,row_hash,character varying,301391,0.0,64407,21.37,12,32,,,,,,,,,,,0,false
+dim_stores,id,bigint,301391,0.0,301391,100.0,-1,426087,251972.41846112744,100650.96955249,80864.39,164825.75,252531.5,339439.25,408447.05,422437.61,0,1,,false
+dim_stores,source_refs,jsonb,301391,0.0,,,,,,,,,,,,,,,,false
+dim_stores,batch_id,bigint,301391,0.0,3028,1.005,0,241707,139698.80949438954,58585.68028758,25161.0,134585.0,166145.0,169273.0,204962.0,223552.0,1,0,,false
+dim_stores,valid_from,timestamp with time zone,301391,0.0,295,0.098,-infinity,2026-08-28 06:31:13.536888+00,,,,,,,,,,,,false
+dim_stores,valid_to,timestamp with time zone,301391,7.907,4529,1.632,2026-06-19 03:11:57.150705+00,2026-08-28 09:10:55.603332+00,,,,,,,,,,,,false
+dim_stores,is_current,boolean,301391,0.0,2,0.001,,,,,,,,,,,,,,false
+dim_stores,created_at,timestamp with time zone,301391,0.0,3562,1.182,2026-06-19 03:06:19.895558+00,2026-08-28 09:10:55.799682+00,,,,,,,,,,,,false
+dim_stores,updated_at,timestamp with time zone,301391,0.0,5145,1.707,2026-06-19 03:06:19.895559+00,2026-08-28 09:10:55.799682+00,,,,,,,,,,,,false
+dim_stores,store_format,character varying,301391,99.998,1,20.0,5,5,,,,,,,,,,,0,true
+dim_stores,account_status,character varying,301391,89.038,2,0.006,6,8,,,,,,,,,,,0,false
+dim_stores,created_date,timestamp without time zone,301391,98.138,111,1.978,2025-01-25 00:00:00,2026-08-28 00:00:00,,,,,,,,,,,,false
+dim_stores,phone_number,character varying,301391,85.957,12033,28.431,0,50,,,,,,,,,,,18981,false
+dim_stores,freezer_qty,integer,301391,100.0,0,,,,,,,,,,,,0,0,,true
+dim_stores,site_number,character varying,301391,62.813,18986,16.94,13,13,,,,,,,,,,,0,false
+dim_stores,distributor_id,bigint,301391,93.925,26,0.142,1,2610,155.3771754943693,583.225657588157,2.0,15.0,19.0,19.0,2597.0,2610.0,0,0,,false
+dim_stores,store_brand_code,character varying,301391,91.306,48,0.183,2,13,,,,,,,,,,,0,false
+dim_sub_inventories,sub_inventory_code,character varying,188,0.0,117,62.234,2,18,,,,,,,,,,,0,false
+dim_sub_inventories,warehouse_key,bigint,188,0.0,7,3.723,-1,7,3.9893617021276597,1.9101892568096872,2.0,2.0,3.0,6.0,7.0,7.0,0,1,,false
+dim_sub_inventories,sub_inventory_name,character varying,188,1.064,186,100.0,5,71,,,,,,,,,,,0,false
+dim_sub_inventories,representative,character varying,188,100.0,0,,,,,,,,,,,,,,0,true
+dim_sub_inventories,position,character varying,188,100.0,0,,,,,,,,,,,,,,0,true
+dim_sub_inventories,deleted,integer,188,0.0,1,0.532,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,188,0,,true
+dim_sub_inventories,row_hash,character varying,188,0.0,188,100.0,12,32,,,,,,,,,,,0,false
+dim_sub_inventories,id,bigint,188,0.0,188,100.0,-1,187,93.49468085106383,54.27936966939331,1.87,46.75,93.5,140.25,177.65,185.13,0,1,,false
+dim_sub_inventories,source_refs,jsonb,188,0.0,,,,,,,,,,,,,,,,false
+dim_sub_inventories,batch_id,bigint,188,0.0,8,4.255,0,158996,15187.72340425532,16770.43978407,21.0,21.0,22823.0,22823.0,22823.0,34215.419999999605,1,0,,false
+dim_sub_inventories,created_at,timestamp with time zone,188,0.0,8,4.255,2026-06-09 08:10:04.318863+00,2026-08-08 05:34:35.461117+00,,,,,,,,,,,,false
+dim_sub_inventories,updated_at,timestamp with time zone,188,0.0,11,5.851,2026-06-09 08:10:04.318868+00,2026-08-08 05:34:35.461117+00,,,,,,,,,,,,false
+dim_sub_inventories,valid_from,timestamp with time zone,188,0.0,8,4.255,2026-06-09 08:10:04.318869+00,2026-08-08 05:34:35.461117+00,,,,,,,,,,,,false
+dim_sub_inventories,valid_to,timestamp with time zone,188,62.234,4,5.634,2026-06-11 06:52:36.202939+00,2026-07-24 02:28:28.973251+00,,,,,,,,,,,,false
+dim_sub_inventories,is_current,boolean,188,0.0,2,1.064,,,,,,,,,,,,,,false
+dim_suppliers,supplier_code,character varying,63,0.0,63,100.0,3,7,,,,,,,,,,,0,false
+dim_suppliers,supplier_name,character varying,63,0.0,63,100.0,3,18,,,,,,,,,,,0,false
+dim_suppliers,is_deleted,boolean,63,100.0,0,,,,,,,,,,,,,,,true
+dim_suppliers,row_hash,character varying,63,0.0,63,100.0,12,32,,,,,,,,,,,0,false
+dim_suppliers,id,bigint,63,0.0,63,100.0,-1,62,30.984126984126984,18.211710922207,0.24,15.5,31.0,46.5,58.9,61.38,0,1,,false
+dim_suppliers,source_refs,jsonb,63,0.0,,,,,,,,,,,,,,,,false
+dim_suppliers,batch_id,bigint,63,0.0,4,6.349,0,60121,1916.5079365079366,10535.3724471,5.58,9.0,9.0,9.0,9.0,60094.96,1,0,,false
+dim_suppliers,valid_from,timestamp with time zone,63,0.0,4,6.349,2026-06-09 08:10:04.267805+00,2026-07-01 03:38:57.169615+00,,,,,,,,,,,,false
+dim_suppliers,valid_to,timestamp with time zone,63,100.0,0,,,,,,,,,,,,,,,true
+dim_suppliers,is_current,boolean,63,0.0,1,1.587,,,,,,,,,,,,,,true
+dim_suppliers,created_at,timestamp with time zone,63,0.0,4,6.349,2026-06-09 08:10:04.267799+00,2026-07-01 03:38:57.163743+00,,,,,,,,,,,,false
+dim_suppliers,updated_at,timestamp with time zone,63,0.0,4,6.349,2026-06-09 08:10:04.267804+00,2026-07-01 03:38:57.163743+00,,,,,,,,,,,,false
+dim_warehouse_capacity,warehouse_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_capacity,sub_inventory_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_capacity,capacity_carton,double precision,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_capacity,effective_from,date,0,,0,,,,,,,,,,,,,,,true
+dim_warehouse_capacity,effective_to,date,0,,0,,,,,,,,,,,,,,,true
+dim_warehouse_capacity,notes,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_capacity,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_capacity,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+dim_warehouse_capacity,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_capacity,created_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_warehouse_capacity,updated_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_warehouse_target,distributor_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_target,warehouse_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_target,sub_inventory_code,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_target,period_year,integer,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,period_month,integer,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,target_carton,double precision,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,target_vnd,double precision,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,notes,character varying,0,,0,,,,,,,,,,,,,,0,true
+dim_warehouse_target,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+dim_warehouse_target,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+dim_warehouse_target,created_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_warehouse_target,updated_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+dim_warehouses,warehouse_code,character varying,39,0.0,39,100.0,3,8,,,,,,,,,,,0,false
+dim_warehouses,warehouse_name,character varying,39,0.0,39,100.0,6,44,,,,,,,,,,,0,false
+dim_warehouses,address,character varying,39,41.026,23,100.0,3,96,,,,,,,,,,,0,false
+dim_warehouses,warehouse_type,integer,39,97.436,1,100.0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1,0,,true
+dim_warehouses,warehouse_type_code,character varying,39,2.564,2,5.263,3,7,,,,,,,,,,,0,false
+dim_warehouses,min_stock_qty,double precision,39,100.0,0,,,,,,,,,,,,0,0,,true
+dim_warehouses,dms_site_code,character varying,39,71.795,11,100.0,3,13,,,,,,,,,,,0,false
+dim_warehouses,is_active,boolean,39,0.0,1,2.564,,,,,,,,,,,,,,true
+dim_warehouses,row_hash,character varying,39,0.0,39,100.0,12,32,,,,,,,,,,,0,false
+dim_warehouses,id,bigint,39,0.0,39,100.0,-1,38,18.974358974358974,11.298938410508782,-0.24,9.5,19.0,28.5,36.1,37.62,0,1,,false
+dim_warehouses,source_refs,jsonb,39,0.0,,,,,,,,,,,,,,,,false
+dim_warehouses,batch_id,bigint,39,0.0,2,5.128,0,15,14.615384615384615,2.3709284626803755,5.7,15.0,15.0,15.0,15.0,15.0,1,0,,false
+dim_warehouses,valid_from,timestamp with time zone,39,0.0,2,5.128,2026-06-09 08:10:04.3053+00,2026-06-09 08:16:46.162872+00,,,,,,,,,,,,false
+dim_warehouses,valid_to,timestamp with time zone,39,100.0,0,,,,,,,,,,,,,,,true
+dim_warehouses,is_current,boolean,39,0.0,1,2.564,,,,,,,,,,,,,,true
+dim_warehouses,created_at,timestamp with time zone,39,0.0,2,5.128,2026-06-09 08:10:04.305294+00,2026-06-09 08:16:46.162872+00,,,,,,,,,,,,false
+dim_warehouses,updated_at,timestamp with time zone,39,0.0,2,5.128,2026-06-09 08:10:04.305299+00,2026-06-09 08:16:46.162872+00,,,,,,,,,,,,false
+dim_weather_locations,city_name,character varying,64,0.0,64,100.0,6,17,,,,,,,,,,,0,false
+dim_weather_locations,latitude,double precision,64,0.0,63,98.438,0,22.8233,15.804460937499996,5.239873804021226,5.781447,10.918275,15.8122,20.969625,22.358249999999998,22.724642,1,0,,false
+dim_weather_locations,longitude,double precision,64,0.0,61,95.312,0,109.3,104.753659375,13.265500660309133,64.90190700000001,105.675725,106.18020000000001,107.09832499999999,108.955805,109.2496,1,0,,false
+dim_weather_locations,id,bigint,64,0.0,64,100.0,-1,63,31.484375,18.499993401603554,0.26,15.75,31.5,47.25,59.849999999999994,62.37,0,1,,false
+dim_weather_locations,source_refs,jsonb,64,0.0,,,,,,,,,,,,,,,,false
+dim_weather_locations,batch_id,bigint,64,0.0,1,1.562,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,64,0,,true
+dim_weather_locations,created_at,timestamp with time zone,64,0.0,64,100.0,2026-06-09 08:10:04.366837+00,2026-06-09 08:10:04.463327+00,,,,,,,,,,,,false
+dim_weather_locations,updated_at,timestamp with time zone,64,0.0,64,100.0,2026-06-09 08:10:04.366842+00,2026-08-28 01:43:19.086172+00,,,,,,,,,,,,false
+dms_notify_ledger,order_code,character varying,67945,0.0,67945,100.0,6,6,,,,,,,,,,,0,false
+dms_notify_ledger,last_notified_at,timestamp with time zone,67945,0.0,5056,7.441,2026-07-03 06:02:06.37935+00,2026-08-28 02:26:16.735097+00,,,,,,,,,,,,false
+dwh_batch_logs,id,bigint,241005,0.0,241005,100.0,0,241727,120817.61029024294,69699.70510896,2410.04,60498.0,120812.0,181100.0,229560.8,239316.96,1,0,,false
+dwh_batch_logs,target_table,character varying,241005,0.0,44,0.018,7,31,,,,,,,,,,,0,false
+dwh_batch_logs,data_from,timestamp with time zone,241005,0.0,240642,99.849,-infinity,2026-08-28 09:00:16.265861+00,,,,,,,,,,,,false
+dwh_batch_logs,data_to,timestamp with time zone,241005,0.0,241005,100.0,-infinity,2026-08-28 09:12:37.641395+00,,,,,,,,,,,,false
+dwh_batch_logs,status,character varying,241005,0.0,5,0.002,5,10,,,,,,,,,,,0,false
+dwh_batch_logs,row_count,integer,241005,0.0,5730,2.378,0,2021006,739.9521669674903,8443.748800554242,0.0,0.0,5.0,117.0,4018.0,11359.0,101728,0,,false
+dwh_batch_logs,duration_ms,integer,241005,0.0,1,0.0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,241005,0,,true
+dwh_batch_logs,error_message,text,241005,99.871,24,7.742,34,500,,,,,,,,,,,0,false
+dwh_batch_logs,created_at,timestamp with time zone,241005,0.0,179191,74.352,2026-06-09 08:10:04.159249+00,2026-08-28 09:12:37.433894+00,,,,,,,,,,,,false
+dwh_batch_logs,updated_at,timestamp with time zone,241005,0.0,241004,100.0,2026-06-09 08:10:04.159249+00,2026-08-28 09:15:52.834593+00,,,,,,,,,,,,false
+fact_asset_activities,visit_key,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_activities,asset_key,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_activities,scan_count,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_activities,is_active,boolean,0,,0,,,,,,,,,,,,,,,true
+fact_asset_activities,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_activities,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+fact_asset_activities,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_activities,created_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+fact_asset_activities,updated_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+fact_asset_audits,visit_id,bigint,216302,0.0,189998,87.839,449308,1564541,780005.3881471276,243864.24555445,454871.01,611095.25,716836.5,940580.75,1265457.9,1495816.99,0,0,,false
+fact_asset_audits,shop_id,bigint,216302,0.0,11988,5.542,77501,426087,106376.22588325581,31494.07818512,77839.0,95540.0,102881.0,109349.0,132533.0,210303.7899999998,0,0,,false
+fact_asset_audits,asset_id,bigint,216302,0.0,15393,7.116,6,32962,12957.39139258999,5507.891267053072,750.0,11496.0,13877.0,15881.0,19773.0,27409.0,0,0,,false
+fact_asset_audits,audit_date,timestamp without time zone,216302,0.0,187406,86.641,2025-12-01 06:18:43,2026-08-28 16:04:03,,,,,,,,,,,,false
+fact_asset_audits,qr_code,character varying,216302,0.0,11237,5.195,3,34,,,,,,,,,,,0,false
+fact_asset_audits,is_scanned,boolean,216302,0.0,1,0.0,,,,,,,,,,,,,,true
+fact_asset_audits,condition_status,character varying,216302,100.0,0,,,,,,,,,,,,,,0,true
+fact_asset_audits,notes,text,216302,100.0,0,,,,,,,,,,,,,,0,true
+fact_asset_audits,id,bigint,216302,0.0,216302,100.0,207421,750335,355721.00731384824,126040.49994453,209584.01,261496.25,315571.5,439323.75,614825.95,724630.97,0,0,,false
+fact_asset_audits,source_refs,jsonb,216302,100.0,,,,,,,,,,,,,,,,false
+fact_asset_audits,batch_id,bigint,216302,100.0,0,,,,,,,,,,,,0,0,,true
+fact_asset_audits,created_at,timestamp with time zone,216302,0.0,1868,0.864,2026-06-19 04:14:14.314096+00,2026-08-28 09:11:41.213415+00,,,,,,,,,,,,false
+fact_asset_audits,updated_at,timestamp with time zone,216302,0.0,1868,0.864,2026-06-19 04:14:14.314096+00,2026-08-28 09:11:41.213415+00,,,,,,,,,,,,false
+fact_asset_inventory,id,bigint,20178,0.0,20178,100.0,1,56382,10219.547824363168,6167.073992945981,202.77,5045.25,10089.5,15133.75,19169.149999999998,28322.23,0,0,,false
+fact_asset_inventory,batch_id,bigint,20178,0.0,469,2.324,57090,241714,69653.51437208841,38125.95482448,57090.0,57090.0,57090.0,57090.0,177380.0,228204.43,0,0,,false
+fact_asset_inventory,source_refs,jsonb,20178,0.0,,,,,,,,,,,,,,,,false
+fact_asset_inventory,serial,character varying,20178,0.0,20178,100.0,1,34,,,,,,,,,,,0,false
+fact_asset_inventory,distributor_key,bigint,20178,0.0,23,0.114,-1,2610,76.61904053920111,431.16322255076,-1.0,-1.0,-1.0,5.0,29.0,2597.0,0,13435,,false
+fact_asset_inventory,warehouse_key,bigint,20178,92.859,8,0.555,26,38,33.448993754337266,4.324654642855874,26.0,27.0,34.0,37.0,38.0,38.0,0,0,,false
+fact_asset_inventory,shop_id,bigint,20178,29.621,10981,77.326,77499,426075,109912.3548341666,37880.02346085,77829.0,96077.0,103983.0,112582.0,135399.0,384029.0,0,0,,false
+fact_asset_inventory,holder_code,character varying,20178,0.0,32,0.159,3,9,,,,,,,,,,,0,false
+fact_asset_inventory,holder_name,character varying,20178,0.0,32,0.159,8,46,,,,,,,,,,,0,false
+fact_asset_inventory,qr_code,character varying,20178,8.172,11265,60.797,0,38,,,,,,,,,,,7264,false
+fact_asset_inventory,status,character varying,20178,0.0,3,0.015,0,7,,,,,,,,,,,2,false
+fact_asset_inventory,is_deleted,boolean,20178,0.0,2,0.01,,,,,,,,,,,,,,false
+fact_asset_inventory,asset_code,character varying,20178,0.0,1,0.005,7,7,,,,,,,,,,,0,true
+fact_asset_inventory,brand_code,character varying,20178,0.0,20,0.099,0,4,,,,,,,,,,,212,false
+fact_asset_inventory,model,character varying,20178,0.0,84,0.416,0,12,,,,,,,,,,,5,false
+fact_asset_inventory,capacity,character varying,20178,0.0,27,0.134,0,5,,,,,,,,,,,5,false
+fact_asset_inventory,subinventory_code,character varying,20178,2.711,27,0.138,0,10,,,,,,,,,,,7971,false
+fact_asset_inventory,shop_code,character varying,20178,27.49,11305,77.267,5,18,,,,,,,,,,,0,false
+fact_asset_inventory,source_updated_at,timestamp without time zone,20178,0.0,1046,5.184,2026-05-26 03:55:53.170465,2026-08-28 09:10:55.680506,,,,,,,,,,,,false
+fact_asset_inventory,source_id,bigint,20178,0.0,20178,100.0,1,20209,10098.947417979978,5832.498446320936,202.77,5048.25,10097.5,15149.75,19192.149999999998,20007.23,0,0,,false
+fact_asset_inventory,created_at,timestamp with time zone,20178,0.0,13,0.064,2026-06-30 04:09:26.156036+00,2026-08-28 08:11:34.560866+00,,,,,,,,,,,,false
+fact_asset_inventory,updated_at,timestamp with time zone,20178,0.0,469,2.324,2026-06-30 04:09:24.995154+00,2026-08-28 09:11:30.946337+00,,,,,,,,,,,,false
+fact_asset_inventory,supplier,character varying,20178,0.099,3,0.015,8,10,,,,,,,,,,,0,false
+fact_asset_placements,shop_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_placements,asset_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_placements,allocated_date,timestamp without time zone,0,,0,,,,,,,,,,,,,,,true
+fact_asset_placements,is_active,boolean,0,,0,,,,,,,,,,,,,,,true
+fact_asset_placements,image_url,character varying,0,,0,,,,,,,,,,,,,,0,true
+fact_asset_placements,placement_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_placements,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_placements,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+fact_asset_placements,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_asset_placements,created_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+fact_asset_placements,updated_at,timestamp with time zone,0,,0,,,,,,,,,,,,,,,true
+fact_delivery_details,date_key,integer,301218,0.006,171,0.057,20250331,20290813,20260640.05394362,297.087772221503,20260330.0,20260525.0,20260622.0,20260724.0,20260822.0,20260828.0,0,0,,false
+fact_delivery_details,store_key,bigint,301218,0.0,11355,3.77,77496,426077,106363.49726438317,44695.05871719,77524.0,92794.0,98251.0,107635.0,139260.0,412022.31999999983,0,0,,false
+fact_delivery_details,product_key,bigint,301218,0.0,569,0.189,2,2542,1485.9550840616685,598.488361489752,453.0,1016.0,1260.0,1968.0,2480.0,2519.0,0,0,,false
+fact_delivery_details,employee_key,bigint,301218,0.0,375,0.124,-1,6731,934.3081995422368,1502.098765427604,7.0,260.0,431.0,547.0,4793.0,4843.0,0,2780,,false
+fact_delivery_details,shipper_key,bigint,301218,0.0,4610,1.53,5,57453,21096.249245089344,14097.30148849,3417.0,10067.0,16729.0,28486.0,50631.0,56727.439999999944,0,0,,false
+fact_delivery_details,delivery_status_key,integer,301218,0.0,77,0.026,6,38976,21.508525756654674,432.691128028367,6.0,6.0,9.0,22.0,38.0,55.0,0,0,,false
+fact_delivery_details,warehouse_key,bigint,301218,0.0,7,0.002,-1,7,4.134335894548366,1.7401309542732086,2.0,2.0,5.0,6.0,6.0,7.0,0,23,,false
+fact_delivery_details,sub_inventory_key,bigint,301218,0.0,66,0.022,-1,186,102.43922346352012,27.739945152772187,21.0,94.0,102.0,120.0,137.0,141.0,0,23,,false
+fact_delivery_details,delivery_note_code,character varying,301218,0.0,80365,26.68,13,15,,,,,,,,,,,0,false
+fact_delivery_details,so_number,character varying,301218,0.0,78281,25.988,3,16,,,,,,,,,,,0,false
+fact_delivery_details,product_type,character varying,301218,0.0,3,0.001,0,4,,,,,,,,,,,95,false
+fact_delivery_details,unit,character varying,301218,0.0,12,0.004,2,3,,,,,,,,,,,0,false
+fact_delivery_details,serial,character varying,301218,99.992,18,75.0,0,9,,,,,,,,,,,6,false
+fact_delivery_details,note_source,character varying,301218,0.0,2,0.001,3,3,,,,,,,,,,,0,false
+fact_delivery_details,note_type,character varying,301218,0.0,2,0.001,6,7,,,,,,,,,,,0,false
+fact_delivery_details,attempt_count,integer,301218,0.0,3,0.001,1,3,1.011108564291148,0.11027751595708425,1.0,1.0,1.0,1.0,1.0,2.0,0,0,,false
+fact_delivery_details,trip_code,character varying,301218,1.195,4512,1.516,13,13,,,,,,,,,,,0,false
+fact_delivery_details,created_date_key,integer,301218,0.0,160,0.053,20260316,20260828,20260634.505957898,128.266885583705,20260330.0,20260525.0,20260622.0,20260724.0,20260822.0,20260827.0,0,0,,false
+fact_delivery_details,shipper_received_date_key,integer,301218,96.664,129,1.284,20260316,20260827,20260460.818046752,172.939320551164,20260316.0,20260328.0,20260401.0,20260604.0,20260815.0,20260826.0,0,0,,false
+fact_delivery_details,shipper_received_at,timestamp without time zone,301218,96.664,2617,26.045,2026-03-16 16:45:19,2026-08-27 16:43:02,,,,,,,,,,,,false
+fact_delivery_details,completed_date_key,integer,301218,9.545,153,0.056,20260326,20260828,20260640.931948423,125.444800299036,20260403.0,20260527.0,20260625.0,20260727.0,20260822.0,20260827.0,0,0,,false
+fact_delivery_details,dispatcher_name,character varying,301218,1.196,29,0.01,5,23,,,,,,,,,,,0,false
+fact_delivery_details,accountant_name,character varying,301218,54.463,22,0.016,8,23,,,,,,,,,,,0,false
+fact_delivery_details,is_warehouse_confirmed,integer,301218,0.0,2,0.001,0,1,0.290290968644217,0.4538965985418036,0.0,0.0,0.0,1.0,1.0,1.0,213643,0,,false
+fact_delivery_details,is_accountant_confirmed,integer,301218,0.0,3,0.001,0,2,0.3941979011988878,0.4906654381464996,0.0,0.0,0.0,1.0,1.0,1.0,182657,0,,false
+fact_delivery_details,note_status,character varying,301218,0.0,7,0.002,3,18,,,,,,,,,,,0,false
+fact_delivery_details,delivery_status,character varying,301218,0.0,4,0.001,8,16,,,,,,,,,,,0,false
+fact_delivery_details,payment_status,character varying,301218,9.181,3,0.001,4,8,,,,,,,,,,,0,false
+fact_delivery_details,received_qty_status,character varying,301218,0.0,1,0.0,4,4,,,,,,,,,,,0,true
+fact_delivery_details,recon_status,character varying,301218,0.0,1,0.0,8,8,,,,,,,,,,,0,true
+fact_delivery_details,docs_status,character varying,301218,0.0,2,0.001,13,17,,,,,,,,,,,0,false
+fact_delivery_details,note_reason,text,301218,95.601,588,4.437,1,95,,,,,,,,,,,0,false
+fact_delivery_details,pod_image_url,jsonb,301218,0.0,,,,,,,,,,,,,,,,false
+fact_delivery_details,license_plate,character varying,301218,0.008,394,0.131,0,20,,,,,,,,,,,5701,false
+fact_delivery_details,qty_so,numeric,301218,0.0,1019,0.338,0,21227727,1811.4115937002748,104270.15633763,0.0,8.0,20.0,25.0,125.0,850.0,17878,0,,false
+fact_delivery_details,qty_delivered,numeric,301218,0.0,967,0.321,0,21227727,1777.7745865016327,104076.05705222,0.0,6.0,16.0,25.0,120.0,775.0,31988,0,,false
+fact_delivery_details,qty_received,numeric,301218,0.0,1027,0.341,0,21227727,1856.8417304645068,104425.78379532,0.0,10.0,20.0,28.0,128.0,875.0,7794,0,,false
+fact_delivery_details,qty_remain,numeric,301218,0.0,92,0.031,0,1036800,7.572041231907889,2055.214022277581,0.0,0.0,0.0,0.0,0.0,0.0,298515,0,,false
+fact_delivery_details,ai_qty_received,numeric,301218,0.0,1,0.0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,301029,0,,true
+fact_delivery_details,is_valid_line,integer,301218,0.0,2,0.001,0,1,0.9741088067927011,0.15881070279298332,0.0,1.0,1.0,1.0,1.0,1.0,7794,0,,false
+fact_delivery_details,id,bigint,301218,0.0,301218,100.0,920863,4357116,1906821.6968398395,1025324.1771,924315.28,1010214.0,1586612.0,2643179.0,3942070.6,4316303.72,0,0,,false
+fact_delivery_details,source_refs,jsonb,301218,0.0,,,,,,,,,,,,,,,,false
+fact_delivery_details,batch_id,bigint,301218,0.0,1873,0.622,25165,241719,79805.95940922636,67693.89068376,25165.0,25165.0,43647.0,125487.0,223572.0,240515.0,0,0,,false
+fact_delivery_details,created_at,timestamp with time zone,301218,0.0,1873,0.622,2026-06-19 04:11:48.982508+00,2026-08-28 09:11:46.636327+00,,,,,,,,,,,,false
+fact_delivery_details,updated_at,timestamp with time zone,301218,0.0,1873,0.622,2026-06-19 04:11:48.982508+00,2026-08-28 09:11:46.636327+00,,,,,,,,,,,,false
+fact_inventory_daily_balances,source_system,character varying,116787,0.0,1,0.001,3,3,,,,,,,,,,,0,true
+fact_inventory_daily_balances,date_key,integer,116787,0.0,57,0.049,20260703,20260828,20260765.74700095,49.3885608762928,20260703.0,20260717.0,20260731.0,20260815.0,20260826.0,20260828.0,0,0,,false
+fact_inventory_daily_balances,warehouse_id,bigint,116787,0.0,26,0.022,9,37,21.452901435947496,8.709941525253855,9.0,14.0,20.0,28.0,37.0,37.0,0,0,,false
+fact_inventory_daily_balances,product_id,bigint,116787,0.0,245,0.21,1336,2540,2124.9660578660296,315.439509437659,1353.0,1942.5,2303.0,2329.0,2507.0,2522.0,0,0,,false
+fact_inventory_daily_balances,opening_quantity,double precision,116787,0.0,2968,2.541,-192,16247,930.159743992221,2789.1297172172763,0.0,0.0,19.0,286.0,12074.0,12158.0,45589,202,,false
+fact_inventory_daily_balances,import_quantity,double precision,116787,0.0,209,0.179,0,13224,11.03973045330738,127.78455545721084,0.0,0.0,0.0,0.0,0.0,265.679999999993,114173,0,,false
+fact_inventory_daily_balances,export_quantity,double precision,116787,0.0,598,0.512,0,4800,10.380830058140033,86.81807019603413,0.0,0.0,0.0,0.0,27.0,247.0,108280,0,,false
+fact_inventory_daily_balances,closing_quantity,double precision,116787,0.0,2993,2.563,-192,16247,946.9069418862538,2811.5314816889245,0.0,0.0,23.0,290.0,12076.0,12158.0,44324,208,,false
+fact_inventory_daily_balances,closing_value,double precision,116787,0.0,1,0.001,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,116787,0,,true
+fact_inventory_daily_balances,id,bigint,116787,0.0,116787,100.0,9324560,16443263,10289031.162689341,1871531.5929,9325727.86,9353756.5,9382953.0,10053727.5,15346948.7,16285427.14,0,0,,false
+fact_inventory_daily_balances,source_refs,jsonb,116787,0.0,,,,,,,,,,,,,,,,false
+fact_inventory_daily_balances,batch_id,bigint,116787,0.0,17,0.015,176683,241722,186605.37804721415,19059.96427023,176683.0,176683.0,176683.0,186979.0,236999.0,241722.0,0,0,,false
+fact_inventory_daily_balances,created_at,timestamp with time zone,116787,0.0,68,0.058,2026-08-13 07:05:39.642957+00,2026-08-28 08:41:52.094839+00,,,,,,,,,,,,false
+fact_inventory_daily_balances,updated_at,timestamp with time zone,116787,0.0,57,0.049,2026-08-13 07:05:39.642957+00,2026-08-28 09:12:02.285303+00,,,,,,,,,,,,false
+fact_inventory_lot_snapshot,source_system,character varying,301764,0.0,2,0.001,3,6,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,date_key,integer,301764,0.0,79,0.026,20260609,20260828,20260732.497891728,75.05561367779755,20260609.0,20260703.0,20260722.0,20260811.0,20260825.0,20260828.0,0,0,,false
+fact_inventory_lot_snapshot,warehouse_id,bigint,301764,0.0,32,0.011,2,37,5.968599909080727,6.933443508119721,2.0,2.0,3.0,6.0,23.0,36.0,0,0,,false
+fact_inventory_lot_snapshot,sub_inventory_id,bigint,301764,0.0,90,0.03,-1,187,76.91994821554457,49.10925224886218,-1.0,35.0,86.0,113.0,137.0,186.0,0,59844,,false
+fact_inventory_lot_snapshot,product_id,bigint,301764,0.0,1332,0.441,-1,2542,1695.7107844752047,605.57051034295,64.0,1368.0,1788.0,2298.0,2449.0,2518.0,0,284,,false
+fact_inventory_lot_snapshot,brand_id,bigint,301764,0.0,2217,0.735,127,528514,109809.08202829039,156151.50642174,149.0,230.0,259.0,217299.0,450148.0,525299.0,0,0,,false
+fact_inventory_lot_snapshot,lot_code,character varying,301764,0.0,7920,2.625,3,34,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,expiry_date,date,301764,36.087,961,0.498,2025-04-21,2029-01-26,,,,,,,,,,,,false
+fact_inventory_lot_snapshot,warehouse_code_raw,character varying,301764,0.0,32,0.011,3,8,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,sub_inventory_code_raw,character varying,301764,13.223,59,0.023,2,15,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,product_code_raw,character varying,301764,0.0,691,0.229,12,12,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,brand_code_raw,character varying,301764,13.223,101,0.039,4,4,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,locator,character varying,301764,13.71,95,0.036,7,18,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,g_department,character varying,301764,13.223,9,0.003,9,21,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,category,character varying,301764,13.223,28,0.011,4,30,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,sub_category,character varying,301764,13.223,50,0.019,21,74,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,barcode,character varying,301764,36.066,351,0.182,8,14,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,package_uom,character varying,301764,13.223,10,0.004,2,3,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,primary_uom,character varying,301764,0.0,23,0.008,2,4,,,,,,,,,,,0,false
+fact_inventory_lot_snapshot,expiry_warning_days,integer,301764,36.087,1418,0.735,-492,954,325.57159456055115,246.665400357401,-253.0,164.0,312.0,562.0,669.0,696.0,138,20720,,false
+fact_inventory_lot_snapshot,qty_package,double precision,301764,32.458,8335,4.089,0,5693,60.58007095029081,298.3766039113416,0.04,1.0,3.71,18.0,208.0,1288.0,30,0,,false
+fact_inventory_lot_snapshot,available_package,double precision,301764,32.458,8421,4.132,-342.17,5693,59.507875919731475,297.6532368341641,0.0,0.6,3.0,16.5,201.0,1277.0,21740,22,,false
+fact_inventory_lot_snapshot,reservation_package,double precision,301764,32.458,1260,0.618,0,1174.5,1.0721061237201897,15.180278893818262,0.0,0.0,0.0,0.0,2.0,16.08,177839,0,,false
+fact_inventory_lot_snapshot,qty_primary,double precision,301764,0.0,7154,2.371,0,6758740,1751.5288348538534,44841.992526029615,0.0,2.0,31.0,250.0,4200.0,24964.899999999674,14907,0,,false
+fact_inventory_lot_snapshot,available_primary,double precision,301764,13.223,6728,2.569,-8212,6758740,1793.6074773880416,46855.017558590764,0.0,1.0,24.0,238.0,4000.0,29080.0,23077,22,,false
+fact_inventory_lot_snapshot,reservation_primary,double precision,301764,13.223,1004,0.383,0,1446098,92.01688998580272,9031.048160652896,0.0,0.0,0.0,0.0,24.0,311.0,234998,0,,false
+fact_inventory_lot_snapshot,volume_package,double precision,301764,33.866,21631,10.839,0,749335135.5,951560.177419648,9900116.275721647,532.8,12206.25,54235.44,266112.0,2934064.0,15308705.041599931,30,0,,false
+fact_inventory_lot_snapshot,volume_primary,double precision,301764,19.519,19612,8.075,0.00552,295514419.2,613163.897369089,3954044.170735358,0.4488,1437.48,21760.0,142074.24,2026944.0,12426624.0,0,0,,false
+fact_inventory_lot_snapshot,id,bigint,301764,0.0,301764,100.0,70,22712994,11017586.745416153,6852216.9272,10228.65,5208774.25,10770055.5,17143797.75,21882769.5,22702288.999999996,0,0,,false
+fact_inventory_lot_snapshot,source_refs,jsonb,301764,0.0,,,,,,,,,,,,,,,,false
+fact_inventory_lot_snapshot,batch_id,bigint,301764,0.0,141,0.047,37,241687,162914.85311266742,34043.69841968,48321.0,155963.0,155963.0,171084.0,230420.0,241684.0,0,0,,false
+fact_inventory_lot_snapshot,created_at,timestamp with time zone,301764,0.0,147,0.049,2026-06-09 15:32:06.638484+00,2026-08-28 09:02:01.967998+00,,,,,,,,,,,,false
+fact_inventory_lot_snapshot,updated_at,timestamp with time zone,301764,0.0,141,0.047,2026-06-09 15:32:06.638484+00,2026-08-28 09:02:01.967998+00,,,,,,,,,,,,false
+fact_inventory_lot_snapshot,locator_id,bigint,301764,0.0,94,0.031,-1,54212,68.36399992093976,567.439418778751,-1.0,16.0,51.0,97.0,164.0,218.0,0,40989,,false
+fact_inventory_transactions,transaction_id,bigint,173448,0.0,173448,100.0,251698,435112,342823.18101102347,53116.84102407,253439.47,295950.75,343358.5,388667.25,426131.65,433181.53,0,0,,false
+fact_inventory_transactions,date_key,integer,173448,0.0,258,0.149,20251108,20260828,20259472.39350699,2888.955845078862,20251205.0,20260214.0,20260424.0,20260626.0,20260815.0,20260827.0,0,0,,false
+fact_inventory_transactions,warehouse_id,bigint,173448,0.0,24,0.014,9,37,18.136104192611043,8.876901852130025,9.0,11.0,15.0,27.0,37.0,37.0,0,0,,false
+fact_inventory_transactions,product_id,bigint,173448,0.0,390,0.225,2,2540,1100.2839583045063,640.075817713783,452.0,638.0,991.0,1260.0,2405.0,2519.0,0,0,,false
+fact_inventory_transactions,order_id,bigint,173448,3.189,43500,25.906,399761,996045,759193.0238273899,135496.46136149,530750.0,638035.0,757838.0,879894.0,964759.0,991091.0,0,0,,false
+fact_inventory_transactions,transaction_type,integer,173448,0.0,2,0.001,0,1,0.08215142290484756,0.27459527785371046,0.0,0.0,0.0,0.0,1.0,1.0,159199,0,,false
+fact_inventory_transactions,transaction_date,timestamp without time zone,173448,0.0,39045,22.511,2025-11-08 00:00:00,2026-08-28 15:36:03,,,,,,,,,,,,false
+fact_inventory_transactions,batch_code,character varying,173448,0.0,2,0.001,1,3,,,,,,,,,,,0,false
+fact_inventory_transactions,expiry_date,timestamp without time zone,173448,100.0,0,,,,,,,,,,,,,,,true
+fact_inventory_transactions,quantity,double precision,173448,0.0,720,0.415,0,12177,76.73373287930912,381.54665875006197,1.0,20.0,24.0,40.0,240.0,1200.0,7,0,,false
+fact_inventory_transactions,unit_price,double precision,173448,0.0,223,0.129,0,1276580,16810.185806244048,38808.250662696715,0.0,5498.28,10211.4,15709.1,62836.0,151753.0,25773,0,,false
+fact_inventory_transactions,total_amount,double precision,173448,0.0,3667,2.114,0,1673185104,1486279.974492167,18246082.52241317,0.0,164948.4,282735.36,433570.19999999995,2167786.8000000003,10405368.0,25779,0,,false
+fact_inventory_transactions,description,text,173448,0.031,62998,36.332,5,127,,,,,,,,,,,0,false
+fact_inventory_transactions,id,bigint,173448,0.0,173448,100.0,1,526949,143207.84902103225,138410.69603739,1735.47,43362.75,86724.5,239822.25,429661.65,504716.53,0,0,,false
+fact_inventory_transactions,source_refs,jsonb,173448,0.0,,,,,,,,,,,,,,,,false
+fact_inventory_transactions,batch_id,bigint,173448,0.0,958,0.552,26,241720,34304.58242239749,62609.84063329,26.0,26.0,26.0,43594.0,185135.0,238992.0,0,0,,false
+fact_inventory_transactions,created_at,timestamp with time zone,173448,0.0,962,0.555,2026-06-09 08:20:05.283066+00,2026-08-28 08:41:38.577657+00,,,,,,,,,,,,false
+fact_inventory_transactions,updated_at,timestamp with time zone,173448,0.0,958,0.552,2026-06-09 08:20:05.283066+00,2026-08-28 09:11:51.322824+00,,,,,,,,,,,,false
+fact_order_fulfillment,salesman_id,bigint,300243,0.0,743,0.247,-1,6731,537.0322514682614,988.797195318442,9.0,154.0,319.0,496.0,762.0,4821.0,0,1055,,false
+fact_order_fulfillment,status_key,integer,300243,0.0,8,0.003,1,8,4.172185497063477,1.8274993813739355,2.0,2.0,5.0,5.0,8.0,8.0,0,0,,false
+fact_order_fulfillment,delivery_type_key,integer,300243,0.0,1,0.0,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,298312,,true
+fact_order_fulfillment,store_key,bigint,300243,0.0,24846,8.275,-1,426081,106500.7035184639,31974.05038875,77767.0,94488.0,101524.0,109953.0,134346.0,230352.0,0,55,,false
+fact_order_fulfillment,distributor_key,bigint,300243,0.0,31,0.01,2,2641,123.05233782080506,508.881747745887,2.0,21.0,21.0,21.0,21.0,2597.0,0,0,,false
+fact_order_fulfillment,chain_key,bigint,300243,70.377,19,0.021,2,7334,23.23068990526268,89.48311073702982,2.0,7.0,30.0,30.0,33.0,34.0,0,0,,false
+fact_order_fulfillment,warehouse_key,bigint,300243,0.0,35,0.012,-1,37,6.924535385770603,6.468607766982621,2.0,2.0,6.0,7.0,22.0,31.0,0,162,,false
+fact_order_fulfillment,order_date_key,integer,300243,0.0,558,0.186,20220604,20260828,20255405.485421304,4838.264028944076,20250411.0,20250808.0,20251216.0,20260507.0,20260807.0,20260826.0,0,0,,false
+fact_order_fulfillment,order_source,character varying,300243,0.0,2,0.001,3,3,,,,,,,,,,,0,false
+fact_order_fulfillment,order_type_key,integer,300243,0.0,13,0.004,-1,12,-0.11022017216873609,1.5155097140141043,-1.0,-1.0,-1.0,1.0,1.0,6.0,0,189055,,false
+fact_order_fulfillment,sub_inventory_key,bigint,300243,0.0,86,0.029,-1,186,37.749091555150315,53.106071432401755,-1.0,-1.0,-1.0,94.0,133.0,141.0,0,189124,,false
+fact_order_fulfillment,order_code,character varying,300243,0.0,300243,100.0,5,29,,,,,,,,,,,0,false
+fact_order_fulfillment,order_timestamp,timestamp without time zone,300243,0.0,296814,98.858,2022-06-04 05:17:00,2026-08-28 16:09:54,,,,,,,,,,,,false
+fact_order_fulfillment,raw_created_at,timestamp without time zone,300243,63.447,15388,14.021,2026-03-12 14:42:43,2026-08-28 16:07:21,,,,,,,,,,,,false
+fact_order_fulfillment,delivery_date,timestamp without time zone,300243,43.617,32359,19.115,2025-03-20 06:55:18,2027-07-04 17:00:00,,,,,,,,,,,,false
+fact_order_fulfillment,delivery_date_key,integer,300243,43.617,530,0.313,20250320,20270704,20257977.639074933,4262.367761972882,20250503.0,20251219.0,20260412.0,20260619.0,20260821.0,20260830.0,0,0,,false
+fact_order_fulfillment,total_before_discount,numeric,300243,0.001,109027,36.313,-236125309.09,974903833792,20639006.429621834,2233187401.8444,8.0,669088.89,1853180.0,6316362.0,44121177.07999998,262948615.4399996,2754,174,,false
+fact_order_fulfillment,total_discount,numeric,300243,0.001,93050,30.992,-27792592,862789892907,17078909.048875496,1946164782.038,0.0,14720.0,340368.0,3552214.0,35579347.0,240744681.6799995,65300,63,,false
+fact_order_fulfillment,total_net_revenue,numeric,300243,0.001,116785,38.897,-236125309.09,112115605583,3560097.381626367,291117903.0422,6.0,507840.0,1046769.0,2015958.0,8540043.48,32521910.839999977,2754,175,,false
+fact_order_fulfillment,total_vat,numeric,300243,0.001,94324,31.416,-23612531,9749183094,436272.60632766696,28677987.7745,0.0,42336.0,88282.0,169394.0,714616.1999999994,2700876.799999993,3047,175,,false
+fact_order_fulfillment,total_amount,numeric,300243,0.0,115315,38.407,-259737840,121864788677,3996329.798291822,316759022.8839,7.0,552000.0,1131054.48,2184574.0,9254784.193000004,35249517.000000216,2755,175,,false
+fact_order_fulfillment,item_count,integer,300243,0.0,77,0.026,1,436,4.797249188768806,5.0180825715383515,1.0,2.0,3.0,6.0,14.0,24.0,0,0,,false
+fact_order_fulfillment,canceled_reason,character varying,300243,99.728,117,14.321,3,74,,,,,,,,,,,0,false
+fact_order_fulfillment,canceled_reason_admin,character varying,300243,98.291,86,1.676,3,46,,,,,,,,,,,0,false
+fact_order_fulfillment,is_count,integer,300243,0.0,1,0.0,1,1,1.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0,0,,true
+fact_order_fulfillment,visit_key,bigint,300243,89.964,27040,89.736,449309,1564821,735783.2862643563,246139.57395687,453019.0,543223.5,685100.5,834005.75,1232019.25,1479183.0,0,0,,false
+fact_order_fulfillment,id,bigint,300243,0.0,300243,100.0,3313363,4679333,3618404.4118339187,275019.66573775,3318510.11,3435730.5,3557544.5,3685010.25,4219104.45,4644021.89,0,0,,false
+fact_order_fulfillment,source_refs,jsonb,300243,0.0,,,,,,,,,,,,,,,,false
+fact_order_fulfillment,batch_id,bigint,300243,0.0,859,0.286,73373,241727,86222.472823755,36469.64597899,73373.0,73373.0,73373.0,73373.0,173916.0,239483.0,0,0,,false
+fact_order_fulfillment,created_at,timestamp with time zone,300243,0.0,859,0.286,2026-07-06 07:35:02.069596+00,2026-08-28 09:14:22.485836+00,,,,,,,,,,,,false
+fact_order_fulfillment,updated_at,timestamp with time zone,300243,0.0,866,0.288,2026-07-06 07:35:02.069596+00,2026-08-28 09:14:22.485836+00,,,,,,,,,,,,false
+fact_order_fulfillment,total_delivered_revenue,numeric,300243,0.0,69809,23.251,-192390060.74,112115605583,1948345.4268818218,206149796.5484,0.0,0.0,314848.905,1161173.0,4672018.501000002,20848389.530000027,119888,120,,false
+fact_order_fulfillment,total_cancelled_revenue,numeric,300243,0.0,10189,3.394,0,4112468888.89,209630.62246564002,8323839.2558,0.0,0.0,0.0,0.0,545454.0,3150000.0,273376,0,,false
+fact_order_fulfillment,dms_order_code,character varying,300243,4.54,286418,99.932,4,29,,,,,,,,,,,0,false
+fact_order_fulfillment,is_erp_deleted,boolean,300243,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_order_fulfillment,erp_deleted_source,character varying,300243,99.946,2,1.235,6,8,,,,,,,,,,,0,false
+fact_order_lines,salesman_id,bigint,297238,0.0,731,0.246,-1,6731,797.2934819943292,1424.352829882799,-1.0,172.0,357.0,540.0,4789.0,6237.0,0,14106,,false
+fact_order_lines,product_key,bigint,297238,0.0,855,0.288,2,2542,1822.7945292663708,536.77691649149,455.0,1386.0,1945.0,2302.0,2367.0,2509.0,0,0,,false
+fact_order_lines,order_date_key,integer,297238,0.0,556,0.187,20250203,20260828,20255365.803756036,4844.633678899092,20250410.0,20250731.0,20251215.0,20260507.0,20260805.0,20260825.0,0,0,,false
+fact_order_lines,store_key,bigint,297238,0.0,19755,6.646,-1,426084,104034.27510253838,31711.78793749,77553.0,93520.0,99070.0,108228.0,134428.0,226679.0,0,42,,false
+fact_order_lines,distributor_key,bigint,297238,0.0,27,0.009,-1,2610,63.048191351081954,334.560054579336,-1.0,21.0,21.0,21.0,21.0,2597.0,0,3940,,false
+fact_order_lines,chain_key,bigint,297238,45.26,21,0.013,2,7334,26.3844444170052,142.205091896696,4.0,26.0,30.0,30.0,32.0,34.0,0,0,,false
+fact_order_lines,visit_key,bigint,297238,100.0,0,,,,,,,,,,,,0,0,,true
+fact_order_lines,line_status_key,integer,297238,0.0,8,0.003,1,9,4.028397572753416,1.7542449367411068,2.0,2.0,5.0,5.0,8.0,8.0,0,0,,false
+fact_order_lines,sub_inventory_key,bigint,297238,0.0,48,0.016,-1,186,41.21457627575246,54.681003184317866,-1.0,-1.0,-1.0,102.0,137.0,141.0,0,182545,,false
+fact_order_lines,warehouse_key,bigint,297238,0.0,35,0.012,-1,37,6.259922144920899,5.9693996537629666,2.0,2.0,5.0,6.0,20.0,28.0,0,146,,false
+fact_order_lines,delivery_type_key,integer,297238,0.0,1,0.0,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,296962,,true
+fact_order_lines,order_type_key,integer,297238,0.0,13,0.004,-1,12,-0.1531980522760488,1.2518107490213277,-1.0,-1.0,-1.0,1.0,1.0,5.0,0,182477,,false
+fact_order_lines,delivery_date_key,integer,297238,65.969,486,0.48,20250401,20260828,20257580.12823241,4540.917084052333,20250423.0,20251028.0,20260526.0,20260708.0,20260819.0,20260826.0,0,0,,false
+fact_order_lines,order_source,character varying,297238,0.0,2,0.001,3,3,,,,,,,,,,,0,false
+fact_order_lines,order_timestamp,timestamp without time zone,297238,0.0,127099,42.76,2025-02-03 08:48:45,2026-08-28 15:59:00,,,,,,,,,,,,false
+fact_order_lines,raw_created_at,timestamp without time zone,297238,61.666,12057,10.582,2026-03-12 14:43:38,2026-08-28 16:07:21,,,,,,,,,,,,false
+fact_order_lines,delivery_date,timestamp without time zone,297238,65.969,25944,25.648,2025-04-01 11:35:16,2026-08-28 14:21:40,,,,,,,,,,,,false
+fact_order_lines,schedule_ship_date,timestamp without time zone,297238,50.221,26646,18.009,2025-03-19 17:00:00,2027-07-04 17:00:00,,,,,,,,,,,,false
+fact_order_lines,sales_qty,numeric,297238,0.0,985,0.331,-755762,4363232,437.9439922616362,22805.80566492,-8.0,10.0,24.0,30.0,120.0,552.0,162,3607,,false
+fact_order_lines,shipped_qty,numeric,297238,0.0,937,0.315,-3600,4363232,414.6372650372775,22115.85458067,-6.0,7.0,20.0,25.0,108.0,500.0,21361,3502,,false
+fact_order_lines,cancelled_qty,numeric,297238,0.0,281,0.095,-1440,240000,4.995198038806312,651.130471404352,0.0,0.0,0.0,0.0,5.0,48.0,280632,21,,false
+fact_order_lines,vat_percent,numeric,297238,0.0,15,0.005,0,0.68,0.0820874387968831,0.0073421815431039,0.08,0.08,0.08,0.08,0.1,0.1,525,0,,false
+fact_order_lines,unit_price_before_vat,numeric,297238,0.0,1572,0.529,-0.9259,1930000,23038.44895104559,49078.22063991,0.0,6800.0,14545.0,23000.0,87273.0,315000.0,61188,173,,false
+fact_order_lines,unit_price_after_discount_before_vat,numeric,297238,0.0,4820,1.622,-81647.25,1930000,22047.750767638285,46897.81352861,0.0,6334.85,13742.1667,21818.0,74545.0,315000.0,61198,174,,false
+fact_order_lines,unit_price_after_discount_after_vat,numeric,297238,0.0,5970,2.008,-88179,2084400,23812.995182230385,50658.40377991,0.0,6841.638,14841.5417,23563.44,80508.6667,340200.0,61198,174,,false
+fact_order_lines,unit_price,numeric,297238,0.0,1376,0.463,-1,2084400,24881.741127046556,53005.05123743,0.0,7344.0,15708.6,24840.0,94254.84,340200.0,61188,173,,false
+fact_order_lines,discount_percent,numeric,297238,0.0,296,0.1,-21.43,100,3.533655787609189,8.359788954124658,0.0,0.0,0.0,0.0,21.0,36.67,225449,6,,false
+fact_order_lines,amount_before_discount_before_vat,numeric,297238,0.0,9869,3.32,-110400000,854574912,629433.2886300604,3749603.0699,0.0,109090.0,288200.0,545450.0,1920000.0,6981600.0,61311,2813,,false
+fact_order_lines,amount_before_discount,numeric,297238,0.0,9171,3.085,-119232000,922940904.96,679792.1615738041,4049576.6869,0.0,117817.2,311256.0,589086.0,2073600.0,7540128.0,61311,2813,,false
+fact_order_lines,discount_amount_before_vat,numeric,297238,0.0,6682,2.248,-38473100,754574912.01,36295.560633549074,1728644.2199,-0.64,0.0,0.0,3819.0,114080.04,465393.78,202018,10514,,false
+fact_order_lines,discount_amount,numeric,297238,0.0,6992,2.352,-41550948,754574911.97,38689.683316215545,1748269.5171,-0.44,0.0,0.0,4124.2,123206.0,502625.28,157419,32829,,false
+fact_order_lines,amount_incl_vat,numeric,297238,0.0,14689,4.942,-110885760,671760000,641102.4782584304,3213038.9675,0.0,114534.0,291304.5,565471.0,1976609.0,7257600.0,61321,2813,,false
+fact_order_lines,net_revenue,numeric,297238,0.0,14121,4.751,-102672000,622000000,593137.7280042564,2956770.4283,0.0,106050.0,269453.0,523584.0,1830194.0,6720000.0,61321,2813,,false
+fact_order_lines,vat_amount,numeric,297238,0.0,14164,4.765,-8213760,68365993,47964.750252759615,283888.65991188,0.0,8484.0,21600.0,41887.0,146415.36,537600.0,61846,2813,,false
+fact_order_lines,is_return,boolean,297238,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_order_lines,is_free_order,boolean,297238,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_order_lines,order_line_type,character varying,297238,61.666,6,0.005,3,7,,,,,,,,,,,0,false
+fact_order_lines,order_code,character varying,297238,0.0,127932,43.04,5,29,,,,,,,,,,,0,false
+fact_order_lines,ora_order_no,character varying,297238,78.365,27830,43.276,6,6,,,,,,,,,,,0,false
+fact_order_lines,invoice_no,character varying,297238,83.571,21575,44.182,21,21,,,,,,,,,,,0,false
+fact_order_lines,delivery_days_sla,integer,297238,93.835,46,0.251,-3651,90,0.8610905632463278,37.60027265042619,-2.0,0.0,1.0,2.0,4.0,8.0,4430,435,,false
+fact_order_lines,ar_doc_no,character varying,297238,82.43,23127,44.283,8,8,,,,,,,,,,,0,false
+fact_order_lines,goods_receipt_no,character varying,297238,82.714,22617,44.017,20,20,,,,,,,,,,,0,false
+fact_order_lines,billing_address,text,297238,81.933,7271,13.54,25,364,,,,,,,,,,,0,false
+fact_order_lines,shipping_address,text,297238,81.936,7138,13.294,1,201,,,,,,,,,,,0,false
+fact_order_lines,supervisor_employee_id,bigint,297238,89.927,88,0.294,7,6731,2838.779398834142,2213.440194353605,7.0,431.0,4725.0,4797.0,5262.0,5264.0,0,0,,false
+fact_order_lines,asm_employee_id,bigint,297238,92.324,38,0.167,29,6731,2848.3714249070154,2290.022296387948,154.70000000000002,492.0,4627.0,4803.0,5264.0,6731.0,0,0,,false
+fact_order_lines,category_id,bigint,297238,100.0,0,,,,,,,,,,,,0,0,,true
+fact_order_lines,row_hash,character,297238,5.466,242773,86.399,64,64,,,,,,,,,,,0,false
+fact_order_lines,sales_flow,character varying,297238,0.0,2,0.001,7,8,,,,,,,,,,,0,false
+fact_order_lines,id,bigint,297238,0.0,297238,100.0,14979658,42058330,30642343.305840477,8196450.9278,15015597.22,33199399.25,33787970.5,34372754.75,39174967.75,41753331.39,0,0,,false
+fact_order_lines,source_refs,jsonb,297238,0.0,,,,,,,,,,,,,,,,false
+fact_order_lines,batch_id,bigint,297238,0.0,1241,0.418,25163,241721,71767.53582613263,44611.53413641,25163.0,66647.0,66647.0,66647.0,170723.0,239092.0,0,0,,false
+fact_order_lines,created_at,timestamp with time zone,297238,0.0,5593,1.882,2026-06-19 03:33:51.264802+00,2026-08-28 09:12:07.560249+00,,,,,,,,,,,,false
+fact_order_lines,updated_at,timestamp with time zone,297238,0.0,4423,1.488,2026-06-19 03:33:51.264802+00,2026-08-28 09:12:07.560249+00,,,,,,,,,,,,false
+fact_order_lines,eco_flag,integer,297238,0.0,2,0.001,0,1,0.8355883917807666,0.37064866288980286,0.0,1.0,1.0,1.0,1.0,1.0,48824,0,,false
+fact_order_lines,sales_qty_carton,numeric,297238,0.469,1253,0.424,-150,23000,1.7935956109575508,44.800734159873244,-0.3333,0.4583,1.0,1.0,5.0,20.0,162,3604,,false
+fact_order_lines,reason_code,character varying,297238,100.0,0,,,,,,,,,,,,,,0,true
+fact_order_lines,delivery_date_source,character varying,297238,61.757,3,0.003,5,12,,,,,,,,,,,0,false
+fact_order_lines,warehouse_out_at,timestamp without time zone,297238,82.314,21139,40.212,2026-05-05 00:00:00,2026-08-28 08:15:54,,,,,,,,,,,,false
+fact_order_lines,canceled_reason_line,character varying,297238,97.825,19,0.294,11,40,,,,,,,,,,,0,false
+fact_order_lines,canceled_note,character varying,297238,98.144,316,5.729,3,86,,,,,,,,,,,0,false
+fact_order_lines,product_code,character varying,297238,0.0,512,0.172,12,12,,,,,,,,,,,0,false
+fact_order_lines,is_admin_cancel,boolean,297238,98.339,2,0.041,,,,,,,,,,,,,,false
+fact_order_lines,erp_status,character varying,297238,89.269,9,0.028,6,21,,,,,,,,,,,0,false
+fact_order_lines,dms_status,character varying,297238,1.494,7,0.002,3,9,,,,,,,,,,,0,false
+fact_order_lines,dms_order_code,character varying,297238,3.965,122091,42.771,4,29,,,,,,,,,,,0,false
+fact_order_lines,uom,character varying,297238,0.004,19,0.006,2,10,,,,,,,,,,,0,false
+fact_order_lines,is_erp_deleted,boolean,297238,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_order_lines,erp_deleted_source,character varying,297238,99.944,2,1.212,6,8,,,,,,,,,,,0,false
+fact_order_status_timeline,id,bigint,302887,0.0,302887,100.0,2,5091969,1500526.244147958,1326369.1872,5752.0599999999995,127892.5,1702243.0,1880545.5,4281181.7,4875249.94,0,0,,false
+fact_order_status_timeline,batch_id,bigint,302887,0.0,1615,0.533,31,241727,119638.8318097018,30679.0586206,73373.0,110949.0,110949.0,110949.0,199974.0,239483.0,0,0,,false
+fact_order_status_timeline,source_refs,jsonb,302887,100.0,,,,,,,,,,,,,,,,false
+fact_order_status_timeline,order_code,character varying,302887,0.0,302887,100.0,5,29,,,,,,,,,,,0,false
+fact_order_status_timeline,pending_at,timestamp without time zone,302887,0.0,299251,98.8,2025-02-03 08:48:45,2026-08-28 16:09:54,,,,,,,,,,,,false
+fact_order_status_timeline,approved_at,timestamp without time zone,302887,7.08,269363,95.708,2025-04-01 06:34:57,2026-08-28 16:06:40,,,,,,,,,,,,false
+fact_order_status_timeline,picking_at,timestamp without time zone,302887,98.664,104,2.569,2026-06-18 17:06:10.68628,2026-06-24 14:50:52.898143,,,,,,,,,,,,false
+fact_order_status_timeline,shipping_at,timestamp without time zone,302887,51.574,74248,50.62,2025-04-02 10:55:35,2026-08-28 16:07:23,,,,,,,,,,,,false
+fact_order_status_timeline,completed_full_at,timestamp without time zone,302887,43.218,51446,29.913,2025-04-01 11:35:16,2026-08-28 16:07:23,,,,,,,,,,,,false
+fact_order_status_timeline,completed_partial_at,timestamp without time zone,302887,99.935,11,5.584,2026-06-18 17:06:10.68628,2026-06-23 15:40:43.830618,,,,,,,,,,,,false
+fact_order_status_timeline,returned_at,timestamp without time zone,302887,99.902,10,3.367,2026-05-06 09:34:20,2026-07-28 15:00:56,,,,,,,,,,,,false
+fact_order_status_timeline,cancelled_at,timestamp without time zone,302887,93.625,7266,37.628,2025-04-01 11:29:29,2026-08-28 09:37:33,,,,,,,,,,,,false
+fact_order_status_timeline,last_status_key,integer,302887,0.0,8,0.003,1,8,4.070384128071511,1.8579082154517008,1.0,2.0,5.0,5.0,8.0,8.0,0,0,,false
+fact_order_status_timeline,last_status_at,timestamp without time zone,302887,0.0,1513,0.5,2026-06-18 17:06:10.68628,2026-08-28 16:14:22.485836,,,,,,,,,,,,false
+fact_order_status_timeline,created_at,timestamp with time zone,302887,0.0,1819,0.601,2026-06-18 10:06:10.68628+00,2026-08-28 09:14:22.485836+00,,,,,,,,,,,,false
+fact_order_status_timeline,updated_at,timestamp with time zone,302887,0.0,1865,0.616,2026-06-18 10:06:10.68628+00,2026-08-28 16:14:22.485836+00,,,,,,,,,,,,false
+fact_promo_budget_available,row_hash,character,182571,0.0,139320,76.31,64,64,,,,,,,,,,,0,false
+fact_promo_budget_available,row_type,character varying,182571,0.0,2,0.001,11,12,,,,,,,,,,,0,false
+fact_promo_budget_available,promo_start_date_key,integer,182571,0.0,127,0.07,20250101,20260828,20259005.561912898,3823.828968617676,20250101.0,20260527.0,20260605.0,20260703.0,20260801.0,20260814.0,0,0,,false
+fact_promo_budget_available,promo_end_date_key,integer,182571,0.0,100,0.055,20251231,20261231,20260813.716784157,208.325696183201,20260610.0,20260630.0,20260731.0,20260902.0,20261231.0,20261231.0,0,0,,false
+fact_promo_budget_available,order_date_key,integer,182571,0.433,85,0.047,20260531,20260828,20260697.121982615,81.42549380682202,20260601.0,20260616.0,20260706.0,20260801.0,20260824.0,20260827.0,0,0,,false
+fact_promo_budget_available,invoice_date_key,integer,182571,6.124,90,0.053,20260531,20260828,20260704.188113727,79.80361768403745,20260603.0,20260623.0,20260710.0,20260804.0,20260824.0,20260827.0,0,0,,false
+fact_promo_budget_available,region_site_domain_id,bigint,182571,0.0,5,0.003,-1,55,34.249683684703484,18.68789181230782,10.0,10.0,34.0,55.0,55.0,55.0,0,791,,false
+fact_promo_budget_available,subregion_site_domain_id,bigint,182571,0.0,12,0.007,-1,81,37.07859408120677,19.68348101722306,11.0,13.0,35.0,56.0,63.0,72.0,0,791,,false
+fact_promo_budget_available,region_name_raw,character varying,182571,0.433,4,0.002,8,14,,,,,,,,,,,0,false
+fact_promo_budget_available,subregion_name_raw,character varying,182571,0.433,11,0.006,6,19,,,,,,,,,,,0,false
+fact_promo_budget_available,promotion_code,character varying,182571,0.0,504,0.276,8,22,,,,,,,,,,,0,false
+fact_promo_budget_available,ctkm_type,character varying,182571,0.0,2,0.001,8,9,,,,,,,,,,,0,false
+fact_promo_budget_available,currency_code,character varying,182571,54.29,1,0.001,3,3,,,,,,,,,,,0,true
+fact_promo_budget_available,foc_primary_uom,character varying,182571,45.71,9,0.009,2,3,,,,,,,,,,,0,false
+fact_promo_budget_available,allocation_status,character varying,182571,100.0,0,,,,,,,,,,,,,,0,true
+fact_promo_budget_available,promotion_name,character varying,182571,0.0,488,0.267,21,114,,,,,,,,,,,0,false
+fact_promo_budget_available,promotion_description,character varying,182571,98.247,9,0.281,5,50,,,,,,,,,,,0,false
+fact_promo_budget_available,budget_total,double precision,182571,99.878,61,27.477,0,2065879196,62669344.018018015,246035674.45937362,0.0,0.0,0.0,10204020.0,297920138.09999955,1555354665.1999927,157,0,,false
+fact_promo_budget_available,budget_allocated,double precision,182571,99.567,61,7.712,0,2065879196,17588614.88242731,133349529.24878487,0.0,0.0,0.0,0.0,37552800.0,369417319.200004,726,0,,false
+fact_promo_budget_available,budget_used_total,double precision,182571,0.0,5890,3.226,-38473100,3156148537.1274076,194088.70450418835,10025580.16484429,-123221.0,0.0,0.0,30720.0,276000.0,1260000.0,99119,5427,,false
+fact_promo_budget_available,budget_remaining,double precision,182571,99.567,222,28.066,-3156148537.1274076,1833519291,-4810227.639718239,187286232.32443666,-279077055.8281481,0.0,0.0,0.0,13080783.5,341093959.60000473,570,167,,false
+fact_promo_budget_available,foc_budget_total,double precision,182571,99.688,69,12.127,0,31200,489.0158172231986,2537.4446485024628,0.0,0.0,0.0,0.0,1953.2000000000025,11695.68000000011,484,0,,false
+fact_promo_budget_available,foc_budget_allocated,double precision,182571,99.567,69,8.723,0,31200,351.7699115044248,2163.2975993416135,0.0,0.0,0.0,0.0,1223.5,9140.000000000033,706,0,,false
+fact_promo_budget_available,foc_used_total,double precision,182571,0.0,580,0.318,-2400,85356,15.359298392703664,476.9826648390832,-18.0,0.0,1.0,12.0,30.0,90.0,83855,5026,,false
+fact_promo_budget_available,foc_remaining,double precision,182571,99.567,418,52.845,-85356,31208,-1420.7727350532878,7320.439752250812,-38140.299999999996,-474.0,-27.0,0.0,684.0,5565.00000000007,223,496,,false
+fact_promo_budget_available,order_no,character varying,182571,0.433,46469,25.563,6,6,,,,,,,,,,,0,false
+fact_promo_budget_available,invoice_no,character varying,182571,6.124,46379,27.06,8,21,,,,,,,,,,,0,false
+fact_promo_budget_available,invoice_status,character varying,182571,14.772,6,0.004,11,21,,,,,,,,,,,0,false
+fact_promo_budget_available,entered_amount,double precision,182571,99.542,49,5.854,0,597786039.04,1663917.6606265763,22211701.872514576,0.0,0.0,0.0,0.0,106560.0,52232663.03999991,780,0,,false
+fact_promo_budget_available,uninvoiced_amount,double precision,182571,98.839,454,21.425,-353191.48148148146,900106213.0133333,1568663.9450548775,21989974.74903195,0.0,0.0,63936.0,148368.0,2060400.999999998,23454419.120000165,717,2,,false
+fact_promo_budget_available,ar_interface_amount,double precision,182571,98.851,468,22.318,-6070747.222222222,61420414.81481481,161709.37936028594,1669411.8080647239,-349088.8888888889,0.0,19839.814814814814,118127.77777777778,460800.0,1745444.4444444445,737,127,,false
+fact_promo_budget_available,invoiced_amount,double precision,182571,55.446,5341,6.566,-38473100,1651898911,373474.54353224655,10799885.141365604,-255744.0,10472.0,40206.0,139635.0,576000.0,2398359.999999986,574,5311,,false
+fact_promo_budget_available,entered_qty,double precision,182571,99.523,27,3.1,0,232,2.0619977037887485,12.032325964260314,0.0,0.0,0.0,0.0,9.5,38.59999999999991,769,0,,false
+fact_promo_budget_available,uninvoiced_qty,double precision,182571,96.882,120,2.108,0,19813,32.67429140196768,453.91721953750914,0.0,10.0,12.0,20.0,36.44999999999982,150.0,686,0,,false
+fact_promo_budget_available,ar_interface_qty,double precision,182571,98.073,124,3.524,-144,7386,21.184427394146063,177.54277072887257,-36.0,0.0,9.0,20.0,40.0,196.40000000000327,692,339,,false
+fact_promo_budget_available,invoiced_qty,double precision,182571,49.811,562,0.613,-2400,77970,27.739917715558057,604.5301962301519,-24.0,3.0,10.0,16.0,48.0,144.0,646,4700,,false
+fact_promo_budget_available,id,bigint,182571,0.0,182571,100.0,1,182571,91286.0,52703.70799732,1826.7,45643.5,91286.0,136928.5,173442.5,180745.3,0,0,,false
+fact_promo_budget_available,source_refs,jsonb,182571,0.0,,,,,,,,,,,,,,,,false
+fact_promo_budget_available,batch_id,bigint,182571,0.0,1,0.001,240893,240893,240893.0,0.0,240893.0,240893.0,240893.0,240893.0,240893.0,240893.0,0,0,,true
+fact_promo_budget_available,created_at,timestamp with time zone,182571,0.0,1,0.001,2026-08-28 05:12:28.788584+00,2026-08-28 05:12:28.788584+00,,,,,,,,,,,,true
+fact_promo_budget_available,updated_at,timestamp with time zone,182571,0.0,2,0.001,2026-08-28 05:12:28.788584+00,2026-08-28 05:14:19.584939+00,,,,,,,,,,,,false
+fact_promo_budget_available,sub_inventory_key,bigint,182571,0.0,42,0.023,-1,186,109.28283790963516,21.503211007378905,74.0,94.0,106.0,121.0,141.0,141.0,0,1469,,false
+fact_roadmap_stores,roadmap_code,character varying,17942,0.0,263,1.466,5,15,,,,,,,,,,,0,false
+fact_roadmap_stores,employee_id,bigint,17942,0.0,209,1.165,-1,6726,3613.1589566380558,2121.660135746552,-1.0,-1.0,4737.0,4789.0,4856.0,6669.0,0,4520,,false
+fact_roadmap_stores,store_id,bigint,17942,0.0,17942,100.0,77496,426087,170020.0521680972,123584.90828977,78057.51,98554.75,107655.5,144088.75,423470.95,425669.13,0,0,,false
+fact_roadmap_stores,source_store_code,character varying,17942,0.0,17942,100.0,7,21,,,,,,,,,,,0,false
+fact_roadmap_stores,id,bigint,17942,0.0,17942,100.0,46272377,46290318,46281347.5,5179.409256855457,46272556.41,46276862.25,46281347.5,46285832.75,46289420.95,46290138.59,0,0,,false
+fact_roadmap_stores,batch_id,bigint,17942,0.0,1,0.006,241723,241723,241723.0,0.0,241723.0,241723.0,241723.0,241723.0,241723.0,241723.0,0,0,,true
+fact_roadmap_stores,source_refs,jsonb,17942,0.0,,,,,,,,,,,,,,,,false
+fact_roadmap_stores,created_at,timestamp with time zone,17942,0.0,1,0.006,2026-08-28 09:12:07.05085+00,2026-08-28 09:12:07.05085+00,,,,,,,,,,,,true
+fact_roadmap_stores,updated_at,timestamp with time zone,17942,0.0,1,0.006,2026-08-28 09:12:07.05085+00,2026-08-28 09:12:07.05085+00,,,,,,,,,,,,true
+fact_roadmap_stores,route_manager_employee_id,bigint,17942,0.072,45,0.251,4627,6731,4865.472809414914,326.391987560988,4663.0,4750.0,4801.0,4834.0,5262.0,6731.0,0,0,,false
+fact_roadmaps,code,character varying,268,0.0,268,100.0,5,15,,,,,,,,,,,0,false
+fact_roadmaps,name,character varying,268,0.0,262,97.761,6,49,,,,,,,,,,,0,false
+fact_roadmaps,employee_id,bigint,268,0.0,211,78.731,-1,6730,4159.917910447762,2321.685297392172,-1.0,4616.75,4758.0,4852.25,6713.65,6724.33,0,58,,false
+fact_roadmaps,store_count,integer,268,0.0,125,46.642,0,504,66.94776119402985,62.0868814903495,0.0,6.0,66.0,105.25,157.5999999999999,243.84999999999928,5,0,,false
+fact_roadmaps,id,bigint,268,0.0,268,100.0,1,503593,126345.88432835821,208043.99452404,3.67,83.75,156.5,469758.5,477545.3,485398.66,0,0,,false
+fact_roadmaps,batch_id,bigint,268,0.0,1,0.373,241723,241723,241723.0,0.0,241723.0,241723.0,241723.0,241723.0,241723.0,241723.0,0,0,,true
+fact_roadmaps,source_refs,jsonb,268,0.0,,,,,,,,,,,,,,,,false
+fact_roadmaps,created_at,timestamp with time zone,268,0.0,21,7.836,2026-08-01 04:32:13.377112+00,2026-08-27 04:03:15.68404+00,,,,,,,,,,,,false
+fact_roadmaps,updated_at,timestamp with time zone,268,0.0,1,0.373,2026-08-28 09:12:07.05085+00,2026-08-28 09:12:07.05085+00,,,,,,,,,,,,true
+fact_roadmaps,distributor_code,character varying,268,0.0,21,7.836,3,8,,,,,,,,,,,0,false
+fact_roadmaps,distributor_name,character varying,268,0.0,21,7.836,8,60,,,,,,,,,,,0,false
+fact_roadmaps,channel_code,character varying,268,0.0,4,1.493,2,5,,,,,,,,,,,0,false
+fact_roadmaps,channel_name,character varying,268,0.0,4,1.493,7,30,,,,,,,,,,,0,false
+fact_roadmaps,region_code,character varying,268,0.0,7,2.612,7,7,,,,,,,,,,,0,false
+fact_roadmaps,region_name,character varying,268,0.0,7,2.612,8,14,,,,,,,,,,,0,false
+fact_roadmaps,route_manager_employee_id,bigint,268,0.746,45,16.917,4627,6731,5260.417293233083,814.957540017743,4663.0,4792.0,4812.0,5262.0,6728.0,6731.0,0,0,,false
+fact_sales_targets,salesman_id,bigint,270,0.0,1,0.37,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,270,,true
+fact_sales_targets,target_date_id,integer,270,0.0,270,100.0,20251201,20260831,20259409.15925926,2958.641441327454,20251203.69,20260207.25,20260417.5,20260624.75,20260817.55,20260828.31,0,0,,false
+fact_sales_targets,target_revenue,numeric,270,0.0,1,0.37,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,270,0,,true
+fact_sales_targets,target_visit_count,integer,270,0.0,187,69.259,1,2780,1186.737037037037,989.089248734204,1.0,10.0,1569.0,1983.75,2571.7,2738.55,0,0,,false
+fact_sales_targets,target_order_count,integer,270,0.0,1,0.37,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,270,0,,true
+fact_sales_targets,target_new_store,integer,270,0.0,1,0.37,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,270,0,,true
+fact_sales_targets,id,bigint,270,0.0,270,100.0,1,3884,633.0777777777778,968.767608426191,3.69,68.25,135.5,927.75,2686.55,3879.93,0,0,,false
+fact_sales_targets,source_refs,jsonb,270,0.0,,,,,,,,,,,,,,,,false
+fact_sales_targets,batch_id,bigint,270,0.0,81,30.0,23,241724,35216.21481481481,65656.57396888,23.0,23.0,23.0,40104.0,195945.19999999992,240585.88,0,0,,false
+fact_sales_targets,created_at,timestamp with time zone,270,0.0,270,100.0,2026-06-09 08:18:31.240779+00,2026-08-24 04:03:46.798048+00,,,,,,,,,,,,false
+fact_sales_targets,updated_at,timestamp with time zone,270,0.0,270,100.0,2026-06-09 08:18:31.240799+00,2026-08-28 09:12:18.064612+00,,,,,,,,,,,,false
+fact_trade_promo,id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,promotion_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,store_key,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,product_key,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,distributor_key,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,period_year,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,period_month,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,ns_allocated,numeric,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,ns_used,numeric,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,foc_value,numeric,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,foc_qty_carton,numeric,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,cnt_entered,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,cnt_uninvoiced,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,cnt_ar_interface,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,cnt_invoiced,integer,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,batch_id,bigint,0,,0,,,,,,,,,,,,0,0,,true
+fact_trade_promo,source_refs,jsonb,0,,,,,,,,,,,,,,,,,false
+fact_trade_promo,created_at,timestamp without time zone,0,,0,,,,,,,,,,,,,,,true
+fact_trade_promo,updated_at,timestamp without time zone,0,,0,,,,,,,,,,,,,,,true
+fact_visits,salesman_id,bigint,302926,0.0,594,0.196,7,6731,653.9119782244278,1249.337526771553,9.0,135.0,295.0,502.0,4749.0,4843.0,0,0,,false
+fact_visits,shop_id,bigint,302926,0.0,20934,6.911,-1,426085,103279.07530497419,38842.41858228,-1.0,94871.0,101958.0,109216.0,133129.3,273017.0,0,10124,,false
+fact_visits,distributor_id,bigint,302926,63.05,23,0.021,2,2610,252.68728671974975,753.607082870363,2.0,4.0,9.0,20.0,2589.0,2597.0,0,0,,false
+fact_visits,date_key,integer,302926,0.0,265,0.087,20251201,20260831,20259413.016554084,2954.001160019762,20251202.0,20260212.0,20260415.0,20260623.0,20260817.0,20260827.0,0,0,,false
+fact_visits,plan_type,integer,302926,0.0,3,0.001,0,2,0.15645217506763373,0.3634844531081984,0.0,0.0,0.0,0.0,1.0,1.0,254145,0,,false
+fact_visits,plan_status,character varying,302926,0.0,2,0.001,7,9,,,,,,,,,,,0,false
+fact_visits,is_visited,boolean,302926,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_visits,planned_start_date,timestamp without time zone,302926,0.0,265,0.087,2025-12-01 00:00:00,2026-08-31 00:00:00,,,,,,,,,,,,false
+fact_visits,planned_end_date,timestamp without time zone,302926,0.0,265,0.087,2025-12-01 23:59:59,2026-08-31 23:59:59,,,,,,,,,,,,false
+fact_visits,checkin_at,timestamp without time zone,302926,10.827,264987,98.097,2025-12-01 06:18:43,2026-08-28 16:05:23,,,,,,,,,,,,false
+fact_visits,checkout_at,timestamp without time zone,302926,11.01,263652,97.803,2025-12-01 06:19:56,2026-08-28 16:09:34,,,,,,,,,,,,false
+fact_visits,scan_serials,text,302926,56.104,11513,8.658,10,611,,,,,,,,,,,0,false
+fact_visits,travel_distance_km,numeric,302926,0.0,4173,1.378,0,521.87,2.20958895288045,5.708219073969719,0.0,0.05,0.71,2.11,8.84,24.29460000000021,65255,0,,false
+fact_visits,travel_duration_minutes,numeric,302926,0.0,7852,2.592,0,2385.23,5.249315330865878,18.536487569266026,0.0,0.15,1.65,4.38,19.23,63.02920000000042,61965,0,,false
+fact_visits,working_time_minutes,numeric,302926,11.01,15265,5.663,0.03,949.88,25.904630051782743,53.633502286180985,0.08,3.53,10.1,21.35,115.25,278.92,0,0,,false
+fact_visits,is_compliance,boolean,302926,0.0,2,0.001,,,,,,,,,,,,,,false
+fact_visits,source_id,bigint,302926,0.0,302926,100.0,1704408,2990362,2368138.569049476,358164.49806111,1721499.54,2108251.5,2363041.0,2672135.0,2951148.3,2985237.46,0,0,,false
+fact_visits,id,bigint,302926,0.0,302926,100.0,449308,1564105,737655.3154404076,242892.82607728,453523.54,558946.5,673088.0,821799.0,1231300.3,1491000.3,0,0,,false
+fact_visits,source_refs,jsonb,302926,0.0,,,,,,,,,,,,,,,,false
+fact_visits,batch_id,bigint,302926,0.0,1973,0.651,25162,241725,51227.45845214187,54126.02365575,25162.0,25162.0,25162.0,30056.0,191355.0,234206.0,0,0,,false
+fact_visits,created_at,timestamp with time zone,302926,0.0,265,0.087,2025-12-01 00:00:00+00,2026-08-31 00:00:00+00,,,,,,,,,,,,false
+fact_visits,updated_at,timestamp with time zone,302926,0.0,302926,100.0,2026-06-19 03:12:37.929585+00,2026-08-28 09:12:27.786396+00,,,,,,,,,,,,false
+fact_weather_forecast,latitude,double precision,154161,0.0,62,0.04,9.1769,22.8233,16.055325396817786,4.885118308229698,9.1769,10.95,16.0544,21.0285,22.3956,22.8233,0,0,,false
+fact_weather_forecast,longitude,double precision,154161,0.0,60,0.039,103.0189,109.3,106.41641587303499,1.3498707576271696,103.0189,105.69,106.1834,107.1833,108.9833,109.3,0,0,,false
+fact_weather_forecast,date,date,154161,0.0,2447,1.587,2020-01-01,2026-09-12,,,,,,,,,,,,false
+fact_weather_forecast,location_id,bigint,154161,0.0,63,0.041,1,63,32.0,18.184242262647807,1.0,16.0,32.0,48.0,60.0,63.0,0,0,,false
+fact_weather_forecast,temperature_max,double precision,154161,0.0,343,0.222,5.6,43,29.27213627311712,4.522182734490467,16.2,26.8,30.2,32.2,35.5,37.5,0,0,,false
+fact_weather_forecast,temperature_min,double precision,154161,0.0,283,0.184,2.6,32.7,22.04782986617883,4.226970488377619,9.2,20.0,23.4,24.9,27.0,28.5,0,0,,false
+fact_weather_forecast,precipitation_day_sum,double precision,154161,0.0,1948,1.264,0,354.19999999999993,3.66519184488914,7.0270353690311795,0.0,0.0,0.8,4.500000000000001,15.9,28.900000000000006,44176,0,,false
+fact_weather_forecast,precipitation_night_sum,double precision,154161,0.0,1806,1.172,0,287.69999999999993,2.425754568275935,6.164846067319869,0.0,0.0,0.1,2.0,12.799999999999999,27.500000000000004,73158,0,,false
+fact_weather_forecast,id,bigint,154161,0.0,154161,100.0,1,4434014,162261.76782714177,520783.8656076,1542.6000000000001,38541.0,77081.0,115621.0,146453.0,3482817.4,0,0,,false
+fact_weather_forecast,source_refs,jsonb,154161,0.0,,,,,,,,,,,,,,,,false
+fact_weather_forecast,batch_id,bigint,154161,0.0,82,0.053,24,241726,6473.324427060022,34514.29130507,24.0,24.0,24.0,24.0,24.0,241726.0,0,0,,false
+fact_weather_forecast,created_at,timestamp with time zone,154161,0.0,79,0.051,2026-06-09 08:18:40.248197+00,2026-08-28 02:11:47.870594+00,,,,,,,,,,,,false
+fact_weather_forecast,updated_at,timestamp with time zone,154161,0.0,82,0.053,2026-06-09 08:18:40.248197+00,2026-08-28 09:12:34.158853+00,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,salesman_id,bigint,446,0.0,46,10.314,-1,754,268.890134529148,214.575238023001,-1.0,30.0,297.0,473.0,613.0,694.6000000000015,0,83,,false
+zz_archive_om_orphans_20260804,product_key,bigint,446,0.0,149,33.408,10,2518,1000.762331838565,502.547400453117,23.6,639.0,991.0,1140.0,1994.0,2420.3500000000004,0,0,,false
+zz_archive_om_orphans_20260804,order_date_key,integer,446,0.0,23,5.157,20260511,20260713,20260620.715246636,47.392901124083,20260511.0,20260609.0,20260622.0,20260625.0,20260701.0,20260703.75,0,0,,false
+zz_archive_om_orphans_20260804,store_key,bigint,446,0.0,84,18.834,-1,135642,100708.88565022421,16749.06960398,77846.0,89555.5,99806.0,109458.0,134753.0,134774.0,0,2,,false
+zz_archive_om_orphans_20260804,distributor_key,bigint,446,0.0,1,0.224,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,446,,true
+zz_archive_om_orphans_20260804,chain_key,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,visit_key,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,line_status_key,integer,446,0.0,1,0.224,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,446,,true
+zz_archive_om_orphans_20260804,sub_inventory_key,bigint,446,0.0,21,4.709,74,141,106.05156950672645,19.778584576519876,74.0,94.0,102.0,122.0,137.0,141.0,0,0,,false
+zz_archive_om_orphans_20260804,warehouse_key,bigint,446,0.0,5,1.121,2,7,3.5336322869955157,1.7118654208340198,2.0,2.0,3.0,5.0,6.0,7.0,0,0,,false
+zz_archive_om_orphans_20260804,delivery_type_key,integer,446,0.0,1,0.224,-1,-1,-1.0,0.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0,446,,true
+zz_archive_om_orphans_20260804,order_type_key,integer,446,0.0,4,0.897,-1,7,-0.8766816143497758,0.9159981798271879,-1.0,-1.0,-1.0,-1.0,-1.0,6.0,0,437,,false
+zz_archive_om_orphans_20260804,delivery_date_key,integer,446,95.516,3,15.0,20260609,20260713,20260623.15,30.620703780285652,20260609.0,20260609.0,20260609.0,20260624.0,20260713.0,20260713.0,0,0,,false
+zz_archive_om_orphans_20260804,order_source,character varying,446,0.0,2,0.448,9,9,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,order_timestamp,timestamp without time zone,446,100.0,0,,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,raw_created_at,timestamp without time zone,446,100.0,0,,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,delivery_date,timestamp without time zone,446,95.516,3,15.0,2026-06-09 00:00:00,2026-07-13 00:00:00,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,schedule_ship_date,timestamp without time zone,446,100.0,0,,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,sales_qty,numeric,446,0.0,79,17.713,-1,2400,86.79372197309416,227.14914315077,-0.5499999999999998,11.0,24.0,48.0,424.0,1310.0000000000023,5,5,,false
+zz_archive_om_orphans_20260804,shipped_qty,numeric,446,0.0,30,6.726,0,504,13.441704035874439,49.20233652954112,0.0,0.0,0.0,0.0,93.25,240.0,384,0,,false
+zz_archive_om_orphans_20260804,cancelled_qty,numeric,446,0.0,2,0.448,-1,0,-0.004484304932735426,0.06681463868049928,0.0,0.0,0.0,0.0,0.0,0.0,444,2,,false
+zz_archive_om_orphans_20260804,vat_percent,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,unit_price_before_vat,numeric,446,0.0,116,26.009,0,288000,29852.937197309417,32265.12146155,0.0,12364.0,18900.0,27583.5,89136.0,125000.0,36,0,,false
+zz_archive_om_orphans_20260804,unit_price_after_discount_before_vat,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,unit_price_after_discount_after_vat,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,unit_price,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,discount_percent,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,amount_before_discount_before_vat,numeric,446,0.0,204,45.74,0,55855200,1471658.811659193,3920303.818,0.0,246139.75,534818.0,1020847.0,6642453.0,18796296.0,41,0,,false
+zz_archive_om_orphans_20260804,amount_before_discount,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,discount_amount_before_vat,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,discount_amount,numeric,446,99.552,2,100.0,16178.43,25166.44,20672.435,4494.005,16268.3101,18425.4325,20672.434999999998,22919.4375,24717.0395,25076.5599,0,0,,false
+zz_archive_om_orphans_20260804,amount_incl_vat,numeric,446,0.0,204,45.74,0,60323616,1589391.5,4233928.1275,0.0,265830.75,577603.0,1102515.0,7173849.25,20300000.0,41,0,,false
+zz_archive_om_orphans_20260804,net_revenue,numeric,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,vat_amount,numeric,446,0.0,202,45.291,0,4468416,117732.68834080717,313624.3095357,0.0,19691.0,42785.0,81668.0,531396.25,1503704.0,41,0,,false
+zz_archive_om_orphans_20260804,is_return,boolean,446,0.0,1,0.224,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,is_free_order,boolean,446,0.0,1,0.224,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,order_line_type,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,order_code,character varying,446,0.0,99,22.197,6,6,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,ora_order_no,character varying,446,0.0,99,22.197,6,6,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,invoice_no,character varying,446,85.65,11,17.188,21,21,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,delivery_days_sla,integer,446,98.879,1,20.0,1,1,1.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0,0,,true
+zz_archive_om_orphans_20260804,ar_doc_no,character varying,446,85.65,11,17.188,8,8,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,goods_receipt_no,character varying,446,95.516,4,20.0,20,20,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,billing_address,text,446,95.516,4,20.0,60,113,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,shipping_address,text,446,95.516,4,20.0,38,87,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,supervisor_employee_id,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,asm_employee_id,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,category_id,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,row_hash,character,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,sales_flow,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,id,bigint,446,0.0,446,100.0,15570319,36328351,18789107.977578476,4970430.9621,15571666.45,15700355.25,15836630.5,18831578.75,28933314.75,32637447.800000075,0,0,,false
+zz_archive_om_orphans_20260804,source_refs,jsonb,446,100.0,,,,,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,batch_id,bigint,446,100.0,0,,,,,,,,,,,,0,0,,true
+zz_archive_om_orphans_20260804,created_at,timestamp with time zone,446,0.0,11,2.466,2026-06-19 07:03:50.496302+00,2026-07-16 22:05:49.793951+00,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,updated_at,timestamp with time zone,446,0.0,18,4.036,2026-06-19 07:03:50.496302+00,2026-07-17 15:44:07.530222+00,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,eco_flag,integer,446,0.0,2,0.448,0,1,0.13901345291479822,0.3459605654167876,0.0,0.0,0.0,0.0,1.0,1.0,384,0,,false
+zz_archive_om_orphans_20260804,sales_qty_carton,numeric,446,1.57,83,18.907,0,100,3.8495605922551253,9.493351970969542,0.009499999999999998,1.0,1.0,2.0,19.0,58.3333,5,0,,false
+zz_archive_om_orphans_20260804,reason_code,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,delivery_date_source,character varying,446,0.0,2,0.448,5,7,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,warehouse_out_at,timestamp without time zone,446,85.65,7,10.938,2026-05-11 00:00:00,2026-07-13 23:28:55,,,,,,,,,,,,false
+zz_archive_om_orphans_20260804,canceled_reason_line,character varying,446,99.552,1,50.0,15,15,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,canceled_note,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,product_code,character varying,446,0.0,110,24.664,12,12,,,,,,,,,,,0,false
+zz_archive_om_orphans_20260804,is_admin_cancel,boolean,446,100.0,0,,,,,,,,,,,,,,,true
+zz_archive_om_orphans_20260804,erp_status,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,dms_status,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,dms_order_code,character varying,446,100.0,0,,,,,,,,,,,,,,0,true
+zz_archive_om_orphans_20260804,uom,character varying,446,99.552,1,50.0,3,3,,,,,,,,,,,0,true

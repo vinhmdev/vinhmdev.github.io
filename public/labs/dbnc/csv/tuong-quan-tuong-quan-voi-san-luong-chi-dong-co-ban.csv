@@ -1,0 +1,76 @@
+dac_trung,loai,so_dong,spearman_gop,spearman_trong_cap,chenh_lech
+qty_thung,nhãn viết cách khác,485060,0.7889,0.9868,-0.1979
+doanh_so,nhãn viết cách khác,485060,0.6352,0.8847,-0.2495
+tien_vat,biết trước kỳ,485060,0.5127,0.6519,-0.1392
+tien_co_vat,biết trước kỳ,485060,0.5117,0.6517,-0.14
+so_lan_mua,nhãn viết cách khác,485060,0.4488,0.6415,-0.1926
+qty_giao,biết trước kỳ,485060,0.7219,0.6346,0.0874
+sl_moi_lan,nhãn viết cách khác,485060,0.8572,0.623,0.2342
+so_don,biết trước kỳ,485060,0.3265,0.4404,-0.1139
+so_dong_eco,biết trước kỳ,485060,0.3249,0.365,-0.0401
+gh_qty_dat,biết trước kỳ,63481,0.8266,0.3404,0.4862
+gh_qty_nhan,biết trước kỳ,63481,0.8327,0.3397,0.493
+ft_vat,biết trước kỳ,481356,0.2749,0.3132,-0.0383
+ft_tong_tien,biết trước kỳ,481356,0.2745,0.3106,-0.0361
+ft_doanh_thu_thuan,biết trước kỳ,481356,0.2745,0.3102,-0.0358
+gh_qty_giao,biết trước kỳ,63481,0.7432,0.3099,0.4333
+toc_do_ban_hieu_chinh,nhãn viết cách khác,65513,0.7766,0.2508,0.5257
+ft_so_mat_hang,biết trước kỳ,481356,0.1741,0.2504,-0.0764
+gh_so_dong,biết trước kỳ,63481,0.4503,0.2255,0.2248
+ft_so_dong,biết trước kỳ,481356,0.1231,0.2042,-0.0811
+ft_so_don,biết trước kỳ,481356,0.1231,0.2042,-0.0811
+ngay_mua_dau_thang,biết trước kỳ,485060,-0.1922,-0.2009,-0.0087
+gh_so_shipper,biết trước kỳ,63481,0.3082,0.1929,0.1153
+don_gia_do_lech,biết trước kỳ,485058,0.2561,0.1821,0.074
+ngay_mua_cuoi_thang,biết trước kỳ,485060,0.1306,0.1384,-0.0078
+ft_chiet_khau,biết trước kỳ,481356,0.1636,0.1376,0.026
+tien_chiet_khau,biết sau kỳ,485060,-0.0431,0.1333,-0.0901
+ck_pct_do_lech_chuan,biết sau kỳ,485060,0.0823,0.1277,-0.0453
+qty_huy,biết trước kỳ,485060,0.0932,0.1238,-0.0305
+tien_ck_truoc_vat,biết trước kỳ,485060,-0.0267,0.1181,-0.0915
+ft_doanh_thu_da_giao,biết trước kỳ,481356,0.1112,0.1103,0.0009
+tmin_tb,biết trước kỳ,484774,0.0665,0.1052,-0.0387
+so_kho_con,biết trước kỳ,485060,0.0941,0.0991,-0.005
+so_trang_thai_dong,biết trước kỳ,485060,0.1138,0.0979,0.016
+tmax_tb,biết trước kỳ,484774,0.0168,0.0913,-0.0745
+tmax_dinh,biết trước kỳ,484774,0.0495,0.091,-0.0415
+so_dong_hang_tang,biết sau kỳ,485060,0.1093,0.0889,0.0204
+ngay_co_hang,biết sau kỳ,485060,0.0494,0.0838,-0.0344
+ngay_theo_doi_ton,biết sau kỳ,485060,0.0493,0.0838,-0.0345
+co_du_lieu_ton,biết trước kỳ,485060,0.0475,0.0791,-0.0316
+vat_pct_tb,biết trước kỳ,485060,0.1408,0.079,0.0618
+gia_thuc_thu,nhãn viết cách khác,485060,-0.3103,-0.0779,0.2323
+don_gia_truoc_vat_tb,biết trước kỳ,485060,-0.3399,-0.0613,0.2786
+don_gia_tb,biết trước kỳ,485058,-0.3399,-0.0606,0.2793
+gh_dong_kho_xac_nhan,biết trước kỳ,63481,0.0959,0.0581,0.0378
+so_ngay_mua,biết trước kỳ,484774,0.026,0.0549,-0.0288
+mua_tong,biết trước kỳ,484774,0.0307,0.054,-0.0232
+ty_le_chiet_khau,biết sau kỳ,473658,-0.059,0.0518,0.0072
+so_nguon_dat,biết trước kỳ,485060,-0.0107,-0.0482,-0.0376
+so_loai_don,biết trước kỳ,485060,-0.0081,-0.0455,-0.0374
+cach_ngay_giao_tb,biết trước kỳ,89664,0.0068,0.0427,-0.0359
+phut_di_chuyen_tb,biết trước kỳ,182792,0.0718,-0.0392,0.0326
+km_di_chuyen_tb,biết trước kỳ,182792,0.1206,0.0293,0.0914
+sla_giao_ngay_tb,biết trước kỳ,11497,0.0694,-0.0259,0.0435
+phut_lam_viec_tb,biết trước kỳ,178702,0.1053,0.0242,0.0811
+so_nvbh_ghe,biết trước kỳ,182792,0.0501,0.0221,0.028
+thang_tu_lan_mua_dau,biết trước kỳ,485060,0.0342,-0.02,0.0142
+gh_so_lan_thu_tb,biết trước kỳ,63481,0.0297,0.0191,0.0106
+ngay_het_hang,biết sau kỳ,485060,0.009,0.0186,-0.0096
+so_ngay_lam_viec,biết trước kỳ,485060,0.0016,-0.0179,-0.0163
+ngay_ke_hoach_ghe,biết trước kỳ,182792,0.1009,0.0169,0.0839
+so_kho_xuat,biết trước kỳ,485060,0.0356,0.016,0.0196
+qty_per_carton,biết trước kỳ,484316,0.2771,0.0111,0.266
+ty_le_tuan_thu,biết trước kỳ,182792,-0.0144,-0.0099,0.0045
+so_ngay_lich,biết trước kỳ,485060,0.0277,0.0093,0.0185
+net_weight,biết trước kỳ,484309,-0.2325,0.0032,0.2292
+ngay_ghe,biết sau kỳ,485060,-0.0368,0.0008,0.036
+so_dong_admin_huy,biết trước kỳ,485060,-0.0075,0.0005,0.007
+co_du_lieu_ghe,biết trước kỳ,485060,-0.1715,,
+so_tu_dong,biết trước kỳ,485060,-0.0656,,
+shelf_life,biết trước kỳ,474533,0.1111,,
+conversion_rate,biết trước kỳ,483133,0.2749,,
+mt_price_exc_vat,biết trước kỳ,8834,,,
+mt_price_inc_vat,biết trước kỳ,8834,,,
+tax_rate,biết trước kỳ,454633,,,
+co_du_lieu_km,biết trước kỳ,485060,,,

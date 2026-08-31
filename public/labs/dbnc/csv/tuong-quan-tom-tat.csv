@@ -1,0 +1,9 @@
+cau_hoi,so_do,y_nghia
+"Tháng trước nói được gì về tháng này, trong cùng một cặp?",0.1247,"Gộp chung thì hệ số là 0.3204, nhưng phần lớn chỉ là khác biệt giữa các cặp. Trong cặp còn 0.1247 → lịch sử của chính cặp đó gần như không dự báo được, phải dựa vào gộp lên cấp trên và biến ngoại sinh."
+Còn ở tầm xa (trễ 3 tháng trở lên)?,0.0434,Đây là trần của tầm M+3 và của dự báo dài hạn nếu chỉ dùng lịch sử bản thân.
+Đặc trưng BIẾT TRƯỚC KỲ mạnh nhất với sản lượng,tien_vat = 0.6519,Chỉ những đặc trưng biết trước kỳ mới dùng được cho tầm M+1…M+3.
+Đặc trưng biết trước kỳ mạnh nhất với xác suất có bán,so_kho_xuat = 0.921 bit,"Thông tin tương hỗ, đo bằng bit. Nhãn nhị phân cân bằng nhất chứa 1 bit."
+Bao nhiêu phần tương quan chỉ là khác biệt giữa các cặp?,0.0009,Trung vị của |gộp| − |trong cặp|. Dương nghĩa là hệ số gộp đang thổi phồng.
+"Số cặp đặc trưng cộng tuyến (|ρ| ≥ 0,8)",26,"Không ảnh hưởng độ chính xác của mô hình cây, nhưng làm phân rã sáu hệ số mất ổn định."
+Số đặc trưng có VIF ≥ 5,33,"Cao nhất: ngay_theo_doi_ton (inf), tien_vat (inf), don_gia_truoc_vat_tb (inf)"
+Số đặc trưng ĐỔI DẤU giữa hai chế độ ghi nhận,1,Đổi dấu nghĩa là quan hệ với nhãn đảo chiều sau mốc 01/2026 → không dùng xuyên mốc. Gồm: thang_tu_lan_mua_dau

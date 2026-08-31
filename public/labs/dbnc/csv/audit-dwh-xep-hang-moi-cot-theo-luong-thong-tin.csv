@@ -1,0 +1,926 @@
+bang,truong,dang,so_dong_mau,khuyet_pct,so_gia_tri_khac_nhau,diem_thong_tin,danh_gia
+dim_product_brands,brand_path,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+dms_notify_ledger,order_code,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+dwh_batch_logs,data_to,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+dwh_batch_logs,updated_at,phân loại,20000,0.0,19999,2.3813,thông tin phong phú
+fact_asset_inventory,source_refs,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_asset_inventory,serial,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_inventory_transactions,source_refs,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_order_fulfillment,order_code,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_order_fulfillment,source_refs,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_order_lines,source_refs,phân loại,20000,0.0,19999,2.3813,thông tin phong phú
+fact_order_status_timeline,order_code,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_promo_budget_available,source_refs,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_visits,source_refs,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+fact_visits,updated_at,phân loại,20000,0.0,20000,2.3813,thông tin phong phú
+dwh_batch_logs,data_from,phân loại,20000,0.0,19990,2.3811,thông tin phong phú
+fact_order_fulfillment,order_timestamp,phân loại,20000,0.0,19940,2.3801,thông tin phong phú
+fact_order_status_timeline,pending_at,phân loại,20000,0.0,19898,2.3795,thông tin phong phú
+dim_assets,row_hash,phân loại,20000,0.0,19884,2.3793,thông tin phong phú
+fact_roadmap_stores,source_store_code,phân loại,17942,0.0,17942,2.3552,thông tin phong phú
+fact_roadmap_stores,source_refs,phân loại,17942,0.0,17942,2.3552,thông tin phong phú
+fact_asset_audits,audit_date,phân loại,20000,0.0,17667,2.3372,thông tin phong phú
+dim_assets,asset_code,phân loại,20000,0.0,16611,2.3134,thông tin phong phú
+dim_assets,serial_number,phân loại,20000,0.0,16611,2.3134,thông tin phong phú
+fact_promo_budget_available,row_hash,phân loại,20000,0.0,15712,2.3023,thông tin phong phú
+dim_stores,row_hash,phân loại,20000,0.0,15112,2.288,thông tin phong phú
+dim_stores,source_refs,phân loại,20000,0.0,14984,2.2854,thông tin phong phú
+dim_stores,store_code,phân loại,20000,0.0,14876,2.2829,thông tin phong phú
+fact_order_status_timeline,approved_at,phân loại,20000,4.865,18872,2.2512,thông tin phong phú
+dwh_batch_logs,created_at,phân loại,20000,0.0,14961,2.2479,thông tin phong phú
+fact_order_fulfillment,dms_order_code,phân loại,20000,5.79,18831,2.2295,thông tin phong phú
+dim_chains,chain_code,phân loại,9638,0.0,9638,2.2058,thông tin phong phú
+dim_chains,row_hash,phân loại,9638,0.0,9638,2.2058,thông tin phong phú
+dim_chains,chain_name,phân loại,9638,0.0,9603,2.2045,thông tin phong phú
+fact_order_lines,row_hash,phân loại,20000,5.885,16742,2.1902,thông tin phong phú
+fact_inventory_lot_snapshot,source_refs,phân loại,20000,0.0,16865,2.1591,thông tin phong phú
+fact_order_lines,order_code,phân loại,20000,0.0,10500,2.1591,thông tin phong phú
+fact_order_lines,order_timestamp,phân loại,20000,0.0,10480,2.1583,thông tin phong phú
+fact_asset_audits,qr_code,phân loại,20000,0.0,7727,2.0996,thông tin phong phú
+fact_visits,checkin_at,phân loại,20000,11.36,17624,2.0833,thông tin phong phú
+fact_promo_budget_available,order_no,phân loại,20000,0.43,8357,2.0813,thông tin phong phú
+fact_visits,checkout_at,phân loại,20000,11.57,17457,2.0758,thông tin phong phú
+fact_order_lines,dms_order_code,phân loại,20000,4.08,9987,2.0592,thông tin phong phú
+fact_promo_budget_available,invoice_no,phân loại,20000,2.185,8653,2.0576,thông tin phong phú
+dim_stores,store_name,phân loại,20000,0.0,11315,2.05,thông tin phong phú
+fact_inventory_transactions,description,phân loại,20000,0.03,7061,2.0409,thông tin phong phú
+fact_delivery_details,delivery_note_code,phân loại,20000,0.0,6222,2.0308,thông tin phong phú
+fact_delivery_details,source_refs,phân loại,20000,0.0,6222,2.0308,thông tin phong phú
+fact_delivery_details,so_number,phân loại,20000,0.0,6212,2.0302,thông tin phong phú
+dim_dates,full_date,phân loại,4018,0.0,4018,1.9954,thông tin phong phú
+fact_inventory_transactions,transaction_date,phân loại,20000,0.0,5113,1.9791,thông tin phong phú
+fact_delivery_details,pod_image_url,phân loại,20000,0.0,5790,1.9517,thông tin phong phú
+dim_products,row_hash,phân loại,2543,0.0,2543,1.8854,thông tin phong phú
+dim_products,valid_from,phân loại,2543,0.0,2543,1.8854,thông tin phong phú
+dim_products,created_at,phân loại,2543,0.0,2543,1.8854,thông tin phong phú
+fact_weather_forecast,date,phân loại,20000,0.0,2355,1.8561,thông tin phong phú
+dms_notify_ledger,last_notified_at,phân loại,20000,0.0,2546,1.8111,thông tin phong phú
+fact_order_lines,created_at,phân loại,20000,0.0,2798,1.8057,thông tin phong phú
+dim_shippers,updated_at,phân loại,20000,0.0,2262,1.7533,thông tin phong phú
+dim_shippers,valid_to,phân loại,20000,0.06,2257,1.7519,thông tin phong phú
+fact_order_lines,updated_at,phân loại,20000,0.0,2481,1.7478,thông tin phong phú
+dim_shippers,created_at,phân loại,20000,0.0,2032,1.738,thông tin phong phú
+dim_shippers,valid_from,phân loại,20000,0.155,2031,1.7351,thông tin phong phú
+dim_products,product_code,phân loại,2543,0.0,1275,1.7188,thông tin phong phú
+dim_products,source_refs,phân loại,2543,0.0,1275,1.7188,thông tin phong phú
+dim_products,product_name,phân loại,2543,0.0,1259,1.7146,thông tin phong phú
+dim_product_brands,updated_at,phân loại,20000,0.0,1926,1.7073,thông tin phong phú
+dim_product_brands,valid_from,phân loại,20000,0.0,1543,1.6832,thông tin phong phú
+dim_product_brands,created_at,phân loại,20000,0.0,1543,1.6832,thông tin phong phú
+dim_employees,row_hash,phân loại,6699,0.0,1473,1.6743,thông tin phong phú
+fact_inventory_lot_snapshot,lot_code,phân loại,20000,0.0,4902,1.6739,thông tin phong phú
+dim_product_brands,valid_to,phân loại,20000,5.83,1474,1.5704,thông tin phong phú
+fact_asset_inventory,shop_code,phân loại,20000,27.55,11182,1.562,thông tin phong phú
+fact_delivery_details,trip_code,phân loại,20000,1.01,1099,1.5534,thông tin phong phú
+dim_employees,employee_name,phân loại,6699,0.0,767,1.528,thông tin phong phú
+dim_employees,employee_code,phân loại,6699,0.0,749,1.5271,thông tin phong phú
+dim_employees,source_refs,phân loại,6699,0.0,749,1.5271,thông tin phong phú
+dim_stores,created_at,phân loại,20000,0.0,872,1.4842,thông tin phong phú
+dim_stores,updated_at,phân loại,20000,0.0,1000,1.4671,thông tin phong phú
+dim_product_prices,source_refs,phân loại,9085,0.0,678,1.4535,thông tin phong phú
+dim_product_prices,product_code,phân loại,9085,0.0,678,1.4535,thông tin phong phú
+dim_stores,address,phân loại,20000,33.75,9168,1.4286,thông tin phong phú
+dim_price_lists,row_hash,phân loại,364,0.0,364,1.418,thông tin phong phú
+dim_price_lists,price_list_code,phân loại,364,0.0,362,1.4161,thông tin phong phú
+dim_price_lists,source_refs,phân loại,364,0.0,362,1.4161,thông tin phong phú
+dim_price_lists,price_list_name,phân loại,364,0.0,361,1.4152,thông tin phong phú
+fact_asset_inventory,qr_code,phân loại,20000,8.1,11129,1.3947,thông tin phong phú
+fact_asset_inventory,source_updated_at,phân loại,20000,0.0,1036,1.3866,thông tin phong phú
+dim_locators,locator_code,phân loại,315,0.0,315,1.3832,thông tin phong phú
+dim_locators,locator_name,phân loại,315,0.0,314,1.3821,thông tin phong phú
+dim_categories,category_code,phân loại,277,0.0,277,1.3523,thông tin phong phú
+dim_categories,row_hash,phân loại,277,0.0,277,1.3523,thông tin phong phú
+dim_categories,source_refs,phân loại,277,0.0,277,1.3523,thông tin phong phú
+dim_categories,category_name,phân loại,277,0.0,276,1.3511,thông tin phong phú
+fact_inventory_lot_snapshot,product_code_raw,phân loại,20000,0.0,626,1.3511,thông tin phong phú
+fact_sales_targets,created_at,phân loại,270,0.0,270,1.3461,thông tin phong phú
+fact_sales_targets,updated_at,phân loại,270,0.0,270,1.3461,thông tin phong phú
+fact_roadmaps,code,phân loại,268,0.0,268,1.3443,thông tin phong phú
+fact_roadmaps,source_refs,phân loại,268,0.0,268,1.3443,thông tin phong phú
+fact_roadmaps,name,phân loại,268,0.0,262,1.3364,thông tin phong phú
+fact_order_fulfillment,delivery_date,phân loại,20000,21.38,3645,1.3135,thông tin phong phú
+dim_sub_inventories,row_hash,phân loại,188,0.0,188,1.2591,thông tin phong phú
+fact_visits,planned_start_date,phân loại,20000,0.0,219,1.2447,thông tin phong phú
+fact_visits,planned_end_date,phân loại,20000,0.0,219,1.2447,thông tin phong phú
+fact_visits,created_at,phân loại,20000,0.0,219,1.2447,thông tin phong phú
+dim_sub_inventories,sub_inventory_name,phân loại,188,1.064,187,1.2432,thông tin phong phú
+fact_roadmap_stores,roadmap_code,phân loại,17942,0.0,263,1.2362,thông tin phong phú
+dim_product_brands,brand_name,phân loại,20000,0.0,138,1.1832,thông tin phong phú
+dim_product_brands,row_hash,phân loại,20000,0.0,138,1.1832,thông tin phong phú
+dim_product_brands,source_refs,phân loại,20000,0.0,138,1.1832,thông tin phong phú
+dim_site_domains,site_domain_code,phân loại,137,0.0,137,1.183,thông tin phong phú
+dim_site_domains,site_domain_path,phân loại,137,0.0,137,1.183,thông tin phong phú
+dim_site_domains,site_domain_name,phân loại,137,0.0,136,1.1806,thông tin phong phú
+dim_locators,sub_inventory_code,phân loại,315,0.635,168,1.1673,thông tin phong phú
+dim_account_channels,channel_code,phân loại,127,0.0,127,1.1648,thông tin phong phú
+dim_account_channels,channel_path,phân loại,127,0.0,127,1.1648,thông tin phong phú
+dim_sub_inventories,source_refs,phân loại,188,0.0,118,1.1343,thông tin phong phú
+dim_sub_inventories,sub_inventory_code,phân loại,188,0.0,117,1.1319,thông tin phong phú
+fact_inventory_lot_snapshot,created_at,phân loại,20000,0.0,135,1.121,thông tin phong phú
+fact_order_status_timeline,completed_full_at,phân loại,20000,42.885,5501,1.1206,thông tin phong phú
+dim_delivery_status,row_hash,phân loại,103,0.0,103,1.1144,thông tin phong phú
+fact_order_lines,product_code,phân loại,20000,0.0,326,1.0912,thông tin phong phú
+fact_promo_budget_available,promotion_code,phân loại,20000,0.0,326,1.0788,thông tin phong phú
+dim_account_channels,channel_name,phân loại,127,0.0,94,1.0782,thông tin phong phú
+fact_promo_budget_available,promotion_name,phân loại,20000,0.0,318,1.0756,thông tin phong phú
+fact_inventory_lot_snapshot,expiry_date,phân loại,20000,30.005,890,1.0626,thông tin phong phú
+zz_archive_om_orphans_20260804,product_code,phân loại,446,0.0,110,1.0491,thông tin phong phú
+dim_products,updated_at,phân loại,2543,0.0,1282,1.0346,thông tin phong phú
+dim_shippers,row_hash,phân loại,20000,0.0,164,1.0201,thông tin phong phú
+dim_shippers,shipper_code,phân loại,20000,0.0,93,1.013,thông tin phong phú
+dim_shippers,shipper_name,phân loại,20000,0.0,93,1.013,thông tin phong phú
+dim_product_brands,brand_code,phân loại,20000,0.0,67,1.0057,thông tin phong phú
+dim_assets,id,số,20000,0.0,20000,1.0,thông tin phong phú
+dim_assets,is_current,phân loại,20000,0.0,2,1.0,thông tin phong phú
+dim_chains,id,số,9638,0.0,9638,1.0,thông tin phong phú
+dim_dates,date_key,số,4018,0.0,4018,1.0,thông tin phong phú
+dim_dates,id,số,4018,0.0,4018,1.0,thông tin phong phú
+dim_delivery_types,delivery_type_code,phân loại,5,0.0,5,1.0,thông tin phong phú
+dim_delivery_types,delivery_type_name,phân loại,5,0.0,5,1.0,thông tin phong phú
+dim_delivery_types,id,số,5,0.0,5,1.0,thông tin phong phú
+dim_employees,id,số,6699,0.0,6699,1.0,thông tin phong phú
+dim_order_status,status_code,phân loại,10,0.0,10,1.0,thông tin phong phú
+dim_order_status,status_name,phân loại,10,0.0,10,1.0,thông tin phong phú
+dim_order_status,description,phân loại,10,0.0,10,1.0,thông tin phong phú
+dim_order_status,sort_order,số,10,0.0,10,1.0,thông tin phong phú
+dim_order_status,id,số,10,0.0,10,1.0,thông tin phong phú
+dim_order_types,order_type_code,phân loại,15,0.0,15,1.0,thông tin phong phú
+dim_order_types,order_type_name,phân loại,15,0.0,15,1.0,thông tin phong phú
+dim_order_types,description,phân loại,15,0.0,15,1.0,thông tin phong phú
+dim_order_types,sort_order,số,15,0.0,15,1.0,thông tin phong phú
+dim_order_types,id,số,15,0.0,15,1.0,thông tin phong phú
+dim_otif_reason,reason_text,phân loại,22,0.0,22,1.0,thông tin phong phú
+dim_otif_reason,id,số,22,0.0,22,1.0,thông tin phong phú
+dim_product_brands,id,số,20000,0.0,20000,1.0,thông tin phong phú
+dim_product_prices,id,số,9085,0.0,9085,1.0,thông tin phong phú
+dim_products,id,số,2543,0.0,2543,1.0,thông tin phong phú
+dim_products,is_current,phân loại,2543,0.0,2,1.0,thông tin phong phú
+dim_sales_positions,id,số,7,0.0,7,1.0,thông tin phong phú
+dim_sales_positions,position_code,phân loại,7,0.0,7,1.0,thông tin phong phú
+dim_sales_positions,position_name,phân loại,7,0.0,7,1.0,thông tin phong phú
+dim_shippers,id,số,20000,0.0,20000,1.0,thông tin phong phú
+dim_site_accounts,site_account_code,phân loại,7,0.0,7,1.0,thông tin phong phú
+dim_site_accounts,site_account_name,phân loại,7,0.0,7,1.0,thông tin phong phú
+dim_site_accounts,id,số,7,0.0,7,1.0,thông tin phong phú
+dim_stores,id,số,20000,0.0,20000,1.0,thông tin phong phú
+dim_suppliers,supplier_code,phân loại,63,0.0,63,1.0,thông tin phong phú
+dim_suppliers,supplier_name,phân loại,63,0.0,63,1.0,thông tin phong phú
+dim_suppliers,row_hash,phân loại,63,0.0,63,1.0,thông tin phong phú
+dim_suppliers,id,số,63,0.0,63,1.0,thông tin phong phú
+dim_suppliers,source_refs,phân loại,63,0.0,63,1.0,thông tin phong phú
+dim_warehouses,warehouse_code,phân loại,39,0.0,39,1.0,thông tin phong phú
+dim_warehouses,warehouse_name,phân loại,39,0.0,39,1.0,thông tin phong phú
+dim_warehouses,row_hash,phân loại,39,0.0,39,1.0,thông tin phong phú
+dim_warehouses,id,số,39,0.0,39,1.0,thông tin phong phú
+dim_warehouses,source_refs,phân loại,39,0.0,39,1.0,thông tin phong phú
+dim_weather_locations,city_name,phân loại,64,0.0,64,1.0,thông tin phong phú
+dim_weather_locations,id,số,64,0.0,64,1.0,thông tin phong phú
+dim_weather_locations,created_at,phân loại,64,0.0,64,1.0,thông tin phong phú
+dim_weather_locations,updated_at,phân loại,64,0.0,64,1.0,thông tin phong phú
+dwh_batch_logs,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_asset_audits,visit_id,số,20000,0.0,17780,1.0,thông tin phong phú
+fact_asset_audits,shop_id,số,20000,0.0,6912,1.0,thông tin phong phú
+fact_asset_audits,asset_id,số,20000,0.0,7801,1.0,thông tin phong phú
+fact_asset_audits,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_asset_inventory,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_asset_inventory,source_id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_delivery_details,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_inventory_daily_balances,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_inventory_lot_snapshot,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_inventory_transactions,transaction_id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_inventory_transactions,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_order_fulfillment,store_key,số,20000,0.0,10254,1.0,thông tin phong phú
+fact_order_fulfillment,order_source,phân loại,20000,0.0,2,1.0,thông tin phong phú
+fact_order_fulfillment,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_order_lines,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_order_status_timeline,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_promo_budget_available,ctkm_type,phân loại,20000,0.0,2,1.0,thông tin phong phú
+fact_promo_budget_available,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_roadmap_stores,store_id,số,17942,0.0,17942,1.0,thông tin phong phú
+fact_roadmap_stores,id,số,17942,0.0,17942,1.0,thông tin phong phú
+fact_visits,source_id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_visits,id,số,20000,0.0,20000,1.0,thông tin phong phú
+fact_weather_forecast,id,số,20000,0.0,20000,1.0,thông tin phong phú
+dim_dates,week,số,4018,0.0,53,0.9999,thông tin phong phú
+zz_archive_om_orphans_20260804,id,số,446,0.0,446,0.9999,thông tin phong phú
+dim_locators,is_priced,phân loại,315,0.0,2,0.9998,thông tin phong phú
+dim_shippers,batch_id,số,20000,0.005,2032,0.9998,thông tin phong phú
+fact_order_fulfillment,total_net_revenue,số,20000,0.0,11310,0.9998,thông tin phong phú
+dim_product_brands,batch_id,số,20000,0.0,1543,0.9997,thông tin phong phú
+fact_order_lines,store_key,số,20000,0.0,5752,0.9997,thông tin phong phú
+dim_locators,id,số,315,0.0,315,0.9996,thông tin phong phú
+fact_order_fulfillment,total_vat,số,20000,0.0,10341,0.9996,thông tin phong phú
+dim_account_channels,id,số,127,0.0,127,0.9994,thông tin phong phú
+fact_delivery_details,store_key,số,20000,0.0,3508,0.9994,thông tin phong phú
+fact_order_fulfillment,total_amount,số,20000,0.0,11229,0.9993,thông tin phong phú
+dim_price_lists,id,số,364,0.0,364,0.9992,thông tin phong phú
+dim_sub_inventories,id,số,188,0.0,188,0.9991,thông tin phong phú
+dim_dates,day,số,4018,0.0,31,0.999,thông tin phong phú
+fact_roadmaps,id,số,268,0.0,268,0.999,thông tin phong phú
+fact_sales_targets,target_date_id,số,270,0.0,270,0.9989,thông tin phong phú
+fact_sales_targets,id,số,270,0.0,270,0.9989,thông tin phong phú
+fact_order_fulfillment,total_before_discount,số,20000,0.0,10450,0.9988,thông tin phong phú
+dim_categories,id,số,277,0.0,277,0.9986,thông tin phong phú
+dim_weather_locations,latitude,số,64,0.0,63,0.9986,thông tin phong phú
+fact_order_lines,order_date_key,số,20000,0.0,484,0.9986,thông tin phong phú
+zz_archive_om_orphans_20260804,order_code,phân loại,446,0.0,99,0.9985,thông tin phong phú
+zz_archive_om_orphans_20260804,ora_order_no,phân loại,446,0.0,99,0.9985,thông tin phong phú
+fact_inventory_lot_snapshot,product_id,số,20000,0.0,998,0.9983,thông tin phong phú
+fact_order_fulfillment,order_date_key,số,20000,0.0,490,0.9982,thông tin phong phú
+dim_product_prices,product_id,số,9085,0.0,678,0.9973,thông tin phong phú
+dim_site_domains,id,số,137,0.0,137,0.9971,thông tin phong phú
+fact_visits,salesman_id,số,20000,0.0,497,0.9961,thông tin phong phú
+dim_shippers,license_plate,phân loại,20000,0.035,143,0.996,thông tin phong phú
+fact_visits,shop_id,số,20000,0.0,9415,0.9952,thông tin phong phú
+fact_visits,date_key,số,20000,0.0,219,0.9942,thông tin phong phú
+dim_weather_locations,longitude,số,64,0.0,61,0.9939,thông tin phong phú
+fact_weather_forecast,temperature_min,số,20000,0.0,263,0.9936,thông tin phong phú
+fact_weather_forecast,temperature_max,số,20000,0.0,303,0.9932,thông tin phong phú
+dim_product_prices,price_excl_vat,số,9085,0.0,2061,0.9931,thông tin phong phú
+dim_product_prices,price_incl_vat,số,9085,0.0,2045,0.993,thông tin phong phú
+fact_inventory_daily_balances,product_id,số,20000,0.0,242,0.9917,thông tin phong phú
+fact_delivery_details,shipper_key,số,20000,0.0,906,0.9903,thông tin phong phú
+fact_delivery_details,created_date_key,số,20000,0.0,146,0.9903,thông tin phong phú
+fact_delivery_details,date_key,số,20000,0.0,145,0.9901,thông tin phong phú
+fact_weather_forecast,location_id,số,20000,0.0,56,0.9897,thông tin phong phú
+fact_inventory_daily_balances,date_key,số,20000,0.0,49,0.9884,thông tin phong phú
+dim_delivery_status,id,số,103,0.0,103,0.9882,thông tin phong phú
+fact_inventory_lot_snapshot,date_key,số,20000,0.0,79,0.9881,thông tin phong phú
+dim_dates,month,số,4018,0.0,12,0.9879,thông tin phong phú
+dim_dates,year,số,4018,0.0,11,0.9867,thông tin phong phú
+dim_dates,fiscal_year,số,4018,0.0,11,0.9867,thông tin phong phú
+dim_distributors,id,số,89,0.0,89,0.9857,thông tin phong phú
+fact_inventory_transactions,date_key,số,20000,0.0,194,0.9848,thông tin phong phú
+fact_weather_forecast,latitude,số,20000,0.0,56,0.9848,thông tin phong phú
+fact_order_lines,product_key,số,20000,0.0,516,0.9842,thông tin phong phú
+fact_order_fulfillment,salesman_id,số,20000,0.0,583,0.9833,thông tin phong phú
+fact_weather_forecast,longitude,số,20000,0.0,54,0.9818,thông tin phong phú
+fact_order_fulfillment,raw_created_at,phân loại,20000,49.815,4691,0.9815,thông tin phong phú
+fact_inventory_daily_balances,updated_at,phân loại,20000,0.0,49,0.9804,thông tin phong phú
+zz_archive_om_orphans_20260804,product_key,số,446,0.0,149,0.9793,thông tin phong phú
+fact_inventory_lot_snapshot,brand_id,phân loại,20000,0.0,1098,0.9784,thông tin phong phú
+fact_promo_budget_available,region_name_raw,phân loại,20000,0.43,5,0.9779,thông tin phong phú
+dim_sales_positions,power_level,số,7,0.0,6,0.9755,thông tin phong phú
+fact_inventory_daily_balances,created_at,phân loại,20000,0.0,50,0.9755,thông tin phong phú
+fact_inventory_daily_balances,warehouse_id,số,20000,0.0,26,0.9729,thông tin phong phú
+fact_order_lines,salesman_id,số,20000,0.0,557,0.9725,thông tin phong phú
+dim_order_status,is_closed,phân loại,10,0.0,2,0.971,thông tin phong phú
+fact_delivery_details,product_key,số,20000,0.0,407,0.9709,thông tin phong phú
+dim_product_prices,price_group_code,phân loại,9085,0.0,183,0.9705,thông tin phong phú
+dim_order_status,bucket_group,phân loại,10,0.0,5,0.9675,thông tin phong phú
+fact_promo_budget_available,order_date_key,số,20000,0.43,71,0.9666,thông tin phong phú
+dim_product_prices,price_group_name,phân loại,9085,0.0,182,0.966,thông tin phong phú
+fact_inventory_transactions,order_id,số,20000,3.49,5533,0.965,thông tin phong phú
+fact_roadmap_stores,route_manager_employee_id,số,17942,0.072,46,0.963,thông tin phong phú
+fact_promo_budget_available,invoice_date_key,số,20000,2.185,73,0.9608,thông tin phong phú
+zz_archive_om_orphans_20260804,amount_before_discount_before_vat,số,446,0.0,204,0.9605,thông tin phong phú
+zz_archive_om_orphans_20260804,amount_incl_vat,số,446,0.0,204,0.9605,thông tin phong phú
+zz_archive_om_orphans_20260804,vat_amount,số,446,0.0,202,0.9605,thông tin phong phú
+fact_order_lines,order_source,phân loại,20000,0.0,2,0.9604,thông tin phong phú
+fact_delivery_details,employee_key,số,20000,0.0,269,0.96,thông tin phong phú
+fact_inventory_lot_snapshot,qty_primary,số,20000,0.0,2306,0.9595,thông tin phong phú
+dim_sub_inventories,is_current,phân loại,188,0.0,2,0.9564,thông tin phong phú
+fact_sales_targets,target_visit_count,số,270,0.0,187,0.9557,thông tin phong phú
+fact_delivery_details,docs_status,phân loại,20000,0.0,2,0.9541,thông tin phong phú
+zz_archive_om_orphans_20260804,store_key,số,446,0.0,84,0.9523,thông tin phong phú
+fact_order_status_timeline,shipping_at,phân loại,20000,52.07,5361,0.9519,thông tin phong phú
+dim_products,brand_id,phân loại,2543,0.118,218,0.9492,thông tin phong phú
+dim_otif_reason,cancel_nature,phân loại,22,4.545,21,0.9491,thông tin phong phú
+fact_roadmaps,region_code,phân loại,268,0.0,7,0.9441,thông tin phong phú
+fact_roadmaps,region_name,phân loại,268,0.0,7,0.9441,thông tin phong phú
+dim_dates,quarter,số,4018,0.0,4,0.944,thông tin phong phú
+dim_employees,batch_id,số,6699,0.0,94,0.9428,thông tin phong phú
+fact_inventory_transactions,product_id,số,20000,0.0,254,0.9428,thông tin phong phú
+dwh_batch_logs,target_table,phân loại,20000,0.0,43,0.9394,thông tin phong phú
+zz_archive_om_orphans_20260804,unit_price_before_vat,số,446,0.0,116,0.9393,thông tin phong phú
+fact_delivery_details,license_plate,phân loại,20000,0.005,140,0.935,thông tin phong phú
+dim_product_brands,parent_brand_id,số,20000,1.375,55,0.9338,thông tin phong phú
+zz_archive_om_orphans_20260804,warehouse_key,số,446,0.0,5,0.9281,thông tin phong phú
+dim_site_domains,parent_code,phân loại,137,0.73,29,0.9205,thông tin phong phú
+dim_order_types,is_free_order,phân loại,15,0.0,2,0.9183,thông tin phong phú
+fact_order_fulfillment,total_delivered_revenue,số,20000,0.0,8812,0.9177,thông tin phong phú
+fact_order_lines,amount_incl_vat,số,20000,0.0,3508,0.9171,thông tin phong phú
+fact_order_lines,net_revenue,số,20000,0.0,3380,0.9169,thông tin phong phú
+fact_order_lines,vat_amount,số,20000,0.0,3399,0.9167,thông tin phong phú
+dim_product_prices,is_current,phân loại,9085,0.0,2,0.9162,thông tin phong phú
+fact_order_lines,amount_before_discount,số,20000,0.0,2464,0.9093,thông tin phong phú
+fact_roadmaps,employee_id,số,268,0.0,211,0.9092,thông tin phong phú
+dim_otif_reason,classification_rationale,phân loại,22,9.091,21,0.9091,thông tin phong phú
+fact_roadmaps,store_count,số,268,0.0,125,0.9091,thông tin phong phú
+fact_order_lines,amount_before_discount_before_vat,số,20000,0.0,2581,0.909,thông tin phong phú
+fact_order_lines,unit_price_after_discount_after_vat,số,20000,0.0,1841,0.9065,thông tin phong phú
+fact_order_lines,unit_price_after_discount_before_vat,số,20000,0.0,1567,0.9044,thông tin phong phú
+fact_inventory_lot_snapshot,locator_id,số,20000,0.0,76,0.9035,thông tin phong phú
+fact_delivery_details,completed_date_key,số,20000,8.655,143,0.9026,thông tin phong phú
+fact_visits,travel_duration_minutes,số,20000,0.0,2641,0.9013,thông tin phong phú
+fact_visits,travel_distance_km,số,20000,0.0,1554,0.8995,thông tin phong phú
+dim_distributors,is_current,phân loại,89,0.0,2,0.8984,thông tin phong phú
+fact_inventory_transactions,total_amount,số,20000,0.0,1173,0.8983,thông tin phong phú
+zz_archive_om_orphans_20260804,sales_qty,số,446,0.0,79,0.8976,thông tin phong phú
+fact_inventory_transactions,warehouse_id,số,20000,0.0,23,0.8959,thông tin phong phú
+dim_locators,is_sellable_stock,phân loại,315,0.0,2,0.8945,thông tin phong phú
+fact_delivery_details,qty_delivered,số,20000,0.0,274,0.8941,thông tin phong phú
+zz_archive_om_orphans_20260804,salesman_id,số,446,0.0,46,0.8937,thông tin phong phú
+fact_order_lines,shipped_qty,số,20000,0.0,297,0.8893,thông tin phong phú
+fact_roadmaps,route_manager_employee_id,số,268,0.746,46,0.889,thông tin phong phú
+dim_stores,is_legal_entity,phân loại,20000,0.0,2,0.8864,thông tin phong phú
+fact_visits,working_time_minutes,số,20000,11.57,4458,0.8842,thông tin phong phú
+dim_order_status,is_revenue_recognized,phân loại,10,0.0,2,0.8813,thông tin phong phú
+fact_order_lines,unit_price,số,20000,0.0,647,0.8812,thông tin phong phú
+fact_order_lines,unit_price_before_vat,số,20000,0.0,711,0.8811,thông tin phong phú
+fact_delivery_details,qty_so,số,20000,0.0,279,0.8805,thông tin phong phú
+dim_stores,valid_to,phân loại,20000,8.265,636,0.8799,thông tin phong phú
+dim_otif_reason,impact_type,phân loại,22,4.545,4,0.8797,thông tin phong phú
+dim_otif_reason,revenue_impact,phân loại,22,4.545,4,0.8797,thông tin phong phú
+fact_roadmap_stores,employee_id,số,17942,0.0,209,0.8782,thông tin phong phú
+fact_inventory_lot_snapshot,barcode,phân loại,20000,29.995,332,0.8772,thông tin phong phú
+fact_delivery_details,qty_received,số,20000,0.0,279,0.8763,thông tin phong phú
+fact_order_lines,sales_qty,số,20000,0.0,305,0.8749,thông tin phong phú
+dim_stores,batch_id,số,20000,0.0,477,0.8738,thông tin phong phú
+fact_inventory_transactions,quantity,số,20000,0.0,280,0.8674,thông tin phong phú
+fact_inventory_transactions,unit_price,số,20000,0.0,138,0.8665,thông tin phong phú
+dim_dates,is_working_day,phân loại,4018,0.0,2,0.8631,thông tin phong phú
+dim_dates,is_weekend,phân loại,4018,0.0,2,0.8631,thông tin phong phú
+fact_weather_forecast,precipitation_day_sum,số,20000,0.0,971,0.8573,thông tin phong phú
+dim_locators,location_code,phân loại,315,12.698,78,0.8567,thông tin phong phú
+dim_locators,location_address,phân loại,315,12.698,78,0.8567,thông tin phong phú
+dim_account_channels,channel_level,số,127,0.0,3,0.8559,thông tin phong phú
+zz_archive_om_orphans_20260804,sub_inventory_key,số,446,0.0,21,0.8557,thông tin phong phú
+fact_promo_budget_available,subregion_site_domain_id,số,20000,0.0,12,0.8535,thông tin phong phú
+dim_delivery_status,delivery_status,phân loại,103,0.0,5,0.8494,thông tin phong phú
+fact_delivery_details,sub_inventory_key,số,20000,0.0,59,0.8492,thông tin phong phú
+fact_order_lines,schedule_ship_date,phân loại,20000,50.335,2597,0.8482,thông tin phong phú
+fact_promo_budget_available,subregion_name_raw,phân loại,20000,0.43,12,0.8454,thông tin phong phú
+fact_inventory_lot_snapshot,sub_inventory_id,số,20000,0.0,67,0.8438,thông tin phong phú
+fact_order_fulfillment,total_discount,số,20000,0.0,7933,0.8424,thông tin phong phú
+fact_order_fulfillment,item_count,số,20000,0.0,51,0.842,thông tin phong phú
+dim_distributors,distributor_code,phân loại,89,0.0,35,0.841,thông tin phong phú
+dim_distributors,distributor_name,phân loại,89,0.0,35,0.841,thông tin phong phú
+dim_distributors,source_refs,phân loại,89,0.0,35,0.841,thông tin phong phú
+fact_promo_budget_available,sub_inventory_key,số,20000,0.0,38,0.8406,thông tin phong phú
+dim_distributors,row_hash,phân loại,89,0.0,37,0.8366,thông tin phong phú
+fact_delivery_details,created_at,phân loại,20000,0.0,523,0.8305,thông tin phong phú
+fact_delivery_details,updated_at,phân loại,20000,0.0,523,0.8305,thông tin phong phú
+fact_roadmaps,channel_code,phân loại,268,0.0,4,0.8273,thông tin phong phú
+fact_roadmaps,channel_name,phân loại,268,0.0,4,0.8273,thông tin phong phú
+fact_promo_budget_available,promo_start_date_key,số,20000,0.0,89,0.8261,thông tin phong phú
+dim_products,category_id,phân loại,2543,7.039,76,0.824,thông tin phong phú
+zz_archive_om_orphans_20260804,created_at,phân loại,446,0.0,11,0.8188,thông tin phong phú
+fact_promo_budget_available,promo_end_date_key,số,20000,0.0,77,0.8155,thông tin phong phú
+dim_locators,organization_code,phân loại,315,8.889,7,0.8151,thông tin phong phú
+dim_otif_reason,incharge_group,phân loại,22,0.0,5,0.8139,thông tin phong phú
+dim_products,category_code,phân loại,2543,0.039,78,0.8134,thông tin phong phú
+zz_archive_om_orphans_20260804,order_date_key,số,446,0.0,23,0.8102,thông tin phong phú
+zz_archive_om_orphans_20260804,updated_at,phân loại,446,0.0,18,0.807,thông tin phong phú
+dim_locators,purpose_code,phân loại,315,0.0,9,0.805,thông tin phong phú
+dim_locators,purpose_name,phân loại,315,0.0,9,0.805,thông tin phong phú
+dim_otif_reason,revenue_loss_level,phân loại,22,4.545,7,0.8038,thông tin phong phú
+fact_delivery_details,dispatcher_name,phân loại,20000,1.01,23,0.7993,thông tin phong phú
+fact_inventory_daily_balances,closing_quantity,số,20000,0.0,1624,0.795,thông tin phong phú
+fact_visits,scan_serials,phân loại,20000,60.27,4711,0.791,thông tin phong phú
+fact_inventory_daily_balances,opening_quantity,số,20000,0.0,1625,0.7905,thông tin phong phú
+dim_account_channels,level_1_code,phân loại,127,7.874,7,0.7891,thông tin phong phú
+fact_inventory_lot_snapshot,available_primary,số,20000,16.03,2030,0.788,thông tin phong phú
+fact_order_fulfillment,delivery_date_key,số,20000,21.38,474,0.7849,thông tin phong phú
+fact_order_fulfillment,warehouse_key,số,20000,0.0,29,0.7812,thông tin phong phú
+dim_distributors,updated_at,phân loại,89,0.0,39,0.779,thông tin phong phú
+fact_asset_inventory,holder_name,phân loại,20000,0.0,32,0.7739,thông tin phong phú
+fact_promo_budget_available,region_site_domain_id,số,20000,0.0,5,0.7717,thông tin phong phú
+fact_inventory_lot_snapshot,volume_primary,số,20000,22.985,5344,0.7673,thông tin phong phú
+dim_distributors,batch_id,số,89,0.0,39,0.7672,thông tin phong phú
+dim_distributors,created_at,phân loại,89,0.0,39,0.7601,thông tin phong phú
+zz_archive_om_orphans_20260804,sales_qty_carton,số,446,1.57,84,0.759,thông tin phong phú
+fact_order_lines,warehouse_key,số,20000,0.0,30,0.7565,thông tin phong phú
+fact_asset_inventory,holder_code,phân loại,20000,0.0,32,0.7549,thông tin phong phú
+dwh_batch_logs,row_count,số,20000,0.0,1371,0.7527,thông tin phong phú
+fact_order_lines,sales_qty_carton,số,20000,0.26,436,0.7505,thông tin phong phú
+dim_sub_inventories,warehouse_key,số,188,0.0,7,0.7472,thông tin phong phú
+fact_delivery_details,warehouse_key,số,20000,0.0,7,0.7463,thông tin phong phú
+fact_asset_inventory,model,phân loại,20000,0.0,84,0.7341,thông tin phong phú
+fact_inventory_lot_snapshot,brand_code_raw,phân loại,20000,16.03,99,0.7268,thông tin phong phú
+fact_inventory_lot_snapshot,volume_package,số,20000,27.485,5997,0.725,thông tin phong phú
+dim_assets,asset_model,phân loại,20000,0.0,84,0.7242,thông tin phong phú
+dim_delivery_types,created_at,phân loại,5,0.0,2,0.7219,thông tin phong phú
+dim_order_status,is_cancelled,phân loại,10,0.0,2,0.7219,thông tin phong phú
+dim_employees,updated_at,phân loại,6699,0.0,73,0.7185,thông tin phong phú
+fact_inventory_lot_snapshot,locator,phân loại,20000,16.755,78,0.7184,thông tin phong phú
+dim_employees,created_at,phân loại,6699,0.0,96,0.7111,thông tin phong phú
+fact_weather_forecast,precipitation_night_sum,số,20000,0.0,873,0.7108,thông tin phong phú
+fact_inventory_lot_snapshot,qty_package,số,20000,26.26,2363,0.7082,thông tin phong phú
+dim_distributors,site_domain_id,số,89,1.124,20,0.7071,thông tin phong phú
+fact_asset_inventory,shop_id,số,20000,29.7,10857,0.7025,thông tin phong phú
+fact_inventory_lot_snapshot,expiry_warning_days,số,20000,30.005,1102,0.6998,thông tin phong phú
+fact_promo_budget_available,foc_used_total,số,20000,0.0,174,0.6964,thông tin phong phú
+fact_inventory_lot_snapshot,available_package,số,20000,26.26,2334,0.6953,thông tin phong phú
+fact_order_lines,dms_status,phân loại,20000,1.55,8,0.6901,thông tin phong phú
+fact_delivery_details,batch_id,số,20000,0.0,523,0.6878,thông tin phong phú
+fact_delivery_details,delivery_status_key,số,20000,0.0,49,0.6876,thông tin phong phú
+fact_order_lines,raw_created_at,phân loại,20000,61.655,2472,0.6844,thông tin phong phú
+dim_distributors,address,phân loại,89,17.978,32,0.6837,thông tin phong phú
+fact_order_fulfillment,sub_inventory_key,số,20000,0.0,68,0.6835,thông tin phong phú
+dim_distributors,dms_site_number,phân loại,89,15.73,29,0.681,thông tin phong phú
+fact_inventory_lot_snapshot,sub_inventory_code_raw,phân loại,20000,16.03,52,0.6785,thông tin phong phú
+fact_inventory_lot_snapshot,warehouse_id,số,20000,0.0,32,0.6777,thông tin phong phú
+fact_promo_budget_available,budget_used_total,số,20000,0.0,1666,0.6748,thông tin phong phú
+fact_order_lines,order_type_key,số,20000,0.0,10,0.6721,thông tin phong phú
+dim_warehouses,warehouse_type_code,phân loại,39,2.564,3,0.6715,thông tin phong phú
+fact_order_lines,discount_amount,số,20000,0.0,1491,0.6646,thông tin phong phú
+fact_order_status_timeline,last_status_key,số,20000,0.0,8,0.6643,thông tin phong phú
+dim_employees,valid_to,phân loại,6699,4.299,72,0.6636,thông tin phong phú
+fact_inventory_lot_snapshot,batch_id,số,20000,0.0,89,0.6599,thông tin phong phú
+dim_account_channels,level_2_code,phân loại,127,7.874,40,0.6592,thông tin phong phú
+dim_assets,asset_category,phân loại,20000,5.37,44,0.6447,thông tin phong phú
+fact_asset_inventory,supplier,phân loại,20000,0.1,4,0.6439,thông tin phong phú
+fact_order_status_timeline,created_at,phân loại,20000,0.0,715,0.6435,thông tin phong phú
+dim_delivery_status,note_status,phân loại,103,0.0,9,0.6375,thông tin phong phú
+dim_delivery_status,document_status,phân loại,103,0.0,3,0.635,thông tin phong phú
+dim_products,conversion_rate,số,2543,27.527,55,0.635,thông tin phong phú
+fact_inventory_lot_snapshot,source_system,phân loại,20000,0.0,2,0.635,thông tin phong phú
+dim_products,net_weight,số,2543,32.56,246,0.6343,thông tin phong phú
+fact_inventory_lot_snapshot,updated_at,phân loại,20000,0.0,89,0.6326,thông tin phong phú
+dim_assets,updated_at,phân loại,20000,0.0,1084,0.6288,thông tin phong phú
+fact_visits,plan_type,số,20000,0.0,3,0.6285,thông tin phong phú
+fact_visits,plan_status,phân loại,20000,0.0,2,0.6285,thông tin phong phú
+dim_distributors,valid_to,phân loại,89,31.461,39,0.6247,thông tin phong phú
+dim_delivery_status,created_at,phân loại,103,0.0,28,0.6228,thông tin phong phú
+dim_delivery_status,updated_at,phân loại,103,0.0,28,0.6228,thông tin phong phú
+dim_site_domains,dms_city_code,phân loại,137,0.73,64,0.616,thông tin phong phú
+dim_site_domains,dms_city_name,phân loại,137,0.73,64,0.616,thông tin phong phú
+dim_products,supplier_id,số,2543,26.976,62,0.6156,thông tin phong phú
+dim_product_prices,uom,phân loại,9085,3.17,17,0.6133,thông tin phong phú
+fact_order_fulfillment,order_type_key,số,20000,0.0,12,0.6073,thông tin phong phú
+fact_inventory_lot_snapshot,primary_uom,phân loại,20000,0.0,23,0.6043,thông tin phong phú
+fact_order_lines,sub_inventory_key,số,20000,0.0,43,0.6001,thông tin phong phú
+dim_locators,site_type_code,phân loại,315,0.0,4,0.599,thông tin phong phú
+dim_locators,site_type_name,phân loại,315,0.0,4,0.599,thông tin phong phú
+dim_sales_positions,created_at,phân loại,7,0.0,2,0.5917,thông tin phong phú
+dim_warehouses,address,phân loại,39,41.026,24,0.5897,thông tin phong phú
+dim_delivery_status,payment_status,phân loại,103,25.243,5,0.5893,thông tin phong phú
+dim_stores,site_number,phân loại,20000,69.925,3886,0.5846,thông tin phong phú
+dim_sub_inventories,batch_id,số,188,0.0,8,0.5834,thông tin phong phú
+fact_inventory_lot_snapshot,warehouse_code_raw,phân loại,20000,0.0,32,0.5834,thông tin phong phú
+dim_order_status,created_at,phân loại,10,0.0,3,0.5817,thông tin phong phú
+fact_order_lines,batch_id,số,20000,0.0,334,0.5802,thông tin phong phú
+fact_order_lines,line_status_key,số,20000,0.0,7,0.5797,thông tin phong phú
+dim_otif_reason,is_included_otif,phân loại,22,0.0,2,0.5746,thông tin phong phú
+fact_delivery_details,unit,phân loại,20000,0.0,11,0.5569,thông tin phong phú
+fact_inventory_lot_snapshot,sub_category,phân loại,20000,16.03,48,0.547,thông tin phong phú
+dim_stores,system,phân loại,20000,67.6,2917,0.5395,thông tin phong phú
+fact_asset_inventory,distributor_key,số,20000,0.0,23,0.5381,thông tin phong phú
+fact_delivery_details,product_type,phân loại,20000,0.0,3,0.5349,thông tin phong phú
+fact_asset_inventory,subinventory_code,phân loại,20000,2.725,28,0.5341,thông tin phong phú
+fact_order_fulfillment,distributor_key,số,20000,0.0,25,0.5314,thông tin phong phú
+fact_order_lines,discount_amount_before_vat,số,20000,0.0,1506,0.5179,thông tin phong phú
+fact_visits,is_compliance,phân loại,20000,0.0,2,0.5169,thông tin phong phú
+fact_asset_inventory,capacity,phân loại,20000,0.0,27,0.5164,thông tin phong phú
+fact_visits,is_visited,phân loại,20000,0.0,2,0.5107,thông tin phong phú
+dim_products,batch_id,số,2543,0.0,14,0.51,thông tin phong phú
+fact_order_lines,delivery_date,phân loại,20000,67.97,1959,0.5086,thông tin phong phú
+dim_account_channels,created_at,phân loại,127,0.0,4,0.4994,thông tin vừa
+fact_sales_targets,batch_id,số,270,0.0,81,0.4905,thông tin vừa
+fact_promo_budget_available,invoiced_amount,số,20000,50.355,1625,0.4893,thông tin vừa
+fact_delivery_details,payment_status,phân loại,20000,8.15,4,0.4819,thông tin vừa
+fact_order_lines,uom,phân loại,20000,0.0,15,0.4793,thông tin vừa
+dim_stores,account_channel_id,số,20000,3.705,58,0.4779,thông tin vừa
+dim_order_status,batch_id,số,10,0.0,2,0.469,thông tin vừa
+dim_order_status,updated_at,phân loại,10,0.0,2,0.469,thông tin vừa
+dim_product_prices,valid_from,phân loại,9085,0.0,200,0.4637,thông tin vừa
+dim_products,uom,phân loại,2543,32.442,18,0.4571,thông tin vừa
+dim_stores,site_domain_id,số,20000,48.635,62,0.4509,thông tin vừa
+dim_employees,site_account_id,số,6699,33.692,8,0.4464,thông tin vừa
+fact_order_lines,is_free_order,phân loại,20000,0.0,2,0.4353,thông tin vừa
+dim_assets,asset_supplier,phân loại,20000,0.0,5,0.4325,thông tin vừa
+dim_sub_inventories,created_at,phân loại,188,0.0,8,0.4316,thông tin vừa
+dim_sub_inventories,valid_from,phân loại,188,0.0,8,0.4316,thông tin vừa
+fact_order_lines,discount_percent,số,20000,0.0,98,0.4263,thông tin vừa
+fact_promo_budget_available,invoiced_qty,số,20000,50.97,175,0.4205,thông tin vừa
+dim_stores,is_current,phân loại,20000,0.0,2,0.4114,thông tin vừa
+fact_asset_inventory,brand_code,phân loại,20000,0.0,20,0.411,thông tin vừa
+dim_assets,valid_from,phân loại,20000,0.0,738,0.3979,thông tin vừa
+dim_assets,created_at,phân loại,20000,0.0,738,0.3979,thông tin vừa
+dim_product_prices,valid_to,phân loại,9085,0.132,155,0.3962,thông tin vừa
+fact_order_lines,chain_key,số,20000,45.035,21,0.3898,thông tin vừa
+dim_sub_inventories,updated_at,phân loại,188,0.0,11,0.3877,thông tin vừa
+fact_order_fulfillment,status_key,số,20000,0.0,8,0.3845,thông tin vừa
+dim_assets,batch_id,số,20000,0.0,738,0.3768,thông tin vừa
+dim_site_domains,site_domain_level,số,137,0.0,5,0.3761,thông tin vừa
+dim_products,shelf_life,phân loại,2543,38.97,20,0.3752,thông tin vừa
+fact_order_lines,distributor_key,số,20000,0.0,27,0.3613,thông tin vừa
+fact_order_status_timeline,batch_id,số,20000,0.0,578,0.3594,thông tin vừa
+fact_order_status_timeline,updated_at,phân loại,20000,0.0,589,0.3572,thông tin vừa
+fact_order_status_timeline,last_status_at,phân loại,20000,0.0,551,0.3543,thông tin vừa
+dim_order_types,batch_id,số,15,0.0,2,0.3534,thông tin vừa
+dim_order_types,created_at,phân loại,15,0.0,2,0.3534,thông tin vừa
+dim_order_types,updated_at,phân loại,15,0.0,2,0.3534,thông tin vừa
+fact_visits,batch_id,số,20000,0.0,395,0.3517,thông tin vừa
+dim_products,valid_to,phân loại,2543,0.039,9,0.345,thông tin vừa
+fact_roadmaps,created_at,phân loại,268,0.0,21,0.343,thông tin vừa
+fact_order_lines,ora_order_no,phân loại,20000,80.875,2080,0.3408,thông tin vừa
+fact_roadmaps,distributor_code,phân loại,268,0.0,21,0.3406,thông tin vừa
+fact_roadmaps,distributor_name,phân loại,268,0.0,21,0.3406,thông tin vừa
+fact_order_fulfillment,batch_id,số,20000,0.0,222,0.3398,thông tin vừa
+fact_inventory_lot_snapshot,category,phân loại,20000,16.03,27,0.3243,thông tin vừa
+fact_order_lines,vat_percent,số,20000,0.0,9,0.3234,thông tin vừa
+dim_employees,power_level,số,6699,0.97,7,0.3219,thông tin vừa
+dim_product_brands,is_current,phân loại,20000,0.0,2,0.3207,thông tin vừa
+fact_order_lines,delivery_date_key,số,20000,67.97,392,0.3186,thông tin vừa
+fact_delivery_details,accountant_name,phân loại,20000,56.935,17,0.3062,thông tin vừa
+dim_assets,valid_to,phân loại,20000,49.885,726,0.3032,thông tin vừa
+dim_distributors,warehouse_key,số,89,69.663,27,0.3021,thông tin vừa
+fact_order_lines,delivery_date_source,phân loại,20000,64.475,4,0.2942,thông tin vừa
+fact_delivery_details,delivery_status,phân loại,20000,0.0,4,0.2895,thông tin vừa
+zz_archive_om_orphans_20260804,shipped_qty,số,446,0.0,30,0.2868,thông tin vừa
+fact_order_fulfillment,updated_at,phân loại,20000,0.0,227,0.2867,thông tin vừa
+fact_order_fulfillment,created_at,phân loại,20000,0.0,222,0.2865,thông tin vừa
+fact_inventory_transactions,batch_code,phân loại,20000,0.0,2,0.2855,thông tin vừa
+dim_warehouses,dms_site_code,phân loại,39,71.795,12,0.2821,thông tin vừa
+fact_promo_budget_available,foc_primary_uom,phân loại,20000,49.735,8,0.2818,thông tin vừa
+fact_order_lines,ar_doc_no,phân loại,20000,84.07,1793,0.2789,thông tin vừa
+dim_account_channels,updated_at,phân loại,127,0.0,3,0.2742,thông tin vừa
+fact_order_lines,billing_address,phân loại,20000,83.585,1414,0.2742,thông tin vừa
+fact_order_lines,shipping_address,phân loại,20000,83.585,1399,0.2736,thông tin vừa
+fact_inventory_transactions,batch_id,số,20000,0.0,189,0.2733,thông tin vừa
+dim_employees,management_path,phân loại,6699,83.818,1085,0.2719,thông tin vừa
+fact_order_lines,goods_receipt_no,phân loại,20000,84.46,1722,0.2704,thông tin vừa
+fact_order_lines,warehouse_out_at,phân loại,20000,84.01,1634,0.2694,thông tin vừa
+fact_inventory_daily_balances,batch_id,số,20000,0.0,9,0.2673,thông tin vừa
+dim_otif_reason,batch_id,số,22,0.0,2,0.2668,thông tin vừa
+dim_otif_reason,created_at,phân loại,22,0.0,2,0.2668,thông tin vừa
+dim_otif_reason,updated_at,phân loại,22,0.0,2,0.2668,thông tin vừa
+zz_archive_om_orphans_20260804,delivery_date_source,phân loại,446,0.0,2,0.2641,thông tin vừa
+fact_asset_audits,created_at,phân loại,20000,0.0,133,0.2624,thông tin vừa
+fact_asset_audits,updated_at,phân loại,20000,0.0,133,0.2624,thông tin vừa
+dim_employees,is_current,phân loại,6699,0.0,2,0.2558,thông tin vừa
+fact_inventory_lot_snapshot,g_department,phân loại,20000,16.03,10,0.2536,thông tin vừa
+fact_order_lines,invoice_no,phân loại,20000,85.35,1653,0.2536,thông tin vừa
+fact_inventory_lot_snapshot,reservation_primary,số,20000,16.03,322,0.2516,thông tin vừa
+fact_asset_inventory,batch_id,số,20000,0.0,462,0.251,thông tin vừa
+fact_order_fulfillment,total_cancelled_revenue,số,20000,0.0,1167,0.2508,thông tin vừa
+dim_assets,asset_brand,phân loại,20000,34.28,21,0.2502,thông tin vừa
+fact_visits,distributor_id,số,20000,73.095,24,0.2408,thông tin vừa
+fact_delivery_details,note_status,phân loại,20000,0.0,6,0.2266,thông tin vừa
+fact_inventory_daily_balances,export_quantity,số,20000,0.0,237,0.2235,thông tin vừa
+dim_chains,batch_id,số,9638,0.0,155,0.2212,thông tin vừa
+fact_asset_inventory,updated_at,phân loại,20000,0.0,462,0.2152,thông tin vừa
+fact_inventory_lot_snapshot,reservation_package,số,20000,26.26,397,0.2151,thông tin vừa
+dim_employees,user_level,phân loại,6699,0.97,8,0.2122,thông tin vừa
+fact_inventory_transactions,updated_at,phân loại,20000,0.0,189,0.2115,thông tin vừa
+fact_inventory_transactions,created_at,phân loại,20000,0.0,186,0.2111,thông tin vừa
+fact_order_lines,cancelled_qty,số,20000,0.0,81,0.1813,thông tin vừa
+dim_suppliers,batch_id,số,63,0.0,4,0.1758,thông tin vừa
+dim_suppliers,valid_from,phân loại,63,0.0,4,0.1758,thông tin vừa
+dim_suppliers,created_at,phân loại,63,0.0,4,0.1758,thông tin vừa
+dim_suppliers,updated_at,phân loại,63,0.0,4,0.1758,thông tin vừa
+dim_warehouses,batch_id,số,39,0.0,2,0.172,thông tin vừa
+dim_warehouses,valid_from,phân loại,39,0.0,2,0.172,thông tin vừa
+dim_warehouses,created_at,phân loại,39,0.0,2,0.172,thông tin vừa
+dim_warehouses,updated_at,phân loại,39,0.0,2,0.172,thông tin vừa
+fact_order_lines,order_line_type,phân loại,20000,61.655,6,0.1627,thông tin vừa
+dim_stores,phone_number,phân loại,20000,86.31,1491,0.1622,thông tin vừa
+fact_inventory_lot_snapshot,package_uom,phân loại,20000,16.03,11,0.1561,thông tin vừa
+dim_chains,valid_from,phân loại,9638,0.0,155,0.156,thông tin vừa
+dim_chains,created_at,phân loại,9638,0.0,155,0.156,thông tin vừa
+dim_chains,updated_at,phân loại,9638,0.0,155,0.156,thông tin vừa
+dwh_batch_logs,status,phân loại,20000,0.0,5,0.1498,gần như một giá trị — ít dùng được
+fact_order_fulfillment,visit_key,số,20000,85.55,2755,0.1445,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,invoice_no,phân loại,446,85.65,12,0.1304,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,ar_doc_no,phân loại,446,85.65,12,0.1304,gần như một giá trị — ít dùng được
+fact_asset_inventory,status,phân loại,20000,0.0,3,0.1226,gần như một giá trị — ít dùng được
+fact_promo_budget_available,invoice_status,phân loại,20000,10.195,6,0.1217,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,warehouse_out_at,phân loại,446,85.65,8,0.1204,gần như một giá trị — ít dùng được
+fact_inventory_daily_balances,source_refs,phân loại,20000,0.0,2,0.1169,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,order_type_key,số,446,0.0,4,0.1165,gần như một giá trị — ít dùng được
+fact_inventory_daily_balances,import_quantity,số,20000,0.0,102,0.1163,gần như một giá trị — ít dùng được
+dim_weather_locations,source_refs,phân loại,64,0.0,2,0.1161,gần như một giá trị — ít dùng được
+fact_order_lines,is_return,phân loại,20000,0.0,2,0.1096,gần như một giá trị — ít dùng được
+fact_order_fulfillment,chain_key,số,20000,87.785,20,0.0949,gần như một giá trị — ít dùng được
+dim_price_lists,batch_id,số,364,0.0,6,0.0937,gần như một giá trị — ít dùng được
+dim_product_prices,tax_rate,số,9085,0.0,4,0.0893,gần như một giá trị — ít dùng được
+dim_delivery_status,line_status,phân loại,103,50.485,4,0.0868,gần như một giá trị — ít dùng được
+fact_order_lines,supervisor_employee_id,số,20000,91.505,66,0.0813,gần như một giá trị — ít dùng được
+dim_delivery_status,received_qty_status,phân loại,103,0.0,2,0.0789,gần như một giá trị — ít dùng được
+dim_delivery_status,recon_status,phân loại,103,0.0,2,0.0789,gần như một giá trị — ít dùng được
+fact_promo_budget_available,updated_at,phân loại,20000,0.0,2,0.0778,gần như một giá trị — ít dùng được
+fact_asset_inventory,is_deleted,phân loại,20000,0.0,2,0.0737,gần như một giá trị — ít dùng được
+fact_order_lines,sales_flow,phân loại,20000,0.0,2,0.0717,gần như một giá trị — ít dùng được
+dim_price_lists,updated_at,phân loại,364,0.0,8,0.0709,gần như một giá trị — ít dùng được
+dim_price_lists,valid_from,phân loại,364,0.0,6,0.0697,gần như một giá trị — ít dùng được
+dim_price_lists,created_at,phân loại,364,0.0,6,0.0697,gần như một giá trị — ít dùng được
+dim_employees,manager_user_id,số,6699,93.193,101,0.0642,gần như một giá trị — ít dùng được
+dim_site_domains,updated_at,phân loại,137,0.0,2,0.0623,gần như một giá trị — ít dùng được
+dim_stores,account_status,phân loại,20000,90.475,3,0.0616,gần như một giá trị — ít dùng được
+fact_order_lines,asm_employee_id,số,20000,93.425,34,0.0615,gần như một giá trị — ít dùng được
+dim_sub_inventories,valid_to,phân loại,188,62.234,5,0.0603,gần như một giá trị — ít dùng được
+dim_locators,is_from_master,phân loại,315,0.0,2,0.0555,gần như một giá trị — ít dùng được
+dim_stores,distributor_id,số,20000,92.57,26,0.0518,gần như một giá trị — ít dùng được
+fact_asset_inventory,warehouse_key,số,20000,92.805,9,0.051,gần như một giá trị — ít dùng được
+dim_price_lists,is_current,phân loại,364,0.0,2,0.0492,gần như một giá trị — ít dùng được
+dim_locators,created_at,phân loại,315,0.0,4,0.0464,gần như một giá trị — ít dùng được
+dim_products,tax_rate,số,2543,50.138,5,0.0462,gần như một giá trị — ít dùng được
+dim_products,tax_code,phân loại,2543,50.138,5,0.0444,gần như một giá trị — ít dùng được
+fact_delivery_details,shipper_received_at,phân loại,20000,96.515,207,0.042,gần như một giá trị — ít dùng được
+fact_order_lines,delivery_days_sla,số,20000,94.295,18,0.0414,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,order_source,phân loại,446,0.0,2,0.0414,gần như một giá trị — ít dùng được
+dim_stores,store_brand_code,phân loại,20000,94.15,33,0.0404,gần như một giá trị — ít dùng được
+fact_asset_inventory,created_at,phân loại,20000,0.0,12,0.0403,gần như một giá trị — ít dùng được
+fact_promo_budget_available,row_type,phân loại,20000,0.0,2,0.04,gần như một giá trị — ít dùng được
+dim_delivery_status,source_refs,phân loại,103,94.175,3,0.0379,gần như một giá trị — ít dùng được
+dim_employees,flat_sup_code,phân loại,6699,96.119,38,0.0366,gần như một giá trị — ít dùng được
+fact_order_status_timeline,cancelled_at,phân loại,20000,93.305,284,0.0362,gần như một giá trị — ít dùng được
+dim_employees,flat_asm_code,phân loại,6699,96.044,13,0.036,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,delivery_date_key,số,446,95.516,4,0.035,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,delivery_date,phân loại,446,95.516,4,0.035,gần như một giá trị — ít dùng được
+dim_categories,valid_from,phân loại,277,0.0,2,0.0345,gần như một giá trị — ít dùng được
+dim_categories,created_at,phân loại,277,0.0,2,0.0345,gần như một giá trị — ít dùng được
+dim_categories,updated_at,phân loại,277,0.0,2,0.0345,gần như một giá trị — ít dùng được
+dim_distributors,valid_from,phân loại,89,96.629,4,0.0337,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,goods_receipt_no,phân loại,446,95.516,5,0.0332,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,billing_address,phân loại,446,95.516,5,0.0332,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,shipping_address,phân loại,446,95.516,5,0.0332,gần như một giá trị — ít dùng được
+fact_delivery_details,shipper_received_date_key,số,20000,96.515,47,0.0313,gần như một giá trị — ít dùng được
+dim_locators,updated_at,phân loại,315,0.0,2,0.0309,gần như một giá trị — ít dùng được
+fact_delivery_details,note_reason,phân loại,20000,96.315,78,0.0306,gần như một giá trị — ít dùng được
+fact_order_lines,erp_status,phân loại,20000,92.0,6,0.0276,gần như một giá trị — ít dùng được
+dim_price_lists,currency,phân loại,364,0.549,3,0.0273,gần như một giá trị — ít dùng được
+dim_stores,group_code,phân loại,20000,0.0,2,0.0181,gần như một giá trị — ít dùng được
+fact_order_lines,canceled_note,phân loại,20000,97.78,49,0.0166,gần như một giá trị — ít dùng được
+fact_order_lines,canceled_reason_line,phân loại,20000,98.14,17,0.0148,gần như một giá trị — ít dùng được
+fact_order_lines,is_admin_cancel,phân loại,20000,97.98,3,0.0143,gần như một giá trị — ít dùng được
+dim_locators,sub_inventory_key,số,315,98.73,3,0.0127,gần như một giá trị — ít dùng được
+dim_employees,valid_from,phân loại,6699,96.119,15,0.0094,gần như một giá trị — ít dùng được
+fact_promo_budget_available,ar_interface_qty,số,20000,98.82,35,0.0092,gần như một giá trị — ít dùng được
+fact_promo_budget_available,uninvoiced_qty,số,20000,99.0,38,0.008,gần như một giá trị — ít dùng được
+fact_weather_forecast,updated_at,phân loại,20000,0.0,17,0.008,gần như một giá trị — ít dùng được
+fact_order_lines,is_erp_deleted,phân loại,20000,0.0,2,0.0078,gần như một giá trị — ít dùng được
+dim_shippers,is_current,phân loại,20000,0.0,2,0.0073,gần như một giá trị — ít dùng được
+fact_order_fulfillment,canceled_reason_admin,phân loại,20000,99.115,21,0.0073,gần như một giá trị — ít dùng được
+fact_order_status_timeline,picking_at,phân loại,20000,98.49,32,0.0058,gần như một giá trị — ít dùng được
+fact_weather_forecast,created_at,phân loại,20000,0.0,8,0.0056,gần như một giá trị — ít dùng được
+dim_price_lists,valid_to,phân loại,364,99.451,3,0.0055,gần như một giá trị — ít dùng được
+fact_promo_budget_available,ar_interface_amount,số,20000,99.275,41,0.0046,gần như một giá trị — ít dùng được
+fact_promo_budget_available,promotion_description,phân loại,20000,99.065,5,0.0045,gần như một giá trị — ít dùng được
+zz_archive_om_orphans_20260804,discount_amount,số,446,99.552,3,0.0045,gần như một giá trị — ít dùng được
+fact_promo_budget_available,foc_remaining,số,20000,99.57,67,0.0039,gần như một giá trị — ít dùng được
+dim_employees,sales_channel,phân loại,6699,88.909,3,0.003,gần như một giá trị — ít dùng được
+fact_promo_budget_available,uninvoiced_amount,số,20000,99.445,34,0.0027,gần như một giá trị — ít dùng được
+dim_employees,group_code,phân loại,6699,0.0,2,0.0021,gần như một giá trị — ít dùng được
+dim_stores,valid_from,phân loại,20000,99.83,25,0.0017,gần như một giá trị — ít dùng được
+fact_promo_budget_available,budget_remaining,số,20000,99.57,20,0.0017,gần như một giá trị — ít dùng được
+fact_order_fulfillment,canceled_reason,phân loại,20000,99.82,17,0.0016,gần như một giá trị — ít dùng được
+fact_order_fulfillment,is_erp_deleted,phân loại,20000,0.0,2,0.0015,gần như một giá trị — ít dùng được
+fact_promo_budget_available,foc_budget_allocated,số,20000,99.57,13,0.0013,gần như một giá trị — ít dùng được
+fact_promo_budget_available,foc_budget_total,số,20000,99.66,13,0.0011,gần như một giá trị — ít dùng được
+fact_promo_budget_available,budget_allocated,số,20000,99.57,8,0.0009,gần như một giá trị — ít dùng được
+dim_assets,source_refs,phân loại,20000,0.0,2,0.0008,gần như một giá trị — ít dùng được
+fact_delivery_details,note_source,phân loại,20000,0.0,2,0.0008,gần như một giá trị — ít dùng được
+fact_delivery_details,note_type,phân loại,20000,0.0,2,0.0008,gần như một giá trị — ít dùng được
+fact_promo_budget_available,entered_amount,số,20000,99.56,6,0.0007,gần như một giá trị — ít dùng được
+fact_promo_budget_available,entered_qty,số,20000,99.565,5,0.0007,gần như một giá trị — ít dùng được
+dwh_batch_logs,error_message,phân loại,20000,99.92,8,0.0006,gần như một giá trị — ít dùng được
+fact_promo_budget_available,budget_total,số,20000,99.91,8,0.0006,gần như một giá trị — ít dùng được
+fact_order_status_timeline,completed_partial_at,phân loại,20000,99.92,3,0.0003,gần như một giá trị — ít dùng được
+fact_order_fulfillment,erp_deleted_source,phân loại,20000,99.985,3,0.0001,gần như một giá trị — ít dùng được
+dim_account_channels,source_refs,phân loại,127,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_account_channels,batch_id,số,127,7.874,2,0.0,rỗng hoặc hằng số — bỏ
+dim_assets,asset_name,phân loại,20000,99.995,2,0.0,rỗng hoặc hằng số — bỏ
+dim_categories,batch_id,số,277,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+dim_categories,valid_to,phân loại,277,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_categories,is_current,phân loại,277,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_chains,is_active,phân loại,9638,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_chains,source_system,phân loại,9638,99.585,2,0.0,rỗng hoặc hằng số — bỏ
+dim_chains,source_refs,phân loại,9638,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_chains,valid_to,phân loại,9638,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_chains,is_current,phân loại,9638,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_dates,source_refs,phân loại,4018,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_dates,batch_id,phân loại,4018,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_dates,created_at,phân loại,4018,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_dates,updated_at,phân loại,4018,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_delivery_status,is_mismatch,phân loại,103,38.835,2,0.0,rỗng hoặc hằng số — bỏ
+dim_delivery_status,batch_id,số,103,95.146,2,0.0,rỗng hoặc hằng số — bỏ
+dim_delivery_types,source_refs,phân loại,5,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_delivery_types,batch_id,số,5,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_delivery_types,updated_at,phân loại,5,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_distributors,group_code,phân loại,89,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_distributors,account_channel_id,số,89,98.876,2,0.0,rỗng hoặc hằng số — bỏ
+dim_distributors,distributor_brand,phân loại,89,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_employees,account_channel_id,số,6699,32.751,3,0.0,rỗng hoặc hằng số — bỏ
+dim_employees,emp_id_hr,phân loại,6699,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_employees,is_active,phân loại,6699,85.819,2,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,warehouse_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,brand_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,target_weeks,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,min_stock_qty,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,effective_from,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,effective_to,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,notes,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_inventory_policy,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_locators,batch_id,số,315,0.317,2,0.0,rỗng hoặc hằng số — bỏ
+dim_locators,source_refs,phân loại,315,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_order_status,source_refs,phân loại,10,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_order_types,source_refs,phân loại,15,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_otif_reason,notes,phân loại,22,95.455,2,0.0,rỗng hoặc hằng số — bỏ
+dim_otif_reason,source_refs,phân loại,22,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_price_lists,effective_from,phân loại,364,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_price_lists,effective_to,phân loại,364,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_product_brands,description,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_product_prices,batch_id,số,9085,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_product_prices,created_at,phân loại,9085,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_product_prices,updated_at,phân loại,9085,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_products,pack_size,phân loại,2543,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_products,sub_brand,phân loại,2543,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_products,volume,phân loại,2543,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_products,unit_per_pack,phân loại,2543,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_products,mt_price_exc_vat,số,2543,99.725,2,0.0,rỗng hoặc hằng số — bỏ
+dim_products,mt_price_inc_vat,số,2543,99.725,2,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,promo_code_dms,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,promo_code_orc,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,promo_name,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,mechanic_type,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,long_mechanic,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,promo_start,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,promo_end,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,target_channel,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,target_chain,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,budget_total,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,notes,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,is_active,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_promotions,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_sales_positions,updated_at,phân loại,7,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_sales_positions,is_active,phân loại,7,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_shippers,group_code,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_shippers,source_refs,phân loại,20000,0.005,2,0.0,rỗng hoặc hằng số — bỏ
+dim_site_accounts,description,phân loại,7,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_accounts,source_refs,phân loại,7,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_accounts,batch_id,số,7,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_accounts,created_at,phân loại,7,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_accounts,updated_at,phân loại,7,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_domains,source_refs,phân loại,137,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_site_domains,batch_id,số,137,0.73,2,0.0,rỗng hoặc hằng số — bỏ
+dim_site_domains,created_at,phân loại,137,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_stores,store_format,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_stores,created_date,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_stores,freezer_qty,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_sub_inventories,representative,phân loại,188,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_sub_inventories,position,phân loại,188,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_sub_inventories,deleted,số,188,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_suppliers,is_deleted,phân loại,63,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_suppliers,valid_to,phân loại,63,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_suppliers,is_current,phân loại,63,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,warehouse_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,sub_inventory_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,capacity_carton,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,effective_from,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,effective_to,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,notes,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_capacity,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,distributor_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,warehouse_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,sub_inventory_code,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,period_year,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,period_month,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,target_carton,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,target_vnd,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,notes,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouse_target,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouses,warehouse_type,số,39,97.436,2,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouses,min_stock_qty,phân loại,39,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouses,is_active,phân loại,39,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouses,valid_to,phân loại,39,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_warehouses,is_current,phân loại,39,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dim_weather_locations,batch_id,số,64,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+dwh_batch_logs,duration_ms,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,visit_key,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,asset_key,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,scan_count,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,is_active,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_activities,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_audits,is_scanned,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_audits,condition_status,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_audits,notes,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_audits,source_refs,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_audits,batch_id,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_inventory,asset_code,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,shop_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,asset_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,allocated_date,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,is_active,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,image_url,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,placement_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_asset_placements,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,serial,phân loại,20000,99.995,2,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,attempt_count,số,20000,0.0,3,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,is_warehouse_confirmed,số,20000,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,is_accountant_confirmed,số,20000,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,received_qty_status,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,recon_status,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,qty_remain,số,20000,0.0,22,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,ai_qty_received,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_delivery_details,is_valid_line,số,20000,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+fact_inventory_daily_balances,source_system,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_inventory_daily_balances,closing_value,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_inventory_transactions,transaction_type,số,20000,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+fact_inventory_transactions,expiry_date,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_fulfillment,delivery_type_key,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_fulfillment,is_count,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,visit_key,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,delivery_type_key,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,category_id,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,eco_flag,số,20000,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,reason_code,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_lines,erp_deleted_source,phân loại,20000,99.935,2,0.0,rỗng hoặc hằng số — bỏ
+fact_order_status_timeline,source_refs,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_order_status_timeline,returned_at,phân loại,20000,99.94,2,0.0,rỗng hoặc hằng số — bỏ
+fact_promo_budget_available,currency_code,phân loại,20000,50.265,2,0.0,rỗng hoặc hằng số — bỏ
+fact_promo_budget_available,allocation_status,phân loại,20000,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_promo_budget_available,batch_id,số,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_promo_budget_available,created_at,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_roadmap_stores,batch_id,số,17942,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_roadmap_stores,created_at,phân loại,17942,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_roadmap_stores,updated_at,phân loại,17942,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_roadmaps,batch_id,số,268,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_roadmaps,updated_at,phân loại,268,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_sales_targets,salesman_id,số,270,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_sales_targets,target_revenue,số,270,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_sales_targets,target_order_count,số,270,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_sales_targets,target_new_store,số,270,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_sales_targets,source_refs,phân loại,270,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,promotion_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,store_key,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,product_key,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,distributor_key,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,period_year,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,period_month,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,ns_allocated,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,ns_used,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,foc_value,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,foc_qty_carton,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,cnt_entered,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,cnt_uninvoiced,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,cnt_ar_interface,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,cnt_invoiced,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,batch_id,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,source_refs,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,created_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_trade_promo,updated_at,—,0,100.0,0,0.0,rỗng hoặc hằng số — bỏ
+fact_weather_forecast,source_refs,phân loại,20000,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+fact_weather_forecast,batch_id,số,20000,0.0,17,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,distributor_key,số,446,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,chain_key,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,visit_key,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,line_status_key,số,446,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,delivery_type_key,số,446,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,order_timestamp,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,raw_created_at,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,schedule_ship_date,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,cancelled_qty,số,446,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,vat_percent,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,unit_price_after_discount_before_vat,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,unit_price_after_discount_after_vat,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,unit_price,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,discount_percent,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,amount_before_discount,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,discount_amount_before_vat,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,net_revenue,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,is_return,phân loại,446,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,is_free_order,phân loại,446,0.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,order_line_type,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,delivery_days_sla,số,446,98.879,2,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,supervisor_employee_id,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,asm_employee_id,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,category_id,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,row_hash,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,sales_flow,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,source_refs,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,batch_id,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,eco_flag,số,446,0.0,2,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,reason_code,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,canceled_reason_line,phân loại,446,99.552,2,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,canceled_note,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,is_admin_cancel,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,erp_status,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,dms_status,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,dms_order_code,phân loại,446,100.0,1,0.0,rỗng hoặc hằng số — bỏ
+zz_archive_om_orphans_20260804,uom,phân loại,446,99.552,2,0.0,rỗng hoặc hằng số — bỏ

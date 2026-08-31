@@ -1,0 +1,8 @@
+Bộ báo cáo audit dữ liệu DBNC — Giai đoạn 1.
+
+  index.html      trang tổng: khả thi, phép kiểm, chuẩn hoá, tương quan
+  profile/        hồ sơ sâu từng cột, mỗi bảng một trang
+  csv/            số liệu thô của từng bảng, mở bằng Excel
+
+Thả nguyên thư mục này lên bất kỳ máy chủ tĩnh nào, hoặc mở index.html
+bằng trình duyệt. Không cần cài gì thêm.

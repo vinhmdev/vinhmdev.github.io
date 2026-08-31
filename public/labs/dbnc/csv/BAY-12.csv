@@ -1,0 +1,7 @@
+bang,phuc_vu,so_dong,trang_thai
+fact_trade_promo,K_chương_trình,0,RỖNG
+dim_promotions,K_chương_trình,0,RỖNG
+fact_inventory_lot_snapshot,mặt nạ hết hàng (chính),1087678,có dữ liệu
+fact_inventory_daily_balances,mặt nạ hết hàng (phụ),123107,có dữ liệu
+fact_weather_forecast,K_thời_tiết,154350,có dữ liệu
+fact_visits,số ngày ghé,450710,có dữ liệu

@@ -1,0 +1,76 @@
+dac_trung,loai,TRUOC_01_2026,SAU_01_2026,chenh_lech_giua_hai_che_do,canh_bao
+cach_ngay_giao_tb,biết trước kỳ,-0.0251,0.0492,0.0743,—
+ck_pct_do_lech_chuan,biết sau kỳ,0.0971,0.1741,0.077,—
+co_du_lieu_ghe,biết trước kỳ,,,,—
+co_du_lieu_km,biết trước kỳ,,,,—
+co_du_lieu_ton,biết trước kỳ,,0.0984,,—
+conversion_rate,biết trước kỳ,,,,—
+doanh_so,nhãn viết cách khác,0.8894,0.8908,0.0014,—
+don_gia_do_lech,biết trước kỳ,0.2293,0.1647,-0.0646,—
+don_gia_tb,biết trước kỳ,-0.0472,-0.0981,-0.0509,—
+don_gia_truoc_vat_tb,biết trước kỳ,-0.0467,-0.099,-0.0523,—
+ft_chiet_khau,biết trước kỳ,0.2701,0.1082,-0.1619,đổi độ lớn
+ft_doanh_thu_da_giao,biết trước kỳ,0.0909,0.2472,0.1563,đổi độ lớn
+ft_doanh_thu_thuan,biết trước kỳ,0.3324,0.2845,-0.0479,—
+ft_so_don,biết trước kỳ,0.2261,0.2196,-0.0065,—
+ft_so_dong,biết trước kỳ,0.2261,0.2196,-0.0065,—
+ft_so_mat_hang,biết trước kỳ,0.2728,0.2598,-0.013,—
+ft_tong_tien,biết trước kỳ,0.3326,0.2845,-0.0481,—
+ft_vat,biết trước kỳ,0.3336,0.2843,-0.0493,—
+gh_dong_kho_xac_nhan,biết trước kỳ,,0.0676,,—
+gh_qty_dat,biết trước kỳ,,0.3903,,—
+gh_qty_giao,biết trước kỳ,,0.3558,,—
+gh_qty_nhan,biết trước kỳ,,0.3898,,—
+gh_so_dong,biết trước kỳ,,0.256,,—
+gh_so_lan_thu_tb,biết trước kỳ,,0.0201,,—
+gh_so_shipper,biết trước kỳ,,0.2187,,—
+gia_thuc_thu,nhãn viết cách khác,-0.0562,-0.1138,-0.0576,—
+km_di_chuyen_tb,biết trước kỳ,,0.0289,,—
+mt_price_exc_vat,biết trước kỳ,,,,—
+mt_price_inc_vat,biết trước kỳ,,,,—
+mua_tong,biết trước kỳ,0.068,0.114,0.046,—
+net_weight,biết trước kỳ,0.0019,0.0031,0.0012,—
+ngay_co_hang,biết sau kỳ,,0.1073,,—
+ngay_ghe,biết sau kỳ,-0.0054,0.0299,0.0353,—
+ngay_het_hang,biết sau kỳ,,0.0328,,—
+ngay_ke_hoach_ghe,biết trước kỳ,,0.0164,,—
+ngay_mua_cuoi_thang,biết trước kỳ,0.1824,0.1039,-0.0785,—
+ngay_mua_dau_thang,biết trước kỳ,-0.2332,-0.1993,0.0339,—
+ngay_theo_doi_ton,biết sau kỳ,,0.1073,,—
+phut_di_chuyen_tb,biết trước kỳ,,-0.0391,,—
+phut_lam_viec_tb,biết trước kỳ,,0.0219,,—
+qty_giao,biết trước kỳ,0.9794,0.2642,-0.7152,đổi độ lớn
+qty_huy,biết trước kỳ,0.1036,0.1479,0.0443,—
+qty_per_carton,biết trước kỳ,-0.0077,0.0133,0.021,—
+qty_thung,nhãn viết cách khác,0.9905,0.992,0.0015,—
+shelf_life,biết trước kỳ,,,,—
+sl_moi_lan,nhãn viết cách khác,0.6243,0.555,-0.0693,—
+sla_giao_ngay_tb,biết trước kỳ,,-0.0303,,—
+so_don,biết trước kỳ,0.6799,0.2238,-0.4561,đổi độ lớn
+so_dong_admin_huy,biết trước kỳ,0.0006,-0.0011,-0.0017,—
+so_dong_eco,biết trước kỳ,0.68,0.1358,-0.5442,đổi độ lớn
+so_dong_hang_tang,biết sau kỳ,0.0053,0.2291,0.2238,đổi độ lớn
+so_kho_con,biết trước kỳ,,0.1586,,—
+so_kho_xuat,biết trước kỳ,0.0201,0.0169,-0.0032,—
+so_lan_mua,nhãn viết cách khác,0.6526,0.6831,0.0305,—
+so_loai_don,biết trước kỳ,0.0082,-0.029,-0.0372,—
+so_ngay_lam_viec,biết trước kỳ,-0.0235,-0.0056,0.0179,—
+so_ngay_lich,biết trước kỳ,0.0378,0.0017,-0.0361,—
+so_ngay_mua,biết trước kỳ,0.0787,0.0965,0.0178,—
+so_nguon_dat,biết trước kỳ,0.0082,-0.0321,-0.0403,—
+so_nvbh_ghe,biết trước kỳ,,0.0166,,—
+so_trang_thai_dong,biết trước kỳ,0.2511,0.0394,-0.2117,đổi độ lớn
+so_tu_dong,biết trước kỳ,,,,—
+tax_rate,biết trước kỳ,,,,—
+thang_tu_lan_mua_dau,biết trước kỳ,-0.1289,0.1206,0.2495,ĐỔI DẤU
+tien_chiet_khau,biết sau kỳ,0.0944,0.2162,0.1218,—
+tien_ck_truoc_vat,biết trước kỳ,0.2076,0.132,-0.0756,—
+tien_co_vat,biết trước kỳ,0.8865,0.3459,-0.5406,đổi độ lớn
+tien_vat,biết trước kỳ,0.8865,0.3453,-0.5412,đổi độ lớn
+tmax_dinh,biết trước kỳ,0.1144,0.0841,-0.0303,—
+tmax_tb,biết trước kỳ,0.1084,0.0957,-0.0127,—
+tmin_tb,biết trước kỳ,0.1265,0.1208,-0.0057,—
+toc_do_ban_hieu_chinh,nhãn viết cách khác,,0.2946,,—
+ty_le_chiet_khau,biết sau kỳ,0.0129,0.0467,0.0338,—
+ty_le_tuan_thu,biết trước kỳ,,0.0098,,—
+vat_pct_tb,biết trước kỳ,0.1245,0.0033,-0.1212,—

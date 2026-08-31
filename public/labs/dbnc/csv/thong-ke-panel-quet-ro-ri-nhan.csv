@@ -1,0 +1,26 @@
+cot,khuyet_khi_co_ban_pct,khuyet_khi_khong_ban_pct,chenh_lech_pp,biet_truoc_ky,muc_do
+gia_thuc_thu,0.0,100.0,100.0,false,TÁCH HOÀN HẢO
+sl_moi_lan,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+salesman_id,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+ck_pct_do_lech_chuan,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+don_gia_truoc_vat_tb,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
+vat_pct_tb,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
+ngay_mua_dau_thang,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
+ngay_mua_cuoi_thang,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
+don_gia_tb,0.0,99.972,99.971,true,TÁCH HOÀN HẢO
+don_gia_do_lech,0.0,99.972,99.971,true,TÁCH HOÀN HẢO
+ty_le_chiet_khau,2.368,100.0,97.632,false,tách mạnh
+chain_key,8.707,99.973,91.267,false,tách mạnh
+chuoi,8.707,99.973,91.267,false,tách mạnh
+cach_ngay_giao_tb,80.835,100.0,19.165,true,tách nhẹ
+ngay_ke_hoach_ghe,60.918,44.258,16.66,true,tách nhẹ
+km_di_chuyen_tb,60.918,44.258,16.66,true,tách nhẹ
+phut_di_chuyen_tb,60.918,44.258,16.66,true,tách nhẹ
+ty_le_tuan_thu,60.918,44.258,16.66,true,tách nhẹ
+so_nvbh_ghe,60.918,44.258,16.66,true,tách nhẹ
+phut_lam_viec_tb,61.76,45.862,15.897,true,tách nhẹ
+toc_do_ban_hieu_chinh,86.02,99.992,13.972,false,tách nhẹ
+ft_so_dong,0.789,14.334,13.545,true,tách nhẹ
+ft_tong_tien,0.789,14.334,13.545,true,tách nhẹ
+ft_doanh_thu_thuan,0.789,14.334,13.545,true,tách nhẹ
+ft_chiet_khau,0.789,14.334,13.545,true,tách nhẹ

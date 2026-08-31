@@ -1,0 +1,83 @@
+bang,cot,bang_dich,so_dong_co_khoa,khop_pct,dong_mo_coi_pct,so_gia_tri_mo_coi,dim_duoc_dung_pct,khoa_dim_duy_nhat,canh_bao
+dim_distributors,account_channel_id,dim_account_channels,1,100.0,0.0,0,0.79,true,—
+dim_distributors,site_domain_id,dim_site_domains,88,100.0,0.0,0,13.87,true,—
+dim_distributors,warehouse_key,dim_warehouses,27,100.0,0.0,0,66.67,true,—
+dim_employees,account_channel_id,dim_account_channels,4505,100.0,0.0,0,1.57,true,—
+dim_employees,site_account_id,dim_site_accounts,4442,100.0,0.0,0,100.0,true,—
+dim_locators,sub_inventory_key,dim_sub_inventories,4,100.0,0.0,0,1.06,true,—
+dim_product_prices,product_id,dim_products,9085,100.0,0.0,0,26.66,true,—
+dim_products,brand_id,dim_product_brands,2540,100.0,0.0,0,0.04,true,—
+dim_products,category_id,dim_categories,2364,100.0,0.0,0,27.08,true,—
+dim_products,supplier_id,dim_suppliers,1857,100.0,0.0,0,96.83,true,—
+dim_stores,account_channel_id,dim_account_channels,331147,100.0,0.0,0,59.06,true,—
+dim_stores,distributor_id,dim_distributors,21301,100.0,0.0,0,30.34,true,—
+dim_stores,site_domain_id,dim_site_domains,191392,100.0,0.0,0,45.99,true,—
+dim_sub_inventories,warehouse_key,dim_warehouses,188,100.0,0.0,0,17.95,true,—
+fact_asset_activities,asset_key,dim_assets,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_asset_audits,asset_id,dim_assets,216978,100.0,0.0,0,46.95,true,—
+fact_asset_audits,shop_id,dim_stores,216978,100.0,0.0,0,3.45,true,—
+fact_asset_inventory,distributor_key,dim_distributors,20178,100.0,0.0,0,25.84,true,—
+fact_asset_inventory,shop_id,dim_stores,14195,100.0,0.0,0,3.15,true,—
+fact_asset_inventory,warehouse_key,dim_warehouses,1441,100.0,0.0,0,20.51,true,—
+fact_asset_placements,asset_id,dim_assets,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_asset_placements,shop_id,dim_stores,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_delivery_details,delivery_status_key,dim_delivery_status,360568,100.0,0.0,0,81.55,true,—
+fact_delivery_details,employee_key,dim_employees,360568,100.0,0.0,0,5.63,true,—
+fact_delivery_details,product_key,dim_products,360568,100.0,0.0,0,22.61,true,—
+fact_delivery_details,shipper_key,dim_shippers,360568,100.0,0.0,0,8.43,true,—
+fact_delivery_details,store_key,dim_stores,360568,100.0,0.0,0,3.4,true,—
+fact_delivery_details,sub_inventory_key,dim_sub_inventories,360568,100.0,0.0,0,35.64,true,—
+fact_delivery_details,warehouse_key,dim_warehouses,360568,100.0,0.0,0,17.95,true,—
+fact_inventory_daily_balances,product_id,dim_products,118895,100.0,0.0,0,9.63,true,—
+fact_inventory_daily_balances,warehouse_id,dim_warehouses,118895,100.0,0.0,0,66.67,true,—
+fact_inventory_lot_snapshot,brand_id,dim_product_brands,1059190,100.0,0.0,0,0.54,true,—
+fact_inventory_lot_snapshot,locator_id,dim_locators,1059190,100.0,0.0,0,29.84,true,—
+fact_inventory_lot_snapshot,product_id,dim_products,1059190,100.0,0.0,0,52.77,true,—
+fact_inventory_lot_snapshot,sub_inventory_id,dim_sub_inventories,1059190,100.0,0.0,0,50.53,true,—
+fact_inventory_lot_snapshot,warehouse_id,dim_warehouses,1059190,100.0,0.0,0,82.05,true,—
+fact_inventory_transactions,product_id,dim_products,174657,100.0,0.0,0,15.34,true,—
+fact_inventory_transactions,warehouse_id,dim_warehouses,174657,100.0,0.0,0,61.54,true,—
+fact_order_fulfillment,chain_key,dim_chains,144133,100.0,0.0,0,0.22,true,—
+fact_order_fulfillment,delivery_type_key,dim_delivery_types,488810,100.0,0.0,0,20.0,true,—
+fact_order_fulfillment,distributor_key,dim_distributors,488810,100.0,0.0,0,35.96,true,—
+fact_order_fulfillment,order_type_key,dim_order_types,488810,100.0,0.0,0,86.67,true,—
+fact_order_fulfillment,salesman_id,dim_employees,488810,100.0,0.0,0,11.36,true,—
+fact_order_fulfillment,store_key,dim_stores,488810,100.0,0.0,0,7.72,true,—
+fact_order_fulfillment,sub_inventory_key,dim_sub_inventories,488810,100.0,0.0,0,48.94,true,—
+fact_order_fulfillment,warehouse_key,dim_warehouses,488810,100.0,0.0,0,89.74,true,—
+fact_order_lines,asm_employee_id,dim_employees,182747,100.0,0.0,0,0.57,true,—
+fact_order_lines,category_id,dim_categories,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_order_lines,chain_key,dim_chains,1276252,100.0,0.0,0,0.23,true,—
+fact_order_lines,delivery_type_key,dim_delivery_types,2343689,100.0,0.0,0,20.0,true,—
+fact_order_lines,distributor_key,dim_distributors,2343689,100.0,0.0,0,30.34,true,—
+fact_order_lines,order_type_key,dim_order_types,2343689,100.0,0.0,0,86.67,true,—
+fact_order_lines,product_key,dim_products,2343689,100.0,0.0,0,40.9,true,—
+fact_order_lines,salesman_id,dim_employees,2343689,100.0,0.0,0,11.48,true,—
+fact_order_lines,store_key,dim_stores,2343689,100.0,0.0,0,7.4,true,—
+fact_order_lines,sub_inventory_key,dim_sub_inventories,2343689,100.0,0.0,0,27.13,true,—
+fact_order_lines,supervisor_employee_id,dim_employees,242394,100.0,0.0,0,1.33,true,—
+fact_order_lines,warehouse_key,dim_warehouses,2343689,100.0,0.0,0,89.74,true,—
+fact_promo_budget_available,sub_inventory_key,dim_sub_inventories,183903,100.0,0.0,0,22.34,true,—
+fact_roadmap_stores,employee_id,dim_employees,17953,100.0,0.0,0,3.12,true,—
+fact_roadmap_stores,store_id,dim_stores,17953,100.0,0.0,0,5.15,true,—
+fact_roadmaps,employee_id,dim_employees,268,100.0,0.0,0,3.15,true,—
+fact_sales_targets,salesman_id,dim_employees,270,100.0,0.0,0,0.01,true,—
+fact_trade_promo,distributor_key,dim_distributors,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_trade_promo,product_key,dim_products,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_trade_promo,promotion_id,dim_promotions,0,100.0,0.0,0,,true,không có dòng nào mang khoá này
+fact_trade_promo,store_key,dim_stores,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+fact_visits,distributor_id,dim_distributors,167553,100.0,0.0,0,26.97,true,—
+fact_visits,salesman_id,dim_employees,448518,100.0,0.0,0,9.06,true,—
+fact_visits,shop_id,dim_stores,448518,100.0,0.0,0,6.34,true,—
+zz_archive_om_orphans_20260804,asm_employee_id,dim_employees,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,category_id,dim_categories,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,chain_key,dim_chains,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,delivery_type_key,dim_delivery_types,446,100.0,0.0,0,20.0,true,—
+zz_archive_om_orphans_20260804,distributor_key,dim_distributors,446,100.0,0.0,0,1.12,true,—
+zz_archive_om_orphans_20260804,order_type_key,dim_order_types,446,100.0,0.0,0,26.67,true,—
+zz_archive_om_orphans_20260804,product_key,dim_products,446,100.0,0.0,0,5.86,true,—
+zz_archive_om_orphans_20260804,salesman_id,dim_employees,446,100.0,0.0,0,0.69,true,—
+zz_archive_om_orphans_20260804,store_key,dim_stores,446,100.0,0.0,0,0.02,true,—
+zz_archive_om_orphans_20260804,sub_inventory_key,dim_sub_inventories,446,100.0,0.0,0,11.17,true,—
+zz_archive_om_orphans_20260804,supervisor_employee_id,dim_employees,0,100.0,0.0,0,0.0,true,không có dòng nào mang khoá này
+zz_archive_om_orphans_20260804,warehouse_key,dim_warehouses,446,100.0,0.0,0,12.82,true,—

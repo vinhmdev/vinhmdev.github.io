@@ -1,0 +1,11 @@
+nhom_co_che,ma_co_che,so_dong,cach_ghi_trong_file,giam_pct_tb
+GIAM_GIA,GIAM_GIA,1594,Giảm Giá · Giảm giá,0.2052
+TANG_HANG,TANG_HANG,1422,Tăng hàng · Tăặng hàng · Tặng Hàng · Tặng hàng · tặng hàng,0.2996
+GIAM_GIA,GIAM_TREN_HD,1364,Trừ trên hóa đơn,0.2722
+TANG_QUA,TANG_QUA,1053,Tặng gift · Tặng quà,0.1984
+GIAM_GIA,GIAM_SAU,909,Trừ sau,0.2261
+,,8,"",0.5
+GIAM_GIA,MUA_N_TINH_M,6,Mua 2 tính tiền 1,0.4722
+HO_TRO,HO_TRO,6,Chi hộ · Hỗ trợ,
+KHAC,KHAC,5,S,0.25
+GIAM_GIA,CLAIM_BACK,1,Claim back,0.4

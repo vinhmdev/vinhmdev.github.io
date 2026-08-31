@@ -1,0 +1,6 @@
+bang,cot,so_dong,so_dong_co_gia_tri,khuyet_pct
+dim_stores,created_date,349094,6475,98.145
+dim_stores,freezer_qty,349094,0,100.0
+dim_stores,store_brand_code,349094,29833,91.454
+dim_products,net_weight,2543,1715,32.56
+dim_products,shelf_life,2543,1552,38.97

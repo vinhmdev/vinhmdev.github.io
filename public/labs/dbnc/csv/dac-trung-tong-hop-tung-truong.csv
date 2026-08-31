@@ -1,0 +1,132 @@
+truong,dang,loai,khuyet_pct,so_gia_tri_khac_nhau,r2_duong_thang,r2_duong_gap_khuc,do_tuyen_tinh,quan_he,di_cung_nhat
+gh_qty_dat,số,biết trước kỳ,95.409,869,0.7976,0.1378,5.787,thẳng,gh_qty_nhan (0.9777)
+gh_qty_nhan,số,biết trước kỳ,95.409,876,0.8004,0.133,6.02,thẳng,gh_qty_dat (0.9777)
+gh_qty_giao,số,biết trước kỳ,95.409,821,0.7133,0.1261,5.655,thẳng,gh_qty_nhan (0.9202)
+sla_giao_ngay_tb,số,biết trước kỳ,99.199,157,0.0002,0.0414,0.006,CONG — mô hình tuyến tính sẽ bỏ sót,cach_ngay_giao_tb (-0.2594)
+toc_do_ban_hieu_chinh,số,nhãn viết cách khác,84.814,1456,0.7234,0.0349,20.711,thẳng,ngay_co_hang (0.5232)
+sl_moi_lan,số,nhãn viết cách khác,66.168,4213,0.6989,0.0106,66.113,thẳng,don_gia_tb (-0.4631)
+phut_lam_viec_tb,số,biết trước kỳ,56.211,14480,0.0094,0.0083,1.142,không đáng kể — trường này gần như không liên hệ với nhãn,ngay_ke_hoach_ghe (0.2441)
+chain_key,số,biết sau kỳ,69.041,22,0.0,0.007,0.0,không đáng kể — trường này gần như không liên hệ với nhãn,—
+ty_le_chiet_khau,số,biết sau kỳ,66.982,11042,0.0001,0.0062,0.012,không đáng kể — trường này gần như không liên hệ với nhãn,tien_chiet_khau (0.9887)
+supervisor_id,số,biết sau kỳ,96.866,77,0.0001,0.0054,0.016,không đáng kể — trường này gần như không liên hệ với nhãn,—
+qty_thung,số,nhãn viết cách khác,0.0,2764,0.6393,0.005,127.746,không đáng kể — trường này gần như không liên hệ với nhãn,qty_ban (0.9883)
+doanh_so,số,nhãn viết cách khác,0.0,25313,0.0229,0.0046,5.032,không đáng kể — trường này gần như không liên hệ với nhãn,qty_thung (0.9739)
+asm_id,số,biết sau kỳ,97.428,36,0.0001,0.0044,0.017,không đáng kể — trường này gần như không liên hệ với nhãn,—
+ngay_ke_hoach_ghe,số,biết trước kỳ,54.89,30,0.0067,0.0041,1.628,không đáng kể — trường này gần như không liên hệ với nhãn,so_nvbh_ghe (0.3698)
+qty_giao,số,biết trước kỳ,0.0,1587,0.9751,0.0039,248.361,không đáng kể — trường này gần như không liên hệ với nhãn,so_dong_eco (0.9739)
+tien_co_vat,số,biết trước kỳ,0.0,21879,0.0192,0.0039,4.985,không đáng kể — trường này gần như không liên hệ với nhãn,tien_vat (0.9988)
+tien_vat,số,biết trước kỳ,0.0,21405,0.0061,0.0039,1.574,không đáng kể — trường này gần như không liên hệ với nhãn,tien_co_vat (0.9988)
+ft_tong_tien,số,biết trước kỳ,11.681,39128,0.0185,0.0038,4.915,không đáng kể — trường này gần như không liên hệ với nhãn,ft_doanh_thu_thuan (0.9999)
+ft_doanh_thu_thuan,số,biết trước kỳ,11.681,39269,0.0187,0.0038,4.966,không đáng kể — trường này gần như không liên hệ với nhãn,ft_tong_tien (0.9999)
+ft_vat,số,biết trước kỳ,11.681,37595,0.0076,0.0038,2.005,không đáng kể — trường này gần như không liên hệ với nhãn,ft_tong_tien (0.9983)
+ngay_mua_dau_thang,số,biết trước kỳ,66.168,32,0.0013,0.0037,0.343,không đáng kể — trường này gần như không liên hệ với nhãn,ngay_mua_cuoi_thang (0.5295)
+ngay_mua_cuoi_thang,số,biết trước kỳ,66.168,32,0.0012,0.0032,0.38,không đáng kể — trường này gần như không liên hệ với nhãn,ngay_mua_dau_thang (0.5295)
+ft_so_mat_hang,số,biết trước kỳ,11.681,479,0.0165,0.0031,5.245,không đáng kể — trường này gần như không liên hệ với nhãn,ft_vat (0.8986)
+ft_so_dong,số,biết trước kỳ,11.681,60,0.0069,0.0027,2.572,không đáng kể — trường này gần như không liên hệ với nhãn,ft_so_don (1.0)
+ft_so_don,số,biết trước kỳ,11.681,60,0.0069,0.0027,2.572,không đáng kể — trường này gần như không liên hệ với nhãn,ft_so_dong (1.0)
+salesman_id,số,biết sau kỳ,66.168,315,0.0,0.0024,0.006,không đáng kể — trường này gần như không liên hệ với nhãn,—
+cach_ngay_giao_tb,số,biết trước kỳ,93.75,475,0.0019,0.0024,0.803,không đáng kể — trường này gần như không liên hệ với nhãn,sla_giao_ngay_tb (-0.2594)
+ft_chiet_khau,số,biết trước kỳ,11.681,31909,0.0151,0.0024,6.169,không đáng kể — trường này gần như không liên hệ với nhãn,ft_vat (0.5073)
+km_di_chuyen_tb,số,biết trước kỳ,54.89,6893,0.0005,0.0023,0.198,không đáng kể — trường này gần như không liên hệ với nhãn,phut_di_chuyen_tb (0.7726)
+ft_doanh_thu_da_giao,số,biết trước kỳ,11.681,20958,0.0099,0.0017,5.776,không đáng kể — trường này gần như không liên hệ với nhãn,ngay_ghe (0.5308)
+gia_thuc_thu,số,nhãn viết cách khác,66.187,17036,0.0001,0.0013,0.087,không đáng kể — trường này gần như không liên hệ với nhãn,don_gia_tb (0.8728)
+don_gia_tb,số,biết trước kỳ,66.168,4144,0.0,0.0013,0.003,không đáng kể — trường này gần như không liên hệ với nhãn,don_gia_truoc_vat_tb (1.0)
+don_gia_truoc_vat_tb,số,biết trước kỳ,66.168,4273,0.0,0.0013,0.003,không đáng kể — trường này gần như không liên hệ với nhãn,don_gia_tb (1.0)
+conversion_rate,số,biết trước kỳ,0.475,35,0.0,0.0011,0.015,không đáng kể — trường này gần như không liên hệ với nhãn,qty_per_carton (0.9153)
+phut_di_chuyen_tb,số,biết trước kỳ,54.89,9311,0.0,0.0009,0.039,không đáng kể — trường này gần như không liên hệ với nhãn,km_di_chuyen_tb (0.7726)
+nvbh_tuyen,số,biết trước kỳ,4.276,75,0.0006,0.0009,0.694,không đáng kể — trường này gần như không liên hệ với nhãn,—
+store_key,số,biết trước kỳ,0.0,5342,0.0002,0.0008,0.234,không đáng kể — trường này gần như không liên hệ với nhãn,—
+net_weight,số,biết trước kỳ,0.444,146,0.0,0.0004,0.022,không đáng kể — trường này gần như không liên hệ với nhãn,category_code (0.3827)
+qty_per_carton,số,biết trước kỳ,0.171,341,0.0,0.0004,0.046,không đáng kể — trường này gần như không liên hệ với nhãn,conversion_rate (0.9153)
+product_key,số,biết trước kỳ,0.0,586,0.0001,0.0003,0.258,không đáng kể — trường này gần như không liên hệ với nhãn,—
+ngay_ghe,số,biết sau kỳ,0.0,30,0.0001,0.0003,0.366,không đáng kể — trường này gần như không liên hệ với nhãn,ft_doanh_thu_da_giao (0.5308)
+ym,số,biết trước kỳ,0.0,16,0.0,0.0002,0.292,không đáng kể — trường này gần như không liên hệ với nhãn,—
+thang_tu_lan_mua_dau,số,biết trước kỳ,0.0,16,0.0001,0.0002,0.96,không đáng kể — trường này gần như không liên hệ với nhãn,so_nguon_dat (-0.4888)
+kho_phuc_vu,số,biết trước kỳ,0.0,7,0.0,0.0001,0.666,không đáng kể — trường này gần như không liên hệ với nhãn,—
+tmax_tb,số,biết trước kỳ,0.085,962,0.0,0.0001,0.276,không đáng kể — trường này gần như không liên hệ với nhãn,tmax_dinh (0.8338)
+tmin_tb,số,biết trước kỳ,0.085,972,0.0,0.0001,0.288,không đáng kể — trường này gần như không liên hệ với nhãn,tmax_tb (0.7661)
+tmax_dinh,số,biết trước kỳ,0.085,164,0.0,0.0001,0.017,không đáng kể — trường này gần như không liên hệ với nhãn,tmax_tb (0.8338)
+shelf_life,số,biết trước kỳ,3.385,11,0.0,0.0,0.873,không đáng kể — trường này gần như không liên hệ với nhãn,category_code (0.3424)
+mua_tong,số,biết trước kỳ,0.085,949,0.0,0.0,0.814,không đáng kể — trường này gần như không liên hệ với nhãn,so_ngay_mua (0.7823)
+so_ngay_mua,số,biết trước kỳ,0.085,31,0.0,0.0,0.357,không đáng kể — trường này gần như không liên hệ với nhãn,mua_tong (0.7823)
+store_code,phân loại,biết trước kỳ,0.0,5342,,,,—,—
+product_code,phân loại,biết trước kỳ,0.0,347,,,,—,—
+flag_ky_nghi_ngo,số,biết trước kỳ,0.0,2,,,,—,—
+flag_che_do_km,phân loại,biết trước kỳ,0.0,2,,,,—,—
+qty_ban,số,biết sau kỳ,0.0,1849,,,,—,qty_thung (0.9883)
+co_mua,số,biết sau kỳ,0.0,2,,,,—,so_kho_xuat (0.9995)
+so_lan_mua,số,nhãn viết cách khác,0.0,30,,,,—,so_kho_con (0.9837)
+so_ngay_lich,số,biết trước kỳ,0.0,3,,,,—,so_ngay_lam_viec (0.5259)
+so_ngay_lam_viec,số,biết trước kỳ,0.0,4,,,,—,so_ngay_lich (0.5259)
+ngay_co_hang,số,biết sau kỳ,0.0,32,,,,—,ngay_theo_doi_ton (0.9989)
+ngay_theo_doi_ton,số,biết sau kỳ,0.0,32,,,,—,ngay_co_hang (0.9989)
+nguon_ton,phân loại,biết trước kỳ,84.786,2,,,,—,—
+co_du_lieu_ton,số,biết trước kỳ,0.0,2,,,,—,ngay_theo_doi_ton (0.996)
+ngay_het_hang,số,biết sau kỳ,0.0,20,,,,—,co_du_lieu_ton (0.1449)
+ty_le_tuan_thu,số,biết trước kỳ,54.89,91,,,,—,mua_tong (0.2533)
+so_nvbh_ghe,số,biết trước kỳ,54.89,6,,,,—,ngay_ghe (0.4994)
+co_du_lieu_ghe,số,biết trước kỳ,0.0,2,,,,—,so_tu_dong (0.3197)
+store_name,phân loại,biết trước kỳ,0.0,5337,,,,—,—
+store_brand_code,phân loại,biết trước kỳ,0.034,35,,,,—,—
+account_status,phân loại,biết trước kỳ,0.0,1,,,,—,—
+nhom_cua_hang,phân loại,biết trước kỳ,0.0,1,,,,—,—
+he_thong,phân loại,biết trước kỳ,0.0,34,,,,—,—
+dinh_dang_cua_hang,phân loại,biết trước kỳ,100.0,1,,,,—,—
+la_phap_nhan,phân loại,biết trước kỳ,0.0,1,,,,—,—
+ma_site,phân loại,biết trước kỳ,0.0,5342,,,,—,—
+chuoi,phân loại,biết sau kỳ,69.041,22,,,,—,—
+thanh_pho,phân loại,biết trước kỳ,0.0,63,,,,—,—
+duong_dia_ly,phân loại,biết trước kỳ,0.0,63,,,,—,—
+cap_dia_ly,số,biết trước kỳ,0.0,2,,,,—,—
+kenh_code,phân loại,biết trước kỳ,0.0,6,,,,—,—
+kenh_ten,phân loại,biết trước kỳ,0.0,6,,,,—,—
+tuyen_pjp,phân loại,biết trước kỳ,4.276,103,,,,—,—
+so_tu_dong,số,biết trước kỳ,0.0,8,,,,—,co_du_lieu_ghe (0.3197)
+dung_tich_tu,phân loại,biết trước kỳ,47.468,13,,,,—,—
+product_name,phân loại,biết trước kỳ,0.0,347,,,,—,—
+brand_id,phân loại,biết trước kỳ,0.0,95,,,,—,—
+category_id,phân loại,biết trước kỳ,0.0,31,,,,—,—
+uom,phân loại,biết trước kỳ,0.171,13,,,,—,—
+supplier_id,số,biết trước kỳ,0.441,19,,,,—,—
+category_code,phân loại,biết trước kỳ,0.0,31,,,,—,—
+sub_brand,phân loại,biết trước kỳ,100.0,1,,,,—,—
+the_tich,phân loại,biết trước kỳ,100.0,1,,,,—,—
+unit_per_pack,phân loại,biết trước kỳ,100.0,1,,,,—,—
+mt_price_exc_vat,số,biết trước kỳ,98.957,2,,,,—,—
+mt_price_inc_vat,số,biết trước kỳ,98.957,2,,,,—,—
+tax_rate,số,biết trước kỳ,6.033,2,,,,—,—
+tien_chiet_khau,số,biết sau kỳ,0.0,6747,,,,—,ty_le_chiet_khau (0.9887)
+so_dong_hang_tang,số,biết sau kỳ,0.0,30,,,,—,don_gia_do_lech (0.5283)
+ck_pct_do_lech_chuan,số,biết sau kỳ,66.168,396,,,,—,tien_ck_truoc_vat (0.2793)
+qty_huy,số,biết trước kỳ,0.0,440,,,,—,so_trang_thai_dong (0.2226)
+tien_ck_truoc_vat,số,biết trước kỳ,0.0,5336,,,,—,ty_le_chiet_khau (0.5983)
+don_gia_do_lech,số,biết trước kỳ,66.168,3007,,,,—,vat_pct_tb (0.6449)
+vat_pct_tb,số,biết trước kỳ,66.168,136,,,,—,don_gia_do_lech (0.6449)
+so_don,số,biết trước kỳ,0.0,40,,,,—,so_trang_thai_dong (0.9897)
+so_kho_xuat,số,biết trước kỳ,0.0,3,,,,—,co_mua (0.9995)
+so_kho_con,số,biết trước kỳ,0.0,4,,,,—,so_kho_xuat (0.9993)
+so_nguon_dat,số,biết trước kỳ,0.0,3,,,,—,so_loai_don (0.9999)
+so_loai_don,số,biết trước kỳ,0.0,4,,,,—,so_nguon_dat (0.9999)
+so_trang_thai_dong,số,biết trước kỳ,0.0,5,,,,—,so_nguon_dat (0.9962)
+so_dong_admin_huy,số,biết trước kỳ,0.0,2,,,,—,qty_huy (0.0309)
+so_dong_eco,số,biết trước kỳ,0.0,52,,,,—,qty_giao (0.9739)
+ton_kho_tb,phân loại,biết sau kỳ,100.0,1,,,,—,—
+nhap_thang,phân loại,biết sau kỳ,100.0,1,,,,—,—
+xuat_thang,phân loại,biết sau kỳ,100.0,1,,,,—,—
+gh_so_dong,số,biết trước kỳ,95.409,66,,,,—,gh_so_shipper (0.6399)
+gh_so_lan_thu_tb,số,biết trước kỳ,95.409,34,,,,—,gh_so_shipper (0.1802)
+gh_so_shipper,số,biết trước kỳ,95.409,24,,,,—,gh_so_dong (0.6399)
+gh_dong_kho_xac_nhan,số,biết trước kỳ,95.409,49,,,,—,gh_so_dong (0.3377)
+gd_so_dong,phân loại,biết trước kỳ,100.0,1,,,,—,—
+gd_so_luong,phân loại,biết trước kỳ,100.0,1,,,,—,—
+gd_gia_tri,phân loại,biết trước kỳ,100.0,1,,,,—,—
+gd_don_gia_tb,phân loại,biết trước kỳ,100.0,1,,,,—,—
+gd_so_loai,phân loại,biết trước kỳ,100.0,1,,,,—,—
+so_ctkm,phân loại,biết trước kỳ,100.0,1,,,,—,—
+co_che_km,phân loại,biết trước kỳ,100.0,1,,,,—,—
+ns_cap,phân loại,biết trước kỳ,100.0,1,,,,—,—
+ns_dung,phân loại,biết sau kỳ,100.0,1,,,,—,—
+foc_ctn_ke_hoach,phân loại,biết trước kỳ,100.0,1,,,,—,—
+km_bat_dau,phân loại,biết trước kỳ,100.0,1,,,,—,—
+km_ket_thuc,phân loại,biết trước kỳ,100.0,1,,,,—,—
+co_du_lieu_km,số,biết trước kỳ,0.0,1,,,,—,—

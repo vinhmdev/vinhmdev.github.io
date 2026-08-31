@@ -1,0 +1,763 @@
+bang_1,field_1,bang_2,field_2,so_dong_chung,spearman,muc_do
+dim_product_prices,tax_rate,dim_products,tax_rate,5483,1.0,liên hệ rõ
+fact_order_lines,unit_price_after_discount_after_vat,dim_product_prices,price_excl_vat,5061,0.936,liên hệ rõ
+fact_order_lines,unit_price_after_discount_after_vat,dim_product_prices,price_incl_vat,5061,0.936,liên hệ rõ
+fact_order_lines,unit_price_after_discount_before_vat,dim_product_prices,price_excl_vat,5061,0.936,liên hệ rõ
+fact_order_lines,unit_price_after_discount_before_vat,dim_product_prices,price_incl_vat,5061,0.936,liên hệ rõ
+fact_order_lines,unit_price,dim_product_prices,price_excl_vat,5061,0.929,liên hệ rõ
+fact_order_lines,unit_price,dim_product_prices,price_incl_vat,5061,0.929,liên hệ rõ
+fact_order_lines,unit_price_before_vat,dim_product_prices,price_excl_vat,5061,0.929,liên hệ rõ
+fact_order_lines,unit_price_before_vat,dim_product_prices,price_incl_vat,5061,0.929,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_transactions,total_amount,344,0.91,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_transactions,total_amount,344,0.904,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,shipped_qty,1602,0.835,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,shipped_qty,1602,0.83,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,shipped_qty,1602,0.829,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,shipped_qty,416,0.826,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,sales_qty,1602,0.824,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,shipped_qty,416,0.824,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,sales_qty,1602,0.819,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,sales_qty,1602,0.817,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,sales_qty,416,0.817,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,sales_qty,416,0.809,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_inventory_transactions,quantity,344,0.795,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_inventory_transactions,quantity,344,0.782,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,shipped_qty,1279,0.779,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,available_primary,929,0.778,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,available_primary,929,0.778,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,sales_qty_carton,415,0.776,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,available_primary,929,0.773,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,sales_qty_carton,415,0.772,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,sales_qty,1279,0.765,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,cancelled_qty,416,0.761,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,sales_qty_carton,1567,0.754,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,sales_qty_carton,1567,0.75,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,qty_primary,929,0.75,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,qty_primary,929,0.75,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,sales_qty_carton,1567,0.75,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,shipped_qty,1180,0.75,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,available_package,926,0.747,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,sales_qty,1180,0.747,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,available_package,926,0.746,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,available_package,926,0.745,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,qty_package,926,0.745,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,qty_package,926,0.745,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,sales_qty,1291,0.745,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,sales_qty_carton,1567,0.744,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,qty_package,926,0.744,liên hệ rõ
+dim_product_prices,price_excl_vat,dim_products,conversion_rate,5435,-0.744,liên hệ rõ
+dim_product_prices,price_incl_vat,dim_products,conversion_rate,5435,-0.744,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,qty_primary,929,0.743,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,shipped_qty,1291,0.739,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,available_package,926,0.731,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,amount_before_discount,1180,0.731,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,amount_before_discount_before_vat,1180,0.731,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,amount_incl_vat,1180,0.731,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,net_revenue,1180,0.731,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,vat_amount,1180,0.731,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,qty_package,926,0.729,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,qty_primary,485,0.725,liên hệ rõ
+fact_inventory_transactions,unit_price,dim_product_prices,price_excl_vat,451,0.724,liên hệ rõ
+fact_inventory_transactions,unit_price,dim_product_prices,price_incl_vat,451,0.724,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,shipped_qty,1602,0.723,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,cancelled_qty,416,0.722,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,qty_primary,485,0.717,liên hệ rõ
+fact_order_lines,unit_price,dim_products,conversion_rate,7152,-0.716,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,available_primary,422,0.715,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,amount_before_discount,416,0.715,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,amount_before_discount_before_vat,416,0.715,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,amount_incl_vat,416,0.715,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,net_revenue,416,0.715,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,vat_amount,416,0.715,liên hệ rõ
+fact_order_lines,unit_price_after_discount_after_vat,dim_products,conversion_rate,7153,-0.715,liên hệ rõ
+fact_order_lines,unit_price_before_vat,dim_products,conversion_rate,7153,-0.715,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_daily_balances,import_quantity,362,0.714,liên hệ rõ
+fact_order_lines,unit_price_after_discount_before_vat,dim_products,conversion_rate,7153,-0.714,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,expiry_warning_days,884,0.713,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,sales_qty,1602,0.713,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,amount_before_discount,416,0.713,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,amount_before_discount_before_vat,416,0.713,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_daily_balances,import_quantity,362,0.712,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,amount_incl_vat,416,0.712,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,net_revenue,416,0.712,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,vat_amount,416,0.712,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,volume_primary,863,0.71,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,volume_primary,863,0.71,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,volume_primary,863,0.71,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,volume_primary,863,0.709,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,shipped_qty,1144,0.708,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_inventory_transactions,quantity,613,0.706,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_daily_balances,export_quantity,362,0.705,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_daily_balances,import_quantity,362,0.703,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_daily_balances,export_quantity,362,0.703,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,qty_primary,485,0.703,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,available_primary,929,0.7,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,available_package,422,0.7,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,discount_amount,416,0.699,liên hệ rõ
+fact_inventory_transactions,unit_price,fact_order_lines,unit_price,1323,0.699,liên hệ rõ
+fact_inventory_transactions,unit_price,fact_order_lines,unit_price_before_vat,1323,0.699,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,discount_amount_before_vat,416,0.698,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,discount_amount,416,0.698,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_daily_balances,export_quantity,362,0.697,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_order_lines,discount_amount_before_vat,416,0.697,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,volume_package,886,0.696,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,qty_package,422,0.693,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,sales_qty_carton,1142,0.692,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,sales_qty,1144,0.688,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,shipped_qty,1144,0.687,liên hệ rõ
+fact_inventory_transactions,unit_price,fact_order_lines,unit_price_after_discount_after_vat,1323,0.686,liên hệ rõ
+fact_inventory_transactions,unit_price,fact_order_lines,unit_price_after_discount_before_vat,1323,0.686,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,sales_qty_carton,1142,0.683,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,qty_primary,485,0.676,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,sales_qty,1144,0.676,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,available_primary,422,0.675,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,qty_primary,929,0.674,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,volume_package,886,0.671,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,volume_package,886,0.67,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,volume_package,886,0.669,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,volume_primary,422,0.667,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,discount_amount,1180,0.664,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,discount_amount_before_vat,1180,0.664,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,sales_qty_carton,1048,0.664,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,delivery_days_sla,982,0.662,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,amount_incl_vat,1602,0.657,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,net_revenue,1602,0.657,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_transactions,total_amount,931,0.657,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,vat_amount,1602,0.656,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_transactions,total_amount,931,0.655,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_daily_balances,import_quantity,362,0.652,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,amount_before_discount,1602,0.651,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,amount_before_discount_before_vat,1602,0.651,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,available_package,422,0.65,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_transactions,quantity,931,0.646,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,sales_qty_carton,1144,0.646,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_transactions,total_amount,931,0.645,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_transactions,quantity,931,0.645,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,qty_package,422,0.643,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_inventory_transactions,quantity,587,0.641,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_transactions,quantity,931,0.638,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_inventory_transactions,total_amount,587,0.637,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,volume_package,418,0.636,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_daily_balances,export_quantity,362,0.634,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,amount_before_discount,1279,0.634,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,amount_before_discount_before_vat,1279,0.634,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_inventory_transactions,total_amount,587,0.634,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,amount_incl_vat,1279,0.633,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,net_revenue,1279,0.633,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,vat_amount,1279,0.633,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,sales_qty_carton,1084,0.633,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,expiry_warning_days,884,0.63,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,expiry_warning_days,884,0.63,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,expiry_warning_days,884,0.63,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_inventory_transactions,total_amount,587,0.628,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,sales_qty_carton,1156,0.625,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,expiry_warning_days,422,0.624,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,sales_qty_carton,1323,0.622,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,volume_primary,422,0.62,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_transactions,total_amount,931,0.619,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,amount_incl_vat,1602,0.618,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,net_revenue,1602,0.618,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,vat_amount,1602,0.618,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,expiry_warning_days,422,0.618,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,amount_before_discount,1602,0.617,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,amount_before_discount_before_vat,1602,0.617,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,amount_incl_vat,1602,0.617,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,net_revenue,1602,0.617,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,vat_amount,1602,0.616,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,amount_before_discount,1602,0.615,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,amount_before_discount_before_vat,1602,0.615,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,amount_before_discount,1291,0.615,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,amount_before_discount_before_vat,1291,0.615,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,amount_incl_vat,1291,0.614,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,net_revenue,1291,0.614,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,vat_amount,1291,0.614,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_inventory_transactions,total_amount,587,0.611,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,shipped_qty,1086,0.61,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,sales_qty,1323,0.609,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,amount_incl_vat,1602,0.607,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,net_revenue,1602,0.607,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,vat_amount,1602,0.607,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,delivery_days_sla,982,0.606,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,amount_before_discount,1602,0.605,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,amount_before_discount_before_vat,1602,0.605,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,delivery_days_sla,982,0.605,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,shipped_qty,1323,0.605,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,sales_qty,1086,0.604,liên hệ rõ
+fact_inventory_transactions,quantity,fact_order_lines,sales_qty,1323,0.604,liên hệ rõ
+fact_inventory_transactions,unit_price,dim_products,conversion_rate,1424,-0.604,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,delivery_days_sla,982,0.603,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_inventory_transactions,quantity,587,0.603,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,cancelled_qty,1291,0.602,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,cancelled_qty,1180,0.601,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,expiry_warning_days,884,0.6,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,amount_before_discount,1144,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,amount_before_discount_before_vat,1144,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,amount_incl_vat,1144,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,net_revenue,1144,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,vat_amount,1144,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,amount_incl_vat,1086,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,net_revenue,1086,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,vat_amount,1086,0.598,liên hệ rõ
+fact_inventory_lot_snapshot,volume_package,fact_inventory_transactions,total_amount,586,0.597,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,discount_amount_before_vat,1279,0.589,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,amount_before_discount,1086,0.589,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,amount_before_discount_before_vat,1086,0.589,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,discount_amount,1279,0.588,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,dim_products,net_weight,481,-0.586,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,cancelled_qty,1279,0.586,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_inventory_transactions,quantity,587,0.585,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,amount_before_discount,1144,0.585,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,amount_before_discount_before_vat,1144,0.585,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,amount_incl_vat,1144,0.585,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,net_revenue,1144,0.585,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,vat_amount,1144,0.585,liên hệ rõ
+fact_inventory_transactions,quantity,fact_order_lines,shipped_qty,1323,0.585,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,dim_products,net_weight,481,-0.584,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,volume_package,418,0.584,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,volume_primary,863,0.581,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,sales_qty,1279,0.581,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,qty_package,926,0.577,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,available_package,926,0.576,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,amount_incl_vat,1323,0.576,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,net_revenue,1323,0.576,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,vat_amount,1323,0.576,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,amount_before_discount,1323,0.575,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,amount_before_discount_before_vat,1323,0.575,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,discount_amount,1291,0.574,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,discount_amount,1323,0.573,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,discount_amount_before_vat,1323,0.573,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,discount_amount_before_vat,1291,0.572,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_inventory_transactions,total_amount,613,0.571,liên hệ rõ
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,shipped_qty,1086,0.571,liên hệ rõ
+dim_product_prices,price_incl_vat,dim_products,net_weight,5354,0.566,liên hệ rõ
+dim_product_prices,price_excl_vat,dim_products,net_weight,5354,0.565,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_daily_balances,import_quantity,362,0.564,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,volume_package,886,0.564,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,cancelled_qty,1602,0.563,liên hệ rõ
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,sales_qty_carton,1084,0.559,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,available_primary,422,0.558,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,available_primary,422,0.558,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,available_primary,929,0.555,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,qty_primary,929,0.555,liên hệ rõ
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,sales_qty,1086,0.555,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,discount_amount_before_vat,1144,0.554,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,discount_amount,1144,0.553,liên hệ rõ
+fact_delivery_details,qty_remain,fact_inventory_daily_balances,export_quantity,362,0.551,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,qty_package,422,0.551,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,qty_package,422,0.55,liên hệ rõ
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,reservation_primary,929,0.549,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,discount_amount_before_vat,1602,0.548,liên hệ rõ
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,reservation_primary,929,0.548,liên hệ rõ
+fact_delivery_details,attempt_count,fact_order_lines,discount_amount,1602,0.547,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,cancelled_qty,1602,0.542,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,reservation_primary,929,0.541,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,cancelled_qty,1602,0.541,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,discount_amount,1144,0.541,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,dim_product_prices,price_excl_vat,457,-0.54,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,dim_product_prices,price_incl_vat,457,-0.54,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,discount_amount_before_vat,1144,0.54,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,cancelled_qty,416,0.538,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,dim_product_prices,price_excl_vat,457,-0.538,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,dim_product_prices,price_incl_vat,457,-0.538,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,cancelled_qty,1602,0.536,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,discount_amount_before_vat,1602,0.535,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,cancelled_qty,1279,0.535,liên hệ rõ
+fact_delivery_details,qty_received,fact_order_lines,discount_amount,1602,0.534,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_inventory_transactions,quantity,344,0.534,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,shipped_qty,1279,0.534,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,discount_amount_before_vat,1602,0.533,liên hệ rõ
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,delivery_days_sla,825,0.532,liên hệ rõ
+fact_delivery_details,qty_so,fact_order_lines,discount_amount,1602,0.531,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_inventory_transactions,quantity,587,0.53,liên hệ rõ
+fact_inventory_transactions,quantity,fact_order_lines,sales_qty_carton,1323,0.53,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,cancelled_qty,416,0.529,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,discount_amount_before_vat,1602,0.524,liên hệ rõ
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,available_package,422,0.524,liên hệ rõ
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,available_package,422,0.523,liên hệ rõ
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,delivery_days_sla,777,0.523,liên hệ rõ
+fact_inventory_transactions,quantity,fact_order_lines,cancelled_qty,1323,0.523,liên hệ rõ
+fact_delivery_details,qty_delivered,fact_order_lines,discount_amount,1602,0.522,liên hệ rõ
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,cancelled_qty,1144,0.518,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,amount_before_discount,1279,0.518,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,amount_before_discount_before_vat,1279,0.518,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,amount_incl_vat,1279,0.515,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,net_revenue,1279,0.515,liên hệ rõ
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,vat_amount,1279,0.515,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,cancelled_qty,1144,0.513,liên hệ rõ
+fact_inventory_lot_snapshot,available_package,fact_order_lines,delivery_days_sla,796,0.508,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,delivery_days_sla,764,0.508,liên hệ rõ
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,delivery_days_sla,825,0.508,liên hệ rõ
+fact_inventory_transactions,total_amount,fact_order_lines,cancelled_qty,1323,0.508,liên hệ rõ
+fact_inventory_daily_balances,import_quantity,fact_inventory_transactions,quantity,344,0.501,liên hệ rõ
+fact_inventory_lot_snapshot,expiry_warning_days,fact_inventory_transactions,total_amount,587,0.501,liên hệ rõ
+fact_inventory_daily_balances,export_quantity,fact_order_lines,delivery_days_sla,320,0.5,liên hệ rõ
+fact_delivery_details,attempt_count,fact_inventory_transactions,quantity,931,0.497,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,delivery_days_sla,796,0.496,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,amount_before_discount,1086,0.496,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,amount_before_discount_before_vat,1086,0.496,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,amount_incl_vat,1086,0.496,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,net_revenue,1086,0.496,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,vat_amount,1086,0.496,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,delivery_days_sla,320,0.495,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,sales_qty,416,0.491,yếu
+fact_delivery_details,qty_remain,fact_order_lines,sales_qty_carton,1567,0.489,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,discount_amount_before_vat,1086,0.489,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,discount_amount,1086,0.488,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,sales_qty,416,0.487,yếu
+fact_inventory_transactions,quantity,dim_products,net_weight,1424,-0.48,yếu
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,reservation_primary,929,0.479,yếu
+fact_inventory_lot_snapshot,volume_package,fact_inventory_transactions,quantity,586,0.478,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,volume_primary,422,0.473,yếu
+fact_delivery_details,qty_remain,fact_order_lines,delivery_days_sla,982,0.472,yếu
+fact_delivery_details,qty_remain,fact_order_lines,shipped_qty,1602,0.472,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,volume_primary,422,0.472,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,cancelled_qty,1086,0.472,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_product_prices,price_incl_vat,1218,-0.472,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_product_prices,price_excl_vat,1218,-0.471,yếu
+fact_delivery_details,qty_so,fact_inventory_lot_snapshot,reservation_package,926,0.469,yếu
+fact_delivery_details,qty_received,fact_inventory_lot_snapshot,reservation_package,926,0.468,yếu
+fact_delivery_details,attempt_count,fact_inventory_lot_snapshot,reservation_package,926,0.467,yếu
+fact_delivery_details,qty_remain,fact_order_lines,sales_qty,1602,0.467,yếu
+fact_delivery_details,qty_delivered,fact_inventory_lot_snapshot,reservation_package,926,0.464,yếu
+fact_delivery_details,qty_remain,fact_inventory_transactions,total_amount,931,0.462,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,sales_qty_carton,1142,0.462,yếu
+fact_order_lines,sales_qty,dim_product_prices,price_incl_vat,5061,-0.461,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,shipped_qty,416,0.46,yếu
+fact_order_lines,sales_qty,dim_product_prices,price_excl_vat,5061,-0.46,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,shipped_qty,416,0.458,yếu
+fact_inventory_lot_snapshot,available_primary,dim_product_prices,price_incl_vat,1176,-0.458,yếu
+fact_inventory_lot_snapshot,available_primary,dim_product_prices,price_excl_vat,1176,-0.457,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_inventory_transactions,quantity,587,0.457,yếu
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,reservation_primary,929,0.455,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,discount_amount_before_vat,1086,0.454,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,sales_qty_carton,1144,0.453,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,discount_amount,1086,0.453,yếu
+fact_delivery_details,qty_remain,fact_order_lines,amount_incl_vat,1602,0.451,yếu
+fact_delivery_details,qty_remain,fact_order_lines,net_revenue,1602,0.451,yếu
+fact_delivery_details,qty_remain,fact_order_lines,vat_amount,1602,0.451,yếu
+fact_inventory_transactions,quantity,dim_product_prices,price_excl_vat,451,-0.451,yếu
+fact_inventory_transactions,quantity,dim_product_prices,price_incl_vat,451,-0.451,yếu
+fact_delivery_details,qty_remain,fact_order_lines,amount_before_discount,1602,0.449,yếu
+fact_delivery_details,qty_remain,fact_order_lines,amount_before_discount_before_vat,1602,0.449,yếu
+fact_delivery_details,qty_received,fact_inventory_daily_balances,closing_quantity,362,0.447,yếu
+fact_delivery_details,qty_received,fact_inventory_daily_balances,opening_quantity,362,0.447,yếu
+fact_delivery_details,qty_remain,fact_inventory_lot_snapshot,reservation_package,926,0.447,yếu
+fact_delivery_details,qty_so,fact_inventory_daily_balances,closing_quantity,362,0.447,yếu
+fact_delivery_details,qty_so,fact_inventory_daily_balances,opening_quantity,362,0.446,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,discount_amount,1279,0.446,yếu
+fact_order_lines,shipped_qty,dim_product_prices,price_incl_vat,5061,-0.445,yếu
+fact_order_lines,shipped_qty,dim_product_prices,price_excl_vat,5061,-0.444,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,sales_qty_carton,415,0.443,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,discount_amount_before_vat,1279,0.442,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,cancelled_qty,1144,0.44,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,delivery_days_sla,779,0.44,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,sales_qty_carton,415,0.438,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,sales_qty,1144,0.434,yếu
+fact_delivery_details,qty_delivered,fact_inventory_daily_balances,closing_quantity,362,0.432,yếu
+fact_delivery_details,qty_delivered,fact_inventory_daily_balances,opening_quantity,362,0.431,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,amount_before_discount,1144,0.429,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,amount_before_discount_before_vat,1144,0.429,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,amount_incl_vat,1144,0.425,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,net_revenue,1144,0.425,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,vat_amount,1144,0.425,yếu
+fact_inventory_transactions,quantity,fact_order_lines,discount_amount,1323,0.421,yếu
+fact_inventory_transactions,quantity,fact_order_lines,discount_amount_before_vat,1323,0.421,yếu
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,reservation_primary,422,0.417,yếu
+fact_inventory_transactions,quantity,fact_order_lines,amount_before_discount,1323,0.412,yếu
+fact_inventory_transactions,quantity,fact_order_lines,amount_before_discount_before_vat,1323,0.412,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_transactions,total_amount,344,0.41,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_transactions,total_amount,344,0.41,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,cancelled_qty,1086,0.41,yếu
+fact_inventory_transactions,quantity,fact_order_lines,amount_incl_vat,1323,0.409,yếu
+fact_inventory_transactions,quantity,fact_order_lines,net_revenue,1323,0.409,yếu
+fact_inventory_transactions,quantity,fact_order_lines,vat_amount,1323,0.409,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,reservation_primary,422,0.408,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,volume_package,418,0.406,yếu
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,reservation_primary,422,0.406,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,reservation_primary,422,0.406,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,volume_package,418,0.406,yếu
+fact_delivery_details,qty_remain,fact_order_lines,cancelled_qty,1602,0.404,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_inventory_transactions,total_amount,587,0.398,yếu
+fact_inventory_daily_balances,export_quantity,dim_product_prices,price_excl_vat,457,-0.396,yếu
+fact_inventory_daily_balances,export_quantity,dim_product_prices,price_incl_vat,457,-0.396,yếu
+fact_inventory_transactions,quantity,fact_order_lines,unit_price_after_discount_after_vat,1323,-0.393,yếu
+fact_inventory_transactions,quantity,fact_order_lines,unit_price_after_discount_before_vat,1323,-0.393,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,unit_price_after_discount_after_vat,416,-0.389,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,unit_price_after_discount_before_vat,416,-0.389,yếu
+fact_inventory_transactions,quantity,fact_order_lines,unit_price,1323,-0.387,yếu
+fact_inventory_transactions,quantity,fact_order_lines,unit_price_before_vat,1323,-0.387,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,unit_price_after_discount_after_vat,416,-0.386,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,unit_price_after_discount_before_vat,416,-0.386,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_inventory_transactions,total_amount,587,0.386,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,shipped_qty,1144,0.385,yếu
+fact_delivery_details,qty_remain,fact_inventory_transactions,quantity,931,0.381,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,discount_percent,1180,0.381,yếu
+fact_order_lines,cancelled_qty,dim_product_prices,price_incl_vat,5061,-0.381,yếu
+fact_order_lines,cancelled_qty,dim_product_prices,price_excl_vat,5061,-0.38,yếu
+fact_inventory_daily_balances,import_quantity,dim_product_prices,price_excl_vat,457,-0.375,yếu
+fact_inventory_daily_balances,import_quantity,dim_product_prices,price_incl_vat,457,-0.375,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_inventory_transactions,quantity,587,0.375,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,unit_price_after_discount_after_vat,416,-0.374,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,unit_price_after_discount_before_vat,416,-0.374,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,unit_price,1602,-0.373,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,unit_price_before_vat,1602,-0.373,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,discount_amount,416,0.373,yếu
+fact_delivery_details,qty_remain,fact_order_lines,discount_amount_before_vat,1602,0.372,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_products,net_weight,1950,-0.372,yếu
+fact_delivery_details,qty_remain,fact_order_lines,discount_amount,1602,0.371,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,discount_amount_before_vat,416,0.371,yếu
+fact_inventory_lot_snapshot,qty_package,dim_products,net_weight,1692,-0.371,yếu
+fact_delivery_details,qty_received,fact_order_lines,unit_price,1602,-0.37,yếu
+fact_delivery_details,qty_received,fact_order_lines,unit_price_before_vat,1602,-0.37,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,unit_price,416,-0.369,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,unit_price_before_vat,416,-0.369,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,discount_amount,416,0.367,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,unit_price_after_discount_after_vat,1602,-0.366,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,unit_price_after_discount_before_vat,1602,-0.366,yếu
+fact_delivery_details,qty_received,dim_product_prices,price_excl_vat,714,-0.366,yếu
+fact_delivery_details,qty_received,dim_product_prices,price_incl_vat,714,-0.366,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,discount_amount_before_vat,416,0.365,yếu
+fact_delivery_details,qty_received,fact_order_lines,unit_price_after_discount_after_vat,1602,-0.364,yếu
+fact_delivery_details,qty_received,fact_order_lines,unit_price_after_discount_before_vat,1602,-0.364,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,unit_price,416,-0.364,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,unit_price_before_vat,416,-0.364,yếu
+fact_delivery_details,qty_so,fact_order_lines,unit_price,1602,-0.363,yếu
+fact_delivery_details,qty_so,fact_order_lines,unit_price_before_vat,1602,-0.363,yếu
+fact_order_lines,sales_qty,dim_products,net_weight,7429,-0.361,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,unit_price,416,-0.36,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,unit_price_before_vat,416,-0.36,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,discount_amount,1144,0.36,yếu
+fact_delivery_details,qty_so,dim_product_prices,price_excl_vat,714,-0.359,yếu
+fact_delivery_details,qty_so,dim_product_prices,price_incl_vat,714,-0.359,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,delivery_days_sla,641,0.359,yếu
+fact_delivery_details,qty_so,fact_order_lines,unit_price_after_discount_after_vat,1602,-0.357,yếu
+fact_delivery_details,qty_so,fact_order_lines,unit_price_after_discount_before_vat,1602,-0.357,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,unit_price,416,-0.357,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,unit_price_before_vat,416,-0.357,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,discount_amount_before_vat,1144,0.357,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,unit_price_after_discount_after_vat,416,-0.356,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,unit_price_after_discount_before_vat,416,-0.356,yếu
+fact_inventory_lot_snapshot,qty_package,dim_product_prices,price_incl_vat,1158,-0.356,yếu
+fact_inventory_lot_snapshot,qty_package,dim_product_prices,price_excl_vat,1158,-0.355,yếu
+fact_inventory_lot_snapshot,available_package,dim_product_prices,price_incl_vat,1158,-0.354,yếu
+fact_order_lines,cancelled_qty,dim_products,net_weight,7429,-0.354,yếu
+fact_inventory_lot_snapshot,available_package,dim_product_prices,price_excl_vat,1158,-0.353,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,reservation_package,422,0.352,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,reservation_package,422,0.35,yếu
+fact_inventory_lot_snapshot,available_package,dim_products,net_weight,1692,-0.35,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,delivery_days_sla,825,0.346,yếu
+fact_inventory_daily_balances,export_quantity,fact_inventory_lot_snapshot,reservation_package,422,0.345,yếu
+fact_delivery_details,attempt_count,fact_inventory_daily_balances,closing_quantity,362,0.343,yếu
+fact_delivery_details,attempt_count,fact_inventory_daily_balances,opening_quantity,362,0.342,yếu
+fact_inventory_transactions,quantity,dim_products,conversion_rate,1424,0.339,yếu
+fact_delivery_details,qty_delivered,dim_product_prices,price_excl_vat,714,-0.338,yếu
+fact_delivery_details,qty_delivered,dim_product_prices,price_incl_vat,714,-0.338,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_product_prices,price_incl_vat,1176,-0.338,yếu
+fact_inventory_daily_balances,import_quantity,fact_inventory_lot_snapshot,reservation_package,422,0.337,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_product_prices,price_excl_vat,1176,-0.337,yếu
+fact_delivery_details,qty_remain,fact_inventory_daily_balances,opening_quantity,362,0.333,yếu
+fact_delivery_details,qty_remain,fact_inventory_daily_balances,closing_quantity,362,0.329,yếu
+fact_order_lines,shipped_qty,dim_products,net_weight,7429,-0.327,yếu
+fact_order_lines,unit_price_after_discount_after_vat,dim_products,net_weight,7429,0.327,yếu
+fact_order_lines,unit_price_after_discount_before_vat,dim_products,net_weight,7429,0.327,yếu
+fact_order_lines,sales_qty,dim_products,conversion_rate,7153,0.326,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,amount_before_discount,416,0.322,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,amount_before_discount_before_vat,416,0.322,yếu
+fact_inventory_lot_snapshot,available_primary,dim_products,net_weight,1881,-0.322,yếu
+fact_order_lines,unit_price,dim_products,net_weight,7428,0.322,yếu
+fact_order_lines,unit_price_before_vat,dim_products,net_weight,7429,0.322,yếu
+fact_order_lines,discount_percent,dim_products,net_weight,7429,-0.321,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_inventory_transactions,quantity,587,0.319,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,vat_percent,416,0.317,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,amount_before_discount,416,0.317,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,amount_before_discount_before_vat,416,0.317,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,amount_incl_vat,416,0.314,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,net_revenue,416,0.314,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,vat_amount,416,0.314,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,discount_percent,1279,0.314,yếu
+fact_inventory_transactions,quantity,fact_order_lines,delivery_days_sla,641,0.314,yếu
+fact_order_lines,sales_qty_carton,dim_products,net_weight,7094,-0.313,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,discount_percent,1291,0.311,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,amount_incl_vat,416,0.309,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,net_revenue,416,0.309,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,vat_amount,416,0.309,yếu
+fact_order_lines,shipped_qty,dim_products,conversion_rate,7153,0.307,yếu
+fact_order_lines,discount_amount_before_vat,dim_products,net_weight,7429,-0.305,yếu
+fact_order_lines,discount_amount,dim_products,net_weight,7429,-0.301,yếu
+fact_inventory_transactions,unit_price,dim_products,net_weight,1424,0.285,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_product_prices,price_incl_vat,1065,-0.283,yếu
+fact_order_lines,sales_qty_carton,dim_product_prices,price_incl_vat,5024,-0.283,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_product_prices,price_excl_vat,1065,-0.282,yếu
+fact_order_lines,delivery_days_sla,dim_product_prices,price_incl_vat,755,-0.282,yếu
+fact_order_lines,sales_qty_carton,dim_product_prices,price_excl_vat,5024,-0.282,yếu
+fact_order_lines,vat_percent,dim_product_prices,price_excl_vat,5061,-0.282,yếu
+fact_order_lines,vat_percent,dim_product_prices,price_incl_vat,5061,-0.282,yếu
+fact_order_lines,delivery_days_sla,dim_product_prices,price_excl_vat,755,-0.281,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_products,net_weight,1518,-0.278,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,delivery_days_sla,796,0.278,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,discount_percent,1323,0.273,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,shipped_qty,1323,-0.273,yếu
+fact_inventory_daily_balances,export_quantity,dim_products,conversion_rate,487,0.272,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_products,net_weight,1692,-0.27,yếu
+fact_inventory_lot_snapshot,available_primary,dim_products,conversion_rate,1766,0.269,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,unit_price,1143,-0.266,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,sales_qty,1323,-0.266,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,vat_percent,416,0.265,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,unit_price_before_vat,1144,-0.265,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_products,net_weight,1881,-0.265,yếu
+fact_delivery_details,qty_delivered,fact_inventory_transactions,unit_price,931,-0.263,yếu
+fact_delivery_details,qty_received,fact_inventory_transactions,unit_price,931,-0.262,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_transactions,unit_price,344,-0.261,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,unit_price,1143,-0.261,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_transactions,unit_price,344,-0.259,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,unit_price_before_vat,1144,-0.259,yếu
+fact_inventory_lot_snapshot,available_primary,fact_inventory_transactions,unit_price,587,-0.258,yếu
+fact_delivery_details,qty_so,fact_inventory_transactions,unit_price,931,-0.257,yếu
+fact_inventory_daily_balances,import_quantity,dim_products,conversion_rate,487,0.256,yếu
+fact_inventory_lot_snapshot,volume_package,dim_product_prices,price_incl_vat,1068,-0.256,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,unit_price_after_discount_after_vat,1144,-0.255,yếu
+fact_inventory_lot_snapshot,volume_package,dim_product_prices,price_excl_vat,1068,-0.255,yếu
+fact_inventory_transactions,total_amount,dim_products,net_weight,1424,-0.255,yếu
+fact_delivery_details,qty_received,dim_products,conversion_rate,1733,0.254,yếu
+fact_inventory_daily_balances,opening_quantity,dim_products,conversion_rate,487,0.254,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,unit_price_after_discount_before_vat,1144,-0.254,yếu
+fact_inventory_daily_balances,closing_quantity,fact_inventory_lot_snapshot,expiry_warning_days,422,0.252,yếu
+fact_inventory_daily_balances,closing_quantity,dim_products,conversion_rate,487,0.252,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,unit_price_after_discount_after_vat,1144,-0.252,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,unit_price_after_discount_before_vat,1144,-0.252,yếu
+fact_inventory_daily_balances,opening_quantity,fact_inventory_lot_snapshot,expiry_warning_days,422,0.251,yếu
+fact_order_lines,amount_before_discount,dim_products,net_weight,7429,-0.251,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_products,net_weight,7429,-0.251,yếu
+fact_delivery_details,qty_so,dim_products,conversion_rate,1733,0.25,yếu
+fact_order_lines,amount_incl_vat,dim_products,net_weight,7429,-0.249,yếu
+fact_order_lines,net_revenue,dim_products,net_weight,7429,-0.249,yếu
+fact_order_lines,vat_amount,dim_products,net_weight,7429,-0.249,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_product_prices,price_incl_vat,1158,-0.243,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_product_prices,price_incl_vat,1137,-0.242,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_product_prices,price_excl_vat,1158,-0.242,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_product_prices,price_excl_vat,1137,-0.241,yếu
+fact_order_lines,discount_percent,dim_product_prices,price_excl_vat,5061,-0.241,yếu
+fact_order_lines,discount_percent,dim_product_prices,price_incl_vat,5061,-0.241,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_products,conversion_rate,1843,0.24,yếu
+fact_delivery_details,qty_received,dim_products,net_weight,1773,-0.237,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_products,net_weight,1615,-0.236,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_inventory_transactions,unit_price,613,-0.235,yếu
+fact_delivery_details,qty_so,dim_products,net_weight,1773,-0.234,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,unit_price,1085,-0.234,yếu
+fact_order_lines,vat_percent,dim_products,conversion_rate,7153,0.232,yếu
+fact_order_lines,delivery_days_sla,dim_products,net_weight,1207,-0.231,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,unit_price_before_vat,1086,-0.23,yếu
+fact_inventory_daily_balances,export_quantity,fact_order_lines,discount_percent,416,0.228,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,discount_percent,1279,0.226,yếu
+fact_delivery_details,attempt_count,fact_order_lines,unit_price,1602,-0.224,yếu
+fact_delivery_details,attempt_count,fact_order_lines,unit_price_before_vat,1602,-0.224,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,delivery_days_sla,320,0.223,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,delivery_days_sla,320,0.223,yếu
+fact_inventory_daily_balances,import_quantity,fact_order_lines,discount_percent,416,0.222,yếu
+fact_order_lines,cancelled_qty,dim_products,conversion_rate,7153,0.219,yếu
+fact_order_lines,discount_amount_before_vat,dim_product_prices,price_incl_vat,5061,-0.218,yếu
+fact_order_lines,discount_amount_before_vat,dim_product_prices,price_excl_vat,5061,-0.217,yếu
+fact_delivery_details,attempt_count,fact_order_lines,unit_price_after_discount_after_vat,1602,-0.213,yếu
+fact_delivery_details,attempt_count,fact_order_lines,unit_price_after_discount_before_vat,1602,-0.212,yếu
+fact_order_lines,discount_amount,dim_product_prices,price_excl_vat,5061,-0.21,yếu
+fact_order_lines,discount_amount,dim_product_prices,price_incl_vat,5061,-0.21,yếu
+fact_delivery_details,qty_delivered,dim_products,conversion_rate,1733,0.201,yếu
+fact_inventory_transactions,quantity,fact_order_lines,discount_percent,1323,0.201,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,unit_price_after_discount_after_vat,1086,-0.199,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,unit_price_after_discount_before_vat,1086,-0.199,yếu
+fact_inventory_daily_balances,import_quantity,dim_products,net_weight,481,-0.197,yếu
+fact_delivery_details,attempt_count,dim_product_prices,price_excl_vat,714,-0.196,yếu
+fact_delivery_details,attempt_count,dim_product_prices,price_incl_vat,714,-0.196,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,unit_price,1085,-0.196,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,unit_price_after_discount_after_vat,1086,-0.196,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,unit_price_after_discount_before_vat,1086,-0.196,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,discount_percent,1144,0.194,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,unit_price_before_vat,1086,-0.194,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,delivery_days_sla,641,-0.194,yếu
+fact_order_lines,vat_percent,dim_product_prices,tax_rate,5061,0.194,yếu
+fact_delivery_details,qty_delivered,dim_products,net_weight,1773,-0.193,yếu
+fact_inventory_daily_balances,export_quantity,dim_products,net_weight,481,-0.19,yếu
+fact_order_lines,vat_percent,dim_products,tax_rate,5364,0.189,yếu
+fact_delivery_details,attempt_count,fact_order_lines,vat_percent,1602,0.184,yếu
+fact_order_lines,delivery_days_sla,dim_products,conversion_rate,1169,0.184,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,discount_percent,1144,0.182,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_inventory_transactions,unit_price,587,-0.18,yếu
+fact_delivery_details,qty_received,fact_order_lines,vat_percent,1602,0.179,yếu
+fact_delivery_details,qty_so,fact_order_lines,vat_percent,1602,0.179,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,vat_percent,1602,0.178,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,discount_percent,1323,0.178,yếu
+fact_delivery_details,qty_remain,dim_product_prices,price_excl_vat,714,-0.168,yếu
+fact_delivery_details,qty_remain,dim_product_prices,price_incl_vat,714,-0.168,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_products,conversion_rate,1429,0.168,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,discount_percent,416,0.16,yếu
+fact_delivery_details,qty_remain,fact_order_lines,unit_price,1602,-0.159,yếu
+fact_delivery_details,qty_remain,fact_order_lines,unit_price_before_vat,1602,-0.159,yếu
+fact_inventory_transactions,total_amount,dim_product_prices,price_excl_vat,451,-0.159,yếu
+fact_inventory_transactions,total_amount,dim_product_prices,price_incl_vat,451,-0.159,yếu
+fact_inventory_lot_snapshot,volume_package,dim_products,net_weight,1612,-0.158,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,discount_percent,416,0.153,yếu
+fact_delivery_details,attempt_count,dim_products,net_weight,1773,-0.152,yếu
+fact_delivery_details,qty_remain,fact_order_lines,unit_price_after_discount_after_vat,1602,-0.152,yếu
+fact_delivery_details,qty_remain,fact_order_lines,unit_price_after_discount_before_vat,1602,-0.152,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,unit_price_after_discount_after_vat,1323,-0.143,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,unit_price_after_discount_before_vat,1323,-0.143,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,unit_price,1323,-0.14,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,unit_price_before_vat,1323,-0.14,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_products,conversion_rate,1757,-0.128,yếu
+fact_order_lines,unit_price_after_discount_before_vat,dim_product_prices,tax_rate,5061,-0.12,yếu
+fact_order_lines,unit_price_after_discount_after_vat,dim_product_prices,tax_rate,5061,-0.119,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,vat_percent,1086,0.116,yếu
+fact_inventory_transactions,total_amount,dim_products,conversion_rate,1424,0.116,yếu
+fact_inventory_lot_snapshot,available_package,fact_order_lines,vat_percent,1144,0.115,yếu
+fact_delivery_details,qty_remain,dim_products,net_weight,1773,-0.114,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,cancelled_qty,1323,-0.114,yếu
+fact_inventory_transactions,total_amount,fact_order_lines,vat_percent,1323,0.113,yếu
+fact_order_lines,unit_price,dim_product_prices,tax_rate,5061,-0.113,yếu
+fact_order_lines,unit_price_before_vat,dim_product_prices,tax_rate,5061,-0.113,yếu
+fact_order_lines,discount_amount_before_vat,dim_products,conversion_rate,7153,0.111,yếu
+fact_order_lines,unit_price_after_discount_before_vat,dim_products,tax_rate,5364,-0.111,yếu
+fact_delivery_details,qty_remain,fact_order_lines,vat_percent,1602,0.11,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,unit_price_after_discount_after_vat,1180,0.11,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,unit_price_after_discount_before_vat,1180,0.11,yếu
+fact_order_lines,unit_price_after_discount_after_vat,dim_products,tax_rate,5364,-0.11,yếu
+fact_order_lines,amount_before_discount,dim_product_prices,price_incl_vat,5061,-0.107,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_product_prices,price_incl_vat,5061,-0.107,yếu
+fact_order_lines,amount_before_discount,dim_product_prices,price_excl_vat,5061,-0.106,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_product_prices,price_excl_vat,5061,-0.106,yếu
+fact_order_lines,amount_incl_vat,dim_product_prices,price_incl_vat,5061,-0.106,yếu
+fact_order_lines,discount_amount,dim_products,conversion_rate,7153,0.106,yếu
+fact_order_lines,net_revenue,dim_product_prices,price_incl_vat,5061,-0.106,yếu
+fact_order_lines,vat_amount,dim_product_prices,price_incl_vat,5061,-0.106,yếu
+fact_inventory_lot_snapshot,qty_package,fact_order_lines,vat_percent,1144,0.105,yếu
+fact_order_lines,amount_incl_vat,dim_product_prices,price_excl_vat,5061,-0.105,yếu
+fact_order_lines,net_revenue,dim_product_prices,price_excl_vat,5061,-0.105,yếu
+fact_order_lines,unit_price_before_vat,dim_products,tax_rate,5364,-0.105,yếu
+fact_order_lines,vat_amount,dim_product_prices,price_excl_vat,5061,-0.105,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,discount_percent,1086,0.104,yếu
+fact_order_lines,unit_price,dim_products,tax_rate,5362,-0.104,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,unit_price_before_vat,1180,0.103,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,unit_price,1179,0.102,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,unit_price,1278,-0.101,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,unit_price_before_vat,1279,-0.1,yếu
+fact_inventory_transactions,quantity,fact_order_lines,vat_percent,1323,0.098,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,unit_price_after_discount_after_vat,1279,-0.095,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,unit_price_after_discount_before_vat,1279,-0.095,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,discount_percent,1144,0.093,yếu
+fact_inventory_lot_snapshot,volume_package,dim_product_prices,tax_rate,1068,-0.093,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,discount_amount,1323,0.093,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,discount_amount_before_vat,1323,0.093,yếu
+fact_delivery_details,qty_received,fact_order_lines,discount_percent,1602,0.092,yếu
+dim_product_prices,price_excl_vat,dim_products,tax_rate,5483,-0.092,yếu
+fact_delivery_details,qty_so,fact_order_lines,discount_percent,1602,0.091,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_order_lines,discount_percent,1086,0.091,yếu
+fact_delivery_details,attempt_count,fact_order_lines,discount_percent,1602,0.09,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,vat_percent,1144,0.09,yếu
+fact_inventory_lot_snapshot,volume_package,dim_products,tax_rate,1218,-0.09,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,amount_before_discount,1323,0.09,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,amount_before_discount_before_vat,1323,0.09,yếu
+fact_order_lines,discount_percent,dim_products,conversion_rate,7153,0.09,yếu
+fact_inventory_lot_snapshot,available_primary,fact_order_lines,vat_percent,1279,0.089,yếu
+fact_delivery_details,qty_remain,dim_products,conversion_rate,1733,0.088,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,vat_percent,1279,0.088,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,amount_incl_vat,1323,0.088,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,net_revenue,1323,0.088,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,vat_amount,1323,0.088,yếu
+dim_product_prices,price_incl_vat,dim_products,tax_rate,5483,-0.087,yếu
+fact_inventory_lot_snapshot,volume_package,dim_products,conversion_rate,1592,0.086,yếu
+fact_order_lines,sales_qty_carton,dim_products,conversion_rate,7150,0.084,yếu
+fact_inventory_lot_snapshot,qty_package,fact_inventory_transactions,unit_price,587,-0.083,yếu
+fact_delivery_details,qty_delivered,fact_order_lines,discount_percent,1602,0.081,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,vat_percent,1323,-0.08,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,unit_price,1290,-0.078,yếu
+fact_inventory_lot_snapshot,qty_package,dim_product_prices,tax_rate,1158,-0.077,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,unit_price_before_vat,1291,-0.077,yếu
+fact_delivery_details,attempt_count,dim_products,conversion_rate,1733,0.075,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,unit_price_after_discount_after_vat,1291,-0.075,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,unit_price_after_discount_before_vat,1291,-0.075,yếu
+fact_inventory_lot_snapshot,qty_primary,fact_order_lines,vat_percent,1291,0.073,yếu
+fact_inventory_lot_snapshot,available_package,fact_inventory_transactions,unit_price,587,-0.072,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_product_prices,tax_rate,1065,-0.068,yếu
+fact_inventory_lot_snapshot,qty_package,dim_products,tax_rate,1338,-0.067,yếu
+fact_inventory_daily_balances,import_quantity,fact_inventory_transactions,unit_price,344,0.066,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,fact_inventory_transactions,unit_price,587,0.066,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,unit_price_after_discount_after_vat,1144,-0.064,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,unit_price_after_discount_before_vat,1144,-0.064,yếu
+fact_inventory_transactions,unit_price,fact_order_lines,sales_qty_carton,1323,-0.063,yếu
+fact_inventory_lot_snapshot,volume_package,fact_inventory_transactions,unit_price,586,0.062,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_product_prices,tax_rate,1158,-0.061,yếu
+fact_inventory_lot_snapshot,available_package,dim_product_prices,tax_rate,1158,-0.06,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,unit_price,1143,-0.056,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_product_prices,tax_rate,1176,-0.056,yếu
+fact_inventory_daily_balances,closing_quantity,fact_order_lines,vat_percent,416,0.055,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_order_lines,unit_price_before_vat,1144,-0.053,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_product_prices,tax_rate,1218,-0.052,yếu
+fact_inventory_daily_balances,opening_quantity,fact_order_lines,vat_percent,416,0.051,yếu
+fact_inventory_lot_snapshot,available_package,dim_products,tax_rate,1338,-0.051,yếu
+fact_inventory_daily_balances,export_quantity,fact_inventory_transactions,unit_price,344,0.05,yếu
+fact_inventory_lot_snapshot,reservation_package,dim_products,tax_rate,1338,-0.049,yếu
+fact_order_lines,amount_before_discount,dim_products,conversion_rate,7153,0.044,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_products,conversion_rate,7153,0.044,yếu
+fact_order_lines,amount_incl_vat,dim_product_prices,tax_rate,5061,-0.043,yếu
+fact_order_lines,net_revenue,dim_product_prices,tax_rate,5061,-0.043,yếu
+fact_order_lines,vat_amount,dim_products,conversion_rate,7153,0.043,yếu
+fact_order_lines,amount_before_discount,dim_product_prices,tax_rate,5061,-0.042,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_product_prices,tax_rate,5061,-0.042,yếu
+fact_order_lines,amount_incl_vat,dim_products,conversion_rate,7153,0.042,yếu
+fact_order_lines,net_revenue,dim_products,conversion_rate,7153,0.042,yếu
+fact_inventory_lot_snapshot,volume_primary,dim_products,tax_rate,1275,-0.041,yếu
+fact_order_lines,net_revenue,dim_products,tax_rate,5364,-0.04,yếu
+fact_order_lines,amount_before_discount_before_vat,dim_products,tax_rate,5364,-0.039,yếu
+fact_order_lines,amount_incl_vat,dim_products,tax_rate,5364,-0.039,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,unit_price_before_vat,1279,0.038,yếu
+fact_order_lines,amount_before_discount,dim_products,tax_rate,5364,-0.038,yếu
+fact_inventory_lot_snapshot,volume_package,fact_order_lines,vat_percent,1086,0.037,yếu
+fact_delivery_details,qty_remain,fact_inventory_transactions,unit_price,931,-0.036,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,unit_price,1278,0.036,yếu
+fact_inventory_lot_snapshot,available_primary,dim_product_prices,tax_rate,1176,-0.032,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_inventory_transactions,unit_price,587,0.032,yếu
+fact_order_lines,vat_amount,dim_product_prices,tax_rate,5061,-0.031,yếu
+fact_delivery_details,attempt_count,dim_products,tax_rate,747,-0.03,yếu
+fact_delivery_details,qty_remain,fact_order_lines,discount_percent,1602,0.03,yếu
+fact_delivery_details,attempt_count,dim_product_prices,tax_rate,714,-0.029,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_products,conversion_rate,1766,0.028,yếu
+fact_order_lines,vat_amount,dim_products,tax_rate,5364,-0.028,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,unit_price_after_discount_after_vat,1279,0.027,yếu
+fact_inventory_lot_snapshot,reservation_primary,fact_order_lines,unit_price_after_discount_before_vat,1279,0.027,yếu
+fact_order_lines,vat_percent,dim_products,net_weight,7429,-0.027,yếu
+fact_delivery_details,qty_delivered,dim_product_prices,tax_rate,714,0.026,yếu
+fact_delivery_details,qty_delivered,dim_products,tax_rate,747,0.025,yếu
+fact_delivery_details,qty_received,dim_product_prices,tax_rate,714,0.024,yếu
+fact_delivery_details,qty_so,dim_product_prices,tax_rate,714,0.024,yếu
+fact_delivery_details,qty_received,dim_products,tax_rate,747,0.023,yếu
+fact_delivery_details,qty_so,dim_products,tax_rate,747,0.023,yếu
+fact_inventory_lot_snapshot,qty_primary,dim_products,tax_rate,2000,-0.023,yếu
+fact_delivery_details,attempt_count,fact_inventory_transactions,unit_price,931,-0.022,yếu
+fact_inventory_lot_snapshot,volume_primary,fact_order_lines,vat_percent,1180,0.022,yếu
+fact_inventory_lot_snapshot,reservation_primary,dim_products,tax_rate,1930,-0.021,yếu
+fact_inventory_lot_snapshot,qty_package,dim_products,conversion_rate,1757,-0.02,yếu
+fact_delivery_details,qty_remain,dim_product_prices,tax_rate,714,0.017,yếu
+fact_delivery_details,qty_remain,dim_products,tax_rate,747,0.016,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_products,conversion_rate,1542,0.016,yếu
+fact_order_lines,shipped_qty,dim_product_prices,tax_rate,5061,0.015,yếu
+fact_order_lines,shipped_qty,dim_products,tax_rate,5364,0.015,yếu
+fact_inventory_lot_snapshot,reservation_package,fact_inventory_transactions,unit_price,587,0.014,yếu
+fact_order_lines,delivery_days_sla,dim_product_prices,tax_rate,755,0.013,yếu
+fact_order_lines,sales_qty,dim_product_prices,tax_rate,5061,0.013,yếu
+fact_order_lines,sales_qty,dim_products,tax_rate,5364,0.013,yếu
+fact_order_lines,sales_qty_carton,dim_product_prices,tax_rate,5024,-0.012,yếu
+fact_order_lines,sales_qty_carton,dim_products,tax_rate,5161,-0.012,yếu
+fact_inventory_lot_snapshot,available_package,dim_products,conversion_rate,1757,0.011,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_product_prices,tax_rate,1137,-0.011,yếu
+fact_order_lines,delivery_days_sla,dim_products,tax_rate,811,0.011,yếu
+fact_inventory_lot_snapshot,expiry_warning_days,dim_products,tax_rate,1165,-0.01,yếu
+fact_order_lines,discount_amount_before_vat,dim_product_prices,tax_rate,5061,-0.01,yếu
+fact_order_lines,discount_amount_before_vat,dim_products,tax_rate,5364,-0.01,yếu
+fact_order_lines,discount_amount,dim_products,tax_rate,5364,0.005,yếu
+dim_product_prices,tax_rate,dim_products,conversion_rate,5435,0.005,yếu
+dim_product_prices,tax_rate,dim_products,net_weight,5354,0.005,yếu
+fact_order_lines,discount_amount,dim_product_prices,tax_rate,5061,0.004,yếu
+fact_order_lines,discount_percent,dim_product_prices,tax_rate,5061,-0.004,yếu
+fact_order_lines,discount_percent,dim_products,tax_rate,5364,-0.004,yếu
+fact_inventory_lot_snapshot,available_primary,dim_products,tax_rate,1930,-0.002,yếu
+fact_order_lines,cancelled_qty,dim_product_prices,tax_rate,5061,-0.002,yếu
+fact_order_lines,cancelled_qty,dim_products,tax_rate,5364,-0.002,yếu

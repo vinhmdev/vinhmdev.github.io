@@ -1,0 +1,11 @@
+chi_tieu,so_dong,ty_le
+Tổng dòng đã nạp,6368,1.0
+Đọc được cửa sổ thời gian,6123,0.9615
+Năm phải suy từ mã ORC,2458,0.386
+Cửa sổ NTD thay bằng cửa sổ đặt hàng,4004,0.6288
+Khớp mã hàng sang dim_products,5917,0.9292
+Khớp chuỗi sang thương hiệu cửa hàng,6024,0.946
+Có mức giảm (%),5217,0.8193
+Có sản lượng FC,1768,0.2776
+Còn hiệu lực,6298,0.989
+Một ô ghi nhiều mã SKU,0,0.0

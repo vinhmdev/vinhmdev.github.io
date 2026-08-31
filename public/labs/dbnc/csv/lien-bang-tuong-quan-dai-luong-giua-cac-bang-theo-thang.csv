@@ -1,0 +1,20 @@
+dai_luong_1,dai_luong_2,so_thang_chung,spearman,muc_do
+san_luong_thung,doanh_thu,20,0.949,đi cùng nhau chặt
+so_cua_hang_mua,dong_hoan_tat,20,0.889,đi cùng nhau chặt
+dong_giao_hang,dong_hoan_tat,8,0.833,đi cùng nhau chặt
+so_cua_hang_mua,dong_giao_hang,8,0.786,đi cùng nhau chặt
+doanh_thu,luot_ghe,9,0.783,đi cùng nhau chặt
+san_luong_thung,dong_giao_hang,8,0.762,đi cùng nhau chặt
+san_luong_thung,dong_hoan_tat,20,0.737,đi cùng nhau chặt
+dong_hoan_tat,giao_dich_kho,10,0.733,đi cùng nhau chặt
+doanh_thu,dong_hoan_tat,20,0.708,đi cùng nhau chặt
+san_luong_thung,luot_ghe,9,0.667,đi cùng nhau vừa
+doanh_thu,dong_giao_hang,8,0.643,đi cùng nhau vừa
+san_luong_thung,so_cua_hang_mua,20,0.602,đi cùng nhau vừa
+doanh_thu,so_cua_hang_mua,20,0.544,đi cùng nhau vừa
+so_cua_hang_mua,luot_ghe,9,0.433,đi cùng nhau vừa
+doanh_thu,giao_dich_kho,10,0.358,gần như không liên hệ
+san_luong_thung,giao_dich_kho,10,0.345,gần như không liên hệ
+so_cua_hang_mua,giao_dich_kho,10,0.345,gần như không liên hệ
+luot_ghe,dong_hoan_tat,9,0.267,gần như không liên hệ
+luot_ghe,giao_dich_kho,9,0.25,gần như không liên hệ
