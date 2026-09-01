@@ -1,135 +1,119 @@
 hang,truong,dang,loai,so_gia_tri_khac_nhau,khuyet_pct,thong_tin_tuong_ho_bit,phan_bat_dinh_giai_thich,ghi_chu
-1,net_revenue,số,nhãn viết cách khác,7504,0.0,1.3774,0.8859,—
-2,shipped_qty,số,biết sau kỳ,634,0.0,1.3084,0.8415,—
-3,sales_qty_carton,số,nhãn viết cách khác,1131,0.0,1.272,0.8181,—
-4,qty_per_purchase,số,nhãn viết cách khác,1280,66.146,1.1738,0.7549,—
-5,amount_incl_vat,số,biết sau kỳ,6917,0.0,1.1702,0.7526,—
-6,vat_amount,số,biết sau kỳ,6602,0.0,1.1504,0.7398,—
-7,effective_unit_price,số,nhãn viết cách khác,4615,66.168,1.0361,0.6663,—
-8,avg_unit_price,số,biết sau kỳ,1768,66.147,0.9378,0.6032,—
-9,avg_unit_price_excl_vat,số,biết sau kỳ,1812,66.146,0.9351,0.6014,—
-10,purchase_count,số,nhãn viết cách khác,28,0.0,0.7219,0.4643,—
-11,salesman_id,số,định danh,298,66.146,0.6447,0.4147,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-12,remaining_warehouse_count,số,biết sau kỳ,4,0.0,0.6412,0.4124,—
-13,has_purchase,số,biết sau kỳ,2,0.0,0.6409,0.4122,—
-14,issuing_warehouse_count,số,biết sau kỳ,3,0.0,0.6364,0.4093,—
-15,chain_name,phân loại,biết sau kỳ,22,68.997,0.6263,0.4028,—
-16,last_purchase_day,số,biết sau kỳ,32,66.146,0.6051,0.3892,—
-17,first_purchase_day,số,biết sau kỳ,32,66.146,0.5983,0.3848,—
-18,order_count,số,biết sau kỳ,38,0.0,0.5977,0.3844,—
-19,eco_line_count,số,biết sau kỳ,50,0.0,0.5464,0.3514,—
-20,line_status_count,số,biết sau kỳ,5,0.0,0.5367,0.3452,—
-21,order_source_count,số,biết sau kỳ,3,0.0,0.5233,0.3365,—
-22,order_type_count,số,biết sau kỳ,3,0.0,0.5197,0.3343,—
-23,discount_rate,số,biết sau kỳ,3263,66.931,0.4769,0.3067,—
-24,discount_amount,số,biết sau kỳ,2360,0.0,0.4729,0.3041,—
-25,product_key,số,định danh,527,0.0,0.3593,0.2311,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-26,product_code,phân loại,biết trước kỳ,316,0.0,0.3484,0.2241,—
-27,product_name,phân loại,biết trước kỳ,316,0.0,0.3484,0.2241,—
-28,qty_per_carton,số,biết trước kỳ,323,0.168,0.346,0.2225,—
-29,chain_key,số,định danh,22,68.997,0.343,0.2206,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-30,net_weight,số,biết trước kỳ,141,0.444,0.291,0.1872,—
-31,brand_id,số,định danh,85,0.0,0.2798,0.18,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-32,inv_total_amount,số,biết sau kỳ,36515,11.537,0.234,0.1505,—
-33,inv_vat,số,biết sau kỳ,35151,11.537,0.2337,0.1503,—
-34,inv_net_revenue,số,biết sau kỳ,36631,11.537,0.2336,0.1503,—
-35,conversion_rate,số,biết trước kỳ,35,0.471,0.2233,0.1436,—
-36,months_since_first_purchase,số,biết trước kỳ,16,0.0,0.2022,0.1301,—
-37,discount_excl_vat,số,biết sau kỳ,1995,0.0,0.2021,0.13,—
-38,inv_discount,số,biết sau kỳ,29626,11.537,0.2018,0.1298,—
-39,store_code,phân loại,biết trước kỳ,5029,0.0,0.1872,0.1204,lực lượng quá cao — gần như định danh từng dòng
-40,store_name,phân loại,biết trước kỳ,5027,0.0,0.1872,0.1204,lực lượng quá cao — gần như định danh từng dòng
-41,site_number,phân loại,biết trước kỳ,5029,0.0,0.1872,0.1204,lực lượng quá cao — gần như định danh từng dòng
-42,adjusted_sales_rate,số,nhãn viết cách khác,522,84.867,0.1822,0.1171,—
-43,unit_price_stddev,số,biết sau kỳ,1050,66.147,0.1745,0.1122,—
-44,promo_budget,số,biết trước kỳ,899,38.661,0.1663,0.1069,—
-45,store_key,số,định danh,5029,0.0,0.1621,0.1042,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-46,promo_day_weighted_discount_pct,số,biết trước kỳ,496,43.681,0.1605,0.1032,—
-47,category_code,số,biết trước kỳ,27,0.0,0.1491,0.0959,—
-48,category_id,số,định danh,27,0.0,0.1483,0.0954,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-49,store_brand_code,phân loại,biết trước kỳ,34,0.036,0.1477,0.095,—
-50,inv_delivered_revenue,số,biết sau kỳ,19934,11.537,0.1419,0.0913,—
-51,inv_item_count,số,biết sau kỳ,475,11.537,0.121,0.0778,—
-52,store_system,số,biết trước kỳ,32,0.0,0.1209,0.0777,—
-53,dlv_received_qty,số,biết sau kỳ,323,95.409,0.1159,0.0746,—
-54,dlv_ordered_qty,số,biết sau kỳ,318,95.409,0.1138,0.0732,—
-55,dlv_shipped_qty,số,biết sau kỳ,301,95.409,0.1122,0.0722,—
-56,promo_max_discount_pct,số,biết trước kỳ,163,43.681,0.1079,0.0694,—
-57,avg_tmax,số,biết trước kỳ,962,0.088,0.1046,0.0673,—
-58,avg_tmin,số,biết trước kỳ,971,0.088,0.0984,0.0633,—
-59,total_rainfall,số,biết trước kỳ,948,0.088,0.0971,0.0625,—
-60,promo_day_ratio,số,biết trước kỳ,82,0.51,0.0946,0.0608,—
-61,uom,phân loại,biết trước kỳ,11,0.168,0.0882,0.0567,—
-62,inv_line_count,số,biết sau kỳ,60,11.537,0.0831,0.0534,—
-63,inv_order_count,số,biết sau kỳ,60,11.537,0.0791,0.0508,—
-64,avg_vat_rate,số,biết sau kỳ,63,66.146,0.0781,0.0502,—
-65,pjp_route,phân loại,biết trước kỳ,102,4.264,0.0761,0.049,—
-66,promo_forecast_qty,số,biết trước kỳ,127,38.661,0.0706,0.0454,—
-67,promo_days,số,biết trước kỳ,33,0.51,0.0646,0.0415,—
-68,free_line_count,số,biết sau kỳ,28,0.0,0.0613,0.0394,—
-69,ym,số,định danh,16,0.0,0.0597,0.0384,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-70,avg_days_to_delivery,số,biết sau kỳ,224,93.78,0.0566,0.0364,—
-71,peak_tmax,số,biết trước kỳ,164,0.088,0.0537,0.0345,—
-72,supplier_id,số,định danh,16,0.438,0.0517,0.0333,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-73,canceled_qty,số,biết sau kỳ,158,0.0,0.0502,0.0323,—
-74,route_rep_id,số,định danh,75,4.264,0.0495,0.0318,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-75,channel_code,số,biết trước kỳ,6,0.0,0.045,0.029,—
-76,channel_name,phân loại,biết trước kỳ,6,0.0,0.0415,0.0267,—
-77,city_name,phân loại,biết trước kỳ,63,0.0,0.0386,0.0249,—
-78,site_domain_path,phân loại,biết trước kỳ,63,0.0,0.0386,0.0249,—
-79,supervisor_id,số,định danh,75,96.882,0.0381,0.0245,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-80,promo_has_free_goods,số,biết trước kỳ,3,0.51,0.0351,0.0226,—
-81,shelf_life,số,biết trước kỳ,8,3.377,0.0341,0.0219,—
-82,avg_work_minutes,số,biết sau kỳ,14117,56.208,0.0322,0.0207,—
-83,dlv_line_count,số,biết sau kỳ,51,95.409,0.0313,0.0202,—
-84,asm_id,số,định danh,36,97.456,0.0287,0.0185,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-85,avg_travel_km,số,biết sau kỳ,6748,54.879,0.0273,0.0175,—
-86,avg_travel_minutes,số,biết sau kỳ,9083,54.879,0.0269,0.0173,—
-87,rain_days,số,biết trước kỳ,31,0.088,0.0268,0.0172,—
-88,serving_warehouse_key,số,định danh,7,0.0,0.0244,0.0157,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-89,promo_count,số,biết trước kỳ,9,0.51,0.021,0.0135,—
-90,discount_pct_stddev,số,biết sau kỳ,147,66.146,0.0196,0.0126,—
-91,visit_days,số,biết sau kỳ,30,0.0,0.0151,0.0097,—
-92,flag_promo_regime,phân loại,biết trước kỳ,2,0.0,0.0148,0.0095,—
-93,promo_allocation_level,phân loại,biết trước kỳ,4,38.711,0.0146,0.0094,—
-94,dlv_shipper_count,số,biết sau kỳ,22,95.409,0.0141,0.0091,—
-95,planned_visit_days,số,biết trước kỳ,30,54.879,0.0133,0.0086,—
-96,freezer_capacity,phân loại,biết trước kỳ,13,47.384,0.0122,0.0078,—
-97,promo_has_gift,số,biết trước kỳ,3,0.51,0.0113,0.0073,—
-98,working_days,số,biết trước kỳ,4,0.0,0.0109,0.007,—
-99,has_visit_data,số,biết sau kỳ,2,0.0,0.0109,0.007,—
-100,in_stock_days,số,biết sau kỳ,31,0.0,0.0099,0.0063,—
-101,freezer_count,số,biết trước kỳ,8,0.0,0.0098,0.0063,—
-102,stock_tracked_days,số,biết sau kỳ,27,0.0,0.0095,0.0061,—
-103,avg_delivery_sla_days,số,biết sau kỳ,75,99.199,0.0075,0.0048,—
-104,flag_suspect_month,số,định danh,2,0.0,0.0065,0.0042,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-105,promo_has_price_cut,số,biết trước kỳ,3,0.51,0.0059,0.0038,—
-106,dlv_warehouse_confirmed_lines,số,biết sau kỳ,25,95.409,0.0058,0.0037,—
-107,calendar_days,số,biết trước kỳ,3,0.0,0.0048,0.0031,—
-108,visit_compliance_rate,số,biết sau kỳ,91,54.879,0.0047,0.003,—
-109,stockout_days,số,biết sau kỳ,18,0.0,0.0044,0.0028,—
-110,admin_canceled_line_count,số,biết sau kỳ,2,0.0,0.0021,0.0014,—
-111,visiting_rep_count,số,biết sau kỳ,6,54.879,0.0019,0.0012,—
-112,stock_source,phân loại,biết sau kỳ,2,84.841,0.0018,0.0012,—
-113,has_stock_data,số,biết sau kỳ,2,0.0,0.0015,0.001,—
-114,site_domain_level,số,định danh,2,0.0,0.0004,0.0003,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
-115,dlv_avg_attempts,số,biết sau kỳ,17,95.409,0.0,0.0,—
-116,has_promo_data,số,biết trước kỳ,3,0.036,0.0,0.0,—
-117,account_status,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-118,store_group_code,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-119,store_format,—,biết trước kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-120,is_legal_entity,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-121,sub_brand,—,biết trước kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-122,volume,—,biết trước kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-123,unit_per_pack,—,biết trước kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-124,mt_price_exc_vat,—,biết trước kỳ,2,98.961,,,rỗng hoàn toàn hoặc hằng số — không xét được
-125,mt_price_inc_vat,—,biết trước kỳ,2,98.961,,,rỗng hoàn toàn hoặc hằng số — không xét được
-126,tax_rate,—,biết trước kỳ,2,6.05,,,rỗng hoàn toàn hoặc hằng số — không xét được
-127,avg_stock_qty,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-128,stock_in_qty,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-129,stock_out_qty,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-130,txn_line_count,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-131,txn_qty,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-132,txn_value,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-133,txn_avg_unit_price,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
-134,txn_type_count,—,biết sau kỳ,1,100.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
+1,shipped_qty,số,biết sau kỳ,786,0.0,1.5373,0.9942,—
+2,amount_incl_vat,số,biết sau kỳ,8527,0.0,1.4498,0.9376,—
+3,net_revenue,số,nhãn viết cách khác,7834,0.0,1.4404,0.9316,—
+4,vat_amount,số,biết sau kỳ,8304,0.0,1.4263,0.9224,—
+5,sales_qty_carton,số,nhãn viết cách khác,1052,0.0,1.2924,0.8358,—
+6,qty_per_purchase,số,nhãn viết cách khác,1368,65.516,1.1903,0.7699,—
+7,effective_unit_price,số,nhãn viết cách khác,4785,65.534,1.024,0.6623,—
+8,avg_unit_price,số,biết sau kỳ,2127,65.516,0.9532,0.6165,—
+9,avg_unit_price_excl_vat,số,biết sau kỳ,2289,65.516,0.9515,0.6154,—
+10,order_count,số,biết sau kỳ,38,0.0,0.7377,0.4771,—
+11,purchase_count,số,nhãn viết cách khác,28,0.0,0.73,0.4721,—
+12,salesman_id,số,định danh,292,65.516,0.6774,0.4381,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+13,line_status_count,số,biết sau kỳ,7,0.0,0.6643,0.4296,—
+14,eco_line_count,số,biết sau kỳ,50,0.0,0.6572,0.4251,—
+15,remaining_warehouse_count,số,biết sau kỳ,5,0.0,0.6494,0.42,—
+16,order_type_count,số,biết sau kỳ,4,0.0,0.6478,0.419,—
+17,order_source_count,số,biết sau kỳ,3,0.0,0.6474,0.4187,—
+18,issuing_warehouse_count,số,biết sau kỳ,3,0.0,0.6435,0.4162,—
+19,has_purchase,số,biết sau kỳ,2,0.0,0.6415,0.4149,—
+20,last_purchase_day,số,biết sau kỳ,32,65.516,0.6112,0.3953,—
+21,first_purchase_day,số,biết sau kỳ,32,65.516,0.6027,0.3898,—
+22,discount_rate,số,biết sau kỳ,4158,65.612,0.5064,0.3275,—
+23,discount_amount,số,biết sau kỳ,2504,0.0,0.4937,0.3193,—
+24,product_code,phân loại,biết trước kỳ,253,0.0,0.3484,0.2254,—
+25,product_name,phân loại,biết trước kỳ,253,0.0,0.3484,0.2254,—
+26,product_key,số,định danh,253,0.0,0.3385,0.2189,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+27,qty_per_carton,số,biết trước kỳ,175,0.004,0.3321,0.2148,—
+28,net_weight,số,biết trước kỳ,118,0.013,0.2936,0.1899,—
+29,brand_id,số,định danh,64,0.0,0.2724,0.1761,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+30,inv_total_amount,số,biết sau kỳ,36616,11.822,0.2473,0.1599,—
+31,discount_excl_vat,số,biết sau kỳ,2479,0.0,0.2463,0.1593,—
+32,inv_net_revenue,số,biết sau kỳ,36724,11.822,0.2461,0.1592,—
+33,inv_vat,số,biết sau kỳ,35242,11.822,0.2443,0.158,—
+34,conversion_rate,số,biết trước kỳ,21,0.004,0.2288,0.148,—
+35,inv_discount,số,biết sau kỳ,29723,11.822,0.2088,0.135,—
+36,store_name,phân loại,biết trước kỳ,5045,0.0,0.1984,0.1283,lực lượng quá cao — gần như định danh từng dòng
+37,store_code,phân loại,biết trước kỳ,5048,0.0,0.1983,0.1283,lực lượng quá cao — gần như định danh từng dòng
+38,site_number,phân loại,biết trước kỳ,5048,0.0,0.1983,0.1283,lực lượng quá cao — gần như định danh từng dòng
+39,unit_price_stddev,số,biết sau kỳ,1390,65.516,0.1905,0.1232,—
+40,adjusted_sales_rate,số,nhãn viết cách khác,495,84.546,0.1863,0.1205,—
+41,store_key,số,định danh,5048,0.0,0.1777,0.115,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+42,promo_budget,số,biết trước kỳ,896,36.52,0.1764,0.1141,—
+43,promo_day_weighted_discount_pct,số,biết trước kỳ,496,41.715,0.1714,0.1109,—
+44,store_brand_code,phân loại,biết trước kỳ,34,0.035,0.162,0.1048,—
+45,inv_delivered_revenue,số,biết sau kỳ,19959,11.822,0.1519,0.0982,—
+46,category_id,số,định danh,25,0.0,0.1491,0.0964,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+47,category_code,số,biết trước kỳ,25,0.0,0.1478,0.0956,—
+48,store_system,số,biết trước kỳ,33,0.0,0.1345,0.087,—
+49,months_since_first_purchase,số,biết trước kỳ,16,0.0,0.1289,0.0834,—
+50,inv_item_count,số,biết sau kỳ,476,11.822,0.1288,0.0833,—
+51,dlv_received_qty,số,biết sau kỳ,330,95.043,0.1269,0.0821,—
+52,dlv_ordered_qty,số,biết sau kỳ,326,95.043,0.125,0.0808,—
+53,dlv_shipped_qty,số,biết sau kỳ,314,95.043,0.1181,0.0764,—
+54,promo_max_discount_pct,số,biết trước kỳ,160,41.715,0.1166,0.0754,—
+55,avg_tmax,số,biết trước kỳ,961,0.094,0.1067,0.069,—
+56,avg_tmin,số,biết trước kỳ,971,0.094,0.1055,0.0682,—
+57,total_rainfall,số,biết trước kỳ,948,0.094,0.0998,0.0646,—
+58,uom,phân loại,biết trước kỳ,10,0.004,0.0992,0.0642,—
+59,promo_day_ratio,số,biết trước kỳ,82,0.501,0.0942,0.0609,—
+60,inv_line_count,số,biết sau kỳ,60,11.822,0.0909,0.0588,—
+61,inv_order_count,số,biết sau kỳ,60,11.822,0.0907,0.0587,—
+62,avg_vat_rate,số,biết sau kỳ,103,65.516,0.082,0.0531,—
+63,pjp_route,phân loại,biết trước kỳ,101,4.128,0.0792,0.0512,—
+64,promo_forecast_qty,số,biết trước kỳ,128,36.52,0.0731,0.0473,—
+65,canceled_qty,số,biết sau kỳ,197,0.0,0.0673,0.0435,—
+66,ym,số,định danh,16,0.0,0.0642,0.0415,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+67,promo_days,số,biết trước kỳ,33,0.501,0.0636,0.0412,—
+68,avg_days_to_delivery,số,biết sau kỳ,285,93.733,0.0589,0.0381,—
+69,supplier_id,số,định danh,15,0.004,0.0581,0.0376,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+70,free_line_count,số,biết sau kỳ,28,0.0,0.0573,0.037,—
+71,route_rep_id,số,định danh,75,4.128,0.0563,0.0364,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+72,peak_tmax,số,biết trước kỳ,164,0.094,0.0558,0.0361,—
+73,channel_name,phân loại,biết trước kỳ,6,0.0,0.0479,0.031,—
+74,channel_code,số,biết trước kỳ,6,0.0,0.0478,0.0309,—
+75,shelf_life,số,biết trước kỳ,10,0.004,0.0401,0.0259,—
+76,supervisor_id,số,định danh,74,96.861,0.0392,0.0254,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+77,city_name,phân loại,biết trước kỳ,63,0.0,0.0388,0.0251,—
+78,site_domain_path,phân loại,biết trước kỳ,63,0.0,0.0388,0.0251,—
+79,avg_work_minutes,số,biết sau kỳ,14071,57.136,0.0371,0.024,—
+80,dlv_line_count,số,biết sau kỳ,45,95.043,0.0359,0.0232,—
+81,promo_has_free_goods,số,biết trước kỳ,3,0.501,0.034,0.022,—
+82,avg_travel_km,số,biết sau kỳ,6745,55.798,0.0297,0.0192,—
+83,asm_id,số,định danh,35,97.428,0.0293,0.019,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+84,rain_days,số,biết trước kỳ,31,0.094,0.0291,0.0188,—
+85,avg_travel_minutes,số,biết sau kỳ,9082,55.798,0.0282,0.0182,—
+86,discount_pct_stddev,số,biết sau kỳ,222,65.516,0.0268,0.0173,—
+87,serving_warehouse_key,số,định danh,7,0.0,0.0255,0.0165,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+88,promo_count,số,biết trước kỳ,9,0.501,0.0227,0.0147,—
+89,flag_promo_regime,phân loại,biết trước kỳ,2,0.0,0.0163,0.0105,—
+90,visit_days,số,biết sau kỳ,30,0.0,0.0161,0.0104,—
+91,freezer_count,số,biết trước kỳ,8,0.0,0.0152,0.0098,—
+92,freezer_capacity,phân loại,biết trước kỳ,13,47.468,0.0142,0.0092,—
+93,planned_visit_days,số,biết trước kỳ,30,55.798,0.0138,0.0089,—
+94,dlv_shipper_count,số,biết sau kỳ,20,95.043,0.0131,0.0085,—
+95,promo_allocation_level,phân loại,biết trước kỳ,4,36.588,0.0131,0.0085,—
+96,has_visit_data,số,biết sau kỳ,2,0.0,0.0118,0.0076,—
+97,promo_has_gift,số,biết trước kỳ,3,0.501,0.0098,0.0063,—
+98,avg_delivery_sla_days,số,biết sau kỳ,93,99.183,0.0078,0.005,—
+99,working_days,số,biết trước kỳ,4,0.0,0.0073,0.0048,—
+100,in_stock_days,số,biết sau kỳ,31,0.0,0.0067,0.0044,—
+101,flag_suspect_month,số,định danh,2,0.0,0.0058,0.0038,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+102,stock_tracked_days,số,biết sau kỳ,28,0.0,0.0049,0.0032,—
+103,stock_source,phân loại,biết sau kỳ,2,84.525,0.0049,0.0032,—
+104,calendar_days,số,biết trước kỳ,3,0.0,0.0046,0.003,—
+105,dlv_warehouse_confirmed_lines,số,biết sau kỳ,27,95.043,0.0046,0.0029,—
+106,has_stock_data,số,biết sau kỳ,2,0.0,0.0038,0.0024,—
+107,promo_has_price_cut,số,biết trước kỳ,3,0.501,0.0038,0.0024,—
+108,site_domain_level,số,định danh,2,0.0,0.0026,0.0017,"ĐỊNH DANH — điểm là do ghi nhớ, không phải sức dự báo"
+109,visit_compliance_rate,số,biết sau kỳ,90,55.798,0.0016,0.001,—
+110,has_promo_data,số,biết trước kỳ,3,0.035,0.0012,0.0008,—
+111,visiting_rep_count,số,biết sau kỳ,6,55.798,0.0008,0.0005,—
+112,stockout_days,số,biết sau kỳ,17,0.0,0.0,0.0,—
+113,tax_rate,số,biết trước kỳ,1,0.0,0.0,0.0,—
+114,admin_canceled_line_count,số,biết sau kỳ,2,0.0,0.0,0.0,—
+115,dlv_avg_attempts,số,biết sau kỳ,14,95.043,0.0,0.0,—
+116,account_status,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
+117,store_group_code,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được
+118,is_legal_entity,—,biết trước kỳ,1,0.0,,,rỗng hoàn toàn hoặc hằng số — không xét được

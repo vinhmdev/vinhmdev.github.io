@@ -1,10 +1,9 @@
 quyet_dinh,quy_tac,so_truong,vi_sao,vi_du
 NHÃN,R0,1,"Đây là đại lượng cần dự báo. Chọn cột nào làm nhãn là quyết định QD-07, chưa chốt — xem mục Nhãn dự báo.",sales_qty_carton
 BỎ,R1,5,"Cùng một đại lượng với nhãn, viết cách khác. Tương quan cao là hiển nhiên, không phải tín hiệu; đưa vào là mô hình học chép lại đáp án.","adjusted_sales_rate, effective_unit_price, net_revenue, purchase_count, qty_per_purchase"
-BỎ,R2,8,Riêng việc cột này khuyết hay không đã tách được nhãn. Mô hình sẽ học mặt nạ khuyết thiếu chứ không học nhu cầu.,"avg_unit_price, avg_unit_price_excl_vat, avg_vat_rate, discount_pct_stddev, first_purchase_day, last_purchase_day"
-BỎ,R2b,3,"Vừa là khoá định danh, vừa chỉ tồn tại khi tháng đó có đơn hàng — nó lấy từ chính dòng đơn. Không có nghĩa làm đặc trưng và cũng không lag được.","asm_id, chain_key, supervisor_id"
+BỎ,R2,9,Riêng việc cột này khuyết hay không đã tách được nhãn. Mô hình sẽ học mặt nạ khuyết thiếu chứ không học nhu cầu.,"avg_unit_price, avg_unit_price_excl_vat, avg_vat_rate, discount_pct_stddev, discount_rate, first_purchase_day"
+BỎ,R2b,2,"Vừa là khoá định danh, vừa chỉ tồn tại khi tháng đó có đơn hàng — nó lấy từ chính dòng đơn. Không có nghĩa làm đặc trưng và cũng không lag được.","asm_id, supervisor_id"
 DÙNG — mã hoá phân loại,R2c,6,"Khoá ngoại trỏ tới một nhóm chứ không phải một dòng — nhãn hàng, ngành hàng, kho phục vụ. Dùng được, nhưng phải mã hoá như biến phân loại chứ không đưa vào dạng số nguyên.","brand_id, category_id, route_rep_id, serving_warehouse_key, site_domain_level, supplier_id"
-CHUYỂN THÀNH LAG,R3,55,"Chỉ biết sau khi tháng đã xảy ra, nên không có sẵn lúc dự báo M+1…M+3. Dùng được nhưng phải chuyển thành giá trị của kỳ trước.","admin_canceled_line_count, amount_incl_vat, avg_days_to_delivery, avg_delivery_sla_days, avg_stock_qty, avg_travel_km"
-BỎ,R4,6,"Khuyết từ 95% trở lên. Phần quan sát còn lại quá mỏng để ước lượng, giữ lại chỉ nên giữ dưới dạng cờ có/không.","mt_price_exc_vat, mt_price_inc_vat, store_format, sub_brand, unit_per_pack, volume"
+CHUYỂN THÀNH LAG,R3,45,"Chỉ biết sau khi tháng đã xảy ra, nên không có sẵn lúc dự báo M+1…M+3. Dùng được nhưng phải chuyển thành giá trị của kỳ trước.","admin_canceled_line_count, amount_incl_vat, avg_days_to_delivery, avg_delivery_sla_days, avg_travel_km, avg_travel_minutes"
 BỎ,R5,4,"Trùng lặp gần như hoàn toàn với một đặc trưng khác (|ρ| ≥ 0,8). Giữ cả hai làm hệ số hồi quy không đọc được và chia đôi mức quan trọng.","conversion_rate, peak_tmax, promo_days, promo_max_discount_pct"
 DÙNG,R6,39,"Biết trước kỳ, không rò rỉ, đủ độ phủ, không trùng với đặc trưng nào khác.","account_status, avg_tmax, avg_tmin, calendar_days, category_code, channel_code"

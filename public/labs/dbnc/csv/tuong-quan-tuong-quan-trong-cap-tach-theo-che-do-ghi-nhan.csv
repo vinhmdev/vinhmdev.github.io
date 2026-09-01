@@ -1,86 +1,84 @@
 dac_trung,loai,TRUOC_01_2026,SAU_01_2026,chenh_lech_giua_hai_che_do,canh_bao
-adjusted_sales_rate,nhãn viết cách khác,,0.2944,,—
-admin_canceled_line_count,biết sau kỳ,0.0006,-0.0011,-0.0017,—
-amount_incl_vat,biết sau kỳ,0.8866,0.3459,-0.5407,đổi độ lớn
-avg_days_to_delivery,biết sau kỳ,-0.0251,0.0491,0.0742,—
-avg_delivery_sla_days,biết sau kỳ,,-0.0303,,—
-avg_tmax,biết trước kỳ,0.1084,0.0955,-0.0129,—
-avg_tmin,biết trước kỳ,0.1266,0.1207,-0.0059,—
-avg_travel_km,biết sau kỳ,,0.0288,,—
-avg_travel_minutes,biết sau kỳ,,-0.0391,,—
-avg_unit_price,biết sau kỳ,-0.0472,-0.0982,-0.051,—
-avg_unit_price_excl_vat,biết sau kỳ,-0.0467,-0.099,-0.0523,—
-avg_vat_rate,biết sau kỳ,0.1245,0.0033,-0.1212,—
-avg_work_minutes,biết sau kỳ,,0.0218,,—
-calendar_days,biết trước kỳ,0.0378,0.0016,-0.0362,—
-canceled_qty,biết sau kỳ,0.1037,0.1482,0.0445,—
+adjusted_sales_rate,nhãn viết cách khác,,0.4069,,—
+admin_canceled_line_count,biết sau kỳ,0.0006,0.0065,0.0059,—
+amount_incl_vat,biết sau kỳ,0.8904,0.8982,0.0078,—
+avg_days_to_delivery,biết sau kỳ,-0.0251,0.0638,0.0889,—
+avg_delivery_sla_days,biết sau kỳ,,-0.02,,—
+avg_tmax,biết trước kỳ,0.1087,0.0982,-0.0105,—
+avg_tmin,biết trước kỳ,0.1268,0.1244,-0.0024,—
+avg_travel_km,biết sau kỳ,,0.029,,—
+avg_travel_minutes,biết sau kỳ,,-0.0415,,—
+avg_unit_price,biết sau kỳ,-0.0471,-0.1358,-0.0887,—
+avg_unit_price_excl_vat,biết sau kỳ,-0.0466,-0.135,-0.0884,—
+avg_vat_rate,biết sau kỳ,0.1243,0.025,-0.0993,—
+avg_work_minutes,biết sau kỳ,,0.021,,—
+calendar_days,biết trước kỳ,0.0381,0.0005,-0.0376,—
+canceled_qty,biết sau kỳ,0.1036,0.2297,0.1261,—
 conversion_rate,biết trước kỳ,,,,—
-discount_amount,biết sau kỳ,0.0944,0.216,0.1216,—
-discount_excl_vat,biết sau kỳ,0.2077,0.1318,-0.0759,—
-discount_pct_stddev,biết sau kỳ,0.0971,0.1741,0.077,—
-discount_rate,biết sau kỳ,0.0129,0.0468,0.0339,—
-dlv_avg_attempts,biết sau kỳ,,0.0201,,—
-dlv_line_count,biết sau kỳ,,0.2558,,—
-dlv_ordered_qty,biết sau kỳ,,0.3901,,—
-dlv_received_qty,biết sau kỳ,,0.3896,,—
-dlv_shipped_qty,biết sau kỳ,,0.3557,,—
-dlv_shipper_count,biết sau kỳ,,0.2187,,—
-dlv_warehouse_confirmed_lines,biết sau kỳ,,0.0674,,—
-eco_line_count,biết sau kỳ,0.68,0.1358,-0.5442,đổi độ lớn
-effective_unit_price,nhãn viết cách khác,-0.0562,-0.1139,-0.0577,—
-first_purchase_day,biết sau kỳ,-0.2332,-0.1993,0.0339,—
-free_line_count,biết sau kỳ,0.0053,0.2292,0.2239,đổi độ lớn
+discount_amount,biết sau kỳ,0.0947,0.2184,0.1237,—
+discount_excl_vat,biết sau kỳ,0.208,0.2229,0.0149,—
+discount_pct_stddev,biết sau kỳ,0.0973,0.2357,0.1384,—
+discount_rate,biết sau kỳ,0.013,0.047,0.034,—
+dlv_avg_attempts,biết sau kỳ,,0.0225,,—
+dlv_line_count,biết sau kỳ,,0.2697,,—
+dlv_ordered_qty,biết sau kỳ,,0.4167,,—
+dlv_received_qty,biết sau kỳ,,0.4147,,—
+dlv_shipped_qty,biết sau kỳ,,0.378,,—
+dlv_shipper_count,biết sau kỳ,,0.2332,,—
+dlv_warehouse_confirmed_lines,biết sau kỳ,,0.069,,—
+eco_line_count,biết sau kỳ,0.6815,0.4988,-0.1827,đổi độ lớn
+effective_unit_price,nhãn viết cách khác,-0.0559,-0.115,-0.0591,—
+first_purchase_day,biết sau kỳ,-0.2344,-0.2524,-0.018,—
+free_line_count,biết sau kỳ,0.0053,0.2215,0.2162,đổi độ lớn
 freezer_count,biết trước kỳ,,,,—
 has_promo_data,biết trước kỳ,,,,—
-has_stock_data,biết sau kỳ,,0.0984,,—
+has_stock_data,biết sau kỳ,,0.0992,,—
 has_visit_data,biết sau kỳ,,,,—
-in_stock_days,biết sau kỳ,,0.1073,,—
-inv_delivered_revenue,biết sau kỳ,0.0909,0.2471,0.1562,đổi độ lớn
-inv_discount,biết sau kỳ,0.2701,0.108,-0.1621,đổi độ lớn
-inv_item_count,biết sau kỳ,0.2728,0.2599,-0.0129,—
-inv_line_count,biết sau kỳ,0.2261,0.2197,-0.0064,—
-inv_net_revenue,biết sau kỳ,0.3324,0.2844,-0.048,—
-inv_order_count,biết sau kỳ,0.2261,0.2197,-0.0064,—
-inv_total_amount,biết sau kỳ,0.3327,0.2844,-0.0483,—
-inv_vat,biết sau kỳ,0.3336,0.2842,-0.0494,—
-issuing_warehouse_count,biết sau kỳ,0.0197,0.0169,-0.0028,—
-last_purchase_day,biết sau kỳ,0.1826,0.104,-0.0786,—
-line_status_count,biết sau kỳ,0.2511,0.0395,-0.2116,đổi độ lớn
-months_since_first_purchase,biết trước kỳ,-0.1288,0.1204,0.2492,ĐỔI DẤU
-mt_price_exc_vat,biết trước kỳ,,,,—
-mt_price_inc_vat,biết trước kỳ,,,,—
-net_revenue,nhãn viết cách khác,0.8894,0.8908,0.0014,—
+in_stock_days,biết sau kỳ,,0.1051,,—
+inv_delivered_revenue,biết sau kỳ,0.0908,0.2501,0.1593,đổi độ lớn
+inv_discount,biết sau kỳ,0.2707,0.1073,-0.1634,đổi độ lớn
+inv_item_count,biết sau kỳ,0.2735,0.2617,-0.0118,—
+inv_line_count,biết sau kỳ,0.2266,0.2217,-0.0049,—
+inv_net_revenue,biết sau kỳ,0.3332,0.2868,-0.0464,—
+inv_order_count,biết sau kỳ,0.2266,0.2217,-0.0049,—
+inv_total_amount,biết sau kỳ,0.3334,0.2868,-0.0466,—
+inv_vat,biết sau kỳ,0.3344,0.2866,-0.0478,—
+issuing_warehouse_count,biết sau kỳ,0.0198,0.0243,0.0045,—
+last_purchase_day,biết sau kỳ,0.183,0.2029,0.0199,—
+line_status_count,biết sau kỳ,0.2521,0.3494,0.0973,—
+months_since_first_purchase,biết trước kỳ,-0.1291,0.1396,0.2687,ĐỔI DẤU
+net_revenue,nhãn viết cách khác,0.8906,0.8995,0.0089,—
 net_weight,biết trước kỳ,0.0019,0.0031,0.0012,—
-order_count,biết sau kỳ,0.6799,0.224,-0.4559,đổi độ lớn
-order_source_count,biết sau kỳ,0.0082,-0.032,-0.0402,—
-order_type_count,biết sau kỳ,0.0082,-0.0289,-0.0371,—
-peak_tmax,biết trước kỳ,0.1143,0.084,-0.0303,—
-planned_visit_days,biết trước kỳ,,0.0164,,—
+order_count,biết sau kỳ,0.6814,0.71,0.0286,—
+order_source_count,biết sau kỳ,0.016,0.2138,0.1978,đổi độ lớn
+order_type_count,biết sau kỳ,0.016,0.2182,0.2022,đổi độ lớn
+peak_tmax,biết trước kỳ,0.1143,0.0861,-0.0282,—
+planned_visit_days,biết trước kỳ,,0.0156,,—
 promo_budget,biết trước kỳ,0.0515,0.0166,-0.0349,—
-promo_count,biết trước kỳ,0.0541,0.0553,0.0012,—
-promo_day_ratio,biết trước kỳ,0.0706,0.0493,-0.0213,—
-promo_day_weighted_discount_pct,biết trước kỳ,0.0768,0.0617,-0.0151,—
-promo_days,biết trước kỳ,0.0715,0.0512,-0.0203,—
-promo_forecast_qty,biết trước kỳ,-0.0447,-0.0362,0.0085,—
-promo_has_free_goods,biết trước kỳ,0.0926,0.0592,-0.0334,—
-promo_has_gift,biết trước kỳ,0.0105,0.0281,0.0176,—
-promo_has_price_cut,biết trước kỳ,-0.0114,0.0116,0.023,—
+promo_count,biết trước kỳ,0.054,0.0557,0.0017,—
+promo_day_ratio,biết trước kỳ,0.0706,0.05,-0.0206,—
+promo_day_weighted_discount_pct,biết trước kỳ,0.0768,0.0618,-0.015,—
+promo_days,biết trước kỳ,0.0715,0.0519,-0.0196,—
+promo_forecast_qty,biết trước kỳ,-0.0447,-0.0361,0.0086,—
+promo_has_free_goods,biết trước kỳ,0.0925,0.0596,-0.0329,—
+promo_has_gift,biết trước kỳ,0.0105,0.0283,0.0178,—
+promo_has_price_cut,biết trước kỳ,-0.0116,0.0116,0.0232,—
 promo_max_discount_pct,biết trước kỳ,0.0849,0.0561,-0.0288,—
-purchase_count,nhãn viết cách khác,0.6526,0.6832,0.0306,—
-qty_per_carton,biết trước kỳ,-0.0042,0.0137,0.0179,—
-qty_per_purchase,nhãn viết cách khác,0.6243,0.5548,-0.0695,—
-rain_days,biết trước kỳ,0.0788,0.0964,0.0176,—
-remaining_warehouse_count,biết sau kỳ,,0.1587,,—
-sales_qty_carton,nhãn viết cách khác,0.9905,0.992,0.0015,—
+purchase_count,nhãn viết cách khác,0.6525,0.6772,0.0247,—
+qty_per_carton,biết trước kỳ,-0.0008,-0.0037,-0.0029,—
+qty_per_purchase,nhãn viết cách khác,0.6245,0.5632,-0.0613,—
+rain_days,biết trước kỳ,0.0794,0.0982,0.0188,—
+remaining_warehouse_count,biết sau kỳ,0.016,0.2399,0.2239,đổi độ lớn
+sales_qty_carton,nhãn viết cách khác,0.9903,0.9924,0.0021,—
 shelf_life,biết trước kỳ,,,,—
-shipped_qty,biết sau kỳ,0.9794,0.2641,-0.7153,đổi độ lớn
-stock_tracked_days,biết sau kỳ,,0.1072,,—
-stockout_days,biết sau kỳ,,0.0328,,—
+shipped_qty,biết sau kỳ,0.9821,0.7486,-0.2335,đổi độ lớn
+stock_tracked_days,biết sau kỳ,,0.1051,,—
+stockout_days,biết sau kỳ,,0.0326,,—
 tax_rate,biết trước kỳ,,,,—
-total_rainfall,biết trước kỳ,0.068,0.1141,0.0461,—
-unit_price_stddev,biết sau kỳ,0.2293,0.1647,-0.0646,—
-vat_amount,biết sau kỳ,0.8865,0.3453,-0.5412,đổi độ lớn
-visit_compliance_rate,biết sau kỳ,,0.0098,,—
-visit_days,biết sau kỳ,-0.0055,0.0299,0.0354,—
-visiting_rep_count,biết sau kỳ,,0.0166,,—
-working_days,biết trước kỳ,-0.0235,-0.0055,0.018,—
+total_rainfall,biết trước kỳ,0.068,0.1166,0.0486,—
+unit_price_stddev,biết sau kỳ,0.2294,0.2256,-0.0038,—
+vat_amount,biết sau kỳ,0.8904,0.8976,0.0072,—
+visit_compliance_rate,biết sau kỳ,,0.0116,,—
+visit_days,biết sau kỳ,-0.0059,0.0292,0.0351,—
+visiting_rep_count,biết sau kỳ,,0.0154,,—
+working_days,biết trước kỳ,-0.0233,-0.0045,0.0188,—

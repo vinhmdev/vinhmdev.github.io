@@ -1,136 +1,120 @@
 truong,dang,loai,khuyet_pct,so_gia_tri_khac_nhau,r2_duong_thang,r2_duong_gap_khuc,do_tuyen_tinh,quan_he,di_cung_nhat
-dlv_ordered_qty,số,biết sau kỳ,95.41,869,0.7976,0.1381,5.774,thẳng,dlv_received_qty (0.9778)
-dlv_received_qty,số,biết sau kỳ,95.41,876,0.8004,0.1334,6.0,thẳng,dlv_ordered_qty (0.9778)
-dlv_shipped_qty,số,biết sau kỳ,95.41,821,0.7133,0.1264,5.643,thẳng,dlv_received_qty (0.9203)
-avg_delivery_sla_days,số,biết sau kỳ,99.202,157,0.0002,0.0533,0.004,CONG — mô hình tuyến tính sẽ bỏ sót,avg_days_to_delivery (-0.2581)
-adjusted_sales_rate,số,nhãn viết cách khác,84.812,1456,0.7234,0.0349,20.709,thẳng,in_stock_days (0.5233)
-promo_day_weighted_discount_pct,số,biết trước kỳ,43.588,524,0.0076,0.0147,0.521,CONG — mô hình tuyến tính sẽ bỏ sót,promo_max_discount_pct (0.8149)
-qty_per_purchase,số,nhãn viết cách khác,66.159,4213,0.6989,0.0106,66.07,thẳng,avg_unit_price (-0.4631)
-promo_max_discount_pct,số,biết trước kỳ,43.588,167,0.0015,0.0094,0.161,không đáng kể — trường này gần như không liên hệ với nhãn,promo_day_weighted_discount_pct (0.8149)
-avg_work_minutes,số,biết sau kỳ,56.174,14480,0.0094,0.0083,1.142,không đáng kể — trường này gần như không liên hệ với nhãn,planned_visit_days (0.2441)
-promo_budget,số,biết trước kỳ,38.593,999,0.0084,0.0079,1.059,không đáng kể — trường này gần như không liên hệ với nhãn,promo_forecast_qty (-0.6804)
-chain_key,số,biết sau kỳ,69.035,22,0.0,0.007,0.0,không đáng kể — trường này gần như không liên hệ với nhãn,—
-discount_rate,số,biết sau kỳ,66.974,11042,0.0001,0.0062,0.012,không đáng kể — trường này gần như không liên hệ với nhãn,discount_amount (0.9886)
-supervisor_id,số,biết sau kỳ,96.864,77,0.0001,0.0054,0.017,không đáng kể — trường này gần như không liên hệ với nhãn,—
-sales_qty_carton,số,nhãn viết cách khác,0.0,2764,0.6393,0.005,127.697,không đáng kể — trường này gần như không liên hệ với nhãn,sales_qty (0.9883)
-net_revenue,số,nhãn viết cách khác,0.0,25306,0.0229,0.0046,5.031,không đáng kể — trường này gần như không liên hệ với nhãn,sales_qty_carton (0.9739)
-asm_id,số,biết sau kỳ,97.427,36,0.0001,0.0044,0.017,không đáng kể — trường này gần như không liên hệ với nhãn,—
-planned_visit_days,số,biết trước kỳ,54.854,30,0.0067,0.0041,1.628,không đáng kể — trường này gần như không liên hệ với nhãn,visiting_rep_count (0.3698)
-shipped_qty,số,biết sau kỳ,0.0,1587,0.9751,0.0039,248.208,không đáng kể — trường này gần như không liên hệ với nhãn,eco_line_count (0.9739)
-amount_incl_vat,số,biết sau kỳ,0.0,21877,0.0192,0.0039,4.983,không đáng kể — trường này gần như không liên hệ với nhãn,vat_amount (0.9988)
-vat_amount,số,biết sau kỳ,0.0,21401,0.0061,0.0039,1.573,không đáng kể — trường này gần như không liên hệ với nhãn,amount_incl_vat (0.9988)
-inv_total_amount,số,biết sau kỳ,11.652,39118,0.0185,0.0038,4.914,không đáng kể — trường này gần như không liên hệ với nhãn,inv_net_revenue (0.9999)
-inv_net_revenue,số,biết sau kỳ,11.652,39259,0.0187,0.0038,4.964,không đáng kể — trường này gần như không liên hệ với nhãn,inv_total_amount (0.9999)
-inv_vat,số,biết sau kỳ,11.652,37585,0.0076,0.0038,2.004,không đáng kể — trường này gần như không liên hệ với nhãn,inv_total_amount (0.9983)
-first_purchase_day,số,biết sau kỳ,66.159,32,0.0013,0.0037,0.342,không đáng kể — trường này gần như không liên hệ với nhãn,last_purchase_day (0.5294)
-last_purchase_day,số,biết sau kỳ,66.159,32,0.0012,0.0032,0.38,không đáng kể — trường này gần như không liên hệ với nhãn,first_purchase_day (0.5294)
-inv_item_count,số,biết sau kỳ,11.652,479,0.0165,0.0031,5.246,không đáng kể — trường này gần như không liên hệ với nhãn,inv_vat (0.8987)
-inv_line_count,số,biết sau kỳ,11.652,60,0.0069,0.0027,2.573,không đáng kể — trường này gần như không liên hệ với nhãn,inv_order_count (1.0)
-inv_order_count,số,biết sau kỳ,11.652,60,0.0069,0.0027,2.573,không đáng kể — trường này gần như không liên hệ với nhãn,inv_line_count (1.0)
-salesman_id,số,biết sau kỳ,66.159,315,0.0,0.0025,0.006,không đáng kể — trường này gần như không liên hệ với nhãn,—
-avg_days_to_delivery,số,biết sau kỳ,93.75,475,0.0019,0.0025,0.783,không đáng kể — trường này gần như không liên hệ với nhãn,avg_delivery_sla_days (-0.2581)
-inv_discount,số,biết sau kỳ,11.652,31899,0.0151,0.0025,6.164,không đáng kể — trường này gần như không liên hệ với nhãn,inv_vat (0.5077)
-avg_travel_km,số,biết sau kỳ,54.854,6893,0.0005,0.0023,0.198,không đáng kể — trường này gần như không liên hệ với nhãn,avg_travel_minutes (0.7727)
-inv_delivered_revenue,số,biết sau kỳ,11.652,20951,0.0099,0.0017,5.774,không đáng kể — trường này gần như không liên hệ với nhãn,visit_days (0.531)
-effective_unit_price,số,nhãn viết cách khác,66.178,17026,0.0001,0.0013,0.087,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price_excl_vat (0.8729)
-avg_unit_price,số,biết sau kỳ,66.159,4143,0.0,0.0013,0.003,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price_excl_vat (1.0)
-avg_unit_price_excl_vat,số,biết sau kỳ,66.159,4269,0.0,0.0013,0.003,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price (1.0)
-conversion_rate,số,biết trước kỳ,0.476,35,0.0,0.0011,0.015,không đáng kể — trường này gần như không liên hệ với nhãn,qty_per_carton (0.9153)
-promo_day_ratio,số,biết trước kỳ,0.502,82,0.0003,0.0011,0.241,không đáng kể — trường này gần như không liên hệ với nhãn,promo_days (0.9991)
-avg_travel_minutes,số,biết sau kỳ,54.854,9311,0.0,0.0009,0.039,không đáng kể — trường này gần như không liên hệ với nhãn,avg_travel_km (0.7727)
-route_rep_id,số,biết trước kỳ,4.298,75,0.0003,0.0009,0.346,không đáng kể — trường này gần như không liên hệ với nhãn,—
-store_key,số,biết trước kỳ,0.0,5331,0.0002,0.0008,0.233,không đáng kể — trường này gần như không liên hệ với nhãn,—
-promo_days,số,biết trước kỳ,0.502,33,0.0003,0.0008,0.358,không đáng kể — trường này gần như không liên hệ với nhãn,promo_day_ratio (0.9991)
-net_weight,số,biết trước kỳ,0.444,146,0.0,0.0004,0.022,không đáng kể — trường này gần như không liên hệ với nhãn,promo_budget (-0.5256)
-qty_per_carton,số,biết trước kỳ,0.171,341,0.0,0.0004,0.046,không đáng kể — trường này gần như không liên hệ với nhãn,conversion_rate (0.9153)
-product_key,số,biết trước kỳ,0.0,586,0.0001,0.0003,0.258,không đáng kể — trường này gần như không liên hệ với nhãn,—
-visit_days,số,biết sau kỳ,0.0,30,0.0001,0.0003,0.367,không đáng kể — trường này gần như không liên hệ với nhãn,inv_delivered_revenue (0.531)
-ym,số,biết trước kỳ,0.0,16,0.0,0.0002,0.292,không đáng kể — trường này gần như không liên hệ với nhãn,—
-months_since_first_purchase,số,biết trước kỳ,0.0,16,0.0001,0.0002,0.96,không đáng kể — trường này gần như không liên hệ với nhãn,order_source_count (-0.4888)
-promo_forecast_qty,số,biết trước kỳ,38.593,138,0.0001,0.0002,0.369,không đáng kể — trường này gần như không liên hệ với nhãn,promo_budget (-0.6804)
-serving_warehouse_key,số,biết trước kỳ,0.0,7,0.0,0.0001,0.785,không đáng kể — trường này gần như không liên hệ với nhãn,—
-avg_tmax,số,biết trước kỳ,0.085,962,0.0,0.0001,0.278,không đáng kể — trường này gần như không liên hệ với nhãn,peak_tmax (0.8337)
-avg_tmin,số,biết trước kỳ,0.085,972,0.0,0.0001,0.288,không đáng kể — trường này gần như không liên hệ với nhãn,avg_tmax (0.7658)
-peak_tmax,số,biết trước kỳ,0.085,164,0.0,0.0001,0.017,không đáng kể — trường này gần như không liên hệ với nhãn,avg_tmax (0.8337)
-shelf_life,số,biết trước kỳ,3.388,11,0.0,0.0,0.873,không đáng kể — trường này gần như không liên hệ với nhãn,category_code (0.342)
-total_rainfall,số,biết trước kỳ,0.085,949,0.0,0.0,0.815,không đáng kể — trường này gần như không liên hệ với nhãn,rain_days (0.7823)
-rain_days,số,biết trước kỳ,0.085,31,0.0,0.0,0.356,không đáng kể — trường này gần như không liên hệ với nhãn,total_rainfall (0.7823)
-store_code,phân loại,biết trước kỳ,0.0,5331,,,,—,—
-product_code,phân loại,biết trước kỳ,0.0,347,,,,—,—
+dlv_ordered_qty,số,biết sau kỳ,95.042,881,0.8046,0.1324,6.079,thẳng,dlv_received_qty (0.9784)
+dlv_received_qty,số,biết sau kỳ,95.042,895,0.8071,0.1277,6.321,thẳng,dlv_ordered_qty (0.9784)
+dlv_shipped_qty,số,biết sau kỳ,95.042,841,0.7159,0.1212,5.904,thẳng,dlv_received_qty (0.9154)
+avg_delivery_sla_days,số,biết sau kỳ,99.192,201,0.0002,0.0967,0.002,CONG — mô hình tuyến tính sẽ bỏ sót,avg_days_to_delivery (-0.2607)
+adjusted_sales_rate,số,nhãn viết cách khác,84.396,1357,0.9489,0.0339,27.978,thẳng,has_stock_data (0.5134)
+promo_day_weighted_discount_pct,số,biết trước kỳ,41.547,524,0.0077,0.0147,0.521,CONG — mô hình tuyến tính sẽ bỏ sót,promo_max_discount_pct (0.8193)
+qty_per_purchase,số,nhãn viết cách khác,65.624,4198,0.6992,0.0111,63.198,thẳng,avg_unit_price (-0.5033)
+promo_max_discount_pct,số,biết trước kỳ,41.547,167,0.0015,0.0095,0.161,không đáng kể — trường này gần như không liên hệ với nhãn,promo_day_weighted_discount_pct (0.8193)
+avg_work_minutes,số,biết sau kỳ,57.185,14404,0.0095,0.0083,1.139,không đáng kể — trường này gần như không liên hệ với nhãn,planned_visit_days (0.2458)
+promo_budget,số,biết trước kỳ,36.38,999,0.0084,0.0079,1.059,không đáng kể — trường này gần như không liên hệ với nhãn,promo_forecast_qty (-0.683)
+supervisor_id,số,biết sau kỳ,96.843,77,0.0007,0.0063,0.116,không đáng kể — trường này gần như không liên hệ với nhãn,—
+asm_id,số,biết sau kỳ,97.413,36,0.0002,0.0059,0.026,không đáng kể — trường này gần như không liên hệ với nhãn,—
+discount_rate,số,biết sau kỳ,65.725,14609,0.0001,0.0053,0.014,không đáng kể — trường này gần như không liên hệ với nhãn,discount_amount (0.9992)
+shipped_qty,số,biết sau kỳ,0.0,1721,0.9939,0.0053,189.265,không đáng kể — trường này gần như không liên hệ với nhãn,eco_line_count (0.9762)
+sales_qty_carton,số,nhãn viết cách khác,0.0,2346,0.7973,0.005,159.091,không đáng kể — trường này gần như không liên hệ với nhãn,sales_qty (0.9888)
+net_revenue,số,nhãn viết cách khác,0.0,25086,0.0229,0.0047,4.858,không đáng kể — trường này gần như không liên hệ với nhãn,amount_incl_vat (1.0)
+amount_incl_vat,số,biết sau kỳ,0.0,27362,0.0223,0.0047,4.726,không đáng kể — trường này gần như không liên hệ với nhãn,net_revenue (1.0)
+vat_amount,số,biết sau kỳ,0.0,26913,0.0085,0.0047,1.797,không đáng kể — trường này gần như không liên hệ với nhãn,net_revenue (0.999)
+planned_visit_days,số,biết trước kỳ,55.859,30,0.0068,0.0042,1.622,không đáng kể — trường này gần như không liên hệ với nhãn,visiting_rep_count (0.3687)
+first_purchase_day,số,biết sau kỳ,65.624,32,0.0015,0.0042,0.348,không đáng kể — trường này gần như không liên hệ với nhãn,last_purchase_day (0.4828)
+inv_total_amount,số,biết sau kỳ,11.849,39111,0.0188,0.0039,4.808,không đáng kể — trường này gần như không liên hệ với nhãn,inv_net_revenue (0.9999)
+inv_net_revenue,số,biết sau kỳ,11.849,39252,0.019,0.0039,4.862,không đáng kể — trường này gần như không liên hệ với nhãn,inv_total_amount (0.9999)
+inv_vat,số,biết sau kỳ,11.849,37579,0.0076,0.0039,1.941,không đáng kể — trường này gần như không liên hệ với nhãn,inv_total_amount (0.9983)
+last_purchase_day,số,biết sau kỳ,65.624,32,0.0013,0.0035,0.377,không đáng kể — trường này gần như không liên hệ với nhãn,first_purchase_day (0.4828)
+inv_item_count,số,biết sau kỳ,11.849,479,0.0167,0.0033,5.052,không đáng kể — trường này gần như không liên hệ với nhãn,inv_vat (0.8983)
+salesman_id,số,biết sau kỳ,65.624,314,0.0,0.0032,0.0,không đáng kể — trường này gần như không liên hệ với nhãn,—
+inv_line_count,số,biết sau kỳ,11.849,60,0.0073,0.0029,2.524,không đáng kể — trường này gần như không liên hệ với nhãn,inv_order_count (1.0)
+inv_order_count,số,biết sau kỳ,11.849,60,0.0073,0.0029,2.524,không đáng kể — trường này gần như không liên hệ với nhãn,inv_line_count (1.0)
+avg_unit_price,số,biết sau kỳ,65.624,5189,0.0,0.0025,0.002,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price_excl_vat (1.0)
+avg_unit_price_excl_vat,số,biết sau kỳ,65.624,5702,0.0,0.0025,0.002,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price (1.0)
+avg_days_to_delivery,số,biết sau kỳ,93.686,645,0.0019,0.0025,0.767,không đáng kể — trường này gần như không liên hệ với nhãn,avg_delivery_sla_days (-0.2607)
+inv_discount,số,biết sau kỳ,11.849,31892,0.0151,0.0025,5.946,không đáng kể — trường này gần như không liên hệ với nhãn,inv_vat (0.5102)
+avg_travel_km,số,biết sau kỳ,55.859,6871,0.0004,0.0022,0.191,không đáng kể — trường này gần như không liên hệ với nhãn,avg_travel_minutes (0.7678)
+inv_delivered_revenue,số,biết sau kỳ,11.849,20945,0.0102,0.0018,5.674,không đáng kể — trường này gần như không liên hệ với nhãn,visit_days (0.532)
+effective_unit_price,số,nhãn viết cách khác,65.644,16838,0.0001,0.0015,0.082,không đáng kể — trường này gần như không liên hệ với nhãn,avg_unit_price (0.9043)
+conversion_rate,số,biết trước kỳ,0.003,23,0.0,0.0011,0.035,không đáng kể — trường này gần như không liên hệ với nhãn,qty_per_carton (0.9154)
+promo_day_ratio,số,biết trước kỳ,0.521,82,0.0003,0.0011,0.228,không đáng kể — trường này gần như không liên hệ với nhãn,promo_days (0.999)
+route_rep_id,số,biết trước kỳ,4.095,75,0.0003,0.001,0.288,không đáng kể — trường này gần như không liên hệ với nhãn,—
+store_key,số,biết trước kỳ,0.0,5297,0.0002,0.0008,0.229,không đáng kể — trường này gần như không liên hệ với nhãn,—
+avg_travel_minutes,số,biết sau kỳ,55.859,9283,0.0,0.0008,0.032,không đáng kể — trường này gần như không liên hệ với nhãn,avg_travel_km (0.7678)
+promo_days,số,biết trước kỳ,0.521,33,0.0003,0.0008,0.341,không đáng kể — trường này gần như không liên hệ với nhãn,promo_day_ratio (0.999)
+product_key,số,biết trước kỳ,0.0,269,0.0,0.0005,0.012,không đáng kể — trường này gần như không liên hệ với nhãn,—
+qty_per_carton,số,biết trước kỳ,0.003,185,0.0,0.0005,0.084,không đáng kể — trường này gần như không liên hệ với nhãn,conversion_rate (0.9154)
+net_weight,số,biết trước kỳ,0.014,122,0.0,0.0004,0.002,không đáng kể — trường này gần như không liên hệ với nhãn,promo_budget (-0.5469)
+visit_days,số,biết sau kỳ,0.0,30,0.0001,0.0003,0.367,không đáng kể — trường này gần như không liên hệ với nhãn,inv_delivered_revenue (0.532)
+ym,số,biết trước kỳ,0.0,16,0.0,0.0002,0.269,không đáng kể — trường này gần như không liên hệ với nhãn,—
+promo_forecast_qty,số,biết trước kỳ,36.38,138,0.0001,0.0002,0.366,không đáng kể — trường này gần như không liên hệ với nhãn,promo_budget (-0.683)
+serving_warehouse_key,số,biết trước kỳ,0.0,7,0.0,0.0001,0.672,không đáng kể — trường này gần như không liên hệ với nhãn,—
+avg_tmax,số,biết trước kỳ,0.088,962,0.0,0.0001,0.301,không đáng kể — trường này gần như không liên hệ với nhãn,peak_tmax (0.835)
+avg_tmin,số,biết trước kỳ,0.088,972,0.0,0.0001,0.309,không đáng kể — trường này gần như không liên hệ với nhãn,avg_tmax (0.7677)
+peak_tmax,số,biết trước kỳ,0.088,164,0.0,0.0001,0.022,không đáng kể — trường này gần như không liên hệ với nhãn,avg_tmax (0.835)
+months_since_first_purchase,số,biết trước kỳ,0.0,16,0.0,0.0,0.105,không đáng kể — trường này gần như không liên hệ với nhãn,visit_days (0.4883)
+shelf_life,số,biết trước kỳ,0.003,11,0.0,0.0,0.872,không đáng kể — trường này gần như không liên hệ với nhãn,category_code (0.3282)
+total_rainfall,số,biết trước kỳ,0.088,949,0.0,0.0,0.778,không đáng kể — trường này gần như không liên hệ với nhãn,rain_days (0.7832)
+rain_days,số,biết trước kỳ,0.088,31,0.0,0.0,0.35,không đáng kể — trường này gần như không liên hệ với nhãn,total_rainfall (0.7832)
+store_code,phân loại,biết trước kỳ,0.0,5297,,,,—,—
+product_code,phân loại,biết trước kỳ,0.0,269,,,,—,—
 flag_suspect_month,số,biết trước kỳ,0.0,2,,,,—,—
 flag_promo_regime,phân loại,biết trước kỳ,0.0,2,,,,—,—
-sales_qty,số,biết sau kỳ,0.0,1849,,,,—,sales_qty_carton (0.9883)
+sales_qty,số,biết sau kỳ,0.0,1823,,,,—,sales_qty_carton (0.9888)
 has_purchase,số,biết sau kỳ,0.0,2,,,,—,issuing_warehouse_count (0.9995)
-purchase_count,số,nhãn viết cách khác,0.0,30,,,,—,remaining_warehouse_count (0.9837)
-calendar_days,số,biết trước kỳ,0.0,3,,,,—,working_days (0.5259)
-working_days,số,biết trước kỳ,0.0,4,,,,—,calendar_days (0.5259)
-in_stock_days,số,biết sau kỳ,0.0,32,,,,—,stock_tracked_days (0.9989)
-stock_tracked_days,số,biết sau kỳ,0.0,32,,,,—,in_stock_days (0.9989)
-stock_source,phân loại,biết sau kỳ,84.784,2,,,,—,—
-has_stock_data,số,biết sau kỳ,0.0,2,,,,—,stock_tracked_days (0.996)
-stockout_days,số,biết sau kỳ,0.0,20,,,,—,has_stock_data (0.145)
-visit_compliance_rate,số,biết sau kỳ,54.854,91,,,,—,total_rainfall (0.2535)
-visiting_rep_count,số,biết sau kỳ,54.854,6,,,,—,visit_days (0.4994)
-has_visit_data,số,biết sau kỳ,0.0,2,,,,—,freezer_count (0.3184)
-store_name,phân loại,biết trước kỳ,0.0,5326,,,,—,—
-store_brand_code,phân loại,biết trước kỳ,0.034,35,,,,—,—
+purchase_count,số,nhãn viết cách khác,0.0,28,,,,—,order_count (0.9991)
+calendar_days,số,biết trước kỳ,0.0,3,,,,—,working_days (0.5305)
+working_days,số,biết trước kỳ,0.0,4,,,,—,calendar_days (0.5305)
+in_stock_days,số,biết sau kỳ,0.0,32,,,,—,stock_tracked_days (0.999)
+stock_tracked_days,số,biết sau kỳ,0.0,30,,,,—,in_stock_days (0.999)
+stock_source,phân loại,biết sau kỳ,84.373,2,,,,—,—
+has_stock_data,số,biết sau kỳ,0.0,2,,,,—,stock_tracked_days (0.9964)
+stockout_days,số,biết sau kỳ,0.0,19,,,,—,has_stock_data (0.1686)
+visit_compliance_rate,số,biết sau kỳ,55.859,91,,,,—,total_rainfall (0.2502)
+visiting_rep_count,số,biết sau kỳ,55.859,6,,,,—,visit_days (0.5011)
+has_visit_data,số,biết sau kỳ,0.0,2,,,,—,freezer_count (0.2739)
+store_name,phân loại,biết trước kỳ,0.0,5293,,,,—,—
+store_brand_code,phân loại,biết trước kỳ,0.035,34,,,,—,—
 account_status,phân loại,biết trước kỳ,0.0,1,,,,—,—
 store_group_code,phân loại,biết trước kỳ,0.0,1,,,,—,—
-store_system,phân loại,biết trước kỳ,0.0,34,,,,—,—
-store_format,phân loại,biết trước kỳ,100.0,1,,,,—,—
+store_system,phân loại,biết trước kỳ,0.0,33,,,,—,—
 is_legal_entity,phân loại,biết trước kỳ,0.0,1,,,,—,—
-site_number,phân loại,biết trước kỳ,0.0,5331,,,,—,—
-chain_name,phân loại,biết sau kỳ,69.035,22,,,,—,—
+site_number,phân loại,biết trước kỳ,0.0,5297,,,,—,—
 city_name,phân loại,biết trước kỳ,0.0,63,,,,—,—
 site_domain_path,phân loại,biết trước kỳ,0.0,63,,,,—,—
 site_domain_level,số,biết trước kỳ,0.0,2,,,,—,—
 channel_code,phân loại,biết trước kỳ,0.0,6,,,,—,—
 channel_name,phân loại,biết trước kỳ,0.0,6,,,,—,—
-pjp_route,phân loại,biết trước kỳ,4.298,102,,,,—,—
-freezer_count,số,biết trước kỳ,0.0,8,,,,—,has_visit_data (0.3184)
-freezer_capacity,phân loại,biết trước kỳ,47.469,13,,,,—,—
-product_name,phân loại,biết trước kỳ,0.0,347,,,,—,—
-brand_id,phân loại,biết trước kỳ,0.0,95,,,,—,—
-category_id,phân loại,biết trước kỳ,0.0,31,,,,—,—
-uom,phân loại,biết trước kỳ,0.171,13,,,,—,—
-supplier_id,số,biết trước kỳ,0.441,19,,,,—,—
-category_code,phân loại,biết trước kỳ,0.0,31,,,,—,—
-sub_brand,phân loại,biết trước kỳ,100.0,1,,,,—,—
-volume,phân loại,biết trước kỳ,100.0,1,,,,—,—
-unit_per_pack,phân loại,biết trước kỳ,100.0,1,,,,—,—
-mt_price_exc_vat,số,biết trước kỳ,98.958,2,,,,—,—
-mt_price_inc_vat,số,biết trước kỳ,98.958,2,,,,—,—
-tax_rate,số,biết trước kỳ,6.029,2,,,,—,—
-discount_amount,số,biết sau kỳ,0.0,6747,,,,—,discount_rate (0.9886)
-free_line_count,số,biết sau kỳ,0.0,30,,,,—,unit_price_stddev (0.5282)
-discount_pct_stddev,số,biết sau kỳ,66.159,396,,,,—,discount_excl_vat (0.2794)
-canceled_qty,số,biết sau kỳ,0.0,440,,,,—,line_status_count (0.2226)
-discount_excl_vat,số,biết sau kỳ,0.0,5335,,,,—,discount_rate (0.5982)
-unit_price_stddev,số,biết sau kỳ,66.159,3006,,,,—,avg_vat_rate (0.6449)
-avg_vat_rate,số,biết sau kỳ,66.159,136,,,,—,unit_price_stddev (0.6449)
-order_count,số,biết sau kỳ,0.0,40,,,,—,line_status_count (0.9897)
+pjp_route,phân loại,biết trước kỳ,4.095,102,,,,—,—
+freezer_count,số,biết trước kỳ,0.0,8,,,,—,has_visit_data (0.2739)
+freezer_capacity,phân loại,biết trước kỳ,47.568,13,,,,—,—
+product_name,phân loại,biết trước kỳ,0.0,269,,,,—,—
+brand_id,phân loại,biết trước kỳ,0.0,66,,,,—,—
+category_id,phân loại,biết trước kỳ,0.0,28,,,,—,—
+uom,phân loại,biết trước kỳ,0.003,12,,,,—,—
+supplier_id,số,biết trước kỳ,0.003,17,,,,—,—
+category_code,phân loại,biết trước kỳ,0.0,28,,,,—,—
+tax_rate,số,biết trước kỳ,0.0,1,,,,—,—
+discount_amount,số,biết sau kỳ,0.0,6633,,,,—,discount_rate (0.9992)
+free_line_count,số,biết sau kỳ,0.0,30,,,,—,unit_price_stddev (0.5731)
+discount_pct_stddev,số,biết sau kỳ,65.624,576,,,,—,discount_excl_vat (0.3918)
+canceled_qty,số,biết sau kỳ,0.0,491,,,,—,line_status_count (0.2488)
+discount_excl_vat,số,biết sau kỳ,0.0,6187,,,,—,discount_amount (0.6365)
+unit_price_stddev,số,biết sau kỳ,65.624,3914,,,,—,avg_vat_rate (0.6495)
+avg_vat_rate,số,biết sau kỳ,65.624,209,,,,—,unit_price_stddev (0.6495)
+order_count,số,biết sau kỳ,0.0,42,,,,—,purchase_count (0.9991)
 issuing_warehouse_count,số,biết sau kỳ,0.0,3,,,,—,has_purchase (0.9995)
-remaining_warehouse_count,số,biết sau kỳ,0.0,4,,,,—,issuing_warehouse_count (0.9993)
+remaining_warehouse_count,số,biết sau kỳ,0.0,5,,,,—,order_source_count (0.9996)
 order_source_count,số,biết sau kỳ,0.0,3,,,,—,order_type_count (0.9999)
 order_type_count,số,biết sau kỳ,0.0,4,,,,—,order_source_count (0.9999)
-line_status_count,số,biết sau kỳ,0.0,5,,,,—,order_source_count (0.9962)
-admin_canceled_line_count,số,biết sau kỳ,0.0,2,,,,—,canceled_qty (0.031)
-eco_line_count,số,biết sau kỳ,0.0,52,,,,—,shipped_qty (0.9739)
-avg_stock_qty,phân loại,biết sau kỳ,100.0,1,,,,—,—
-stock_in_qty,phân loại,biết sau kỳ,100.0,1,,,,—,—
-stock_out_qty,phân loại,biết sau kỳ,100.0,1,,,,—,—
-dlv_line_count,số,biết sau kỳ,95.41,66,,,,—,dlv_shipper_count (0.6403)
-dlv_avg_attempts,số,biết sau kỳ,95.41,34,,,,—,dlv_shipper_count (0.1811)
-dlv_shipper_count,số,biết sau kỳ,95.41,24,,,,—,dlv_line_count (0.6403)
-dlv_warehouse_confirmed_lines,số,biết sau kỳ,95.41,49,,,,—,dlv_line_count (0.3369)
-txn_line_count,phân loại,biết sau kỳ,100.0,1,,,,—,—
-txn_qty,phân loại,biết sau kỳ,100.0,1,,,,—,—
-txn_value,phân loại,biết sau kỳ,100.0,1,,,,—,—
-txn_avg_unit_price,phân loại,biết sau kỳ,100.0,1,,,,—,—
-txn_type_count,phân loại,biết sau kỳ,100.0,1,,,,—,—
-promo_allocation_level,phân loại,biết trước kỳ,38.648,4,,,,—,—
-promo_count,số,biết trước kỳ,0.502,9,,,,—,promo_day_ratio (0.7837)
-promo_has_price_cut,số,biết trước kỳ,0.502,3,,,,—,promo_count (0.6015)
-promo_has_free_goods,số,biết trước kỳ,0.502,3,,,,—,promo_forecast_qty (0.6489)
-promo_has_gift,số,biết trước kỳ,0.502,3,,,,—,category_code (-0.2032)
-has_promo_data,số,biết trước kỳ,0.034,3,,,,—,store_system (-0.1142)
+line_status_count,số,biết sau kỳ,0.0,7,,,,—,order_source_count (0.995)
+admin_canceled_line_count,số,biết sau kỳ,0.0,2,,,,—,canceled_qty (0.0299)
+eco_line_count,số,biết sau kỳ,0.0,56,,,,—,shipped_qty (0.9762)
+dlv_line_count,số,biết sau kỳ,95.042,69,,,,—,dlv_shipper_count (0.6301)
+dlv_avg_attempts,số,biết sau kỳ,95.042,33,,,,—,dlv_shipper_count (0.1791)
+dlv_shipper_count,số,biết sau kỳ,95.042,24,,,,—,dlv_line_count (0.6301)
+dlv_warehouse_confirmed_lines,số,biết sau kỳ,95.042,53,,,,—,dlv_line_count (0.3357)
+promo_allocation_level,phân loại,biết trước kỳ,36.437,4,,,,—,—
+promo_count,số,biết trước kỳ,0.521,9,,,,—,promo_day_ratio (0.7614)
+promo_has_price_cut,số,biết trước kỳ,0.521,3,,,,—,promo_count (0.5859)
+promo_has_free_goods,số,biết trước kỳ,0.521,3,,,,—,promo_forecast_qty (0.646)
+promo_has_gift,số,biết trước kỳ,0.521,3,,,,—,category_code (-0.1985)
+has_promo_data,số,biết trước kỳ,0.035,3,,,,—,store_system (-0.1176)

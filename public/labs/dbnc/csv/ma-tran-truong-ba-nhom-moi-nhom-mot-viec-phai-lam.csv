@@ -1,4 +1,4 @@
 phan_loai,so_cot,co_bang_chung_do,luoc_do_dwh,bang_phang,file_ctkm,viec_phai_lam,ty_le
-KHÔNG CÓ TÁC DỤNG,765,631,697,64,4,Không đưa vào bảng phẳng. Sửa nguồn cũng vô ích vì sửa xong vẫn không nói được gì về nhu cầu.,0.6855
-NHIỀU TÁC DỤNG · ĐỦ DỮ LIỆU,340,37,228,61,51,"Đưa vào bảng phẳng, dùng được ngay.",0.3047
-NHIỀU TÁC DỤNG · THIẾU DỮ LIỆU,11,6,0,10,1,"VẪN ĐƯA VÀO bảng phẳng, kèm cờ khuyết — rồi đi sửa nguồn. Thiếu dữ liệu là việc của nguồn, không phải lý do loại một cột có ích.",0.0099
+KHÔNG CÓ TÁC DỤNG,753,619,698,51,4,Không đưa vào bảng phẳng. Sửa nguồn cũng vô ích vì sửa xong vẫn không nói được gì về nhu cầu.,0.6845
+NHIỀU TÁC DỤNG · ĐỦ DỮ LIỆU,339,38,227,61,51,"Đưa vào bảng phẳng, dùng được ngay.",0.3082
+NHIỀU TÁC DỤNG · THIẾU DỮ LIỆU,8,5,0,7,1,"VẪN ĐƯA VÀO bảng phẳng, kèm cờ khuyết — rồi đi sửa nguồn. Thiếu dữ liệu là việc của nguồn, không phải lý do loại một cột có ích.",0.0073

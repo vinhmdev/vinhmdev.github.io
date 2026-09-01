@@ -1,13 +1,12 @@
 bien_phan_loai,so_nhom,so_dong,eta_binh_phuong,ghi_chu
-store_system,34,484779,0.0294,—
-store_brand_code,34,484522,0.027,—
-chain_name,21,443572,0.0268,—
-brand_id,95,484779,0.0041,—
-city_name,63,484779,0.0025,—
-category_code,31,484779,0.0008,—
-category_id,31,484779,0.0008,—
-uom,12,484034,0.0005,—
-channel_code,6,484779,0.0003,—
-store_group_code,1,484779,0.0,hằng số — không phân biệt được
-account_status,1,484779,0.0,hằng số — không phân biệt được
-stock_source,1,65514,0.0,hằng số — không phân biệt được
+store_system,33,474180,0.0293,—
+store_brand_code,33,473923,0.0269,—
+brand_id,66,474180,0.004,—
+city_name,63,474180,0.0025,—
+category_code,28,474180,0.0008,—
+category_id,28,474180,0.0008,—
+uom,11,474177,0.0005,—
+channel_code,6,474180,0.0003,—
+store_group_code,1,474180,0.0,hằng số — không phân biệt được
+account_status,1,474180,0.0,hằng số — không phân biệt được
+stock_source,1,64306,0.0,hằng số — không phân biệt được

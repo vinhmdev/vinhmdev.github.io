@@ -1,26 +1,26 @@
 cot,khuyet_khi_co_ban_pct,khuyet_khi_khong_ban_pct,chenh_lech_pp,biet_truoc_ky,muc_do
 effective_unit_price,0.0,100.0,100.0,false,TÁCH HOÀN HẢO
-qty_per_purchase,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-salesman_id,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-discount_pct_stddev,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-avg_unit_price_excl_vat,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-avg_vat_rate,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-first_purchase_day,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-last_purchase_day,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-avg_unit_price,0.0,99.972,99.971,false,TÁCH HOÀN HẢO
-unit_price_stddev,0.0,99.972,99.971,false,TÁCH HOÀN HẢO
-discount_rate,2.37,100.0,97.63,false,tách mạnh
-chain_key,8.709,99.973,91.264,false,tách mạnh
-chain_name,8.709,99.973,91.264,false,tách mạnh
-avg_days_to_delivery,80.84,100.0,19.16,false,tách nhẹ
-planned_visit_days,60.901,44.211,16.69,true,tách nhẹ
-avg_travel_km,60.901,44.211,16.69,false,tách nhẹ
-avg_travel_minutes,60.901,44.211,16.69,false,tách nhẹ
-visit_compliance_rate,60.901,44.211,16.69,false,tách nhẹ
-visiting_rep_count,60.901,44.211,16.69,false,tách nhẹ
-avg_work_minutes,61.738,45.817,15.921,false,tách nhẹ
-adjusted_sales_rate,86.015,99.992,13.977,false,tách nhẹ
-inv_line_count,0.79,14.298,13.508,true,tách nhẹ
-inv_total_amount,0.79,14.298,13.508,true,tách nhẹ
-inv_net_revenue,0.79,14.298,13.508,true,tách nhẹ
-inv_discount,0.79,14.298,13.508,true,tách nhẹ
+qty_per_purchase,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+salesman_id,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+discount_pct_stddev,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+avg_unit_price_excl_vat,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+avg_vat_rate,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+first_purchase_day,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+last_purchase_day,0.0,99.971,99.971,false,TÁCH HOÀN HẢO
+avg_unit_price,0.0,99.971,99.97,false,TÁCH HOÀN HẢO
+unit_price_stddev,0.0,99.971,99.97,false,TÁCH HOÀN HẢO
+discount_rate,0.237,100.0,99.763,false,TÁCH HOÀN HẢO
+avg_days_to_delivery,81.623,100.0,18.377,false,tách nhẹ
+inv_line_count,0.746,17.66,16.913,true,tách nhẹ
+inv_total_amount,0.746,17.66,16.913,true,tách nhẹ
+inv_net_revenue,0.746,17.66,16.913,true,tách nhẹ
+inv_discount,0.746,17.66,16.913,true,tách nhẹ
+inv_vat,0.746,17.66,16.913,true,tách nhẹ
+inv_item_count,0.746,17.66,16.913,true,tách nhẹ
+inv_delivered_revenue,0.746,17.66,16.913,true,tách nhẹ
+inv_order_count,0.746,17.66,16.913,true,tách nhẹ
+dlv_line_count,86.092,99.726,13.634,true,tách nhẹ
+dlv_ordered_qty,86.092,99.726,13.634,true,tách nhẹ
+dlv_shipped_qty,86.092,99.726,13.634,true,tách nhẹ
+dlv_received_qty,86.092,99.726,13.634,true,tách nhẹ
+dlv_avg_attempts,86.092,99.726,13.634,true,tách nhẹ

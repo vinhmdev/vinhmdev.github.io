@@ -1,6 +1,4 @@
 truc,y_nghia,do_phu,so_gia_tri
 serving_warehouse_key,kho phục vụ,1.0,7
-product_code,mã hàng,1.0,347
-store_brand_code,thương hiệu cửa hàng — lấy từ hồ sơ cửa hàng,0.9996708099408443,35
-chain_key,chuỗi — lấy từ DÒNG ĐƠN HÀNG nên chỉ có ở tháng có đơn,0.2679757767117738,22
-stock_source,nguồn dữ liệu tồn kho,0.1576246618992064,2
+product_code,mã hàng,1.0,269
+store_brand_code,thương hiệu cửa hàng — lấy từ hồ sơ cửa hàng,0.9996500456462201,34

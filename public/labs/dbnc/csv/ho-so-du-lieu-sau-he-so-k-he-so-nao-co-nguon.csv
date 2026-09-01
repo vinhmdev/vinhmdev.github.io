@@ -1,7 +1,7 @@
 he_so,nguon,trang_thai,so_do
-K_thời_tiết,dwh.fact_weather_forecast,KHẢ THI,"154,350 dòng"
+K_thời_tiết,dwh.fact_weather_forecast,KHẢ THI,"154,413 dòng"
 K_mùa_vụ,chính dữ liệu bán hàng,CHƯA KHẢ THI,khối liền mạch dài nhất 8 tháng / cần 12
 K_sự_kiện,dwh.dim_dates,CHƯA KHẢ THI,"thiếu cột is_holiday, is_tet"
-K_chương_trình,Excel Trade → out/promo/ctkm_thang.parquet,KHẢ THI,tác động đo được 1.5997× sản lượng
+K_chương_trình,Excel Trade → out/promo/ctkm_thang.parquet,KHẢ THI,tác động đo được 1.5926× sản lượng
 K_thị_trường,—,CHƯA KHẢ THI,chưa có nguồn nào trong kho
 hệ số thứ sáu,—,CHƯA KHẢ THI,hồ sơ thi công chưa đặt tên

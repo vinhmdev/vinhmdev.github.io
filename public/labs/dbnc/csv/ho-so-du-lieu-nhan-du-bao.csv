@@ -1,9 +1,9 @@
 khoan_muc,gia_tri,do_tu
 Đại lượng dự báo,sản lượng bán ra của một mã hàng tại một cửa hàng trong một tháng,sql/panel_mt.sql › CTE `sale`
 Cột nhãn — CHƯA CHỐT (QD-07),`sales_qty_carton` (thùng) hoặc `sales_qty` (đơn vị lẻ). Bản đặc tả này chưa thay nghiệp vụ quyết; cần backtest cả hai rồi so WMAPE,"kha-thi › Sổ quyết định về bảng phẳng, QD-07"
-Nhưng đã chốt được một nửa,"`sales_qty` mang 13 đơn vị tính khác nhau, nên MỌI con số cộng dọc theo mã hàng (Base, gộp lên rồi phân bổ, trọng số WMAPE) phải quy về thùng",thong-ke-panel › Đơn vị tính của nhãn
+Nhưng đã chốt được một nửa,"`sales_qty` mang 12 đơn vị tính khác nhau, nên MỌI con số cộng dọc theo mã hàng (Base, gộp lên rồi phân bổ, trọng số WMAPE) phải quy về thùng",thong-ke-panel › Đơn vị tính của nhãn
 Hạt,cửa hàng × mã hàng × tháng,thong-ke-panel › Tổng quan panel
-Quy mô,"1,725,447 dòng · 5,331 cửa hàng · 347 mã · 16 tháng",thong-ke-panel › Tổng quan panel
-Tỷ lệ dòng có phát sinh mua,29.333%,thong-ke-panel › Ngữ nghĩa số 0
-Tỷ lệ cặp thuộc nhóm thưa,"83.66% — nhu cầu đứt quãng, cần mô hình hai phần",thong-ke-panel › Tính đứt quãng (Syntetos–Boylan)
-"Tự tương quan trong cặp, trễ 1 tháng",0.1248,tuong-quan › Tự tương quan của nhãn theo độ trễ
+Quy mô,"1,380,180 dòng · 5,297 cửa hàng · 269 mã · 16 tháng",thong-ke-panel › Tổng quan panel
+Tỷ lệ dòng có phát sinh mua,34.356%,thong-ke-panel › Ngữ nghĩa số 0
+Tỷ lệ cặp thuộc nhóm thưa,"77.57% — nhu cầu đứt quãng, cần mô hình hai phần",thong-ke-panel › Tính đứt quãng (Syntetos–Boylan)
+"Tự tương quan trong cặp, trễ 1 tháng",0.1206,tuong-quan › Tự tương quan của nhãn theo độ trễ
