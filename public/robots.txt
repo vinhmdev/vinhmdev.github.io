@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# Labs are internal/experimental reports — keep them out of search results.
+Disallow: /labs/
+
 Sitemap: https://utils.vinhmdev.com/sitemap-index.xml
