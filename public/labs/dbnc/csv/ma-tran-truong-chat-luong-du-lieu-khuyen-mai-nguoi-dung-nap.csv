@@ -1,0 +1,10 @@
+thuoc_tinh,cot_trong_file,do_phu,day_du,do_tac_dong_o
+Cơ cấu mua/tặng,"buy_qty, get_qty",0.1288,THIẾU,Theo cơ chế tặng hàng
+Sản lượng Trade dự kiến,forecast_qty,0.2776,THIẾU,Sản lượng Trade dự kiến (FC)
+Ngân sách,budget,0.6112,THIẾU,—
+Mức giảm giá,"discount_pct, discount_amount",0.8193,THIẾU,Theo độ sâu giảm giá
+Mặt hàng,product_code,0.9298,THIẾU,Tác động tổng
+Phạm vi chuỗi,chain_code,0.946,THIẾU,Theo mức phân bổ ghi trong file
+Cửa sổ đặt hàng,"sell_in_from, sell_in_to",0.9611,ĐỦ,Tác động tổng
+Cửa sổ người tiêu dùng,"sell_out_from, sell_out_to",0.9622,ĐỦ,Tác động tổng
+Cơ chế,"mechanic_code, mechanic_group",0.9987,ĐỦ,Theo cơ chế tặng hàng

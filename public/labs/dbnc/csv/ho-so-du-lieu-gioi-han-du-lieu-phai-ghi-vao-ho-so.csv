@@ -1,0 +1,16 @@
+ma,phep_kiem,ket_luan
+BAY-01,uom='VND' bơm tiền vào sales_qty,uom='VND' chiếm 0.0988% số dòng nhưng 93.5845% tổng sales_qty → bắt buộc lọc `uom <> 'VND'`.
+BAY-03,"SCD2 — key là phiên bản, không phải thực thể","Đếm theo khoá phồng lên tới 5.89 lần so với đếm theo mã nghiệp vụ → đếm SKU bằng `product_code`, đếm cửa hàng bằng `store_code`."
+BAY-04,dim_chains ô nhiễm,99.5643% dòng dim_chains có mã toàn số → lọc `chain_code !~ '^[0-9]+$'` để lấy chuỗi MT thật.
+BAY-05,available_primary khuyết theo nguồn,"Nguồn khuyết nặng nhất thiếu 100.0% `available_primary` → luôn `coalesce(available_primary, qty_primary)`."
+BAY-06,Tồn kho mức lô,"31.9035% nhóm (kho × SKU × ngày) có nhiều hơn một lô, trung bình 3.777 lô/nhóm → đếm ngày còn hàng trên dòng lô sẽ sai."
+BAY-07,Độ phủ dữ liệu viếng thăm,45.0206% cửa hàng MT không có dòng nào trong fact_visits (dữ liệu ghé chỉ từ 20251201) → phải dùng cờ `has_visit_data` trước khi đưa vào mẫu số.
+BAY-09,Đứt gãy proxy khuyến mại,"Đứt gãy tại: 202601. Mức mới giữ nguyên ở các tháng sau → là thay đổi cách ghi nhận dữ liệu, không phải thay đổi kinh doanh → KHÔNG huấn luyện xuyên mốc."
+BAY-11,Cột rỗng hoàn toàn,"Cột rỗng 100%: dim_stores.freezer_qty → đừng dùng làm đặc trưng, phải dẫn xuất từ nguồn khác."
+BAY-12,Bảng nguồn rỗng,"Bảng chưa có dữ liệu: fact_trade_promo, dim_promotions → các hệ số phụ thuộc chúng chưa tính được."
+BAY-13,dim_dates thiếu cột lịch lễ,"Thiếu: is_holiday, holiday_name, is_tet, days_to_tet → chưa tính được K_sự_kiện."
+BAY-14,Hai nguồn tồn kho,"daily_balances: toàn bộ 20260703→20260831, phủ 5.95% số ngày của cửa sổ (245 SKU); lot_snapshot: toàn bộ 20260609→20260831, phủ 10.47% số ngày của cửa sổ (1342 SKU). Nguồn tốt nhất chỉ phủ 10.47% số ngày của cửa sổ → mặt nạ hết hàng chỉ đo được trên phần đó, phần còn lại Base phải chấp nhận thiên lệch."
+BAY-16,SCD2 làm vỡ hạt panel,"Nặng nhất: dim_products tháng 202606 có 1260/1273 thực thể sống nhiều phiên bản (98.98%) → nối bảng bằng `product_key`/`store_key` sẽ chẻ đôi một tháng: nhãn chia hai, mẫu số ngày còn hàng tụt xuống và Base phồng lên. Phải nối bằng mã nghiệp vụ (`product_code`, `store_code`)."
+BAY-17,Mốc thời gian vô cực,"7 cột chứa mốc vô cực, nặng nhất là dim_stores.valid_from với 346,777 dòng → mọi câu lệnh đọc thẳng cột này bằng psycopg sẽ ném lỗi chuyển kiểu. Bọc `nullif(nullif(cot, 'infinity'), '-infinity')` ngay trong SELECT."
+CO-CUNG,Tháng gắn cờ cứng trong truy vấn,"202512: doanh thu ×1.198, sản lượng ×1.345, đơn giá ×0.891 → KHÔNG còn bất thường trên số đo hôm nay → cờ đang loại oan một tháng dữ liệu tốt, phải xem lại."
+CUA-SO,Cửa sổ huấn luyện dùng được,"Sau khi cắt các tháng đứt gãy, khối liền mạch dài nhất là 8 tháng → đây là trần của mọi ước lượng mùa vụ và của dự báo dài hạn."

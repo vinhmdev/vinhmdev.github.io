@@ -1,0 +1,16 @@
+tam,muc_gop,mo_hinh,wmape_pct,thien_lech_pct,so_diem
+1,toàn kênh,trung bình 3 kỳ,13.2,-3.2,11
+1,ngành hàng,trung bình 3 kỳ,22.0,-3.2,237
+1,mã hàng,kỳ trước (naive),42.8,-1.8,2052
+1,thương hiệu × mã hàng,trung bình 3 kỳ,52.8,-3.5,12708
+1,cửa hàng × mã hàng,trung bình 3 kỳ,67.4,-3.7,568262
+2,toàn kênh,trung bình 3 kỳ,12.2,-6.2,10
+2,ngành hàng,trung bình toàn bộ,23.2,-3.4,214
+2,mã hàng,trung bình 3 kỳ,50.7,-1.1,1829
+2,thương hiệu × mã hàng,trung bình 3 kỳ,57.5,-6.5,11137
+2,cửa hàng × mã hàng,trung bình 3 kỳ,70.1,-6.1,486241
+3,toàn kênh,trung bình 3 kỳ,9.7,-9.0,9
+3,ngành hàng,trung bình toàn bộ,22.6,-5.8,192
+3,mã hàng,trung bình 3 kỳ,54.6,1.1,1612
+3,thương hiệu × mã hàng,trung bình 3 kỳ,60.3,-5.8,9657
+3,cửa hàng × mã hàng,trung bình 3 kỳ,72.5,-6.0,412214

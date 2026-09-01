@@ -1,0 +1,16 @@
+mo_hinh,tam,wmape_gop_theo_doanh_thu_pct,wmape_tho_tron_don_vi_pct,so_diem
+trung bình 3 kỳ,1,80.6,66.1,568261
+kỳ trước (naive),1,84.1,70.3,568261
+trung bình toàn bộ,1,92.9,75.6,568261
+luôn dự báo 0,1,100.0,100.0,568261
+Croston/SBA,1,114.0,91.0,568261
+trung bình 3 kỳ,2,81.2,68.7,486240
+kỳ trước (naive),2,81.4,72.7,486240
+trung bình toàn bộ,2,91.5,77.9,486240
+luôn dự báo 0,2,100.0,100.0,486240
+Croston/SBA,2,110.4,92.0,486240
+kỳ trước (naive),3,91.3,74.1,412213
+trung bình 3 kỳ,3,94.4,71.1,412213
+luôn dự báo 0,3,100.0,100.0,412213
+trung bình toàn bộ,3,104.5,79.0,412213
+Croston/SBA,3,124.7,91.7,412213

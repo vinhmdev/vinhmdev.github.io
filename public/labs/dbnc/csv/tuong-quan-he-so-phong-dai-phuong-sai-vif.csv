@@ -1,72 +1,83 @@
 dac_trung,vif,danh_gia
-ngay_theo_doi_ton,inf,trùng lặp hoàn toàn với ngay_co_hang — bỏ bớt một cột
-tien_vat,inf,trùng lặp hoàn toàn với tien_co_vat — bỏ bớt một cột
-don_gia_truoc_vat_tb,inf,trùng lặp hoàn toàn với don_gia_tb — bỏ bớt một cột
-ft_so_don,inf,trùng lặp hoàn toàn với ft_so_dong — bỏ bớt một cột
-ft_doanh_thu_thuan,inf,trùng lặp hoàn toàn với ft_tong_tien — bỏ bớt một cột
-ft_vat,inf,trùng lặp hoàn toàn với ft_tong_tien — bỏ bớt một cột
-ngay_co_hang,274.311,đa cộng tuyến
-co_du_lieu_ton,267.612,đa cộng tuyến
-so_nguon_dat,80.061,đa cộng tuyến
-so_loai_don,75.98,đa cộng tuyến
-ty_le_chiet_khau,28.328,đa cộng tuyến
-gh_qty_nhan,28.191,đa cộng tuyến
-tien_chiet_khau,28.073,đa cộng tuyến
-don_gia_tb,24.941,đa cộng tuyến
-gh_qty_dat,24.704,đa cộng tuyến
-gia_thuc_thu,23.55,đa cộng tuyến
-doanh_so,20.877,đa cộng tuyến
-tien_co_vat,19.69,đa cộng tuyến
-so_don,15.374,đa cộng tuyến
-so_dong_eco,12.296,đa cộng tuyến
-sl_moi_lan,9.805,đa cộng tuyến
-conversion_rate,9.732,đa cộng tuyến
-qty_giao,9.582,đa cộng tuyến
-so_lan_mua,9.331,đa cộng tuyến
-ft_tong_tien,9.083,đa cộng tuyến
-ft_so_mat_hang,8.69,đa cộng tuyến
-qty_thung,8.247,đa cộng tuyến
-qty_per_carton,7.174,đa cộng tuyến
-gh_qty_giao,6.851,đa cộng tuyến
-tmin_tb,5.166,đa cộng tuyến
-tmax_tb,5.148,đa cộng tuyến
-don_gia_do_lech,5.144,đa cộng tuyến
-ngay_mua_dau_thang,5.11,đa cộng tuyến
-ngay_mua_cuoi_thang,4.94,—
-tmax_dinh,4.299,—
-so_trang_thai_dong,4.234,—
-so_dong_hang_tang,4.188,—
-mua_tong,4.046,—
-ft_so_dong,4.039,—
-ft_chiet_khau,3.846,—
-ft_doanh_thu_da_giao,3.691,—
-so_ngay_mua,3.338,—
-vat_pct_tb,3.146,—
-ngay_ghe,3.064,—
-gh_so_dong,2.76,—
-phut_di_chuyen_tb,2.676,—
-km_di_chuyen_tb,2.621,—
-tien_ck_truoc_vat,2.552,—
-qty_huy,2.248,—
-gh_so_shipper,2.006,—
-net_weight,1.897,—
-so_ngay_lam_viec,1.775,—
-so_ngay_lich,1.739,—
-toc_do_ban_hieu_chinh,1.676,—
-ngay_ke_hoach_ghe,1.526,—
-so_nvbh_ghe,1.508,—
-co_du_lieu_ghe,1.409,—
-shelf_life,1.312,—
-thang_tu_lan_mua_dau,1.276,—
-gh_dong_kho_xac_nhan,1.276,—
-ty_le_tuan_thu,1.238,—
-ck_pct_do_lech_chuan,1.226,—
-so_tu_dong,1.172,—
-phut_lam_viec_tb,1.145,—
-sla_giao_ngay_tb,1.141,—
-so_kho_con,1.137,—
-cach_ngay_giao_tb,1.106,—
-ngay_het_hang,1.085,—
-gh_so_lan_thu_tb,1.075,—
-so_kho_xuat,1.054,—
-so_dong_admin_huy,1.002,—
+stock_tracked_days,inf,trùng lặp hoàn toàn với in_stock_days — bỏ bớt một cột
+vat_amount,inf,trùng lặp hoàn toàn với amount_incl_vat — bỏ bớt một cột
+avg_unit_price_excl_vat,inf,trùng lặp hoàn toàn với avg_unit_price — bỏ bớt một cột
+inv_order_count,inf,trùng lặp hoàn toàn với inv_line_count — bỏ bớt một cột
+inv_net_revenue,inf,trùng lặp hoàn toàn với inv_total_amount — bỏ bớt một cột
+inv_vat,inf,trùng lặp hoàn toàn với inv_total_amount — bỏ bớt một cột
+promo_day_ratio,inf,trùng lặp hoàn toàn với promo_days — bỏ bớt một cột
+in_stock_days,277.64,đa cộng tuyến
+has_stock_data,270.64,đa cộng tuyến
+order_source_count,80.216,đa cộng tuyến
+order_type_count,76.103,đa cộng tuyến
+discount_rate,28.458,đa cộng tuyến
+dlv_received_qty,28.206,đa cộng tuyến
+discount_amount,28.174,đa cộng tuyến
+avg_unit_price,25.564,đa cộng tuyến
+dlv_ordered_qty,24.703,đa cộng tuyến
+effective_unit_price,24.327,đa cộng tuyến
+net_revenue,20.953,đa cộng tuyến
+amount_incl_vat,19.799,đa cộng tuyến
+order_count,15.533,đa cộng tuyến
+eco_line_count,12.56,đa cộng tuyến
+qty_per_purchase,9.952,đa cộng tuyến
+conversion_rate,9.81,đa cộng tuyến
+shipped_qty,9.647,đa cộng tuyến
+purchase_count,9.383,đa cộng tuyến
+inv_total_amount,9.216,đa cộng tuyến
+inv_item_count,9.04,đa cộng tuyến
+sales_qty_carton,8.43,đa cộng tuyến
+qty_per_carton,7.203,đa cộng tuyến
+dlv_shipped_qty,6.866,đa cộng tuyến
+promo_count,6.735,đa cộng tuyến
+promo_has_price_cut,6.412,đa cộng tuyến
+promo_budget,5.82,đa cộng tuyến
+promo_day_weighted_discount_pct,5.751,đa cộng tuyến
+unit_price_stddev,5.713,đa cộng tuyến
+promo_has_free_goods,5.412,đa cộng tuyến
+promo_max_discount_pct,5.34,đa cộng tuyến
+avg_tmax,5.271,đa cộng tuyến
+avg_tmin,5.239,đa cộng tuyến
+first_purchase_day,5.139,đa cộng tuyến
+last_purchase_day,4.975,—
+inv_line_count,4.496,—
+free_line_count,4.376,—
+peak_tmax,4.352,—
+line_status_count,4.24,—
+total_rainfall,4.095,—
+inv_discount,3.902,—
+inv_delivered_revenue,3.717,—
+promo_days,3.406,—
+rain_days,3.377,—
+avg_vat_rate,3.355,—
+promo_forecast_qty,3.181,—
+visit_days,3.084,—
+dlv_line_count,2.768,—
+avg_travel_minutes,2.679,—
+avg_travel_km,2.626,—
+discount_excl_vat,2.59,—
+net_weight,2.314,—
+canceled_qty,2.258,—
+dlv_shipper_count,2.01,—
+promo_has_gift,1.958,—
+working_days,1.792,—
+calendar_days,1.763,—
+adjusted_sales_rate,1.685,—
+planned_visit_days,1.528,—
+visiting_rep_count,1.509,—
+has_visit_data,1.421,—
+shelf_life,1.407,—
+months_since_first_purchase,1.298,—
+dlv_warehouse_confirmed_lines,1.279,—
+visit_compliance_rate,1.241,—
+discount_pct_stddev,1.235,—
+freezer_count,1.178,—
+has_promo_data,1.157,—
+avg_work_minutes,1.147,—
+avg_delivery_sla_days,1.141,—
+remaining_warehouse_count,1.139,—
+avg_days_to_delivery,1.108,—
+stockout_days,1.093,—
+dlv_avg_attempts,1.076,—
+issuing_warehouse_count,1.056,—
+admin_canceled_line_count,1.002,—

@@ -1,0 +1,13 @@
+cot,kieu,vi_sao_con_trong_truy_van
+store_format,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+sub_brand,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+volume,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+unit_per_pack,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+avg_stock_qty,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+stock_in_qty,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+stock_out_qty,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+txn_line_count,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+txn_qty,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+txn_value,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+txn_avg_unit_price,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"
+txn_type_count,String,"nguồn rỗng hoặc chưa nạp — xem BAY-11, BAY-12"

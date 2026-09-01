@@ -1,0 +1,10 @@
+buoc,lenh,lam_gi
+1,make checks,Đo lại các bẫy dữ liệu và cửa sổ huấn luyện dùng được
+2,make panel-full,Dựng lại bảng phẳng toàn kênh MT từ kho
+3,make ctkm,"Nạp lại CTKM từ file Excel của Trade, gắn vào bảng phẳng, đo tác động"
+4,make stats,"Thống kê bảng phẳng: đơn vị nhãn, số 0, đứt quãng, rò rỉ"
+5,make fields,"Hồ sơ từng trường: khuyết thiếu, độ tuyến tính"
+6,make corr,Tương quan và so sánh sáu thước đo quan trọng
+7,make feasibility,Đối chiếu cam kết Giai đoạn 1 với dữ liệu
+8,make plan,← Sinh lại chính báo cáo này từ các kết quả trên
+9,make html,Dựng lại trang HTML

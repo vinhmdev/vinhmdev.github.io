@@ -1,0 +1,9 @@
+truc,cong,tieu_chi,so_cot,trong_do_co_bang_chung_do,he_qua_neu_bo_qua
+tác dụng,U1,Hằng số hoặc rỗng,287,287,"Phương sai bằng 0 nên thông tin tương hỗ với BẤT KỲ nhãn nào cũng bằng 0. Hệ quả toán học, không phải ngưỡng vận hành."
+tác dụng,U4,Khoá dòng hoặc cột kỹ thuật,185,185,Định danh một dòng hoặc phục vụ vận hành ETL. Không mô tả gì về nhu cầu.
+tác dụng,U2,Gần như chỉ một giá trị,95,95,"Entropy đo được gần 0: hầu hết dòng mang cùng một giá trị, phần khác biệt quá mỏng để mô hình tách được tín hiệu."
+tác dụng,U3,Định danh trá hình,9,9,"Ở bảng fact, biến phân loại gần như không trùng giá trị là định danh trá hình. Mã hoá nó là tạo một cột cho mỗi dòng — mô hình học thuộc lòng."
+đầy đủ,C2,Khuyết ≥ 95%,144,11,"Phần quan sát còn lại quá mỏng để ước lượng ổn định. Chỉ nên giữ lại dưới dạng cờ có/không, không giữ giá trị."
+đầy đủ,C1,Rỗng hoàn toàn,78,0,Không có quan sát nào để ước lượng. Cột vẫn chiếm chỗ trong mọi bảng xếp hạng và làm người đọc tưởng nguồn đã có.
+đầy đủ,C3,Mồ côi tham chiếu > 5%,0,0,"Khoá ngoại trỏ tới giá trị không tồn tại ở bảng đích. Nối vào là mất dòng, mà mất dòng ở đây không ngẫu nhiên nên gây thiên lệch."
+đầy đủ,C4,Nguồn đã ngừng cập nhật,0,0,"Bảng nguồn không có dữ liệu mới quá 30 ngày. Huấn luyện thì được, nhưng chạy thật sẽ không có giá trị cho kỳ cần dự báo."

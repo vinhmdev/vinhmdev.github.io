@@ -1,0 +1,11 @@
+do_phan_giai,muc_gop,so_chuoi,so_ky_trung_vi,ty_le_ky_bang_0_pct,adi_trung_vi,cv2_trung_vi,tu_tuong_quan_tre_1,muot_pct,that_thuong_pct,gian_doan_pct,vua_thua_vua_bien_dong_pct
+thang,toàn kênh,1,17.0,0.0,1.0,0.03,0.047,100.0,0.0,0.0,0.0
+thang,ngành hàng,28,16.5,5.1,1.0,0.19,0.944,66.7,29.2,0.0,4.2
+thang,mã hàng,276,15.0,8.0,1.0,0.4,0.769,49.2,38.8,5.0,7.1
+thang,thương hiệu × mã hàng,1947,12.0,9.6,1.0,0.39,0.722,50.4,32.6,7.3,9.6
+thang,cửa hàng × mã hàng,146371,4.0,45.0,1.14,0.14,0.228,22.8,4.2,64.6,8.4
+tuan,toàn kênh,1,74.0,0.0,1.0,0.07,0.17,100.0,0.0,0.0,0.0
+tuan,ngành hàng,28,69.5,15.0,1.0,0.45,0.88,45.8,16.7,4.2,33.3
+tuan,mã hàng,276,65.0,17.0,1.02,0.57,0.666,28.2,39.9,12.1,19.8
+tuan,thương hiệu × mã hàng,1947,48.0,28.7,1.19,0.58,0.616,22.2,29.2,20.9,27.6
+tuan,cửa hàng × mã hàng,146371,15.0,80.8,3.25,0.08,0.087,3.2,0.7,87.4,8.8

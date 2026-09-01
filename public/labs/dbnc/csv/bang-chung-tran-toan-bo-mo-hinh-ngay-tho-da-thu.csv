@@ -1,0 +1,76 @@
+muc_gop,mo_hinh,tam,wmape_pct,thien_lech_pct,so_diem
+cửa hàng × mã hàng,trung bình 3 kỳ,1,67.4,-3.7,568262
+cửa hàng × mã hàng,kỳ trước (naive),1,71.9,-5.9,568262
+cửa hàng × mã hàng,trung bình toàn bộ,1,74.2,6.6,568262
+cửa hàng × mã hàng,Croston/SBA,1,90.6,24.3,568262
+cửa hàng × mã hàng,luôn dự báo 0,1,100.0,-100.0,568262
+cửa hàng × mã hàng,trung bình 3 kỳ,2,70.1,-6.1,486241
+cửa hàng × mã hàng,kỳ trước (naive),2,74.4,-10.0,486241
+cửa hàng × mã hàng,trung bình toàn bộ,2,76.5,5.2,486241
+cửa hàng × mã hàng,Croston/SBA,2,91.6,22.8,486241
+cửa hàng × mã hàng,luôn dự báo 0,2,100.0,-100.0,486241
+cửa hàng × mã hàng,trung bình 3 kỳ,3,72.5,-6.0,412214
+cửa hàng × mã hàng,kỳ trước (naive),3,75.6,-10.4,412214
+cửa hàng × mã hàng,trung bình toàn bộ,3,77.5,5.7,412214
+cửa hàng × mã hàng,Croston/SBA,3,91.1,22.9,412214
+cửa hàng × mã hàng,luôn dự báo 0,3,100.0,-100.0,412214
+mã hàng,kỳ trước (naive),1,42.8,-1.8,2052
+mã hàng,trung bình 3 kỳ,1,44.4,-0.2,2052
+mã hàng,Croston/SBA,1,51.9,-8.4,2052
+mã hàng,trung bình toàn bộ,1,53.6,5.7,2052
+mã hàng,luôn dự báo 0,1,100.0,-100.0,2052
+mã hàng,trung bình 3 kỳ,2,50.7,-1.1,1829
+mã hàng,kỳ trước (naive),2,52.4,-2.2,1829
+mã hàng,Croston/SBA,2,55.0,-9.2,1829
+mã hàng,trung bình toàn bộ,2,57.2,5.0,1829
+mã hàng,luôn dự báo 0,2,100.0,-100.0,1829
+mã hàng,trung bình 3 kỳ,3,54.6,1.1,1612
+mã hàng,kỳ trước (naive),3,54.9,-0.0,1612
+mã hàng,Croston/SBA,3,55.8,-7.4,1612
+mã hàng,trung bình toàn bộ,3,58.4,7.7,1612
+mã hàng,luôn dự báo 0,3,100.0,-100.0,1612
+ngành hàng,trung bình 3 kỳ,1,22.0,-3.2,237
+ngành hàng,kỳ trước (naive),1,22.9,-3.1,237
+ngành hàng,trung bình toàn bộ,1,23.5,-1.1,237
+ngành hàng,Croston/SBA,1,23.7,-13.2,237
+ngành hàng,luôn dự báo 0,1,100.0,-100.0,237
+ngành hàng,trung bình toàn bộ,2,23.2,-3.4,214
+ngành hàng,trung bình 3 kỳ,2,23.8,-6.2,214
+ngành hàng,Croston/SBA,2,24.9,-15.5,214
+ngành hàng,kỳ trước (naive),2,26.1,-6.1,214
+ngành hàng,luôn dự báo 0,2,100.0,-100.0,214
+ngành hàng,trung bình toàn bộ,3,22.6,-5.8,192
+ngành hàng,trung bình 3 kỳ,3,24.1,-9.0,192
+ngành hàng,Croston/SBA,3,26.5,-18.0,192
+ngành hàng,kỳ trước (naive),3,26.6,-9.8,192
+ngành hàng,luôn dự báo 0,3,100.0,-100.0,192
+thương hiệu × mã hàng,trung bình 3 kỳ,1,52.8,-3.5,12708
+thương hiệu × mã hàng,kỳ trước (naive),1,55.3,-2.3,12708
+thương hiệu × mã hàng,Croston/SBA,1,58.0,-12.1,12708
+thương hiệu × mã hàng,trung bình toàn bộ,1,58.9,0.6,12708
+thương hiệu × mã hàng,luôn dự báo 0,1,100.0,-100.0,12708
+thương hiệu × mã hàng,trung bình 3 kỳ,2,57.5,-6.5,11137
+thương hiệu × mã hàng,Croston/SBA,2,60.7,-13.7,11137
+thương hiệu × mã hàng,kỳ trước (naive),2,61.0,-6.7,11137
+thương hiệu × mã hàng,trung bình toàn bộ,2,62.3,-0.9,11137
+thương hiệu × mã hàng,luôn dự báo 0,2,100.0,-100.0,11137
+thương hiệu × mã hàng,trung bình 3 kỳ,3,60.3,-5.8,9657
+thương hiệu × mã hàng,Croston/SBA,3,61.0,-13.1,9657
+thương hiệu × mã hàng,kỳ trước (naive),3,62.8,-7.3,9657
+thương hiệu × mã hàng,trung bình toàn bộ,3,63.1,0.7,9657
+thương hiệu × mã hàng,luôn dự báo 0,3,100.0,-100.0,9657
+toàn kênh,trung bình 3 kỳ,1,13.2,-3.2,11
+toàn kênh,trung bình toàn bộ,1,14.6,-1.2,11
+toàn kênh,Croston/SBA,1,15.6,-13.2,11
+toàn kênh,kỳ trước (naive),1,16.9,-3.1,11
+toàn kênh,luôn dự báo 0,1,100.0,-100.0,11
+toàn kênh,trung bình 3 kỳ,2,12.2,-6.2,10
+toàn kênh,trung bình toàn bộ,2,12.9,-3.4,10
+toàn kênh,Croston/SBA,2,16.8,-15.5,10
+toàn kênh,kỳ trước (naive),2,17.3,-6.1,10
+toàn kênh,luôn dự báo 0,2,100.0,-100.0,10
+toàn kênh,trung bình 3 kỳ,3,9.7,-9.0,9
+toàn kênh,trung bình toàn bộ,3,11.7,-5.8,9
+toàn kênh,kỳ trước (naive),3,14.1,-9.8,9
+toàn kênh,Croston/SBA,3,18.0,-18.0,9
+toàn kênh,luôn dự báo 0,3,100.0,-100.0,9

@@ -1,0 +1,6 @@
+mo_hinh,tam,bottom_up_wmape_pct,top_down_wmape_pct,top_down_tot_hon_bao_nhieu_diem
+trung bình 3 kỳ,1,67.4,69.1,-1.7
+kỳ trước (naive),1,71.9,70.8,1.1
+Croston/SBA,1,90.6,71.7,18.9
+trung bình toàn bộ,1,74.2,72.7,1.5
+luôn dự báo 0,1,100.0,100.0,0.0

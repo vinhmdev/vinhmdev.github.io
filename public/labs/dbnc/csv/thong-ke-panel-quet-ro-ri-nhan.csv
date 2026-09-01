@@ -1,26 +1,26 @@
 cot,khuyet_khi_co_ban_pct,khuyet_khi_khong_ban_pct,chenh_lech_pp,biet_truoc_ky,muc_do
-gia_thuc_thu,0.0,100.0,100.0,false,TÁCH HOÀN HẢO
-sl_moi_lan,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+effective_unit_price,0.0,100.0,100.0,false,TÁCH HOÀN HẢO
+qty_per_purchase,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
 salesman_id,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-ck_pct_do_lech_chuan,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
-don_gia_truoc_vat_tb,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
-vat_pct_tb,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
-ngay_mua_dau_thang,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
-ngay_mua_cuoi_thang,0.0,99.972,99.972,true,TÁCH HOÀN HẢO
-don_gia_tb,0.0,99.972,99.971,true,TÁCH HOÀN HẢO
-don_gia_do_lech,0.0,99.972,99.971,true,TÁCH HOÀN HẢO
-ty_le_chiet_khau,2.368,100.0,97.632,false,tách mạnh
-chain_key,8.707,99.973,91.267,false,tách mạnh
-chuoi,8.707,99.973,91.267,false,tách mạnh
-cach_ngay_giao_tb,80.835,100.0,19.165,true,tách nhẹ
-ngay_ke_hoach_ghe,60.918,44.258,16.66,true,tách nhẹ
-km_di_chuyen_tb,60.918,44.258,16.66,true,tách nhẹ
-phut_di_chuyen_tb,60.918,44.258,16.66,true,tách nhẹ
-ty_le_tuan_thu,60.918,44.258,16.66,true,tách nhẹ
-so_nvbh_ghe,60.918,44.258,16.66,true,tách nhẹ
-phut_lam_viec_tb,61.76,45.862,15.897,true,tách nhẹ
-toc_do_ban_hieu_chinh,86.02,99.992,13.972,false,tách nhẹ
-ft_so_dong,0.789,14.334,13.545,true,tách nhẹ
-ft_tong_tien,0.789,14.334,13.545,true,tách nhẹ
-ft_doanh_thu_thuan,0.789,14.334,13.545,true,tách nhẹ
-ft_chiet_khau,0.789,14.334,13.545,true,tách nhẹ
+discount_pct_stddev,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+avg_unit_price_excl_vat,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+avg_vat_rate,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+first_purchase_day,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+last_purchase_day,0.0,99.972,99.972,false,TÁCH HOÀN HẢO
+avg_unit_price,0.0,99.972,99.971,false,TÁCH HOÀN HẢO
+unit_price_stddev,0.0,99.972,99.971,false,TÁCH HOÀN HẢO
+discount_rate,2.37,100.0,97.63,false,tách mạnh
+chain_key,8.709,99.973,91.264,false,tách mạnh
+chain_name,8.709,99.973,91.264,false,tách mạnh
+avg_days_to_delivery,80.84,100.0,19.16,false,tách nhẹ
+planned_visit_days,60.901,44.211,16.69,true,tách nhẹ
+avg_travel_km,60.901,44.211,16.69,false,tách nhẹ
+avg_travel_minutes,60.901,44.211,16.69,false,tách nhẹ
+visit_compliance_rate,60.901,44.211,16.69,false,tách nhẹ
+visiting_rep_count,60.901,44.211,16.69,false,tách nhẹ
+avg_work_minutes,61.738,45.817,15.921,false,tách nhẹ
+adjusted_sales_rate,86.015,99.992,13.977,false,tách nhẹ
+inv_line_count,0.79,14.298,13.508,true,tách nhẹ
+inv_total_amount,0.79,14.298,13.508,true,tách nhẹ
+inv_net_revenue,0.79,14.298,13.508,true,tách nhẹ
+inv_discount,0.79,14.298,13.508,true,tách nhẹ

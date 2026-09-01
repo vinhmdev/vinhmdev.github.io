@@ -1,4 +1,4 @@
-ly_do_thoi_gian,nguon,so_dong,so_ctkm,ví_dụ
+window_reason,source,so_dong,legacy_promo_count,ví_dụ
 Có ngày tháng nhưng KHÔNG BIẾT NĂM,sp_khac,219,0,01/03 - 31/03 · 01/12 - 04/01 · 01/12 - 06/01 · 02/01 - 15/01 · 02/01 - 28/01 · 02/02 - 12/02
 Không nhận ra mẫu ngày,sp_khac,14,2,02/01 -28/01 · 20/04 - hết hàng date cận · 21/01/ - 14/02
 Không nhận ra mẫu ngày,walls,5,1,07/08/2025 (13/08) - 09/09/2025

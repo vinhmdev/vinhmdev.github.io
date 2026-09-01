@@ -1,0 +1,7 @@
+cong,tieu_chi,so_cot_vuong,trong_do_can_thiet,he_qua_neu_bo_qua
+Q2,Hằng số,270,1,"Phương sai bằng 0 nên thông tin tương hỗ với BẤT KỲ nhãn nào cũng bằng 0. Đây là hệ quả toán học, không phải ngưỡng vận hành."
+Q3,Khuyết ≥ 95%,144,22,"Phần quan sát còn lại quá mỏng để ước lượng ổn định. Chỉ nên giữ lại dưới dạng cờ có/không, không giữ giá trị."
+Q1,Rỗng hoàn toàn,78,0,Không có quan sát nào để ước lượng. Cột vẫn chiếm chỗ trong mọi bảng xếp hạng và làm người đọc tưởng nguồn đã có.
+Q4,Gần như mỗi dòng một giá trị,9,0,"Ở bảng fact, biến phân loại gần như không trùng giá trị là định danh trá hình. Mã hoá nó là tạo ra một cột cho mỗi dòng — mô hình học thuộc lòng."
+Q5,Mồ côi tham chiếu > 5%,0,0,"Khoá ngoại trỏ tới giá trị không tồn tại ở bảng đích. Nối vào là mất dòng, mà mất dòng ở đây không ngẫu nhiên nên gây thiên lệch."
+Q6,Nguồn đã ngừng cập nhật,0,0,"Bảng nguồn không có dữ liệu mới quá 30 ngày. Huấn luyện thì được, nhưng chạy thật sẽ không có giá trị cho kỳ cần dự báo."
