@@ -43,9 +43,20 @@ const COPY_FEEDBACK_MS = 2000;
  * back to `currentColor` and every alert would render grey. Rewriting the
  * selector to `:host, .markdown-body` puts the variables on the shadow host
  * itself, where the alert rules can actually see them.
+ *
+ * `--color-note` also gets retinted on the way through: upstream ships GitHub
+ * blue (#0969da light / #2f81f7 dark), which clashes with the vinhmetal
+ * palette, so NOTE alerts run on the same Academic Cinnabar accent as the rest
+ * of the preview.
  */
+const NOTE_ACCENT: ReadonlyArray<readonly [RegExp, string]> = [
+  [/#0969da/gi, '#ea580c'],
+  [/#2f81f7/gi, '#fb923c'],
+];
+
 function scopeAlertColors(css: string): string {
-  return css.replace(/^[^{]*\{/, ':host, .markdown-body {');
+  const scoped = css.replace(/^[^{]*\{/, ':host, .markdown-body {');
+  return NOTE_ACCENT.reduce((acc, [from, to]) => acc.replace(from, to), scoped);
 }
 
 export class PreviewRenderer {

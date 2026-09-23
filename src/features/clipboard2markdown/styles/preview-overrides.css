@@ -17,6 +17,8 @@
   font-family:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.7;
+  background-color: #ffffff;
+  color: #262626;
 }
 
 .markdown-body code,
@@ -77,6 +79,10 @@
   color: #262626;
   font-weight: 600;
   text-align: left;
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: #fafafa;
 }
 
 .markdown-body.dark table,
@@ -214,7 +220,8 @@ pre .hljs {
   justify-content: center;
   margin: 1.2em 0;
   padding: 1em;
-  background: #f6f8fa;
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
   border-radius: 6px;
   overflow-x: auto;
 }
@@ -225,7 +232,8 @@ pre .hljs {
 }
 
 .markdown-body.dark .mermaid-wrapper {
-  background: #161b22;
+  background: #0a0a0a;
+  border-color: #262626;
 }
 
 /*
@@ -264,8 +272,8 @@ pre.mermaid-rendered-hide {
 }
 
 .markdown-body .info {
-  border-left-color: #0969da;
-  background: rgba(9, 105, 218, 0.05);
+  border-left-color: #ea580c !important;
+  background: rgba(234, 88, 12, 0.05) !important;
 }
 
 .markdown-body .warning {
@@ -284,8 +292,8 @@ pre.mermaid-rendered-hide {
 }
 
 .markdown-body.dark .info {
-  border-left-color: #2f81f7;
-  background: rgba(47, 129, 247, 0.15);
+  border-left-color: #fb923c !important;
+  background: rgba(251, 146, 60, 0.1) !important;
 }
 
 .markdown-body.dark .warning {
@@ -360,6 +368,223 @@ pre.mermaid-rendered-hide {
 /* ─── Dark surface ────────────────────────────────────────────────────────── */
 
 .markdown-body.dark {
-  background-color: #0d1117;
-  color: #e6edf3;
+  background-color: #171717 !important;
+  color: #d4d4d4 !important;
+}
+
+/* ─── Links — Academic Cinnabar, never GitHub blue ────────────────────────── */
+
+.markdown-body a {
+  color: #c2410c;
+  text-decoration: underline;
+  text-decoration-color: rgba(234, 88, 12, 0.4);
+  text-underline-offset: 3px;
+}
+
+.markdown-body a:hover {
+  color: #ea580c;
+  text-decoration-color: #ea580c;
+}
+
+.markdown-body.dark a {
+  color: #fb923c;
+  text-decoration-color: rgba(251, 146, 60, 0.4);
+}
+
+.markdown-body.dark a:hover {
+  color: #f97316;
+  text-decoration-color: #f97316;
+}
+
+/* ─── Selection — brand tint, overrides GitHub's blue highlight ───────────── */
+
+.markdown-body ::selection {
+  background-color: rgba(251, 146, 60, 0.28) !important;
+  color: inherit !important;
+}
+
+/* ─── Code surfaces ───────────────────────────────────────────────────────── */
+
+.markdown-body pre,
+.markdown-body pre.hljs {
+  background-color: #f5f5f5 !important;
+  border: 1px solid #e5e5e5;
+  color: #262626;
+}
+
+.markdown-body.dark pre,
+.markdown-body.dark pre.hljs {
+  background-color: #0a0a0a !important;
+  border: 1px solid #262626;
+  color: #d4d4d4;
+}
+
+/* hljs sets its own `color` on the inner <code>; pull it back to titanium */
+.markdown-body pre .hljs {
+  color: #262626;
+}
+
+.markdown-body.dark pre .hljs {
+  color: #d4d4d4;
+}
+
+/* Inline code only — `:not(pre) >` keeps fenced blocks out of this rule */
+.markdown-body :not(pre) > code {
+  background-color: #f5f5f5;
+  color: #c2410c;
+  border: 1px solid #e5e5e5;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+.markdown-body.dark :not(pre) > code {
+  background-color: #262626;
+  color: #fb923c;
+  border: 1px solid #404040;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+/* ─── Syntax tokens — warm palette, zero blue ─────────────────────────────── */
+
+.markdown-body .hljs-keyword,
+.markdown-body .hljs-selector-tag,
+.markdown-body .hljs-selector-attr,
+.markdown-body .hljs-selector-class,
+.markdown-body .hljs-selector-id {
+  color: #c2410c;
+}
+
+.markdown-body .hljs-title,
+.markdown-body .hljs-title.function_,
+.markdown-body .hljs-title.class_,
+.markdown-body .hljs-section {
+  color: #b45309;
+}
+
+.markdown-body .hljs-string,
+.markdown-body .hljs-regexp {
+  color: #15803d;
+}
+
+.markdown-body .hljs-number,
+.markdown-body .hljs-literal {
+  color: #b45309;
+}
+
+.markdown-body .hljs-attr,
+.markdown-body .hljs-attribute,
+.markdown-body .hljs-variable {
+  color: #404040;
+}
+
+.markdown-body .hljs-comment {
+  color: #78716c;
+  font-style: italic;
+}
+
+.markdown-body .hljs-operator,
+.markdown-body .hljs-meta {
+  color: #9a3412;
+}
+
+.markdown-body.dark .hljs-keyword,
+.markdown-body.dark .hljs-selector-tag,
+.markdown-body.dark .hljs-selector-attr,
+.markdown-body.dark .hljs-selector-class,
+.markdown-body.dark .hljs-selector-id {
+  color: #fb923c;
+}
+
+.markdown-body.dark .hljs-title,
+.markdown-body.dark .hljs-title.function_,
+.markdown-body.dark .hljs-title.class_,
+.markdown-body.dark .hljs-section {
+  color: #f59e0b;
+}
+
+.markdown-body.dark .hljs-string,
+.markdown-body.dark .hljs-regexp {
+  color: #4ade80;
+}
+
+.markdown-body.dark .hljs-number,
+.markdown-body.dark .hljs-literal {
+  color: #fbbf24;
+}
+
+.markdown-body.dark .hljs-attr,
+.markdown-body.dark .hljs-attribute,
+.markdown-body.dark .hljs-variable {
+  color: #d4d4d4;
+}
+
+.markdown-body.dark .hljs-comment {
+  color: #737373;
+  font-style: italic;
+}
+
+.markdown-body.dark .hljs-operator,
+.markdown-body.dark .hljs-meta {
+  color: #f97316;
+}
+
+/* ─── GitHub alert: NOTE — retinted off --color-note's blue ───────────────── */
+
+.markdown-body .markdown-alert-note {
+  border-left-color: #ea580c !important;
+  background: rgba(234, 88, 12, 0.05) !important;
+}
+
+.markdown-body .markdown-alert-note .markdown-alert-title {
+  color: #ea580c !important;
+}
+
+.markdown-body.dark .markdown-alert-note {
+  border-left-color: #fb923c !important;
+  background: rgba(251, 146, 60, 0.1) !important;
+}
+
+.markdown-body.dark .markdown-alert-note .markdown-alert-title {
+  color: #fb923c !important;
+}
+
+/* ─── Rules & heading underlines ──────────────────────────────────────────── */
+
+.markdown-body hr {
+  border: 0;
+  border-bottom: 1px solid #e5e5e5;
+  background: transparent;
+  height: 0;
+}
+
+.markdown-body.dark hr {
+  border-bottom: 1px solid #333333;
+}
+
+.markdown-body h1,
+.markdown-body h2 {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.markdown-body.dark h1,
+.markdown-body.dark h2 {
+  border-bottom: 1px solid #262626;
+}
+
+/* ─── Task lists & footnotes ──────────────────────────────────────────────── */
+
+.markdown-body .task-list-item input[type='checkbox'],
+.markdown-body input[type='checkbox'] {
+  accent-color: #ea580c;
+}
+
+.markdown-body .footnotes li:target::before,
+.markdown-body .footnotes li:target {
+  border-color: #ea580c;
+}
+
+.markdown-body.dark .footnotes li:target::before,
+.markdown-body.dark .footnotes li:target {
+  border-color: #fb923c;
 }

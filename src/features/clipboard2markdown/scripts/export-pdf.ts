@@ -43,6 +43,13 @@ function buildPrintDocument(content: string): string {
     }
     .markdown-body img { max-width: 100%; }
     .markdown-body svg { max-width: 100%; height: auto; }
+    /* Links — Academic Cinnabar, never GitHub blue */
+    .markdown-body a {
+      color: #c2410c;
+      text-decoration: underline;
+      text-decoration-color: rgba(234, 88, 12, 0.4);
+      text-underline-offset: 3px;
+    }
     /* Center mermaid diagrams */
     .mermaid-wrapper {
       display: flex;
@@ -51,13 +58,24 @@ function buildPrintDocument(content: string): string {
     }
 
     /* Code blocks — hljs theme supplies the token colors, this supplies the frame */
+    .markdown-body pre,
     .markdown-body pre.hljs {
       padding: 1.1em 1em;
+      background-color: #f5f5f5 !important;
+      color: #262626;
       border: 1px solid #e5e5e5;
       border-radius: 6px;
       page-break-inside: avoid;
     }
-    .markdown-body pre .hljs { padding: 0; background: transparent; }
+    .markdown-body pre .hljs { padding: 0; background: transparent; color: #262626; }
+    /* Inline code only — the :not(pre) child combinator keeps fenced blocks out */
+    .markdown-body :not(pre) > code {
+      background-color: #f5f5f5;
+      color: #c2410c;
+      border: 1px solid #e5e5e5;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+    }
     /* Copy buttons are screen-only UI and never belong in a PDF */
     .code-copy-btn { display: none !important; }
 
@@ -80,7 +98,7 @@ function buildPrintDocument(content: string): string {
 
     /* GitHub alerts — the color variables live on :root in the source stylesheet */
     :root {
-      --color-note: #0969da;
+      --color-note: #ea580c;
       --color-tip: #1a7f37;
       --color-warning: #9a6700;
       --color-severe: #bc4c00;
@@ -135,7 +153,7 @@ function buildPrintDocument(content: string): string {
     .markdown-body .warning > :last-child,
     .markdown-body .danger > :last-child,
     .markdown-body .success > :last-child { margin-bottom: 0; }
-    .markdown-body .info { border-left-color: #0969da; background: rgba(9, 105, 218, 0.05); }
+    .markdown-body .info { border-left-color: #ea580c; background: rgba(234, 88, 12, 0.05); }
     .markdown-body .warning { border-left-color: #9a6700; background: rgba(154, 103, 0, 0.05); }
     .markdown-body .danger { border-left-color: #d1242f; background: rgba(209, 36, 47, 0.05); }
     .markdown-body .success { border-left-color: #1a7f37; background: rgba(26, 127, 55, 0.05); }
