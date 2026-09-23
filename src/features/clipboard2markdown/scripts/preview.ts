@@ -124,6 +124,18 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Normalize a fence info string into a class-safe language token.
+ * Fence info is author-controlled, so anything outside the allowed set is
+ * dropped before it reaches a `class` attribute.
+ */
+function safeLangName(lang: string): string {
+  const cleaned = (lang || '').trim().toLowerCase().replace(/[^a-z0-9+#._-]/g, '');
+  return cleaned || 'plaintext';
+}
+
 // ─── Module state ─────────────────────────────────────────────────────────────
 let renderer: PreviewRenderer | null = null;
 let mdParser: MarkdownIt | null = null;
@@ -155,7 +167,9 @@ function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
     .use(resolvePlugin(toc));
 
   if (renderLatex) {
-    md.use(resolvePlugin(texmath), { engine: katex, delimiters: 'dollars' });
+    // 'dollars' → $...$ / $$...$$ ; 'brackets' → \(...\) inline and \[...\] block.
+    // Matches the Hugo Goldmark `markup.toml` passthrough delimiters.
+    md.use(resolvePlugin(texmath), { engine: katex, delimiters: ['dollars', 'brackets'] });
   }
 }
 
@@ -167,22 +181,26 @@ function buildParser(renderLatex: boolean, renderMermaid: boolean): MarkdownIt {
     linkify: true,
     typographer: true,
     highlight: (str: string, lang: string): string => {
-      // Mermaid blocks must keep language-mermaid class so that
-      // PreviewRenderer.renderMermaid() can find them via querySelectorAll.
+      // Mermaid blocks keep the `mermaid-source` marker on <pre> so that
+      // PreviewRenderer can find them without colliding with a plain
+      // ```mermaid fence rendered as code when diagram render is OFF.
       // Do NOT run through hljs — mermaid.render() handles them separately.
       if (lang === 'mermaid' && renderMermaid) {
-        return `<pre><code class="language-mermaid">${md.utils.escapeHtml(str)}</code></pre>`;
+        return `<pre class="mermaid-source"><code class="language-mermaid">${md.utils.escapeHtml(str)}</code></pre>`;
       }
+      // Preserve the language as a `language-*` class so downstream consumers
+      // (copy button badge, PDF export, external re-highlighting) keep the metadata.
+      const langClass = `hljs language-${safeLangName(lang)}`;
       if (lang && hljs.getLanguage(lang)) {
         try {
           return (
-            '<pre class="hljs"><code>' +
+            `<pre class="hljs"><code class="${langClass}">` +
             hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
             '</code></pre>'
           );
         } catch (_) {}
       }
-      return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+      return `<pre class="hljs"><code class="${langClass}">${md.utils.escapeHtml(str)}</code></pre>`;
     },
   });
 

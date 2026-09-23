@@ -16,7 +16,100 @@
  */
 import { md2docx } from '@m2d/md2docx';
 import { WidthType, TableLayoutType } from 'docx';
+import JSZip from 'jszip';
 import { downloadBlob } from './utils';
+
+const DOCX_MIME =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+// Injected when missing from styles.xml. docx@9.5's DefaultStylesFactory
+// (node_modules/docx/dist/index.cjs:18170+) omits Normal/DefaultParagraphFont,
+// yet every emitted style declares <w:basedOn w:val="Normal"/>. Google Docs
+// rejects files with dangling basedOn references; Word/LibreOffice tolerate them.
+const NORMAL_STYLE =
+  '<w:style w:type="paragraph" w:default="1" w:styleId="Normal">' +
+  '<w:name w:val="Normal"/><w:qFormat/></w:style>';
+const DEFAULT_PARAGRAPH_FONT_STYLE =
+  '<w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont">' +
+  '<w:name w:val="Default Paragraph Font"/><w:uiPriority w:val="1"/>' +
+  '<w:semiHidden/><w:unhideWhenUsed/></w:style>';
+
+/**
+ * Post-process the generated DOCX to repair two issues that cause Google Docs
+ * to reject the file with "File could not open. Try refreshing the page.":
+ *
+ * 1. **Duplicate `<w:pStyle>` / `<w:numPr>` inside `<w:pPr>`.** `@m2d/list`
+ *    sets both `bullet` and `numbering` on each list item, and `docx@9.5`
+ *    emits one element per option — producing two of each. OOXML schema
+ *    declares both with `maxOccurs="1"`. We keep the LAST occurrence so the
+ *    m2d-defined list reference (e.g. numId="2") wins over the bullet
+ *    fallback (numId="1").
+ *
+ * 2. **Missing `Normal` and `DefaultParagraphFont` styles.** Every emitted
+ *    style references `Normal`/`DefaultParagraphFont` via `<w:basedOn>`, but
+ *    docx's `DefaultStylesFactory` never emits them. Google Docs rejects the
+ *    dangling references; Word/LibreOffice silently fall back to built-ins.
+ *
+ * Word/LibreOffice tolerate both issues, which is why the file appears valid
+ * until you try to open it in Google Docs.
+ */
+async function repairDocxForGoogleDocs(blob: Blob): Promise<Blob> {
+  const zip = await JSZip.loadAsync(blob);
+  const docFile = zip.file('word/document.xml');
+  const stylesFile = zip.file('word/styles.xml');
+  if (!docFile || !stylesFile) return blob;
+
+  let mutated = false;
+
+  // (1) Dedupe duplicates inside each <w:pPr>.
+  const docXml = await docFile.async('string');
+  const docFixed = docXml.replace(/<w:pPr>([\s\S]*?)<\/w:pPr>/g, (_m, inner: string) => {
+    let body = inner;
+    const pStyleMatches = body.match(/<w:pStyle\s[^/]*\/>/g);
+    if (pStyleMatches && pStyleMatches.length > 1) {
+      let i = 0;
+      body = body.replace(/<w:pStyle\s[^/]*\/>/g, (m) =>
+        ++i === pStyleMatches.length ? m : ''
+      );
+    }
+    const numPrMatches = body.match(/<w:numPr>[\s\S]*?<\/w:numPr>/g);
+    if (numPrMatches && numPrMatches.length > 1) {
+      let i = 0;
+      body = body.replace(/<w:numPr>[\s\S]*?<\/w:numPr>/g, (m) =>
+        ++i === numPrMatches.length ? m : ''
+      );
+    }
+    return `<w:pPr>${body}</w:pPr>`;
+  });
+  if (docFixed !== docXml) {
+    zip.file('word/document.xml', docFixed);
+    mutated = true;
+  }
+
+  // (2) Inject Normal / DefaultParagraphFont when absent.
+  const stylesXml = await stylesFile.async('string');
+  const needsNormal = !/w:styleId="Normal"/.test(stylesXml);
+  const needsDefaultFont = !/w:styleId="DefaultParagraphFont"/.test(stylesXml);
+  if (needsNormal || needsDefaultFont) {
+    const injection =
+      (needsNormal ? NORMAL_STYLE : '') +
+      (needsDefaultFont ? DEFAULT_PARAGRAPH_FONT_STYLE : '');
+    // Prefer to insert right after </w:docDefaults>; fall back to right
+    // after the <w:styles ...> opening tag if docDefaults is missing.
+    const stylesFixed = stylesXml.includes('</w:docDefaults>')
+      ? stylesXml.replace('</w:docDefaults>', `</w:docDefaults>${injection}`)
+      : stylesXml.replace(/(<w:styles\b[^>]*>)/, `$1${injection}`);
+    zip.file('word/styles.xml', stylesFixed);
+    mutated = true;
+  }
+
+  if (!mutated) return blob;
+  return zip.generateAsync({
+    type: 'blob',
+    mimeType: DOCX_MIME,
+    compression: 'DEFLATE',
+  });
+}
 
 const CORS_PROXY_HOST = 'cors-proxy.vinhmdev.com';
 const CORS_PROXY_BASE = `https://${CORS_PROXY_HOST}/`;
@@ -93,9 +186,10 @@ export function initExportDocx(
             tableProps: {
               width: { size: 100, type: WidthType.PERCENTAGE },
               layout: TableLayoutType.AUTOFIT,
-              // MUST explicitly pass empty columnWidths to bypass docx library's hardcoded fallback
-              // which blindly creates a 100-DXA grid column for every cell if undefined.
-              columnWidths: [],
+              // Do NOT pass `columnWidths: []` — it serializes as an empty <w:tblGrid/>,
+              // which violates OOXML (one <w:gridCol> per column is required) and makes
+              // Google Docs reject the file with "File could not open." Leave undefined
+              // so docx falls back to Array(N).fill(100); AUTOFIT then resizes at render time.
             },
             cellProps: {
               // Completely strip the width property so Word uses pure Autofit (simulating "uncheck preferred width").
@@ -116,7 +210,8 @@ export function initExportDocx(
         }
       )) as Blob;
 
-      downloadBlob(blob, 'document.docx');
+      const repaired = await repairDocxForGoogleDocs(blob);
+      downloadBlob(repaired, 'document.docx');
       showToast('file-text', t('toast_exported_doc'));
     } catch (err) {
       console.error('DOCX export error:', err);
