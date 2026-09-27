@@ -1,8 +1,0 @@
-bang,cot,so_dong
-dim_stores,valid_from,346777
-dim_employees,valid_from,6472
-dim_shippers,valid_from,97
-dim_distributors,valid_from,86
-dim_price_lists,effective_from,1
-dwh_batch_logs,data_from,1
-dwh_batch_logs,data_to,1
