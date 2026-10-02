@@ -12,12 +12,17 @@
  * On desktop (≥1024px), both panes are always visible.
  */
 export function initTabs(): void {
-  const editorPane = document.getElementById('editor-pane') as HTMLDivElement;
-  const previewPane = document.getElementById('preview-pane') as HTMLDivElement;
-  const btnTabEdit = document.getElementById('tab-edit-btn');
-  const btnTabPreview = document.getElementById('tab-preview-btn');
+  const editorPaneEl = document.getElementById('editor-pane');
+  const previewPaneEl = document.getElementById('preview-pane');
+  const btnTabEditEl = document.getElementById('tab-edit-btn');
+  const btnTabPreviewEl = document.getElementById('tab-preview-btn');
 
-  if (!btnTabEdit || !btnTabPreview) return;
+  if (!editorPaneEl || !previewPaneEl || !btnTabEditEl || !btnTabPreviewEl) return;
+
+  const editorPane = editorPaneEl;
+  const previewPane = previewPaneEl;
+  const btnTabEdit = btnTabEditEl;
+  const btnTabPreview = btnTabPreviewEl;
 
   function showPane(pane: HTMLElement): void {
     pane.style.display = 'flex';
@@ -42,8 +47,8 @@ export function initTabs(): void {
       showPane(previewPane);
     }
 
-    btnTabEdit!.dataset.active = String(isEdit);
-    btnTabPreview!.dataset.active = String(!isEdit);
+    btnTabEdit.dataset.active = String(isEdit);
+    btnTabPreview.dataset.active = String(!isEdit);
   }
 
   btnTabEdit.addEventListener('click', () => setActiveTab('edit'));
@@ -56,7 +61,7 @@ export function initTabs(): void {
       clearInlineDisplay(previewPane);
     } else {
       // Mobile: show only the active tab's pane
-      const isPreviewActive = btnTabPreview!.dataset.active === 'true';
+      const isPreviewActive = btnTabPreview.dataset.active === 'true';
       setActiveTab(isPreviewActive ? 'preview' : 'edit');
     }
   }

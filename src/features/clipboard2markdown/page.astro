@@ -45,10 +45,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     ></script>
     <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"
     ></script>
-    <script
-      is:inline
-      defer
-      src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script is:inline defer src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
+    ></script>
   </Fragment>
 
   <div id="c2md-shell" class="flex flex-col h-[100dvh] overflow-hidden">
@@ -319,6 +317,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
        status bar. --md-sharebar-h is set from the bar's measured height
        (share.ts); the fallback covers the moment before the first measure. -->
   <style is:global>
-    body.md-has-sharebar #c2md-shell { padding-bottom: var(--md-sharebar-h, 3.25rem); }
+    body.md-has-sharebar #c2md-shell {
+      padding-bottom: var(--md-sharebar-h, 3.25rem);
+    }
   </style>
 </BaseLayout>

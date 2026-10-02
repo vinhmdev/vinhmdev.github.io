@@ -32,7 +32,6 @@ export async function loadAnalytics(): Promise<Analytics | null> {
     }
 
     analytics = getAnalytics(getFirebaseApp());
-    console.log('[Firebase] Analytics initialized.');
     return analytics;
   } catch (error) {
     console.error('[Firebase] Failed to initialize analytics:', error);

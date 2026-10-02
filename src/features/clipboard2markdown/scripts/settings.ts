@@ -45,12 +45,20 @@ export interface AppSettings {
  * Returns a Settings interface for reading values and subscribing to changes.
  */
 export function initSettings(): AppSettings {
-  const state = {} as Record<SettingKey, boolean>;
-  const listeners: Partial<Record<SettingKey, Array<(v: boolean) => void>>> = {};
+  const state: Record<SettingKey, boolean> = {
+    autoConvert: loadFromStorage('autoConvert'),
+    renderMermaid: loadFromStorage('renderMermaid'),
+    renderLatex: loadFromStorage('renderLatex'),
+    syncScroll: loadFromStorage('syncScroll'),
+  };
+  const listeners: Record<SettingKey, Array<(v: boolean) => void>> = {
+    autoConvert: [],
+    renderMermaid: [],
+    renderLatex: [],
+    syncScroll: [],
+  };
 
   (Object.keys(STORAGE_KEYS) as SettingKey[]).forEach((key) => {
-    state[key] = loadFromStorage(key);
-
     const el = document.getElementById(ELEMENT_IDS[key]) as HTMLInputElement | null;
     if (!el) return;
     el.checked = state[key];
@@ -58,15 +66,14 @@ export function initSettings(): AppSettings {
     el.addEventListener('change', () => {
       state[key] = el.checked;
       saveToStorage(key, el.checked);
-      listeners[key]?.forEach((cb) => cb(el.checked));
+      listeners[key].forEach((cb) => cb(el.checked));
     });
   });
 
   return {
     get: (key) => state[key],
     onChange: (key, cb) => {
-      if (!listeners[key]) listeners[key] = [];
-      listeners[key]!.push(cb);
+      listeners[key].push(cb);
     },
   };
 }

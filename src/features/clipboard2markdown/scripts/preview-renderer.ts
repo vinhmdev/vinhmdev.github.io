@@ -25,6 +25,7 @@ import alertsCss from 'markdown-it-github-alerts/styles/github-base.css?inline';
 import alertsLight from 'markdown-it-github-alerts/styles/github-colors-light.css?inline';
 import alertsDark from 'markdown-it-github-alerts/styles/github-colors-dark-class.css?inline';
 import previewOverridesCss from '../styles/preview-overrides.css?inline';
+import { copyToClipboard } from './utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -155,7 +156,8 @@ export class PreviewRenderer {
         wrapper.setAttribute('data-original-code', codeText);
         wrapper.innerHTML = svg;
         pre.replaceWith(wrapper);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        console.warn('[preview-renderer] Mermaid render failed:', err);
         // Show an error alert instead of silently hiding so the user can see their code
         const wrapper = document.createElement('div');
         wrapper.className = 'markdown-alert markdown-alert-warning';
@@ -266,41 +268,12 @@ export class PreviewRenderer {
 
   /** Copy a block's source, then flash the button label for two seconds. */
   private async _copyCode(code: Element, btn: HTMLButtonElement): Promise<void> {
-    const text = (code as HTMLElement).innerText || code.textContent || '';
-    let copied = false;
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        copied = true;
-      } else {
-        copied = this._legacyCopy(text);
-      }
-    } catch {
-      // Clipboard API can reject on insecure origins or denied permission.
-      copied = this._legacyCopy(text);
-    }
-
+    const text =
+      code instanceof HTMLElement
+        ? code.innerText || code.textContent || ''
+        : code.textContent || '';
+    const copied = await copyToClipboard(text);
     this._flashCopyState(btn, copied);
-  }
-
-  /** document.execCommand fallback for browsers without the async Clipboard API. */
-  private _legacyCopy(text: string): boolean {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.top = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
-    try {
-      ok = document.execCommand('copy');
-    } catch {
-      ok = false;
-    }
-    document.body.removeChild(ta);
-    return ok;
   }
 
   private _flashCopyState(btn: HTMLButtonElement, copied: boolean): void {

@@ -9,8 +9,6 @@
  * render theme-aware content (Mermaid diagrams, the Markdown preview, charts)
  * can react.
  */
-const lucide = window.lucide ?? { createIcons: () => {} };
-
 const THEME_KEY = 'c2md-theme';
 type Theme = 'dark' | 'light';
 
@@ -22,12 +20,14 @@ function applyTheme(theme: Theme): void {
 /** Restore the saved/system theme and wire up #theme-toggle-btn. */
 export function initTheme(): void {
   const saved = localStorage.getItem(THEME_KEY) as Theme | null;
-  applyTheme(saved ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  applyTheme(
+    saved ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  );
 
   document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
     const next: Theme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
     applyTheme(next);
-    lucide.createIcons();
+    window.lucide?.createIcons();
     window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
   });
 }

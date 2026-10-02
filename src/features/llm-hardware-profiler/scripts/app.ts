@@ -294,8 +294,8 @@ function renderSpeed(speed: ForwardResult['speed']): void {
 }
 
 function showResultsPanel(mode: Mode): void {
-  document.getElementById('results-empty')!.classList.add('hidden');
-  document.getElementById('results-content')!.classList.remove('hidden');
+  document.getElementById('results-empty')?.classList.add('hidden');
+  document.getElementById('results-content')?.classList.remove('hidden');
 
   // Show/hide sub-cards per mode
   const vramCard = document.getElementById('result-vram');
@@ -483,7 +483,7 @@ function onCalculate(): void {
     showResultsPanel('matchmaking');
     renderMatchmaking(results);
   } else if (activeMode === 'discovery') {
-    const hw = hardwareDB[0]; // Mode 3 uses selected hardware preset if available
+    const hw = hardwareDB.length > 0 ? hardwareDB[0] : undefined; // Mode 3 uses selected hardware preset if available
     const presetId = str('hardware-preset-discovery') || str('hardware-preset');
     const selectedHw = hardwareDB.find((h) => h.hardware_id === presetId) ?? hw;
     if (!selectedHw) {
@@ -515,7 +515,6 @@ export function showToast(msg: string): void {
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // @ts-ignore — CDN global
   window.lucide?.createIcons();
 
   initTheme();

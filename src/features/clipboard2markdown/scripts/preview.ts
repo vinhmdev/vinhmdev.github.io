@@ -8,7 +8,7 @@
  * - DOMPurify sanitization (bundled)
  * - Delegates all DOM operations to PreviewRenderer (Shadow DOM)
  */
-import MarkdownIt from 'markdown-it';
+import MarkdownIt, { type PluginSimple } from 'markdown-it';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 import katex from 'katex';
@@ -132,7 +132,10 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
  * dropped before it reaches a `class` attribute.
  */
 function safeLangName(lang: string): string {
-  const cleaned = (lang || '').trim().toLowerCase().replace(/[^a-z0-9+#._-]/g, '');
+  const cleaned = (lang || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9+#._-]/g, '');
   return cleaned || 'plaintext';
 }
 
@@ -145,7 +148,10 @@ let mermaidEnabledState = true;
 // ─── Plugin attachment ────────────────────────────────────────────────────────
 function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
   // Helper to safely resolve CJS/ESM interop differences
-  const resolvePlugin = (p: any) => p.default || p;
+  const resolvePlugin = <T = PluginSimple>(p: unknown): T =>
+    (typeof p === 'object' && p !== null && 'default' in p
+      ? (p as { default: T }).default
+      : p) as T;
 
   md.use(resolvePlugin(taskLists))
     .use(resolvePlugin(deflist))
@@ -198,7 +204,9 @@ function buildParser(renderLatex: boolean, renderMermaid: boolean): MarkdownIt {
             hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
             '</code></pre>'
           );
-        } catch (_) {}
+        } catch (err) {
+          console.warn('[preview] Code highlight failed:', err);
+        }
       }
       return `<pre class="hljs"><code class="${langClass}">${md.utils.escapeHtml(str)}</code></pre>`;
     },

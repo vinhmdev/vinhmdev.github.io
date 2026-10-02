@@ -32,7 +32,7 @@ export function showToast(icon: string, msg: string): void {
   }
   const msgEl = document.getElementById('toast-msg');
   if (msgEl) msgEl.innerText = msg;
-  window.lucide.createIcons();
+  window.lucide?.createIcons();
 
   toast.classList.remove('translate-y-20', 'opacity-0');
   toast.classList.add('translate-y-0', 'opacity-100');
@@ -47,25 +47,35 @@ export function showToast(icon: string, msg: string): void {
 
 // execCommand is deprecated but intentionally kept as a fallback
 // for non-HTTPS contexts or older browsers where navigator.clipboard is unavailable.
-function fallbackCopy(text: string): void {
+function fallbackCopy(text: string): boolean {
   const el = document.createElement('textarea');
   el.value = text;
   el.style.position = 'fixed';
   el.style.opacity = '0';
   document.body.appendChild(el);
   el.select();
-  document.execCommand('copy');
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
   document.body.removeChild(el);
+  return ok;
 }
 
 /**
  * Copy text to clipboard with fallback for older browsers.
  */
-export function copyToClipboard(text: string): void {
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
-  } else {
-    fallbackCopy(text);
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    return fallbackCopy(text);
+  } catch {
+    return fallbackCopy(text);
   }
 }
 

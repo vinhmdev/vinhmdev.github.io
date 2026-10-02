@@ -14,7 +14,7 @@ const lang = defaultLang;
   title={t(lang, 'site_title')}
   description={t(lang, 'site_description')}
   lang={lang}
-  bodyClass="font-sans bg-[#0e0c0a] text-[#f5f5f5] min-h-screen flex flex-col items-center relative"
+  bodyClass="font-sans bg-neutral-950 text-neutral-100 min-h-screen flex flex-col items-center relative"
 >
   <!-- Animated gradient background -->
   <div class="bg-gradient"></div>
@@ -42,13 +42,13 @@ const lang = defaultLang;
     </div>
 
     <h1
-      class="text-[2.5rem] font-extrabold tracking-tight bg-gradient-to-br from-[#f5f5f5] to-[#a3a3a3] bg-clip-text text-transparent mb-2"
+      class="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-neutral-100 to-neutral-400 bg-clip-text text-transparent mb-2"
     >
       {t(lang, 'site_title')}
     </h1>
 
     <!-- Parent site reference — subtle, inline -->
-    <p class="text-[#a3a3a3] text-sm mb-10 leading-relaxed">
+    <p class="text-neutral-400 text-sm mb-10 leading-relaxed">
       {t(lang, 'site_subtitle')} &mdash;
       <a href="https://vinhmdev.com" target="_blank" class="parent-ref">{t(lang, 'nav_vinhmdev')}</a
       >

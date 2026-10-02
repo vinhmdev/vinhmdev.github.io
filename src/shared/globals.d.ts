@@ -7,7 +7,7 @@
  *
  * The minimal interfaces below cover only the surface actually used in
  * this project. They centralize the "this comes from a CDN UMD" contract
- * in one place so feature code can drop `@ts-ignore` and `(window as any)`.
+ * in one place so feature code can drop type suppression directives and `(window as any)`.
  *
  * All declarations live inside `declare global` so they're available as
  * ambient types throughout the project without needing imports.
@@ -34,10 +34,7 @@ declare global {
   }
 
   interface PrettierStandalone {
-    format(
-      source: string,
-      options: { parser: string; plugins?: unknown[] }
-    ): Promise<string>;
+    format(source: string, options: { parser: string; plugins?: unknown[] }): Promise<string>;
   }
 
   interface TurndownOptions {
@@ -50,15 +47,8 @@ declare global {
   }
 
   interface TurndownRule {
-    filter:
-      | string
-      | string[]
-      | ((node: HTMLElement, options?: TurndownOptions) => boolean);
-    replacement: (
-      content: string,
-      node: HTMLElement,
-      options?: TurndownOptions
-    ) => string;
+    filter: string | string[] | ((node: HTMLElement, options?: TurndownOptions) => boolean);
+    replacement: (content: string, node: HTMLElement, options?: TurndownOptions) => string;
   }
 
   interface TurndownServiceInstance {
@@ -87,9 +77,7 @@ declare global {
   }
 
   // UMD bundles also expose these as bare identifiers (not just on window).
-  // eslint-disable-next-line no-var
   var TurndownService: TurndownServiceConstructor;
-  // eslint-disable-next-line no-var
   var turndownPluginGfm: TurndownPluginGfm;
 }
 

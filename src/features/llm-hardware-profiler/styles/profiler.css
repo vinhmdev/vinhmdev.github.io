@@ -13,39 +13,39 @@
   /* Brand tokens (Pure Titanium + Academic Cinnabar) drive everything — no
      bespoke indigo/slate palette. Monochrome semantics: cinnabar = pass /
      emphasis, muted titanium = insufficient. */
-  --profiler-accent:        var(--color-primary-500);
-  --profiler-accent-hover:  var(--color-primary-600);
-  --profiler-accent-soft:   color-mix(in srgb, var(--color-primary-500) 12%, transparent);
-  --profiler-success:       var(--color-primary-500);
-  --profiler-danger:        var(--color-neutral-400);
-  --profiler-warning:       var(--color-accent-amber);
-  --profiler-text:          var(--color-neutral-700);
-  --profiler-text-muted:    var(--color-neutral-500);
-  --profiler-bg:            var(--color-neutral-50);
-  --profiler-surface:       #ffffff;
-  --profiler-surface-2:     var(--color-neutral-100);
-  --profiler-border:        var(--color-neutral-200);
-  --profiler-border-focus:  var(--color-primary-500);
-  --profiler-shadow:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --profiler-shadow-md:     0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
-  --profiler-radius:        0.5rem;
-  --profiler-radius-lg:     0.75rem;
-  --profiler-transition:    150ms ease;
+  --profiler-accent: var(--color-primary-500);
+  --profiler-accent-hover: var(--color-primary-600);
+  --profiler-accent-soft: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+  --profiler-success: var(--color-primary-500);
+  --profiler-danger: var(--color-neutral-400);
+  --profiler-warning: var(--color-accent-amber);
+  --profiler-text: var(--color-neutral-700);
+  --profiler-text-muted: var(--color-neutral-500);
+  --profiler-bg: var(--color-neutral-50);
+  --profiler-surface: var(--color-neutral-50);
+  --profiler-surface-2: var(--color-neutral-100);
+  --profiler-border: var(--color-neutral-200);
+  --profiler-border-focus: var(--color-primary-500);
+  --profiler-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --profiler-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --profiler-radius: 0.5rem;
+  --profiler-radius-lg: 0.75rem;
+  --profiler-transition: 150ms ease;
 }
 
 :global(.dark) {
-  --profiler-accent:        var(--color-primary-400);
-  --profiler-accent-hover:  var(--color-primary-500);
-  --profiler-accent-soft:   color-mix(in srgb, var(--color-primary-400) 24%, transparent);
-  --profiler-text:          var(--color-neutral-300);
-  --profiler-text-muted:    var(--color-neutral-400);
-  --profiler-bg:            var(--color-neutral-900);
-  --profiler-surface:       var(--color-neutral-800);
-  --profiler-surface-2:     var(--color-neutral-900);
-  --profiler-border:        var(--color-neutral-700);
-  --profiler-border-focus:  var(--color-primary-400);
-  --profiler-shadow:        0 1px 3px rgba(0,0,0,.3);
-  --profiler-shadow-md:     0 4px 6px -1px rgba(0,0,0,.4);
+  --profiler-accent: var(--color-primary-400);
+  --profiler-accent-hover: var(--color-primary-500);
+  --profiler-accent-soft: color-mix(in srgb, var(--color-primary-400) 24%, transparent);
+  --profiler-text: var(--color-neutral-300);
+  --profiler-text-muted: var(--color-neutral-400);
+  --profiler-bg: var(--color-neutral-900);
+  --profiler-surface: var(--color-neutral-800);
+  --profiler-surface-2: var(--color-neutral-900);
+  --profiler-border: var(--color-neutral-700);
+  --profiler-border-focus: var(--color-primary-400);
+  --profiler-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --profiler-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────────── */
@@ -127,7 +127,7 @@
   background: var(--profiler-accent-soft);
 }
 
-.mode-btn[data-active="true"] {
+.mode-btn[data-active='true'] {
   border-color: var(--profiler-accent);
   background: var(--profiler-accent);
   color: #fff;
@@ -231,7 +231,9 @@
   color: var(--profiler-text);
   font-size: 0.8rem;
   font-family: inherit;
-  transition: border-color var(--profiler-transition), box-shadow var(--profiler-transition);
+  transition:
+    border-color var(--profiler-transition),
+    box-shadow var(--profiler-transition);
   box-sizing: border-box;
 }
 
@@ -277,7 +279,11 @@
   flex-shrink: 0;
 }
 
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
 
 .toggle-slider {
   position: absolute;
@@ -298,11 +304,15 @@
   background: white;
   border-radius: 50%;
   transition: transform var(--profiler-transition);
-  box-shadow: 0 1px 2px rgba(0,0,0,.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-switch input:checked + .toggle-slider { background: var(--profiler-accent); }
-.toggle-switch input:checked + .toggle-slider::before { transform: translateX(0.875rem); }
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--profiler-accent);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(0.875rem);
+}
 
 /* ─── Sub-fields (shown when toggle enabled) ─────────────────────────────────── */
 .sub-fields {
@@ -314,7 +324,9 @@
   background: var(--profiler-surface-2);
 }
 
-.sub-fields.hidden { display: none; }
+.sub-fields.hidden {
+  display: none;
+}
 
 /* ─── Calculate Button ───────────────────────────────────────────────────────── */
 .btn-calculate {
@@ -332,8 +344,10 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity var(--profiler-transition), transform var(--profiler-transition);
-  box-shadow: 0 4px 14px rgba(249, 115, 22, .35);
+  transition:
+    opacity var(--profiler-transition),
+    transform var(--profiler-transition);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
 }
 
 .btn-calculate:hover:not(:disabled) {
@@ -413,10 +427,18 @@
 }
 
 /* Cinnabar sequential ramp — the model's footprint, deep → light. */
-.vram-bar-segment.weights  { background: var(--color-primary-700); }
-.vram-bar-segment.kv       { background: var(--color-primary-500); }
-.vram-bar-segment.overhead { background: var(--color-primary-300); }
-.vram-bar-segment.free     { background: transparent; }
+.vram-bar-segment.weights {
+  background: var(--color-primary-700);
+}
+.vram-bar-segment.kv {
+  background: var(--color-primary-500);
+}
+.vram-bar-segment.overhead {
+  background: var(--color-primary-300);
+}
+.vram-bar-segment.free {
+  background: transparent;
+}
 
 .vram-bar-overflow {
   position: absolute;
@@ -455,9 +477,15 @@
   flex-shrink: 0;
 }
 
-.vram-legend-dot.weights  { background: var(--color-primary-700); }
-.vram-legend-dot.kv       { background: var(--color-primary-500); }
-.vram-legend-dot.overhead { background: var(--color-primary-300); }
+.vram-legend-dot.weights {
+  background: var(--color-primary-700);
+}
+.vram-legend-dot.kv {
+  background: var(--color-primary-500);
+}
+.vram-legend-dot.overhead {
+  background: var(--color-primary-300);
+}
 
 .vram-stats {
   display: grid;
@@ -510,8 +538,12 @@
   border: 1px solid color-mix(in srgb, var(--color-neutral-500) 35%, transparent);
 }
 
-:global(.dark) .status-badge.fit  { color: var(--color-primary-300); }
-:global(.dark) .status-badge.oom  { color: var(--color-neutral-300); }
+:global(.dark) .status-badge.fit {
+  color: var(--color-primary-300);
+}
+:global(.dark) .status-badge.oom {
+  color: var(--color-neutral-300);
+}
 
 /* ─── Speed Cards ────────────────────────────────────────────────────────────── */
 .speed-grid {
@@ -641,7 +673,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-.match-table tr:last-child td { border-bottom: none; }
+.match-table tr:last-child td {
+  border-bottom: none;
+}
 
 .match-table tr.best-roi {
   background: var(--profiler-accent-soft);
@@ -674,9 +708,11 @@
   align-items: center;
   gap: 0.625rem;
   font-size: 0.8rem;
-  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   z-index: 999;
-  transition: transform 300ms ease, opacity 300ms ease;
+  transition:
+    transform 300ms ease,
+    opacity 300ms ease;
   opacity: 0;
   pointer-events: none;
 }
@@ -686,14 +722,26 @@
   opacity: 1;
 }
 
-:global(.dark) #profiler-toast { background: var(--color-neutral-700); }
+:global(.dark) #profiler-toast {
+  background: var(--color-neutral-700);
+}
 
 /* ─── Utility ────────────────────────────────────────────────────────────────── */
-.hidden { display: none !important; }
-.text-accent { color: var(--profiler-accent); }
-.text-muted  { color: var(--profiler-text-muted); }
-.text-danger { color: var(--profiler-danger); }
-.text-success { color: var(--profiler-success); }
+.hidden {
+  display: none !important;
+}
+.text-accent {
+  color: var(--profiler-accent);
+}
+.text-muted {
+  color: var(--profiler-text-muted);
+}
+.text-danger {
+  color: var(--profiler-danger);
+}
+.text-success {
+  color: var(--profiler-success);
+}
 
 .divider {
   border: none;

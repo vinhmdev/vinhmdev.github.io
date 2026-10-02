@@ -28,7 +28,6 @@ import { encodePayload, decodePayload } from '@shared/paste/payload';
 import { isFirebaseConfigured } from '@shared/firebase/config';
 import { createDocStore, type MyDoc, type DocStore } from './history';
 
-const lucide = window.lucide ?? { createIcons: () => {} };
 const DAY_MS = 86400_000;
 
 export interface ShareDeps {
@@ -81,8 +80,16 @@ function translateTree(root: HTMLElement): void {
 }
 
 function deriveTitle(md: string): string {
-  const line = md.split('\n').map((s) => s.trim()).find((s) => s.length > 0) ?? '';
-  return line.replace(/^#+\s*/, '').replace(/[*_`>#[\]]/g, '').trim().slice(0, 80);
+  const line =
+    md
+      .split('\n')
+      .map((s) => s.trim())
+      .find((s) => s.length > 0) ?? '';
+  return line
+    .replace(/^#+\s*/, '')
+    .replace(/[*_`>#[\]]/g, '')
+    .trim()
+    .slice(0, 80);
 }
 
 /** The tool's explicit title field, trimmed (empty string if it has none). */
@@ -141,17 +148,20 @@ function buildBar(): void {
   document.body.appendChild(bar);
   translateTree(bar);
 
-  bar.querySelector<HTMLButtonElement>('#md-bar-copy')!.addEventListener('click', async () => {
+  bar.querySelector<HTMLButtonElement>('#md-bar-copy')?.addEventListener('click', async () => {
     if (!current) return;
     const ok = await copy(linkFor(current.id, current.key));
-    deps.showToast(ok ? 'check-circle' : 'alert-triangle', t(ok ? 'toast_copied' : 'toast_copy_failed'));
+    deps.showToast(
+      ok ? 'check-circle' : 'alert-triangle',
+      t(ok ? 'toast_copied' : 'toast_copy_failed')
+    );
   });
-  bar.querySelector<HTMLButtonElement>('#md-bar-primary')!.addEventListener('click', () => {
+  bar.querySelector<HTMLButtonElement>('#md-bar-primary')?.addEventListener('click', () => {
     if (!current) return;
     if (current.mode === 'editable') void saveInPlace();
     else openModal(); // readonly → fork into a new link
   });
-  bar.querySelector<HTMLButtonElement>('#md-bar-detach')!.addEventListener('click', () => {
+  bar.querySelector<HTMLButtonElement>('#md-bar-detach')?.addEventListener('click', () => {
     current = null;
     history.replaceState(null, '', location.pathname);
     updateBar();
@@ -182,22 +192,32 @@ function updateBar(): void {
     return;
   }
   bar.hidden = false;
-  const modeEl = bar.querySelector<HTMLElement>('#md-bar-mode')!;
-  modeEl.textContent = t(current.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
+  const modeEl = bar.querySelector<HTMLElement>('#md-bar-mode');
+  if (modeEl) {
+    modeEl.textContent = t(current.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
+  }
 
   const dirty = isDirty();
-  const stateEl = bar.querySelector<HTMLElement>('#md-bar-state')!;
-  stateEl.textContent = current.mode === 'editable' ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
-  stateEl.classList.toggle('is-dirty', current.mode === 'editable' && dirty);
+  const stateEl = bar.querySelector<HTMLElement>('#md-bar-state');
+  if (stateEl) {
+    stateEl.textContent =
+      current.mode === 'editable' ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
+    stateEl.classList.toggle('is-dirty', current.mode === 'editable' && dirty);
+  }
 
-  const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary')!;
-  primary.innerHTML =
-    current.mode === 'editable'
-      ? `<i data-lucide="save" class="w-4 h-4"></i><span>${t('bar_save')}</span>`
-      : `<i data-lucide="git-fork" class="w-4 h-4"></i><span>${t('bar_fork')}</span>`;
-  primary.disabled = current.mode === 'editable' && !dirty;
-  bar.querySelector<HTMLButtonElement>('#md-bar-detach')!.title = t('bar_detach');
-  lucide.createIcons();
+  const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
+  if (primary) {
+    primary.innerHTML =
+      current.mode === 'editable'
+        ? `<i data-lucide="save" class="w-4 h-4"></i><span>${t('bar_save')}</span>`
+        : `<i data-lucide="git-fork" class="w-4 h-4"></i><span>${t('bar_fork')}</span>`;
+    primary.disabled = current.mode === 'editable' && !dirty;
+  }
+  const detachBtn = bar.querySelector<HTMLButtonElement>('#md-bar-detach');
+  if (detachBtn) {
+    detachBtn.title = t('bar_detach');
+  }
+  window.lucide?.createIcons();
   syncBarSpacing();
 }
 
@@ -240,8 +260,8 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
 
 async function saveInPlace(): Promise<void> {
   if (!current) return;
-  const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary')!;
-  primary.disabled = true;
+  const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
+  if (primary) primary.disabled = true;
   try {
     const body = deps.getValue();
     const explicitTitle = explicitTitleOf();
@@ -312,7 +332,10 @@ async function loadShared(): Promise<void> {
       body
     );
     updateBar();
-    deps.showToast('check-circle', t(stored.mode === 'editable' ? 'toast_loaded_editable' : 'toast_loaded_readonly'));
+    deps.showToast(
+      'check-circle',
+      t(stored.mode === 'editable' ? 'toast_loaded_editable' : 'toast_loaded_readonly')
+    );
   } catch (err) {
     console.error('[share] load failed:', err);
     deps.showToast('lock', t('toast_decrypt_failed'));
@@ -381,58 +404,73 @@ function buildModal(): void {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) close();
   });
-  modal.querySelector('#md-modal-close')!.addEventListener('click', close);
-  modal.querySelector('#md-modal-done')!.addEventListener('click', close);
+  modal.querySelector('#md-modal-close')?.addEventListener('click', close);
+  modal.querySelector('#md-modal-done')?.addEventListener('click', close);
 
-  modal.querySelector<HTMLButtonElement>('#md-modal-create')!.addEventListener('click', async () => {
-    if (!deps.getValue().trim()) {
-      deps.showToast('alert-triangle', t('toast_empty'));
-      return;
-    }
-    if (!isFirebaseConfigured) {
-      deps.showToast('alert-triangle', t('toast_not_configured'));
-      return;
-    }
-    const mode = (modal.querySelector<HTMLInputElement>('input[name="md-mode"]:checked')!.value ===
-    'readonly'
-      ? 'readonly'
-      : 'editable') as PasteMode;
-    // Option values are in minutes so short lifetimes (1 hour) are exact.
-    const ttlDays = Number(modal.querySelector<HTMLSelectElement>('#md-expiry')!.value) / (60 * 24);
-    const createBtn = modal.querySelector<HTMLButtonElement>('#md-modal-create')!;
-    createBtn.disabled = true;
-    createBtn.classList.add('is-loading');
-    try {
-      const doc = await persistCreate(mode, ttlDays);
-      const urlInput = modal.querySelector<HTMLInputElement>('#md-result-url')!;
-      urlInput.value = doc.url;
-      modal.querySelector<HTMLElement>('#md-modal-form')!.hidden = true;
-      modal.querySelector<HTMLElement>('#md-modal-result')!.hidden = false;
-      urlInput.focus();
-      urlInput.select();
-      deps.showToast('check-circle', t('toast_share_created'));
-    } catch (err) {
-      console.error('[share] create failed:', err);
-      deps.showToast('alert-triangle', t('toast_save_failed'));
-    } finally {
-      createBtn.disabled = false;
-      createBtn.classList.remove('is-loading');
-    }
-  });
+  modal
+    .querySelector<HTMLButtonElement>('#md-modal-create')
+    ?.addEventListener('click', async () => {
+      if (!deps.getValue().trim()) {
+        deps.showToast('alert-triangle', t('toast_empty'));
+        return;
+      }
+      if (!isFirebaseConfigured) {
+        deps.showToast('alert-triangle', t('toast_not_configured'));
+        return;
+      }
+      const checkedMode = modal.querySelector<HTMLInputElement>('input[name="md-mode"]:checked');
+      const mode = (checkedMode?.value === 'readonly' ? 'readonly' : 'editable') as PasteMode;
+      // Option values are in minutes so short lifetimes (1 hour) are exact.
+      const expirySelect = modal.querySelector<HTMLSelectElement>('#md-expiry');
+      const ttlDays = Number(expirySelect?.value ?? 43200) / (60 * 24);
+      const createBtn = modal.querySelector<HTMLButtonElement>('#md-modal-create');
+      if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.classList.add('is-loading');
+      }
+      try {
+        const doc = await persistCreate(mode, ttlDays);
+        const urlInput = modal.querySelector<HTMLInputElement>('#md-result-url');
+        if (urlInput) {
+          urlInput.value = doc.url;
+          urlInput.focus();
+          urlInput.select();
+        }
+        const formEl = modal.querySelector<HTMLElement>('#md-modal-form');
+        if (formEl) formEl.hidden = true;
+        const resultEl = modal.querySelector<HTMLElement>('#md-modal-result');
+        if (resultEl) resultEl.hidden = false;
+        deps.showToast('check-circle', t('toast_share_created'));
+      } catch (err) {
+        console.error('[share] create failed:', err);
+        deps.showToast('alert-triangle', t('toast_save_failed'));
+      } finally {
+        if (createBtn) {
+          createBtn.disabled = false;
+          createBtn.classList.remove('is-loading');
+        }
+      }
+    });
 
-  modal.querySelector<HTMLButtonElement>('#md-result-copy')!.addEventListener('click', async () => {
-    const urlInput = modal.querySelector<HTMLInputElement>('#md-result-url')!;
+  modal.querySelector<HTMLButtonElement>('#md-result-copy')?.addEventListener('click', async () => {
+    const urlInput = modal.querySelector<HTMLInputElement>('#md-result-url');
+    if (!urlInput) return;
     const ok = await copy(urlInput.value);
     urlInput.select();
-    deps.showToast(ok ? 'check-circle' : 'alert-triangle', t(ok ? 'toast_copied' : 'toast_copy_failed'));
+    deps.showToast(
+      ok ? 'check-circle' : 'alert-triangle',
+      t(ok ? 'toast_copied' : 'toast_copy_failed')
+    );
   });
 }
 
 function openModal(): void {
-  modal.querySelector<HTMLElement>('#md-modal-form')!.hidden = false;
-  modal.querySelector<HTMLElement>('#md-modal-result')!.hidden = true;
+  const formEl = modal.querySelector<HTMLElement>('#md-modal-form');
+  if (formEl) formEl.hidden = false;
+  const resultEl = modal.querySelector<HTMLElement>('#md-modal-result');
+  if (resultEl) resultEl.hidden = true;
   modal.hidden = false;
-  lucide.createIcons();
+  window.lucide?.createIcons();
 }
 
 // ─── my docs drawer ───────────────────────────────────────────────────────────
@@ -460,8 +498,8 @@ function buildDrawer(): void {
   drawer.addEventListener('click', (e) => {
     if (e.target === drawer) close();
   });
-  drawer.querySelector('#md-drawer-close')!.addEventListener('click', close);
-  drawer.querySelector('#md-drawer-clear')!.addEventListener('click', () => {
+  drawer.querySelector('#md-drawer-close')?.addEventListener('click', close);
+  drawer.querySelector('#md-drawer-clear')?.addEventListener('click', () => {
     store.clearDocs();
     renderDocs();
     deps.showToast('trash-2', t('toast_docs_cleared'));
@@ -469,22 +507,27 @@ function buildDrawer(): void {
 }
 
 function renderDocs(): void {
-  const list = drawer.querySelector<HTMLUListElement>('#md-docs-list')!;
-  const empty = drawer.querySelector<HTMLElement>('#md-docs-empty')!;
+  const list = drawer.querySelector<HTMLUListElement>('#md-docs-list');
+  const empty = drawer.querySelector<HTMLElement>('#md-docs-empty');
+  if (!list || !empty) return;
   const docs = store.getDocs();
   empty.hidden = docs.length > 0;
   list.replaceChildren(...docs.map(renderDocItem));
-  lucide.createIcons();
+  window.lucide?.createIcons();
 }
 
 function renderDocItem(doc: MyDoc): HTMLLIElement {
   const li = el('li', 'md-doc-item');
   const modeLabel = t(doc.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
-  const when = new Date(doc.updatedAt).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' });
+  const when = new Date(doc.updatedAt).toLocaleString(locale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 
   const main = el('button', 'md-doc-main');
   main.innerHTML = `<span class="md-doc-title"></span><span class="md-doc-sub"><span class="md-doc-badge md-doc-badge-${doc.mode}">${modeLabel}</span> · ${when} · ${doc.versions.length} ${t('mydocs_versions')}</span>`;
-  main.querySelector<HTMLElement>('.md-doc-title')!.textContent = doc.title || t('untitled');
+  const titleEl = main.querySelector<HTMLElement>('.md-doc-title');
+  if (titleEl) titleEl.textContent = doc.title || t('untitled');
   main.addEventListener('click', () => {
     drawer.hidden = true;
     location.hash = `#${doc.id}.${doc.key}`;
@@ -497,7 +540,10 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
   copyBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
     const ok = await copy(doc.url);
-    deps.showToast(ok ? 'check-circle' : 'alert-triangle', t(ok ? 'toast_copied' : 'toast_copy_failed'));
+    deps.showToast(
+      ok ? 'check-circle' : 'alert-triangle',
+      t(ok ? 'toast_copied' : 'toast_copy_failed')
+    );
   });
   const delBtn = el('button', 'md-icon-btn', '<i data-lucide="trash-2" class="w-4 h-4"></i>');
   delBtn.title = t('mydocs_remove');
@@ -514,7 +560,7 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
 function openDrawer(): void {
   renderDocs();
   drawer.hidden = false;
-  lucide.createIcons();
+  window.lucide?.createIcons();
 }
 
 // ─── init ─────────────────────────────────────────────────────────────────────

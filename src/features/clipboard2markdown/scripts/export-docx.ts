@@ -15,12 +15,11 @@
  * flight, so only one fetch patch is ever active at a time.
  */
 import { md2docx } from '@m2d/md2docx';
-import { WidthType, TableLayoutType } from 'docx';
+import { WidthType, TableLayoutType, type ITableWidthProperties } from 'docx';
 import JSZip from 'jszip';
 import { downloadBlob } from './utils';
 
-const DOCX_MIME =
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 // Injected when missing from styles.xml. docx@9.5's DefaultStylesFactory
 // (node_modules/docx/dist/index.cjs:18170+) omits Normal/DefaultParagraphFont,
@@ -68,9 +67,7 @@ async function repairDocxForGoogleDocs(blob: Blob): Promise<Blob> {
     const pStyleMatches = body.match(/<w:pStyle\s[^/]*\/>/g);
     if (pStyleMatches && pStyleMatches.length > 1) {
       let i = 0;
-      body = body.replace(/<w:pStyle\s[^/]*\/>/g, (m) =>
-        ++i === pStyleMatches.length ? m : ''
-      );
+      body = body.replace(/<w:pStyle\s[^/]*\/>/g, (m) => (++i === pStyleMatches.length ? m : ''));
     }
     const numPrMatches = body.match(/<w:numPr>[\s\S]*?<\/w:numPr>/g);
     if (numPrMatches && numPrMatches.length > 1) {
@@ -92,8 +89,7 @@ async function repairDocxForGoogleDocs(blob: Blob): Promise<Blob> {
   const needsDefaultFont = !/w:styleId="DefaultParagraphFont"/.test(stylesXml);
   if (needsNormal || needsDefaultFont) {
     const injection =
-      (needsNormal ? NORMAL_STYLE : '') +
-      (needsDefaultFont ? DEFAULT_PARAGRAPH_FONT_STYLE : '');
+      (needsNormal ? NORMAL_STYLE : '') + (needsDefaultFont ? DEFAULT_PARAGRAPH_FONT_STYLE : '');
     // Prefer to insert right after </w:docDefaults>; fall back to right
     // after the <w:styles ...> opening tag if docDefaults is missing.
     const stylesFixed = stylesXml.includes('</w:docDefaults>')
@@ -139,10 +135,7 @@ function withCorsProxy(url: string): string {
 }
 
 /** Routes fetches through the CORS proxy. Installed on window.fetch during export. */
-async function patchedFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<Response> {
+async function patchedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   let url: string;
   if (typeof input === 'string') url = input;
   else if (input instanceof URL) url = input.toString();
@@ -193,9 +186,8 @@ export function initExportDocx(
             },
             cellProps: {
               // Completely strip the width property so Word uses pure Autofit (simulating "uncheck preferred width").
-              // The `as never` cast is needed because docx's type insists width is required,
-              // but the runtime accepts undefined and treats it as "no preferred width".
-              width: undefined as never,
+              // Typed optional width property allows runtime undefined for autofit.
+              width: undefined as ITableWidthProperties | undefined,
             },
           },
           image: {

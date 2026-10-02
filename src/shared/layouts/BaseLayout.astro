@@ -49,8 +49,8 @@ const {
     <!-- Theme detection — must run before paint to avoid flash -->
     <script is:inline>
       (function () {
-        var savedTheme = localStorage.getItem('c2md-theme');
-        var dark = savedTheme
+        const savedTheme = localStorage.getItem('c2md-theme');
+        const dark = savedTheme
           ? savedTheme === 'dark'
           : window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (dark) document.documentElement.classList.add('dark');

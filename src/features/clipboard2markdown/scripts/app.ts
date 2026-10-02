@@ -42,7 +42,7 @@ import { initShare, notifyChange as shareNotify, hasShareLink } from '@shared/pa
 
 document.addEventListener('DOMContentLoaded', () => {
   // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
-  window.lucide.createIcons();
+  window.lucide?.createIcons();
 
   // ─── Initialize core modules ────────────────────────────────────────────────
   createEditor(document.getElementById('codemirror-host') as HTMLDivElement);
@@ -158,11 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── Copy Markdown ────────────────────────────────────────────────────────────
-  document.getElementById('copy-md-btn')?.addEventListener('click', () => {
+  document.getElementById('copy-md-btn')?.addEventListener('click', async () => {
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
-    copyToClipboard(text);
-    showToast('check-circle', t('toast_copied'));
+    const ok = await copyToClipboard(text);
+    showToast(ok ? 'check-circle' : 'alert-triangle', t(ok ? 'toast_copied' : 'toast_copy_failed'));
   });
 
   // ─── Format Markdown (Prettier — lazy loaded) ────────────────────────────────
@@ -202,9 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // with extra cells yields a header≠delimiter mismatch that GFM refuses to
       // render. Pre-trimming to the header's column count keeps the rendered
       // output identical while giving Prettier a consistent table to format.
+      const plugins = window.prettierPlugins ? Object.values(window.prettierPlugins) : [];
       const formatted = await window.prettier.format(normalizeTableColumns(text), {
         parser: 'markdown',
-        plugins: Object.values(window.prettierPlugins),
+        plugins,
       });
       setValue(formatted);
       focus();

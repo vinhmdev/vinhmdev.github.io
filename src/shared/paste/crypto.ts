@@ -55,10 +55,7 @@ export function keyFromString(text: string): Uint8Array<ArrayBuffer> {
 }
 
 function importKey(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [
-    'encrypt',
-    'decrypt',
-  ]);
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
 
 /** Encrypt UTF-8 text with the given key and a fresh random nonce. */

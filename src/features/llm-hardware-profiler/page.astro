@@ -23,14 +23,14 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   <div class="profiler-layout">
     <!-- ===== Header ===== -->
     <header class="profiler-header">
-      <a href="/" class="profiler-header-title" style="text-decoration:none;color:inherit;">
+      <a href="/" class="profiler-header-title no-underline text-inherit">
         <h1 data-i18n="heading">LLM Hardware Estimator</h1>
         <p data-i18n="subtitle">Roofline-based inference capacity planning</p>
       </a>
       <div class="profiler-header-actions">
         <button id="theme-toggle-btn" class="icon-btn" title="Toggle theme">
-          <i data-lucide="sun" style="width:1rem;height:1rem;display:none;" class="dark:block"></i>
-          <i data-lucide="moon" style="width:1rem;height:1rem;" class="dark:hidden"></i>
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
         </button>
         <button id="lang-switch-btn" class="lang-btn">
           <span>🇬🇧</span><span>EN</span>
@@ -48,7 +48,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         role="tab"
         aria-selected="true"
       >
-        <i data-lucide="zap" style="width:.875rem;height:.875rem;"></i>
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
         <span data-i18n="mode_forward">⚡ Forward</span>
       </button>
       <button
@@ -59,7 +59,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         role="tab"
         aria-selected="false"
       >
-        <i data-lucide="search" style="width:.875rem;height:.875rem;"></i>
+        <i data-lucide="search" class="w-3.5 h-3.5"></i>
         <span data-i18n="mode_matchmaking">🔍 Matchmaking</span>
       </button>
       <button
@@ -70,12 +70,12 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         role="tab"
         aria-selected="false"
       >
-        <i data-lucide="puzzle" style="width:.875rem;height:.875rem;"></i>
+        <i data-lucide="puzzle" class="w-3.5 h-3.5"></i>
         <span data-i18n="mode_discovery">🧩 Discovery</span>
       </button>
       <span
         id="mode-desc"
-        style="margin-left:auto;font-size:.7rem;color:var(--profiler-text-muted);align-self:center;"
+        class="ml-auto text-xs text-neutral-500 self-center"
         data-i18n="mode_forward_desc">Model + Hardware → VRAM &amp; Speed</span
       >
     </nav>
@@ -100,7 +100,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <option value="">— Custom —</option>
                 </select>
               </div>
-              <div class="form-section-body" style="padding:0;border:none;">
+              <div class="form-section-body p-0 border-0">
                 <div class="form-field">
                   <label class="form-label" for="total-params" data-i18n="label_total_params"
                     >Total Params (B)</label
@@ -225,7 +225,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <option value="">— Custom —</option>
                 </select>
               </div>
-              <div class="form-section-body" style="padding:0;border:none;">
+              <div class="form-section-body p-0 border-0">
                 <div class="form-field">
                   <label class="form-label" for="vram-total-gb" data-i18n="label_vram_total_gb"
                     >VRAM Total (GB)</label
@@ -393,7 +393,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
               <i data-lucide="sliders-horizontal" class="section-icon"></i>
               <span data-i18n="section_advanced">Advanced Optimisations</span>
             </div>
-            <div class="form-section-body single-col" style="gap:.25rem;">
+            <div class="form-section-body single-col gap-1">
               <!-- APC -->
               <label class="toggle-item">
                 <span class="toggle-switch">
@@ -515,7 +515,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 
           <!-- Calculate Button -->
           <button id="btn-calculate" class="btn-calculate">
-            <i data-lucide="calculator" style="width:1rem;height:1rem;"></i>
+            <i data-lucide="calculator" class="w-4 h-4"></i>
             <span id="btn-calculate-label" data-i18n="btn_calculate">Calculate</span>
           </button>
         </div>
@@ -537,23 +537,18 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             <div class="result-card-header">
               <i
                 data-lucide="memory-stick"
-                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+                class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
               <span data-i18n="result_vram_title">VRAM Breakdown</span>
-              <span
-                id="vram-status-badge"
-                class="status-badge fit"
-                style="margin-left:auto;"
-                data-i18n="badge_fit">✓ Fits</span
+              <span id="vram-status-badge" class="status-badge fit ml-auto" data-i18n="badge_fit"
+                >✓ Fits</span
               >
             </div>
             <div class="result-card-body">
               <div class="vram-bar-wrapper">
                 <div class="vram-bar" id="vram-bar">
-                  <div id="vram-seg-weights" class="vram-bar-segment weights" style="width:0%">
-                  </div>
-                  <div id="vram-seg-kv" class="vram-bar-segment kv" style="width:0%"></div>
-                  <div id="vram-seg-overhead" class="vram-bar-segment overhead" style="width:0%">
-                  </div>
+                  <div id="vram-seg-weights" class="vram-bar-segment weights w-0"></div>
+                  <div id="vram-seg-kv" class="vram-bar-segment kv w-0"></div>
+                  <div id="vram-seg-overhead" class="vram-bar-segment overhead w-0"></div>
                 </div>
                 <div class="vram-legend">
                   <span class="vram-legend-item"
@@ -593,9 +588,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
           <!-- Speed Result (Mode 1) -->
           <div id="result-speed" class="result-card">
             <div class="result-card-header">
-              <i
-                data-lucide="gauge"
-                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+              <i data-lucide="gauge" class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
               <span data-i18n="result_speed_title">Speed Estimates</span>
             </div>
             <div class="result-card-body">
@@ -626,10 +619,10 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             <div class="result-card-header">
               <i
                 data-lucide="list-ordered"
-                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+                class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
               <span data-i18n="result_match_title">Hardware Options</span>
             </div>
-            <div class="result-card-body" style="padding:0;overflow-x:auto;">
+            <div class="result-card-body p-0 overflow-x-auto">
               <table class="match-table" id="match-table">
                 <thead>
                   <tr>
@@ -645,8 +638,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
               </table>
               <p
                 id="match-no-result"
-                class="hidden"
-                style="padding:.875rem;font-size:.8rem;color:var(--profiler-text-muted);"
+                class="hidden p-3.5 text-xs text-neutral-500"
                 data-i18n="no_match_found"
               >
                 No hardware meets your SLA constraints.
@@ -659,7 +651,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             <div class="result-card-header">
               <i
                 data-lucide="package-search"
-                style="width:.875rem;height:.875rem;color:var(--profiler-accent);"></i>
+                class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
               <span data-i18n="result_discovery_title">Maximum Model Size</span>
             </div>
             <div class="result-card-body">
@@ -679,22 +671,18 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <div class="vram-stat-label" data-i18n="discovery_est_layers">Est. Layers</div>
                 </div>
               </div>
-              <div
-                style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;"
-              >
-                <span
-                  style="font-size:.7rem;color:var(--profiler-text-muted);"
-                  data-i18n="discovery_bottleneck">Bottleneck:</span
+              <div class="mt-3 flex gap-2 flex-wrap items-center">
+                <span class="text-xs text-neutral-500" data-i18n="discovery_bottleneck"
+                  >Bottleneck:</span
                 >
                 <span
                   id="discovery-bottleneck"
-                  style="font-size:.75rem;font-weight:600;color:var(--profiler-accent);">—</span
+                  class="text-xs font-semibold text-primary-500 dark:text-primary-400">—</span
                 >
-                <span
-                  style="font-size:.7rem;color:var(--profiler-text-muted);margin-left:.5rem;"
-                  data-i18n="discovery_recommended">Recommended Quant:</span
+                <span class="text-xs text-neutral-500 ml-2" data-i18n="discovery_recommended"
+                  >Recommended Quant:</span
                 >
-                <span id="discovery-quant" style="font-size:.75rem;font-weight:600;">—</span>
+                <span id="discovery-quant" class="text-xs font-semibold">—</span>
               </div>
             </div>
           </div>

@@ -188,7 +188,6 @@ function buildPrintDocument(content: string): string {
 </head>
 <body class="markdown-body">
   ${content}
-  <script>setTimeout(() => { window.print(); window.close(); }, ${PRINT_DIALOG_DELAY_MS});<\/script>
 </body>
 </html>`;
 }
@@ -253,8 +252,23 @@ export function initExportPDF(
       }
     }
 
-    printWindow.document.write(buildPrintDocument(content));
+    printWindow.document.documentElement.innerHTML = buildPrintDocument(content);
+    printWindow.document.title = 'Markdown Export';
     printWindow.document.close();
+
+    // Automatically close the popup window once the user completes or cancels printing
+    printWindow.addEventListener('afterprint', () => {
+      printWindow.close();
+    });
+
+    // Allow external stylesheets & webfonts time to load before triggering print dialog
+    printWindow.setTimeout(() => {
+      if (!printWindow.closed) {
+        printWindow.focus();
+        printWindow.print();
+      }
+    }, PRINT_DIALOG_DELAY_MS);
+
     showToast('printer', t('toast_exported_pdf'));
   });
 }

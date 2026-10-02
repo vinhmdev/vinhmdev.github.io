@@ -119,7 +119,9 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     <div class="paste-editor-foot">
       <span class="flex items-center gap-1.5">
         <i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary"></i>
-        <span data-i18n="subtitle">Encrypted in your browser — the server only sees ciphertext.</span>
+        <span data-i18n="subtitle"
+          >Encrypted in your browser — the server only sees ciphertext.</span
+        >
       </span>
       <span><span id="char-count">0</span>&nbsp;<span data-i18n="chars">chars</span></span>
     </div>
@@ -150,6 +152,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
        lets content clear the bar. --md-sharebar-h is the bar's measured
        height (share.ts); the fallback covers the first paint. -->
   <style is:global>
-    body.md-has-sharebar { padding-bottom: var(--md-sharebar-h, 3.25rem); }
+    body.md-has-sharebar {
+      padding-bottom: var(--md-sharebar-h, 3.25rem);
+    }
   </style>
 </BaseLayout>

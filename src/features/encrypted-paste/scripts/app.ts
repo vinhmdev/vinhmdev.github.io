@@ -18,11 +18,6 @@ import { initTheme } from '@shared/theme/toggle';
 import { init as initI18n, t } from './i18n-client';
 import { initShare, notifyChange as shareNotify, hasShareLink } from '@shared/paste-share/share';
 
-// Lucide is loaded via CDN — typed in src/shared/globals.d.ts. Fall back to a
-// no-op if the CDN failed to load so a missing icon library can't take down
-// the whole tool.
-const lucide = window.lucide ?? { createIcons: () => {} };
-
 // ─── Toast ──────────────────────────────────────────────────────────────────
 let toastTimer: number | undefined;
 function showToast(icon: string, message: string): void {
@@ -30,9 +25,13 @@ function showToast(icon: string, message: string): void {
   const iconEl = document.getElementById('toast-icon');
   const msgEl = document.getElementById('toast-msg');
   if (!toast || !iconEl || !msgEl) return;
-  iconEl.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
+  iconEl.textContent = '';
+  const iEl = document.createElement('i');
+  iEl.setAttribute('data-lucide', icon);
+  iEl.className = 'w-4 h-4';
+  iconEl.appendChild(iEl);
   msgEl.textContent = message;
-  lucide.createIcons();
+  window.lucide?.createIcons();
   toast.classList.add('show');
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2400);
@@ -47,7 +46,7 @@ function autoGrow(el: HTMLTextAreaElement): void {
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  lucide.createIcons();
+  window.lucide?.createIcons();
   initTheme();
   initI18n();
 

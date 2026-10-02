@@ -52,7 +52,10 @@ export function createDocStore(storageKey: string): DocStore {
       const now = Date.now();
       return arr.filter(
         (d): d is MyDoc =>
-          d && typeof d.id === 'string' && typeof d.url === 'string' && (!d.expireAt || d.expireAt > now)
+          d &&
+          typeof d.id === 'string' &&
+          typeof d.url === 'string' &&
+          (!d.expireAt || d.expireAt > now)
       );
     } catch {
       return [];
