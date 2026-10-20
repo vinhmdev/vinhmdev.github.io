@@ -44,10 +44,12 @@
   .paste-title-input::placeholder { color: var(--color-neutral-400); font-weight: 500; }
   .paste-title-input:read-only { cursor: default; }
 
-  /* Auto-growing textarea: no border, no inner scroll, fills the viewport. */
+  /* Auto-growing textarea: fills viewport when empty, page scrolls as it grows. */
   .paste-editor {
     display: block;
     width: 100%;
+    flex: 1;
+    min-height: 0;
     border: none;
     outline: none;
     resize: none;
@@ -60,7 +62,6 @@
     line-height: 1.7;
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
-    min-height: calc(100dvh - 9rem);
   }
   .paste-editor::placeholder { color: var(--color-neutral-400); }
   .paste-editor:read-only { cursor: default; }

@@ -40,6 +40,13 @@ function showToast(icon: string, message: string): void {
 // ─── Editor ──────────────────────────────────────────────────────────────────
 /** Auto-grow the editor so the page scrolls instead of an inner box. */
 function autoGrow(el: HTMLTextAreaElement): void {
+  // When empty or cleared, let flex: 1 naturally fill the viewport height
+  if (!el.value) {
+    el.style.height = '';
+    el.scrollTop = 0;
+    return;
+  }
+
   // If native field-sizing is supported, the browser handles height natively without scroll jumps.
   if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('field-sizing', 'content')) {
     el.scrollTop = 0;
