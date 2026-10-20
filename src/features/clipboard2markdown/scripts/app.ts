@@ -27,6 +27,7 @@ import {
   getScrollDOM,
   scrollTo,
   focus,
+  setReadOnly,
 } from './codemirror-editor';
 import { initSettings } from './settings';
 import {
@@ -302,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     t,
     linkBase: '/clipboard2markdown/',
     storageKey: 'md:docs',
+    setReadOnly,
   });
 
   // Restore saved content (this triggers onUpdate automatically). Skip when a

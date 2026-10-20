@@ -43,6 +43,8 @@ export interface ShareDeps {
   storageKey: string;
   /** Language-switch event this tool dispatches (to re-translate JS-built UI). */
   langChangeEvent?: string;
+  /** Toggle editor read-only state based on shared paste permissions. */
+  setReadOnly?: (readOnly: boolean) => void;
 }
 
 let deps: ShareDeps;
@@ -164,6 +166,7 @@ function buildBar(): void {
   bar.querySelector<HTMLButtonElement>('#md-bar-detach')?.addEventListener('click', () => {
     current = null;
     history.replaceState(null, '', location.pathname);
+    deps.setReadOnly?.(false);
     updateBar();
     deps.showToast('unlink', t('toast_detached'));
   });
@@ -254,6 +257,7 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
   lastSaved = body;
   lastSavedTitle = explicitTitle;
   if (mode === 'editable') history.replaceState(null, '', `#${id}.${keyToString(key)}`);
+  deps.setReadOnly?.(mode === 'readonly');
   updateBar();
   return doc;
 }
@@ -313,6 +317,7 @@ async function loadShared(): Promise<void> {
     const { title, body } = decodePayload(await decrypt(stored.enc, key));
     deps.setValue(body);
     deps.setTitle?.(title);
+    deps.setReadOnly?.(stored.mode === 'readonly');
     lastSaved = body;
     // Match the (possibly empty) loaded title, not a derived one, so a paste
     // saved with a blank title doesn't read as dirty the moment it opens.
@@ -591,5 +596,16 @@ export function initShare(d: ShareDeps): void {
   // The bar can wrap at narrow widths, changing its height.
   window.addEventListener('resize', syncBarSpacing);
 
+  window.addEventListener('hashchange', () => {
+    if (hasShareLink()) {
+      void loadShared();
+    } else if (current) {
+      current = null;
+      deps.setReadOnly?.(false);
+      updateBar();
+    }
+  });
+
+  deps.setReadOnly?.(false);
   if (hasShareLink()) void loadShared();
 }

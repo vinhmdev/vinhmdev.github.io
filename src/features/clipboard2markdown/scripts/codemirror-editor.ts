@@ -132,6 +132,7 @@ const baseTheme = EditorView.theme({
 
 // --- Compartments for dynamic reconfiguration ---
 const highlightCompartment = new Compartment();
+const readOnlyCompartment = new Compartment();
 
 // Check if currently in dark mode
 function isDarkMode(): boolean {
@@ -169,6 +170,7 @@ export function createEditor(parent: HTMLElement): EditorView {
     extensions: [
       baseTheme,
       highlightCompartment.of(getHighlightExtensions()),
+      readOnlyCompartment.of(EditorState.readOnly.of(false)),
       history(),
       drawSelection(),
       rectangularSelection(),
@@ -304,4 +306,12 @@ export function scrollTo(top: number): void {
 /** Focus the editor. */
 export function focus(): void {
   editorView?.focus();
+}
+
+/** Toggle read-only mode in the editor. */
+export function setReadOnly(readOnly: boolean): void {
+  if (!editorView) return;
+  editorView.dispatch({
+    effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(readOnly)),
+  });
 }

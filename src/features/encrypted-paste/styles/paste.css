@@ -42,6 +42,7 @@
     padding: 0.25rem 0;
   }
   .paste-title-input::placeholder { color: var(--color-neutral-400); font-weight: 500; }
+  .paste-title-input:read-only { cursor: default; }
 
   /* Auto-growing textarea: no border, no inner scroll, fills the viewport. */
   .paste-editor {
@@ -51,6 +52,7 @@
     outline: none;
     resize: none;
     overflow: hidden;
+    field-sizing: content;
     background: transparent;
     color: inherit;
     font-family: var(--font-mono);
@@ -61,6 +63,7 @@
     min-height: calc(100dvh - 9rem);
   }
   .paste-editor::placeholder { color: var(--color-neutral-400); }
+  .paste-editor:read-only { cursor: default; }
 
   .paste-editor-foot {
     display: flex;
