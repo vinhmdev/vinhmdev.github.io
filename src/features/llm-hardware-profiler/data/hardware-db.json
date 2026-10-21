@@ -1,5 +1,28 @@
 [
   {
+    "hardware_id": "mac_mini_m4_24",
+    "display_name": "Mac Mini M4 (24GB Unified)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 120.0,
+      "compute_tflops_fp16": 29.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.62,
+      "mfu_factor": 0.3,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.25,
+      "purchase_price_usd": 999,
+      "power_watts": 65
+    }
+  },
+  {
     "hardware_id": "mac_mini_m4_pro_48",
     "display_name": "Mac Mini M4 Pro (48GB)",
     "vendor": "Apple",
@@ -13,11 +36,105 @@
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.75,
       "bandwidth_utilization": 0.62,
-      "mfu_factor": 0.30,
+      "mfu_factor": 0.3,
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 0.50
+      "est_hourly_cost_usd": 0.5,
+      "purchase_price_usd": 1999,
+      "power_watts": 140
+    }
+  },
+  {
+    "hardware_id": "macbook_pro_m4_max_36",
+    "display_name": "MacBook Pro M4 Max (36GB Unified)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 36.0,
+      "raw_bandwidth_gbps": 410.0,
+      "compute_tflops_fp16": 86.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.63,
+      "mfu_factor": 0.31,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.75,
+      "purchase_price_usd": 3199,
+      "power_watts": 140
+    }
+  },
+  {
+    "hardware_id": "macbook_pro_m4_max_128",
+    "display_name": "MacBook Pro M4 Max (128GB Unified)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 546.0,
+      "compute_tflops_fp16": 108.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.64,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.45,
+      "purchase_price_usd": 4699,
+      "power_watts": 140
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m4_max_64",
+    "display_name": "Mac Studio M4 Max (64GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 64.0,
+      "raw_bandwidth_gbps": 546.0,
+      "compute_tflops_fp16": 108.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.64,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.95,
+      "purchase_price_usd": 2699,
+      "power_watts": 190
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m4_max_128",
+    "display_name": "Mac Studio M4 Max (128GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 546.0,
+      "compute_tflops_fp16": 108.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.64,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.4,
+      "purchase_price_usd": 3699,
+      "power_watts": 210
     }
   },
   {
@@ -34,11 +151,13 @@
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.75,
       "bandwidth_utilization": 0.63,
-      "mfu_factor": 0.30,
+      "mfu_factor": 0.3,
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 1.50
+      "est_hourly_cost_usd": 1.5,
+      "purchase_price_usd": 3499,
+      "power_watts": 200
     }
   },
   {
@@ -55,11 +174,13 @@
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.75,
       "bandwidth_utilization": 0.65,
-      "mfu_factor": 0.30,
+      "mfu_factor": 0.3,
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 2.50
+      "est_hourly_cost_usd": 2.5,
+      "purchase_price_usd": 5599,
+      "power_watts": 295
     }
   },
   {
@@ -76,11 +197,266 @@
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.75,
       "bandwidth_utilization": 0.65,
-      "mfu_factor": 0.30,
+      "mfu_factor": 0.3,
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 3.20
+      "est_hourly_cost_usd": 3.2,
+      "purchase_price_usd": 7999,
+      "power_watts": 330
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m3_ultra_256",
+    "display_name": "Mac Studio M3 Ultra (256GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 256.0,
+      "raw_bandwidth_gbps": 819.0,
+      "compute_tflops_fp16": 184.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 3.1,
+      "purchase_price_usd": 6999,
+      "power_watts": 320
+    }
+  },
+  {
+    "hardware_id": "mac_studio_m3_ultra_512",
+    "display_name": "Mac Studio M3 Ultra (512GB)",
+    "vendor": "Apple",
+    "arch_class": "apple_silicon",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 512.0,
+      "raw_bandwidth_gbps": 819.0,
+      "compute_tflops_fp16": 184.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.75,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 4.5,
+      "purchase_price_usd": 9999,
+      "power_watts": 350
+    }
+  },
+  {
+    "hardware_id": "tesla_p40_24g_1x",
+    "display_name": "Tesla P40 ×1 (24GB Used Homelab)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 346.0,
+      "compute_tflops_fp16": 11.8
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.68,
+      "mfu_factor": 0.28,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.12,
+      "purchase_price_usd": 180,
+      "power_watts": 250
+    }
+  },
+  {
+    "hardware_id": "tesla_p40_24g_2x",
+    "display_name": "Tesla P40 ×2 PCIe (48GB Used Homelab)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 692.0,
+      "compute_tflops_fp16": 23.6
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.68,
+      "mfu_factor": 0.28,
+      "interconnect_penalty": 0.76
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.24,
+      "purchase_price_usd": 380,
+      "power_watts": 500
+    }
+  },
+  {
+    "hardware_id": "rtx_2080_ti_22g_mod",
+    "display_name": "RTX 2080 Ti Mod ×1 (22GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 22.0,
+      "raw_bandwidth_gbps": 616.0,
+      "compute_tflops_fp16": 26.9
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.71,
+      "mfu_factor": 0.34,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.2,
+      "purchase_price_usd": 420,
+      "power_watts": 250
+    }
+  },
+  {
+    "hardware_id": "rtx_3060_12g",
+    "display_name": "RTX 3060 ×1 (12GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 12.0,
+      "raw_bandwidth_gbps": 360.0,
+      "compute_tflops_fp16": 12.7
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.71,
+      "mfu_factor": 0.34,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.12,
+      "purchase_price_usd": 280,
+      "power_watts": 170
+    }
+  },
+  {
+    "hardware_id": "rtx_4060_ti_16g",
+    "display_name": "RTX 4060 Ti ×1 (16GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 288.0,
+      "compute_tflops_fp16": 22.1
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.72,
+      "mfu_factor": 0.36,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.18,
+      "purchase_price_usd": 450,
+      "power_watts": 165
+    }
+  },
+  {
+    "hardware_id": "rtx_4070_ti_super_16g",
+    "display_name": "RTX 4070 Ti Super ×1 (16GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 672.0,
+      "compute_tflops_fp16": 44.1
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.37,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.28,
+      "purchase_price_usd": 800,
+      "power_watts": 285
+    }
+  },
+  {
+    "hardware_id": "rtx_4080_super_16g",
+    "display_name": "RTX 4080 Super ×1 (16GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 736.0,
+      "compute_tflops_fp16": 52.2
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.38,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.35,
+      "purchase_price_usd": 1000,
+      "power_watts": 320
+    }
+  },
+  {
+    "hardware_id": "rtx_5070_12g",
+    "display_name": "RTX 5070 ×1 (12GB GDDR7)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 12.0,
+      "raw_bandwidth_gbps": 672.0,
+      "compute_tflops_fp16": 31.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.74,
+      "mfu_factor": 0.38,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.25,
+      "purchase_price_usd": 549,
+      "power_watts": 250
+    }
+  },
+  {
+    "hardware_id": "rtx_5080_16g",
+    "display_name": "RTX 5080 ×1 (16GB GDDR7)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 960.0,
+      "compute_tflops_fp16": 56.3
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.74,
+      "mfu_factor": 0.39,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.45,
+      "purchase_price_usd": 1199,
+      "power_watts": 360
     }
   },
   {
@@ -101,7 +477,55 @@
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 0.35
+      "est_hourly_cost_usd": 0.35,
+      "purchase_price_usd": 800,
+      "power_watts": 350
+    }
+  },
+  {
+    "hardware_id": "rtx_3090_2x_nvlink",
+    "display_name": "RTX 3090 ×2 NVLink (48GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 1872.0,
+      "compute_tflops_fp16": 71.2
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.72,
+      "mfu_factor": 0.35,
+      "interconnect_penalty": 0.88
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.7,
+      "purchase_price_usd": 1700,
+      "power_watts": 700
+    }
+  },
+  {
+    "hardware_id": "rtx_3090_ti_1x",
+    "display_name": "RTX 3090 Ti ×1 (24GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 1008.0,
+      "compute_tflops_fp16": 40.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.73,
+      "mfu_factor": 0.36,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.4,
+      "purchase_price_usd": 950,
+      "power_watts": 450
     }
   },
   {
@@ -122,7 +546,9 @@
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 0.55
+      "est_hourly_cost_usd": 0.55,
+      "purchase_price_usd": 1800,
+      "power_watts": 450
     }
   },
   {
@@ -133,17 +559,19 @@
     "gpu_count": 2,
     "specs": {
       "vram_total_gb": 48.0,
-      "raw_bandwidth_gbps": 1008.0,
+      "raw_bandwidth_gbps": 2016.0,
       "compute_tflops_fp16": 165.2
     },
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.95,
       "bandwidth_utilization": 0.73,
       "mfu_factor": 0.38,
-      "interconnect_penalty": 0.80
+      "interconnect_penalty": 0.8
     },
     "economics": {
-      "est_hourly_cost_usd": 1.10
+      "est_hourly_cost_usd": 1.1,
+      "purchase_price_usd": 3800,
+      "power_watts": 900
     }
   },
   {
@@ -154,17 +582,525 @@
     "gpu_count": 4,
     "specs": {
       "vram_total_gb": 96.0,
-      "raw_bandwidth_gbps": 1008.0,
+      "raw_bandwidth_gbps": 4032.0,
       "compute_tflops_fp16": 330.4
     },
     "empirical_constraints": {
       "os_vram_allocatable_factor": 0.95,
       "bandwidth_utilization": 0.73,
       "mfu_factor": 0.38,
-      "interconnect_penalty": 0.80
+      "interconnect_penalty": 0.76
     },
     "economics": {
-      "est_hourly_cost_usd": 2.20
+      "est_hourly_cost_usd": 2.2,
+      "purchase_price_usd": 8000,
+      "power_watts": 1800
+    }
+  },
+  {
+    "hardware_id": "rtx_5090_1x",
+    "display_name": "RTX 5090 ×1 (32GB GDDR7)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 32.0,
+      "raw_bandwidth_gbps": 1792.0,
+      "compute_tflops_fp16": 104.8
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.75,
+      "mfu_factor": 0.4,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.85,
+      "purchase_price_usd": 2300,
+      "power_watts": 575
+    }
+  },
+  {
+    "hardware_id": "rtx_5090_2x_pcie",
+    "display_name": "RTX 5090 ×2 PCIe (64GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 64.0,
+      "raw_bandwidth_gbps": 3584.0,
+      "compute_tflops_fp16": 209.6
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.75,
+      "mfu_factor": 0.4,
+      "interconnect_penalty": 0.84
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.7,
+      "purchase_price_usd": 4900,
+      "power_watts": 1150
+    }
+  },
+  {
+    "hardware_id": "rtx_5090_4x_pcie",
+    "display_name": "RTX 5090 ×4 PCIe (128GB)",
+    "vendor": "Nvidia",
+    "arch_class": "consumer",
+    "gpu_count": 4,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 7168.0,
+      "compute_tflops_fp16": 419.2
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.75,
+      "mfu_factor": 0.4,
+      "interconnect_penalty": 0.78
+    },
+    "economics": {
+      "est_hourly_cost_usd": 3.4,
+      "purchase_price_usd": 10200,
+      "power_watts": 2300
+    }
+  },
+  {
+    "hardware_id": "rx_9070_xt_16g",
+    "display_name": "Radeon RX 9070 XT ×1 (16GB RDNA4)",
+    "vendor": "AMD",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 640.0,
+      "compute_tflops_fp16": 48.7
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.7,
+      "mfu_factor": 0.35,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.25,
+      "purchase_price_usd": 599,
+      "power_watts": 304
+    }
+  },
+  {
+    "hardware_id": "rx_7900_xtx_1x",
+    "display_name": "Radeon RX 7900 XTX ×1 (24GB)",
+    "vendor": "AMD",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 960.0,
+      "compute_tflops_fp16": 61.4
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.68,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.32,
+      "purchase_price_usd": 900,
+      "power_watts": 355
+    }
+  },
+  {
+    "hardware_id": "rx_7900_xtx_2x_pcie",
+    "display_name": "Radeon RX 7900 XTX ×2 PCIe (48GB)",
+    "vendor": "AMD",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 1920.0,
+      "compute_tflops_fp16": 122.8
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.68,
+      "mfu_factor": 0.32,
+      "interconnect_penalty": 0.78
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.65,
+      "purchase_price_usd": 1900,
+      "power_watts": 710
+    }
+  },
+  {
+    "hardware_id": "ryzen_ai_max_395_64g",
+    "display_name": "Ryzen AI Max+ 395 Strix Halo (64GB Unified)",
+    "vendor": "AMD",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 64.0,
+      "raw_bandwidth_gbps": 256.0,
+      "compute_tflops_fp16": 59.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.88,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.31,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.3,
+      "purchase_price_usd": 1699,
+      "power_watts": 120
+    }
+  },
+  {
+    "hardware_id": "ryzen_ai_max_395_128g",
+    "display_name": "Ryzen AI Max+ 395 Strix Halo (128GB Unified)",
+    "vendor": "AMD",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 256.0,
+      "compute_tflops_fp16": 59.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.88,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.31,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.38,
+      "purchase_price_usd": 2200,
+      "power_watts": 120
+    }
+  },
+  {
+    "hardware_id": "intel_arc_b580_12g",
+    "display_name": "Intel Arc B580 ×1 (12GB)",
+    "vendor": "Intel",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 12.0,
+      "raw_bandwidth_gbps": 456.0,
+      "compute_tflops_fp16": 23.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.66,
+      "mfu_factor": 0.3,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.11,
+      "purchase_price_usd": 250,
+      "power_watts": 190
+    }
+  },
+  {
+    "hardware_id": "intel_arc_a770_16g",
+    "display_name": "Intel Arc A770 ×1 (16GB)",
+    "vendor": "Intel",
+    "arch_class": "consumer",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 16.0,
+      "raw_bandwidth_gbps": 560.0,
+      "compute_tflops_fp16": 19.7
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.3,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.14,
+      "purchase_price_usd": 290,
+      "power_watts": 225
+    }
+  },
+  {
+    "hardware_id": "intel_arc_a770_2x",
+    "display_name": "Intel Arc A770 ×2 PCIe (32GB)",
+    "vendor": "Intel",
+    "arch_class": "consumer",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 32.0,
+      "raw_bandwidth_gbps": 1120.0,
+      "compute_tflops_fp16": 39.4
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.65,
+      "mfu_factor": 0.3,
+      "interconnect_penalty": 0.78
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.28,
+      "purchase_price_usd": 620,
+      "power_watts": 450
+    }
+  },
+  {
+    "hardware_id": "nvidia_l4_24g",
+    "display_name": "NVIDIA L4 24GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 300.0,
+      "compute_tflops_fp16": 121.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.78,
+      "mfu_factor": 0.43,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.7,
+      "purchase_price_usd": 2500,
+      "power_watts": 72
+    }
+  },
+  {
+    "hardware_id": "nvidia_a10g_24g",
+    "display_name": "NVIDIA A10G 24GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 24.0,
+      "raw_bandwidth_gbps": 600.0,
+      "compute_tflops_fp16": 70.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.77,
+      "mfu_factor": 0.42,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.9,
+      "purchase_price_usd": 3000,
+      "power_watts": 150
+    }
+  },
+  {
+    "hardware_id": "rtx_a6000_48g",
+    "display_name": "RTX A6000 48GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 768.0,
+      "compute_tflops_fp16": 38.7
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.76,
+      "mfu_factor": 0.4,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.8,
+      "purchase_price_usd": 4200,
+      "power_watts": 300
+    }
+  },
+  {
+    "hardware_id": "radeon_w7900_48g",
+    "display_name": "Radeon PRO W7900 48GB ×1",
+    "vendor": "AMD",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 864.0,
+      "compute_tflops_fp16": 61.4
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.69,
+      "mfu_factor": 0.34,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.75,
+      "purchase_price_usd": 3500,
+      "power_watts": 295
+    }
+  },
+  {
+    "hardware_id": "rtx_6000_ada_48g",
+    "display_name": "RTX 6000 Ada 48GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 960.0,
+      "compute_tflops_fp16": 91.1
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.77,
+      "mfu_factor": 0.43,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.4,
+      "purchase_price_usd": 6800,
+      "power_watts": 300
+    }
+  },
+  {
+    "hardware_id": "rtx_6000_ada_2x",
+    "display_name": "RTX 6000 Ada 48GB ×2 PCIe (96GB)",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 2,
+    "specs": {
+      "vram_total_gb": 96.0,
+      "raw_bandwidth_gbps": 1920.0,
+      "compute_tflops_fp16": 182.2
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.77,
+      "mfu_factor": 0.43,
+      "interconnect_penalty": 0.82
+    },
+    "economics": {
+      "est_hourly_cost_usd": 2.8,
+      "purchase_price_usd": 14000,
+      "power_watts": 600
+    }
+  },
+  {
+    "hardware_id": "nvidia_l40s_48g_1x",
+    "display_name": "NVIDIA L40S 48GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 48.0,
+      "raw_bandwidth_gbps": 864.0,
+      "compute_tflops_fp16": 362.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.78,
+      "mfu_factor": 0.45,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.65,
+      "purchase_price_usd": 8500,
+      "power_watts": 350
+    }
+  },
+  {
+    "hardware_id": "nvidia_l40s_48g_4x",
+    "display_name": "NVIDIA L40S 48GB ×4 PCIe (192GB)",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 4,
+    "specs": {
+      "vram_total_gb": 192.0,
+      "raw_bandwidth_gbps": 3456.0,
+      "compute_tflops_fp16": 1448.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.78,
+      "mfu_factor": 0.45,
+      "interconnect_penalty": 0.8
+    },
+    "economics": {
+      "est_hourly_cost_usd": 6.6,
+      "purchase_price_usd": 35000,
+      "power_watts": 1400
+    }
+  },
+  {
+    "hardware_id": "dgx_spark_gb10_128g",
+    "display_name": "NVIDIA DGX Spark GB10 (128GB Unified)",
+    "vendor": "Nvidia",
+    "arch_class": "workstation",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 128.0,
+      "raw_bandwidth_gbps": 273.0,
+      "compute_tflops_fp16": 125.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.9,
+      "bandwidth_utilization": 0.72,
+      "mfu_factor": 0.42,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.85,
+      "purchase_price_usd": 3999,
+      "power_watts": 170
+    }
+  },
+  {
+    "hardware_id": "mi100_32g_1x",
+    "display_name": "AMD Instinct MI100 32GB HBM2 ×1",
+    "vendor": "AMD",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 32.0,
+      "raw_bandwidth_gbps": 1228.0,
+      "compute_tflops_fp16": 184.6
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.74,
+      "mfu_factor": 0.37,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 0.55,
+      "purchase_price_usd": 1100,
+      "power_watts": 300
+    }
+  },
+  {
+    "hardware_id": "mi210_64g_1x",
+    "display_name": "AMD Instinct MI210 64GB ×1",
+    "vendor": "AMD",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 64.0,
+      "raw_bandwidth_gbps": 1638.0,
+      "compute_tflops_fp16": 181.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.76,
+      "mfu_factor": 0.4,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 1.6,
+      "purchase_price_usd": 6500,
+      "power_watts": 300
     }
   },
   {
@@ -185,7 +1121,9 @@
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 2.80
+      "est_hourly_cost_usd": 2.8,
+      "purchase_price_usd": 14000,
+      "power_watts": 400
     }
   },
   {
@@ -196,7 +1134,7 @@
     "gpu_count": 4,
     "specs": {
       "vram_total_gb": 320.0,
-      "raw_bandwidth_gbps": 2000.0,
+      "raw_bandwidth_gbps": 8000.0,
       "compute_tflops_fp16": 1248.0
     },
     "empirical_constraints": {
@@ -206,7 +1144,9 @@
       "interconnect_penalty": 0.98
     },
     "economics": {
-      "est_hourly_cost_usd": 11.20
+      "est_hourly_cost_usd": 11.2,
+      "purchase_price_usd": 58000,
+      "power_watts": 1600
     }
   },
   {
@@ -217,7 +1157,7 @@
     "gpu_count": 8,
     "specs": {
       "vram_total_gb": 640.0,
-      "raw_bandwidth_gbps": 2000.0,
+      "raw_bandwidth_gbps": 16000.0,
       "compute_tflops_fp16": 2496.0
     },
     "empirical_constraints": {
@@ -227,7 +1167,9 @@
       "interconnect_penalty": 0.98
     },
     "economics": {
-      "est_hourly_cost_usd": 22.40
+      "est_hourly_cost_usd": 22.4,
+      "purchase_price_usd": 115000,
+      "power_watts": 3200
     }
   },
   {
@@ -248,7 +1190,9 @@
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 8.00
+      "est_hourly_cost_usd": 8.0,
+      "purchase_price_usd": 28000,
+      "power_watts": 700
     }
   },
   {
@@ -259,7 +1203,7 @@
     "gpu_count": 4,
     "specs": {
       "vram_total_gb": 320.0,
-      "raw_bandwidth_gbps": 3350.0,
+      "raw_bandwidth_gbps": 13400.0,
       "compute_tflops_fp16": 3956.0
     },
     "empirical_constraints": {
@@ -269,7 +1213,9 @@
       "interconnect_penalty": 0.98
     },
     "economics": {
-      "est_hourly_cost_usd": 32.00
+      "est_hourly_cost_usd": 32.0,
+      "purchase_price_usd": 115000,
+      "power_watts": 2800
     }
   },
   {
@@ -280,7 +1226,7 @@
     "gpu_count": 8,
     "specs": {
       "vram_total_gb": 640.0,
-      "raw_bandwidth_gbps": 3350.0,
+      "raw_bandwidth_gbps": 26800.0,
       "compute_tflops_fp16": 7912.0
     },
     "empirical_constraints": {
@@ -290,7 +1236,9 @@
       "interconnect_penalty": 0.98
     },
     "economics": {
-      "est_hourly_cost_usd": 64.00
+      "est_hourly_cost_usd": 64.0,
+      "purchase_price_usd": 230000,
+      "power_watts": 5600
     }
   },
   {
@@ -311,7 +1259,124 @@
       "interconnect_penalty": 1.0
     },
     "economics": {
-      "est_hourly_cost_usd": 12.00
+      "est_hourly_cost_usd": 12.0,
+      "purchase_price_usd": 35000,
+      "power_watts": 700
+    }
+  },
+  {
+    "hardware_id": "h200_sxm_141_8x_nvlink",
+    "display_name": "H200 SXM 141GB ×8 NVLink (1128GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 8,
+    "specs": {
+      "vram_total_gb": 1128.0,
+      "raw_bandwidth_gbps": 38400.0,
+      "compute_tflops_fp16": 7912.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.83,
+      "mfu_factor": 0.48,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 96.0,
+      "purchase_price_usd": 285000,
+      "power_watts": 5600
+    }
+  },
+  {
+    "hardware_id": "mi300x_192g_1x",
+    "display_name": "AMD Instinct MI300X 192GB ×1",
+    "vendor": "AMD",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 192.0,
+      "raw_bandwidth_gbps": 5300.0,
+      "compute_tflops_fp16": 1307.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.78,
+      "mfu_factor": 0.44,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 4.5,
+      "purchase_price_usd": 18000,
+      "power_watts": 750
+    }
+  },
+  {
+    "hardware_id": "mi300x_192g_8x",
+    "display_name": "AMD Instinct MI300X 192GB ×8 (1536GB)",
+    "vendor": "AMD",
+    "arch_class": "datacenter",
+    "gpu_count": 8,
+    "specs": {
+      "vram_total_gb": 1536.0,
+      "raw_bandwidth_gbps": 42400.0,
+      "compute_tflops_fp16": 10456.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.78,
+      "mfu_factor": 0.44,
+      "interconnect_penalty": 0.96
+    },
+    "economics": {
+      "est_hourly_cost_usd": 36.0,
+      "purchase_price_usd": 150000,
+      "power_watts": 6000
+    }
+  },
+  {
+    "hardware_id": "b200_sxm_192_1x",
+    "display_name": "NVIDIA B200 SXM 192GB ×1",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 1,
+    "specs": {
+      "vram_total_gb": 192.0,
+      "raw_bandwidth_gbps": 8000.0,
+      "compute_tflops_fp16": 2250.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.84,
+      "mfu_factor": 0.5,
+      "interconnect_penalty": 1.0
+    },
+    "economics": {
+      "est_hourly_cost_usd": 16.0,
+      "purchase_price_usd": 45000,
+      "power_watts": 1000
+    }
+  },
+  {
+    "hardware_id": "b200_sxm_192_8x_nvlink",
+    "display_name": "NVIDIA B200 SXM 192GB ×8 NVLink (1536GB)",
+    "vendor": "Nvidia",
+    "arch_class": "datacenter",
+    "gpu_count": 8,
+    "specs": {
+      "vram_total_gb": 1536.0,
+      "raw_bandwidth_gbps": 64000.0,
+      "compute_tflops_fp16": 18000.0
+    },
+    "empirical_constraints": {
+      "os_vram_allocatable_factor": 0.95,
+      "bandwidth_utilization": 0.84,
+      "mfu_factor": 0.5,
+      "interconnect_penalty": 0.98
+    },
+    "economics": {
+      "est_hourly_cost_usd": 128.0,
+      "purchase_price_usd": 360000,
+      "power_watts": 8000
     }
   }
 ]

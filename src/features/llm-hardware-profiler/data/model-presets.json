@@ -1,7 +1,20 @@
 [
   {
+    "model_id": "llama32_3b",
+    "display_name": "Llama 3.2 3B",
+    "family": "Llama",
+    "total_params": 3.2,
+    "active_params": 3.2,
+    "hidden_size": 3072,
+    "num_layers": 28,
+    "num_query_heads": 24,
+    "num_kv_heads": 8,
+    "vocab_size": 128256,
+    "max_context_window": 131072
+  },
+  {
     "model_id": "llama3_8b",
-    "display_name": "Llama 3 8B",
+    "display_name": "Llama 3.1 / 3 8B",
     "family": "Llama",
     "total_params": 8.0,
     "active_params": 8.0,
@@ -10,11 +23,11 @@
     "num_query_heads": 32,
     "num_kv_heads": 8,
     "vocab_size": 128256,
-    "max_context_window": 8192
+    "max_context_window": 131072
   },
   {
     "model_id": "llama3_70b",
-    "display_name": "Llama 3 70B",
+    "display_name": "Llama 3.3 / 3.1 70B",
     "family": "Llama",
     "total_params": 70.0,
     "active_params": 70.0,
@@ -23,7 +36,7 @@
     "num_query_heads": 64,
     "num_kv_heads": 8,
     "vocab_size": 128256,
-    "max_context_window": 8192
+    "max_context_window": 131072
   },
   {
     "model_id": "llama31_405b",
@@ -37,6 +50,188 @@
     "num_kv_heads": 8,
     "vocab_size": 128256,
     "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen25_coder_1_5b",
+    "display_name": "Qwen 2.5 Coder 1.5B (Draft / Edge)",
+    "family": "Qwen",
+    "total_params": 1.5,
+    "active_params": 1.5,
+    "hidden_size": 1536,
+    "num_layers": 28,
+    "num_query_heads": 12,
+    "num_kv_heads": 2,
+    "vocab_size": 151936,
+    "max_context_window": 32768
+  },
+  {
+    "model_id": "qwen25_7b",
+    "display_name": "Qwen 2.5 7B",
+    "family": "Qwen",
+    "total_params": 7.6,
+    "active_params": 7.6,
+    "hidden_size": 3584,
+    "num_layers": 28,
+    "num_query_heads": 28,
+    "num_kv_heads": 4,
+    "vocab_size": 152064,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen3_8b",
+    "display_name": "Qwen 3 8B",
+    "family": "Qwen",
+    "total_params": 8.2,
+    "active_params": 8.2,
+    "hidden_size": 4096,
+    "num_layers": 36,
+    "num_query_heads": 32,
+    "num_kv_heads": 8,
+    "vocab_size": 151936,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen25_14b",
+    "display_name": "Qwen 2.5 14B",
+    "family": "Qwen",
+    "total_params": 14.7,
+    "active_params": 14.7,
+    "hidden_size": 5120,
+    "num_layers": 48,
+    "num_query_heads": 40,
+    "num_kv_heads": 8,
+    "vocab_size": 152064,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen25_32b",
+    "display_name": "Qwen 2.5 32B / Coder 32B",
+    "family": "Qwen",
+    "total_params": 32.5,
+    "active_params": 32.5,
+    "hidden_size": 5120,
+    "num_layers": 64,
+    "num_query_heads": 40,
+    "num_kv_heads": 8,
+    "vocab_size": 152064,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen25_72b",
+    "display_name": "Qwen 2.5 72B",
+    "family": "Qwen",
+    "total_params": 72.7,
+    "active_params": 72.7,
+    "hidden_size": 8192,
+    "num_layers": 80,
+    "num_query_heads": 64,
+    "num_kv_heads": 8,
+    "vocab_size": 152064,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen3_30b_a3b",
+    "display_name": "Qwen 3 30B-A3B (MoE)",
+    "family": "Qwen",
+    "total_params": 30.5,
+    "active_params": 3.3,
+    "hidden_size": 2048,
+    "num_layers": 48,
+    "num_query_heads": 32,
+    "num_kv_heads": 4,
+    "vocab_size": 151936,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "qwen3_235b_a22b",
+    "display_name": "Qwen 3 235B-A22B (MoE)",
+    "family": "Qwen",
+    "total_params": 235.0,
+    "active_params": 22.0,
+    "hidden_size": 4096,
+    "num_layers": 94,
+    "num_query_heads": 64,
+    "num_kv_heads": 4,
+    "vocab_size": 151936,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "deepseek_r1_distill_8b",
+    "display_name": "DeepSeek R1 Distill 8B",
+    "family": "DeepSeek",
+    "total_params": 8.0,
+    "active_params": 8.0,
+    "hidden_size": 4096,
+    "num_layers": 32,
+    "num_query_heads": 32,
+    "num_kv_heads": 8,
+    "vocab_size": 128256,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "deepseek_r1_distill_32b",
+    "display_name": "DeepSeek R1 Distill 32B",
+    "family": "DeepSeek",
+    "total_params": 32.5,
+    "active_params": 32.5,
+    "hidden_size": 5120,
+    "num_layers": 64,
+    "num_query_heads": 40,
+    "num_kv_heads": 8,
+    "vocab_size": 152064,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "deepseek_r1_distill_70b",
+    "display_name": "DeepSeek R1 Distill 70B",
+    "family": "DeepSeek",
+    "total_params": 70.0,
+    "active_params": 70.0,
+    "hidden_size": 8192,
+    "num_layers": 80,
+    "num_query_heads": 64,
+    "num_kv_heads": 8,
+    "vocab_size": 128256,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "deepseek_r1_671b",
+    "display_name": "DeepSeek R1 / V3 671B (MoE)",
+    "family": "DeepSeek",
+    "total_params": 671.0,
+    "active_params": 37.0,
+    "hidden_size": 7168,
+    "num_layers": 61,
+    "num_query_heads": 128,
+    "num_kv_heads": 8,
+    "vocab_size": 129280,
+    "max_context_window": 131072
+  },
+  {
+    "model_id": "mistral_7b",
+    "display_name": "Mistral 7B v0.3",
+    "family": "Mistral",
+    "total_params": 7.2,
+    "active_params": 7.2,
+    "hidden_size": 4096,
+    "num_layers": 32,
+    "num_query_heads": 32,
+    "num_kv_heads": 8,
+    "vocab_size": 32768,
+    "max_context_window": 32768
+  },
+  {
+    "model_id": "mistral_small_24b",
+    "display_name": "Mistral Small 3 24B",
+    "family": "Mistral",
+    "total_params": 24.0,
+    "active_params": 24.0,
+    "hidden_size": 5120,
+    "num_layers": 40,
+    "num_query_heads": 32,
+    "num_kv_heads": 8,
+    "vocab_size": 131072,
+    "max_context_window": 32768
   },
   {
     "model_id": "mixtral_8x7b",
@@ -65,32 +260,6 @@
     "max_context_window": 65536
   },
   {
-    "model_id": "qwen25_7b",
-    "display_name": "Qwen 2.5 7B",
-    "family": "Qwen",
-    "total_params": 7.6,
-    "active_params": 7.6,
-    "hidden_size": 3584,
-    "num_layers": 28,
-    "num_query_heads": 28,
-    "num_kv_heads": 4,
-    "vocab_size": 152064,
-    "max_context_window": 131072
-  },
-  {
-    "model_id": "qwen25_72b",
-    "display_name": "Qwen 2.5 72B",
-    "family": "Qwen",
-    "total_params": 72.7,
-    "active_params": 72.7,
-    "hidden_size": 8192,
-    "num_layers": 80,
-    "num_query_heads": 64,
-    "num_kv_heads": 8,
-    "vocab_size": 152064,
-    "max_context_window": 131072
-  },
-  {
     "model_id": "gemma2_9b",
     "display_name": "Gemma 2 9B",
     "family": "Gemma",
@@ -104,8 +273,21 @@
     "max_context_window": 8192
   },
   {
+    "model_id": "gemma3_12b",
+    "display_name": "Gemma 3 12B",
+    "family": "Gemma",
+    "total_params": 12.2,
+    "active_params": 12.2,
+    "hidden_size": 3840,
+    "num_layers": 48,
+    "num_query_heads": 16,
+    "num_kv_heads": 8,
+    "vocab_size": 262144,
+    "max_context_window": 131072
+  },
+  {
     "model_id": "gemma2_27b",
-    "display_name": "Gemma 2 27B",
+    "display_name": "Gemma 3 / 2 27B",
     "family": "Gemma",
     "total_params": 27.2,
     "active_params": 27.2,
@@ -114,7 +296,7 @@
     "num_query_heads": 32,
     "num_kv_heads": 16,
     "vocab_size": 256128,
-    "max_context_window": 8192
+    "max_context_window": 131072
   },
   {
     "model_id": "phi3_mini_3b",
@@ -143,55 +325,16 @@
     "max_context_window": 16384
   },
   {
-    "model_id": "deepseek_r1_distill_8b",
-    "display_name": "DeepSeek R1 Distill 8B",
-    "family": "DeepSeek",
-    "total_params": 8.0,
-    "active_params": 8.0,
-    "hidden_size": 4096,
-    "num_layers": 32,
-    "num_query_heads": 32,
+    "model_id": "command_r_plus_104b",
+    "display_name": "Cohere Command R+ 104B",
+    "family": "Cohere",
+    "total_params": 104.0,
+    "active_params": 104.0,
+    "hidden_size": 12288,
+    "num_layers": 64,
+    "num_query_heads": 96,
     "num_kv_heads": 8,
-    "vocab_size": 128256,
+    "vocab_size": 256000,
     "max_context_window": 131072
-  },
-  {
-    "model_id": "deepseek_r1_distill_70b",
-    "display_name": "DeepSeek R1 Distill 70B",
-    "family": "DeepSeek",
-    "total_params": 70.0,
-    "active_params": 70.0,
-    "hidden_size": 8192,
-    "num_layers": 80,
-    "num_query_heads": 64,
-    "num_kv_heads": 8,
-    "vocab_size": 128256,
-    "max_context_window": 131072
-  },
-  {
-    "model_id": "deepseek_r1_671b",
-    "display_name": "DeepSeek R1 671B (MoE)",
-    "family": "DeepSeek",
-    "total_params": 671.0,
-    "active_params": 37.0,
-    "hidden_size": 7168,
-    "num_layers": 61,
-    "num_query_heads": 128,
-    "num_kv_heads": 128,
-    "vocab_size": 129280,
-    "max_context_window": 131072
-  },
-  {
-    "model_id": "mistral_7b",
-    "display_name": "Mistral 7B v0.3",
-    "family": "Mistral",
-    "total_params": 7.2,
-    "active_params": 7.2,
-    "hidden_size": 4096,
-    "num_layers": 32,
-    "num_query_heads": 32,
-    "num_kv_heads": 8,
-    "vocab_size": 32768,
-    "max_context_window": 32768
   }
 ]

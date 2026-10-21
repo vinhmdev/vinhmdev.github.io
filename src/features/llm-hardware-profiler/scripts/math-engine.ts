@@ -4,24 +4,31 @@
  * Pure functions — zero DOM dependency, fully testable in isolation.
  * Implements the Roofline Model as specified in "LLM Hardware Estimator" doc.
  *
- * Phase 2: runForward() — Mode 1 (Forward Estimation)
- * Phase 3: runMatchmaking() — Mode 2 (CSP Hardware Matching)
- *          runDiscovery()   — Mode 3 (Max Model Discovery)
+ * Mode 1: runForward() & runQuantComparison() — Forward Estimation & Quant Matrix
+ * Mode 2: runMatchmaking() — CSP Hardware Matching with Vendor/Tier/OS filters
+ * Mode 3: runDiscovery() & runPresetDiscovery() — Max Model Discovery & Preset Matching
  */
 
 import {
   BYTES_PER_PARAM,
   BYTES_PER_KV,
   OVERHEAD_GB_PER_GPU,
-  FRAG_BUFFER_STANDARD,
-  FRAG_BUFFER_PAGED,
+  ENGINE_OVERHEAD_GB,
+  ENGINE_FRAG_BUFFER,
+  ENGINE_EFFICIENCY_FACTOR,
+  OS_PROFILE_CONSTRAINTS,
+  QUANT_DISPLAY_LABELS,
+  QUANT_COMPARISON_LIST,
   DISCOVERY_VOCAB_DEFAULT,
   DISCOVERY_KV_HEADS_RATIO,
   DISCOVERY_CONTEXT_DEFAULT,
+  SYSTEM_RAM_SPECS,
+  getQuantComputeMultiplier,
 } from './constants';
 
 import type {
   ModelSpec,
+  ModelPreset,
   HardwareSpec,
   RuntimeConfig,
   WorkloadSpec,
@@ -29,13 +36,114 @@ import type {
   VRAMBreakdown,
   SpeedResult,
   ForwardResult,
+  QuantComparisonRow,
+  OSComparisonRow,
   SLAConstraints,
   MatchResult,
   ModelConstraints,
+  PresetDiscoveryRow,
   QuantizationType,
+  InferenceEngine,
+  OSProfile,
 } from './types';
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Resolve the effective OS profile and its empirical multipliers for a given hardware.
+ * When `os_profile` is `'auto'` or omitted, preserves the hardware's native
+ * `os_vram_allocatable_factor` from `hardware-db.json` with 1.0× multipliers.
+ */
+export function resolveOSConstraint(
+  hw: HardwareSpec,
+  osProfile?: OSProfile
+): {
+  effective_os: Exclude<OSProfile, 'auto'>;
+  allocatable_factor: number;
+  overhead_multiplier: number;
+  efficiency_multiplier: number;
+} {
+  const defaultOS: Exclude<OSProfile, 'auto'> =
+    hw.arch_class === 'apple_silicon' ? 'macos_default' : 'linux_headless';
+
+  if (!osProfile || osProfile === 'auto') {
+    return {
+      effective_os: defaultOS,
+      allocatable_factor: hw.empirical_constraints.os_vram_allocatable_factor,
+      overhead_multiplier: 1.0,
+      efficiency_multiplier: 1.0,
+    };
+  }
+
+  // If Apple Silicon is paired with a non-macOS profile (e.g. in cross-DB matchmaking),
+  // keep macOS default unless macos_tuned was explicitly selected.
+  if (
+    hw.arch_class === 'apple_silicon' &&
+    osProfile !== 'macos_default' &&
+    osProfile !== 'macos_tuned'
+  ) {
+    return {
+      effective_os: 'macos_default',
+      allocatable_factor: hw.empirical_constraints.os_vram_allocatable_factor,
+      overhead_multiplier: 1.0,
+      efficiency_multiplier: 1.0,
+    };
+  }
+
+  // Conversely, if a discrete PCIe/SXM GPU or x86 APU is evaluated while a macOS profile is selected,
+  // fall back to linux_headless.
+  if (
+    hw.arch_class !== 'apple_silicon' &&
+    (osProfile === 'macos_default' || osProfile === 'macos_tuned')
+  ) {
+    return {
+      effective_os: 'linux_headless',
+      allocatable_factor: hw.empirical_constraints.os_vram_allocatable_factor,
+      overhead_multiplier: 1.0,
+      efficiency_multiplier: 1.0,
+    };
+  }
+
+  const c = OS_PROFILE_CONSTRAINTS[osProfile];
+  // Respect hardware-specific unified memory ceiling (e.g. Ryzen AI Max+ Strix Halo at 0.88)
+  // so selecting linux_headless does not exceed the physical BIOS/UMA allocation limit.
+  const hwNativeCeiling = hw.empirical_constraints.os_vram_allocatable_factor;
+  const baseRef = hw.arch_class === 'apple_silicon' ? 1.0 : 0.95;
+  const scaledFactor =
+    hw.arch_class !== 'apple_silicon' && hwNativeCeiling < baseRef
+      ? (c.allocatable_factor / baseRef) * hwNativeCeiling
+      : c.allocatable_factor;
+
+  return {
+    effective_os: osProfile,
+    allocatable_factor: Math.min(c.allocatable_factor, scaledFactor),
+    overhead_multiplier: c.overhead_multiplier,
+    efficiency_multiplier: c.efficiency_multiplier,
+  };
+}
+
+/**
+ * Resolve vendor-compatible inference engine for a given hardware.
+ * Prevents vendor-locked engines (e.g. NVIDIA TensorRT-LLM or Apple MLX) from
+ * distorting cross-vendor comparisons in Forward or Matchmaking modes.
+ */
+export function resolveEngineConstraint(
+  hw: HardwareSpec,
+  engine?: InferenceEngine
+): InferenceEngine {
+  const req = engine ?? 'vLLM';
+  if (hw.arch_class === 'apple_silicon' || hw.vendor === 'Apple') {
+    if (req === 'TensorRT_LLM' || req === 'vLLM') return 'MLX';
+    return req;
+  }
+  if (req === 'MLX') {
+    return 'vLLM';
+  }
+  if (req === 'TensorRT_LLM' && hw.vendor !== 'Nvidia') {
+    return 'vLLM';
+  }
+  return req;
+}
 
 /**
  * Compute KV cache bytes per token for a single request.
@@ -43,29 +151,60 @@ import type {
  * where d_head = hidden_size / num_query_heads
  */
 function kvBytesPerToken(model: ModelSpec, rt: RuntimeConfig): number {
-  const d_head = model.hidden_size / model.num_query_heads;
+  const queryHeads = Math.max(1, model.num_query_heads);
+  const d_head = model.hidden_size / queryHeads;
   return 2 * model.num_layers * model.num_kv_heads * d_head * BYTES_PER_KV[rt.kv_quantization];
 }
 
 /**
- * Effective TFLOPS after MFU factor and interconnect penalty.
+ * Resolve effective multi-GPU interconnect factor based on parallelism strategy.
+ * - Tensor Parallelism (default): uses hardware's native all-reduce interconnect_penalty.
+ * - Pipeline / Layer Split: point-to-point activation passing avoids heavy all-reduce latency
+ *   over PCIe for single/low-batch inference (~0.94 efficiency when gpu_count > 1).
  */
-function effectiveTFLOPS(hw: HardwareSpec): number {
+function resolveInterconnectFactor(hw: HardwareSpec, rt?: RuntimeConfig): number {
+  if (hw.gpu_count <= 1) return 1.0;
+  if (rt?.multi_gpu_mode === 'pipeline_parallel') {
+    return Math.max(hw.empirical_constraints.interconnect_penalty, 0.94);
+  }
+  return hw.empirical_constraints.interconnect_penalty;
+}
+
+/**
+ * Effective TFLOPS after MFU factor, interconnect penalty, OS, engine, and quant compute multipliers.
+ */
+function effectiveTFLOPS(hw: HardwareSpec, rt?: RuntimeConfig): number {
+  const os = resolveOSConstraint(hw, rt?.os_profile);
+  const effEngine = resolveEngineConstraint(hw, rt?.inference_engine);
+  const engineFactor = rt ? (ENGINE_EFFICIENCY_FACTOR[effEngine] ?? 1.0) : 1.0;
+  const quantComputeFactor = rt
+    ? getQuantComputeMultiplier(rt.weight_quantization, hw.arch_class)
+    : 1.0;
+  const interconnect = resolveInterconnectFactor(hw, rt);
   return (
     hw.specs.compute_tflops_fp16 *
     hw.empirical_constraints.mfu_factor *
-    hw.empirical_constraints.interconnect_penalty
+    interconnect *
+    os.efficiency_multiplier *
+    engineFactor *
+    quantComputeFactor
   );
 }
 
 /**
- * Effective memory bandwidth after utilization factor and interconnect penalty.
+ * Effective memory bandwidth after utilization factor, interconnect penalty, OS, and engine multipliers.
  */
-function effectiveBandwidthGBs(hw: HardwareSpec): number {
+function effectiveBandwidthGBs(hw: HardwareSpec, rt?: RuntimeConfig): number {
+  const os = resolveOSConstraint(hw, rt?.os_profile);
+  const effEngine = resolveEngineConstraint(hw, rt?.inference_engine);
+  const engineFactor = rt ? (ENGINE_EFFICIENCY_FACTOR[effEngine] ?? 1.0) : 1.0;
+  const interconnect = resolveInterconnectFactor(hw, rt);
   return (
     hw.specs.raw_bandwidth_gbps *
     hw.empirical_constraints.bandwidth_utilization *
-    hw.empirical_constraints.interconnect_penalty
+    interconnect *
+    os.efficiency_multiplier *
+    engineFactor
   );
 }
 
@@ -79,7 +218,8 @@ function effectiveBandwidthGBs(hw: HardwareSpec): number {
  * Key edge cases handled:
  *  - APC: shared prefix KV allocated once, not per-user
  *  - Speculative Decoding: adds draft model weights
- *  - vLLM: 4% fragmentation buffer; Standard HF: 20%
+ *  - Inference Engine: fragmentation buffer & runtime context overhead
+ *  - OS Profile: adjusts allocatable VRAM ceiling & driver overhead
  */
 export function estimateVRAM(
   model: ModelSpec,
@@ -89,10 +229,12 @@ export function estimateVRAM(
   opts: AdvancedOpts
 ): VRAMBreakdown {
   const bytesPerParam = BYTES_PER_PARAM[rt.weight_quantization];
+  const os = resolveOSConstraint(hw, rt.os_profile);
+  const effEngine = resolveEngineConstraint(hw, rt.inference_engine);
 
   // ── Model weights ──────────────────────────────────────────────────────────
-  // Convert Billions → bytes → GB
-  let weights_gb = (model.total_params * 1e9 * bytesPerParam) / 1e9;
+  const totalParams = Math.max(0.1, model.total_params);
+  let weights_gb = (totalParams * 1e9 * bytesPerParam) / 1e9;
 
   // Speculative Decoding: add draft model weights
   if (opts.spec_decoding_enabled && opts.spec_decoding_draft_params > 0) {
@@ -101,32 +243,92 @@ export function estimateVRAM(
 
   // ── KV Cache ───────────────────────────────────────────────────────────────
   const kv_bytes_per_token = kvBytesPerToken(model, rt);
-  const context = Math.min(rt.context_length_limit, model.max_context_window);
+  const maxWindow =
+    model.max_context_window > 0 ? model.max_context_window : rt.context_length_limit;
+  const context = Math.max(1, Math.min(rt.context_length_limit, maxWindow));
+  const concurrentReqs = Math.max(1, wl.max_concurrent_reqs);
 
   let kv_cache_gb: number;
   if (opts.apc_enabled && wl.shared_prefix_length > 0) {
     // APC: prefix tokens allocated once globally, per-user context is reduced
     const prefix_kv_gb = (kv_bytes_per_token * wl.shared_prefix_length) / 1e9;
     const per_user_context = Math.max(context - wl.shared_prefix_length, 0);
-    const per_user_kv_gb = (kv_bytes_per_token * wl.max_concurrent_reqs * per_user_context) / 1e9;
+    const per_user_kv_gb = (kv_bytes_per_token * concurrentReqs * per_user_context) / 1e9;
     kv_cache_gb = prefix_kv_gb + per_user_kv_gb;
   } else {
-    kv_cache_gb = (kv_bytes_per_token * wl.max_concurrent_reqs * context) / 1e9;
+    kv_cache_gb = (kv_bytes_per_token * concurrentReqs * context) / 1e9;
   }
 
   // ── Overhead + fragmentation ───────────────────────────────────────────────
-  const frag = rt.inference_engine === 'vLLM' ? FRAG_BUFFER_PAGED : FRAG_BUFFER_STANDARD;
-  const base_overhead_gb = OVERHEAD_GB_PER_GPU * hw.gpu_count;
+  const frag = ENGINE_FRAG_BUFFER[effEngine] ?? 0.04;
+  const perGpuOverhead = ENGINE_OVERHEAD_GB[effEngine] ?? OVERHEAD_GB_PER_GPU;
+  const gpuCount = Math.max(1, hw.gpu_count);
+  // Pipeline parallelism avoids full NCCL communicator buffers across every GPU
+  const multiGpuOverheadFactor =
+    gpuCount > 1 && rt.multi_gpu_mode === 'pipeline_parallel' ? 0.85 : 1.0;
+  const base_overhead_gb =
+    perGpuOverhead * gpuCount * os.overhead_multiplier * multiGpuOverheadFactor;
   // Fragmentation applied as % of (weights + kv)
   const frag_gb = (weights_gb + kv_cache_gb) * frag;
   const overhead_gb = base_overhead_gb + frag_gb;
 
-  // ── Totals ─────────────────────────────────────────────────────────────────
+  // ── Totals & Capacity Ceilings ─────────────────────────────────────────────
   const total_gb = weights_gb + kv_cache_gb + overhead_gb;
-  const allocatable_gb =
-    hw.specs.vram_total_gb * hw.empirical_constraints.os_vram_allocatable_factor;
-  const is_oom = total_gb > allocatable_gb;
-  const utilization_pct = (total_gb / allocatable_gb) * 100;
+  const allocatable_gb = Math.max(0, hw.specs.vram_total_gb) * os.allocatable_factor;
+
+  // Hybrid System RAM Offloading (applicable to discrete GPUs when enabled; unified memory already uses host RAM)
+  const isUnifiedArch =
+    hw.arch_class === 'apple_silicon' ||
+    hw.empirical_constraints.os_vram_allocatable_factor < 0.92 ||
+    hw.display_name.toLowerCase().includes('unified');
+  const ramTier = opts.system_ram_tier ?? 'none';
+  const ramBudgetGb = Math.max(0, opts.system_ram_gb ?? 0);
+  const canUseRamOffload =
+    Boolean(opts.ram_offload_enabled) && !isUnifiedArch && ramTier !== 'none' && ramBudgetGb > 0;
+
+  let offloaded_ram_gb = 0;
+  let fits_with_offload = false;
+
+  if (total_gb > allocatable_gb && canUseRamOffload) {
+    const rawOverflow = total_gb - allocatable_gb;
+    // KV cache + runtime overhead + at least 10% of weights must fit in VRAM/RAM budget
+    const nonWeightVram = kv_cache_gb + base_overhead_gb;
+    if (nonWeightVram < allocatable_gb && rawOverflow <= ramBudgetGb && rawOverflow <= weights_gb) {
+      offloaded_ram_gb = rawOverflow;
+      fits_with_offload = true;
+    }
+  }
+
+  const is_oom = total_gb > allocatable_gb && !fits_with_offload;
+  const utilization_pct = allocatable_gb > 0 ? (total_gb / allocatable_gb) * 100 : 100;
+
+  // Calculate max concurrent requests & max single-user context before OOM
+  // Total = base_overhead + (weights + kv) * (1 + frag) <= effective_memory_ceiling
+  const effective_ceiling_gb = canUseRamOffload
+    ? allocatable_gb + Math.min(ramBudgetGb, weights_gb * 0.9)
+    : allocatable_gb;
+  const kv_budget_gb = (effective_ceiling_gb - base_overhead_gb) / (1 + frag) - weights_gb;
+  let max_concurrent_at_context = 0;
+  let max_context_single_user = 0;
+
+  if (kv_budget_gb > 0 && kv_bytes_per_token > 0) {
+    const kv_gb_per_token = kv_bytes_per_token / 1e9;
+    max_context_single_user = Math.min(maxWindow, Math.floor(kv_budget_gb / kv_gb_per_token));
+
+    if (opts.apc_enabled && wl.shared_prefix_length > 0) {
+      const prefix_kv_gb = kv_gb_per_token * wl.shared_prefix_length;
+      const per_user_context = Math.max(context - wl.shared_prefix_length, 0);
+      const per_user_kv_gb = kv_gb_per_token * per_user_context;
+      if (kv_budget_gb >= prefix_kv_gb) {
+        max_concurrent_at_context =
+          per_user_kv_gb > 0 ? Math.floor((kv_budget_gb - prefix_kv_gb) / per_user_kv_gb) : 9999;
+      }
+    } else {
+      const per_user_kv_gb = kv_gb_per_token * context;
+      max_concurrent_at_context =
+        per_user_kv_gb > 0 ? Math.floor(kv_budget_gb / per_user_kv_gb) : 9999;
+    }
+  }
 
   return {
     weights_gb,
@@ -135,7 +337,12 @@ export function estimateVRAM(
     total_gb,
     allocatable_gb,
     is_oom,
+    fits_with_offload,
+    offloaded_ram_gb,
     utilization_pct,
+    max_concurrent_at_context: Math.max(0, max_concurrent_at_context),
+    max_context_single_user: Math.max(0, max_context_single_user),
+    effective_os_profile: os.effective_os,
   };
 }
 
@@ -145,12 +352,14 @@ export function estimateVRAM(
  * Estimate prefill and decode speed using the Roofline Model.
  *
  * Prefill  → Compute-Bound:  TTFT ≈ (2 × P_active × input_tokens × batch) / eff_TFLOPS
- * Decode   → Memory-Bound:   TPS  ≈ eff_bandwidth / bytes_accessed_per_token
+ * Decode   → Roofline Bound: Step time = max(t_memory, t_compute)
  *
  * Key edge cases:
  *  - APC: reduces effective input tokens (prefix already cached)
  *  - Chunked Prefill: caps TTFT at chunk_size / eff_TFLOPS_per_token
- *  - Speculative Decoding: multiplies per-user TPS by acceptance rate
+ *  - Speculative Decoding: accounts for draft weight stream & verification FLOPs,
+ *    keeping decode_system_tps consistent with decode_per_user_tps × batch
+ *  - High Batch Size: transitions from memory-bound to compute-bound above ridge point
  */
 export function estimateSpeed(
   model: ModelSpec,
@@ -160,62 +369,124 @@ export function estimateSpeed(
   opts: AdvancedOpts,
   vram: VRAMBreakdown
 ): SpeedResult {
-  const eff_tflops = effectiveTFLOPS(hw); // TFLOPS
-  const eff_bw_gbs = effectiveBandwidthGBs(hw); // GB/s
+  const eff_tflops = effectiveTFLOPS(hw, rt); // TFLOPS
+  const eff_bw_gbs = effectiveBandwidthGBs(hw, rt); // GB/s
+  const effEngine = resolveEngineConstraint(hw, rt.inference_engine);
   const bytesPerParam = BYTES_PER_PARAM[rt.weight_quantization];
+  const concurrentReqs = Math.max(1, wl.max_concurrent_reqs);
+  const totalParams = Math.max(0.1, model.total_params);
+  const activeParams = Math.min(totalParams, Math.max(0.1, model.active_params || totalParams));
 
   // ── Prefill (Compute-Bound) ────────────────────────────────────────────────
-  // Effective input = avg_input - shared_prefix if APC is active
   const effective_input =
     opts.apc_enabled && wl.shared_prefix_length > 0
       ? Math.max(wl.avg_input_tokens - wl.shared_prefix_length, 1)
-      : wl.avg_input_tokens;
+      : Math.max(wl.avg_input_tokens, 1);
 
   // FLOPs = 2 × P_active (in params) × tokens × batch
-  const prefill_flops = 2 * (model.active_params * 1e9) * effective_input * wl.max_concurrent_reqs;
-  let prefill_ttft_ms = (prefill_flops / (eff_tflops * 1e12)) * 1000;
+  const prefill_flops = 2 * (activeParams * 1e9) * effective_input * concurrentReqs;
+  let prefill_ttft_ms = eff_tflops > 0 ? (prefill_flops / (eff_tflops * 1e12)) * 1000 : 0;
 
   // Chunked Prefill: cap TTFT at processing one chunk at a time
-  if (opts.chunked_prefill_enabled && opts.chunked_prefill_chunk_size > 0) {
-    const chunk_flops = 2 * (model.active_params * 1e9) * opts.chunked_prefill_chunk_size;
+  if (opts.chunked_prefill_enabled && opts.chunked_prefill_chunk_size > 0 && eff_tflops > 0) {
+    const chunk_flops = 2 * (activeParams * 1e9) * opts.chunked_prefill_chunk_size;
     const chunk_ttft_ms = (chunk_flops / (eff_tflops * 1e12)) * 1000;
     prefill_ttft_ms = Math.min(prefill_ttft_ms, chunk_ttft_ms);
   }
 
-  // ── Decode (Memory-Bound) ──────────────────────────────────────────────────
-  // Bytes accessed per token = active_weights + KV_total
-  const active_weights_bytes = model.active_params * 1e9 * bytesPerParam;
+  // ── Decode (Roofline Model: Memory-Bound vs Compute-Bound vs RAM Offload) ──
+  // Bytes accessed per decode step = active_weights (streamed once across batch) + KV_total
+  const active_weights_bytes = activeParams * 1e9 * bytesPerParam;
   const kv_total_bytes = vram.kv_cache_gb * 1e9;
   const bytes_per_token = active_weights_bytes + kv_total_bytes;
 
-  // In one memory-bound decode step the GPU streams the active weights ONCE
-  // (reused across the whole batch) plus every sequence's KV, and emits one
-  // token per sequence. So `bytes_per_token` above already sums the batch's KV
-  // (kv_total), which means:
-  //   t_step   = (W + KV_total) / BW
-  //   per_user = 1 / t_step           = BW / (W + KV_total)
-  //   system   = batch / t_step       = batch × per_user
-  // i.e. adding users raises system throughput (weights amortise) until compute
-  // or bandwidth saturates — it must not fall as the old formula implied.
-  const decode_per_user_base = (eff_bw_gbs * 1e9) / bytes_per_token;
-  const decode_system_tps = decode_per_user_base * wl.max_concurrent_reqs;
+  // Memory-bound step duration (s)
+  let t_step_mem_s = eff_bw_gbs > 0 ? bytes_per_token / (eff_bw_gbs * 1e9) : 0;
+  let isOffloadBound = false;
 
-  // Speculative Decoding boosts a single user's latency (spare compute verifies
-  // draft tokens) without raising aggregate throughput, so it multiplies the
-  // per-user rate only.
-  let decode_per_user_tps = decode_per_user_base;
-  if (opts.spec_decoding_enabled && opts.spec_decoding_acceptance_rate > 1) {
-    decode_per_user_tps *= opts.spec_decoding_acceptance_rate;
+  if (vram.fits_with_offload && vram.offloaded_ram_gb > 0 && vram.weights_gb > 0) {
+    const ramTierKey =
+      opts.system_ram_tier && opts.system_ram_tier !== 'none' ? opts.system_ram_tier : 'ddr5_dual';
+    const ramSpec = SYSTEM_RAM_SPECS[ramTierKey];
+    const eff_ram_bw_gbs = ramSpec.raw_bw_gbps * ramSpec.util_factor;
+    // Fraction of active weights spilled to host RAM
+    const offloadFraction = Math.min(1, vram.offloaded_ram_gb / vram.weights_gb);
+    const offloaded_active_bytes = active_weights_bytes * offloadFraction;
+    const vram_active_bytes = active_weights_bytes * (1 - offloadFraction);
+
+    const t_gpu_mem_s =
+      eff_bw_gbs > 0 ? (vram_active_bytes + kv_total_bytes) / (eff_bw_gbs * 1e9) : 0;
+    const t_ram_mem_s = eff_ram_bw_gbs > 0 ? offloaded_active_bytes / (eff_ram_bw_gbs * 1e9) : 0;
+    t_step_mem_s = t_gpu_mem_s + t_ram_mem_s;
+    isOffloadBound = t_ram_mem_s > 0;
+    // Also penalize prefill TTFT when streaming offloaded layers from host RAM
+    prefill_ttft_ms += t_ram_mem_s * 1000 * 1.5;
   }
+
+  // Compute-bound step duration (s): 2 * P_active * batch_size FLOPs per decode step
+  const decode_step_flops = 2 * (activeParams * 1e9) * concurrentReqs;
+  const t_step_comp_s = eff_tflops > 0 ? decode_step_flops / (eff_tflops * 1e12) : 0;
+
+  // True Roofline: step duration is governed by whichever bound is slower
+  let bottleneck_regime: 'memory_bound' | 'compute_bound' | 'ram_offload_bound' = isOffloadBound
+    ? 'ram_offload_bound'
+    : t_step_comp_s > t_step_mem_s
+      ? 'compute_bound'
+      : 'memory_bound';
+  const t_step_s = Math.max(t_step_mem_s, t_step_comp_s);
+
+  let decode_per_user_tps = t_step_s > 0 ? 1 / t_step_s : 0;
+
+  // Speculative Decoding: draft model generates gamma tokens, target model verifies in 1 pass
+  if (
+    opts.spec_decoding_enabled &&
+    opts.spec_decoding_acceptance_rate > 1 &&
+    bottleneck_regime === 'memory_bound'
+  ) {
+    const draftParams = Math.max(0, opts.spec_decoding_draft_params);
+    const acceptRate = opts.spec_decoding_acceptance_rate;
+    const draft_weights_bytes = draftParams * 1e9 * bytesPerParam;
+    // Per verification cycle (~acceptRate accepted tokens), target weights + KV are read once
+    // while draft weights are read across draft steps (~acceptRate times).
+    const cycle_bytes = bytes_per_token + draft_weights_bytes * acceptRate;
+    const t_spec_mem_per_token =
+      eff_bw_gbs > 0 ? cycle_bytes / acceptRate / (eff_bw_gbs * 1e9) : t_step_mem_s;
+    const t_spec_comp_per_token =
+      eff_tflops > 0
+        ? (2 * ((activeParams + draftParams) * 1e9) * concurrentReqs) / (eff_tflops * 1e12)
+        : t_step_comp_s;
+
+    if (t_spec_comp_per_token > t_spec_mem_per_token) {
+      bottleneck_regime = 'compute_bound';
+    }
+    const t_spec_step_s = Math.max(t_spec_mem_per_token, t_spec_comp_per_token);
+    const spec_tps = t_spec_step_s > 0 ? 1 / t_spec_step_s : decode_per_user_tps;
+    // Only apply speculative speedup if the draft model actually improves over baseline
+    if (spec_tps > decode_per_user_tps) {
+      decode_per_user_tps = spec_tps;
+    }
+  }
+
+  const decode_system_tps = decode_per_user_tps * concurrentReqs;
+
+  // End-to-end request time (prefill + generating avg_output_tokens)
+  const outputTokens = Math.max(0, wl.avg_output_tokens);
+  const decode_time_s = decode_per_user_tps > 0 ? outputTokens / decode_per_user_tps : 0;
+  const e2e_latency_s = prefill_ttft_ms / 1000 + decode_time_s;
 
   return {
     prefill_ttft_ms,
     decode_system_tps,
     decode_per_user_tps,
+    e2e_latency_s,
+    bottleneck_regime,
+    effective_bw_gbps: eff_bw_gbs,
+    effective_tflops: eff_tflops,
+    effective_engine: effEngine,
   };
 }
 
-// ─── Mode 1: Forward Estimation ──────────────────────────────────────────────
+// ─── Mode 1: Forward Estimation & Quantization Comparison ─────────────────────
 
 /**
  * Run Mode 1 — Forward Estimation.
@@ -233,16 +504,74 @@ export function runForward(
   return { vram, speed };
 }
 
+/**
+ * Compare how the given model performs across standard quantization formats
+ * on the selected hardware and OS profile.
+ */
+export function runQuantComparison(
+  model: ModelSpec,
+  hw: HardwareSpec,
+  rt: RuntimeConfig,
+  wl: WorkloadSpec,
+  opts: AdvancedOpts
+): QuantComparisonRow[] {
+  return QUANT_COMPARISON_LIST.map((quant) => {
+    const quantRt: RuntimeConfig = {
+      ...rt,
+      weight_quantization: quant,
+    };
+    const { vram, speed } = runForward(model, hw, quantRt, wl, opts);
+    return {
+      quant,
+      label: QUANT_DISPLAY_LABELS[quant],
+      bytes_per_param: BYTES_PER_PARAM[quant],
+      vram,
+      speed,
+    };
+  });
+}
+
+/**
+ * Compare how the given model and hardware perform across applicable OS / driver profiles.
+ * - Apple Silicon: compares macos_default (75% RAM) vs macos_tuned (88% RAM)
+ * - Discrete GPUs / x86 APUs: compares linux_headless, linux_gui, windows_wsl2, windows_native
+ */
+export function runOSComparison(
+  model: ModelSpec,
+  hw: HardwareSpec,
+  rt: RuntimeConfig,
+  wl: WorkloadSpec,
+  opts: AdvancedOpts
+): OSComparisonRow[] {
+  const profiles: Exclude<OSProfile, 'auto'>[] =
+    hw.arch_class === 'apple_silicon'
+      ? ['macos_default', 'macos_tuned']
+      : ['linux_headless', 'linux_gui', 'windows_wsl2', 'windows_native'];
+
+  return profiles.map((os_profile) => {
+    const osRt: RuntimeConfig = {
+      ...rt,
+      os_profile,
+    };
+    const { vram, speed } = runForward(model, hw, osRt, wl, opts);
+    return {
+      os_profile,
+      vram,
+      speed,
+    };
+  });
+}
+
 // ─── Mode 2: Hardware Matchmaking (CSP) ──────────────────────────────────────
 
 /**
  * Run Mode 2 — Hardware Matchmaking via Constraint Satisfaction.
  *
- * Algorithm (per spec §4):
- * 1. Simulate Mode 1 for each hardware entry in the DB
- * 2. Discard: OOM, decode < min_tps, TTFT > max_ttft
- * 3. Sort by est_hourly_cost_usd (ascending)
- * 4. Compute ROI score = decode_per_user_tps / est_hourly_cost_usd
+ * Algorithm:
+ * 1. Filter by optional vendor_filter and arch_filter
+ * 2. Simulate Mode 1 for each hardware entry in the DB
+ * 3. Discard: OOM, decode < min_tps, TTFT > max_ttft
+ * 4. Sort according to sla.sort_by (defaults to lowest hourly cost)
  */
 export function runMatchmaking(
   model: ModelSpec,
@@ -255,6 +584,28 @@ export function runMatchmaking(
   const results: MatchResult[] = [];
 
   for (const hw of db) {
+    if (sla.vendor_filter && sla.vendor_filter !== 'all' && hw.vendor !== sla.vendor_filter) {
+      continue;
+    }
+    if (sla.arch_filter && sla.arch_filter !== 'all' && hw.arch_class !== sla.arch_filter) {
+      continue;
+    }
+    if (
+      sla.max_buy_price_usd &&
+      sla.max_buy_price_usd > 0 &&
+      (hw.economics.purchase_price_usd === undefined ||
+        hw.economics.purchase_price_usd > sla.max_buy_price_usd)
+    ) {
+      continue;
+    }
+    if (
+      sla.max_hourly_cost_usd &&
+      sla.max_hourly_cost_usd > 0 &&
+      hw.economics.est_hourly_cost_usd > sla.max_hourly_cost_usd
+    ) {
+      continue;
+    }
+
     const result = runForward(model, hw, rt, wl, opts);
 
     // Filter: OOM
@@ -264,14 +615,29 @@ export function runMatchmaking(
     // Filter: TTFT SLA
     if (result.speed.prefill_ttft_ms > sla.max_ttft_ms) continue;
 
-    const roi_score = result.speed.decode_per_user_tps / hw.economics.est_hourly_cost_usd;
+    const costHr = hw.economics.est_hourly_cost_usd;
+    const roi_score = costHr > 0 ? result.speed.decode_per_user_tps / costHr : 0;
     results.push({ hardware: hw, result, roi_score });
   }
 
-  // Sort by cost ascending (lowest cost first)
-  results.sort(
-    (a, b) => a.hardware.economics.est_hourly_cost_usd - b.hardware.economics.est_hourly_cost_usd
-  );
+  const sortBy = sla.sort_by ?? 'cost_hr';
+  results.sort((a, b) => {
+    if (sortBy === 'buy_price') {
+      const pa = a.hardware.economics.purchase_price_usd ?? Number.MAX_SAFE_INTEGER;
+      const pb = b.hardware.economics.purchase_price_usd ?? Number.MAX_SAFE_INTEGER;
+      return pa - pb;
+    }
+    if (sortBy === 'roi') {
+      return b.roi_score - a.roi_score;
+    }
+    if (sortBy === 'tps') {
+      return b.result.speed.decode_per_user_tps - a.result.speed.decode_per_user_tps;
+    }
+    if (sortBy === 'ttft') {
+      return a.result.speed.prefill_ttft_ms - b.result.speed.prefill_ttft_ms;
+    }
+    return a.hardware.economics.est_hourly_cost_usd - b.hardware.economics.est_hourly_cost_usd;
+  });
 
   return results;
 }
@@ -286,9 +652,6 @@ export function runMatchmaking(
  * the standard aspect ratio is num_layers ≈ hidden / 128. So
  *   params ≈ 12 · (hidden/128) · hidden² = (12/128) · hidden³
  *   ⇒ hidden ≈ cbrt(params / (12/128)) = cbrt(params × 10.667)
- * The relationship is CUBIC, not quadratic — a sqrt law gives wildly wrong
- * shapes (e.g. an 8B model → hidden 128 / 4 layers instead of ~4096 / 32).
- * head_dim is pinned at 128 (num_query_heads ≈ hidden/128).
  */
 const PARAMS_PER_HIDDEN_CUBED = 12 / 128; // 0.09375
 
@@ -318,10 +681,9 @@ export function runDiscovery(
   wl: WorkloadSpec,
   opts: AdvancedOpts
 ): ModelConstraints {
-  // Binary search: find max params_b that fits
   let lo = 0.5; // minimum 500M
   let hi = 1000.0; // max 1T
-  let best = lo;
+  let best = 0;
 
   for (let iter = 0; iter < 40; iter++) {
     const mid = (lo + hi) / 2;
@@ -335,7 +697,7 @@ export function runDiscovery(
       num_query_heads: arch.num_query_heads,
       num_kv_heads: arch.num_kv_heads,
       vocab_size: DISCOVERY_VOCAB_DEFAULT,
-      max_context_window: DISCOVERY_CONTEXT_DEFAULT,
+      max_context_window: Math.max(DISCOVERY_CONTEXT_DEFAULT, rt.context_length_limit),
     };
 
     const vram = estimateVRAM(syntheticModel, hw, rt, wl, opts);
@@ -347,18 +709,18 @@ export function runDiscovery(
     }
   }
 
-  const bestArch = paramsToArchitecture(best);
+  const effectiveBest = Math.max(best, 0.5);
+  const bestArch = paramsToArchitecture(effectiveBest);
 
-  // Determine bottleneck: estimate weights vs KV at best fit
   const syntheticModel: ModelSpec = {
-    total_params: best,
-    active_params: best,
+    total_params: effectiveBest,
+    active_params: effectiveBest,
     hidden_size: bestArch.hidden_size,
     num_layers: bestArch.num_layers,
     num_query_heads: bestArch.num_query_heads,
     num_kv_heads: bestArch.num_kv_heads,
     vocab_size: DISCOVERY_VOCAB_DEFAULT,
-    max_context_window: DISCOVERY_CONTEXT_DEFAULT,
+    max_context_window: Math.max(DISCOVERY_CONTEXT_DEFAULT, rt.context_length_limit),
   };
   const vramAtBest = estimateVRAM(syntheticModel, hw, rt, wl, opts);
 
@@ -369,19 +731,79 @@ export function runDiscovery(
   else if (kvRatio > 0.4) bottleneck = 'kv_cache';
   else bottleneck = 'both';
 
-  // Recommend a quantization that would allow ~2× more params
   let recommended_quant: QuantizationType = rt.weight_quantization;
-  if (rt.weight_quantization === 'FP16' || rt.weight_quantization === 'BF16') {
+  if (
+    rt.weight_quantization === 'FP16' ||
+    rt.weight_quantization === 'BF16' ||
+    rt.weight_quantization === 'FP32'
+  ) {
     recommended_quant = 'AWQ';
-  } else if (rt.weight_quantization === 'INT8' || rt.weight_quantization === 'FP8') {
+  } else if (
+    rt.weight_quantization === 'INT8' ||
+    rt.weight_quantization === 'FP8' ||
+    rt.weight_quantization === 'GGUF_Q8_0'
+  ) {
+    recommended_quant = 'GGUF_Q4_K_M';
+  } else if (rt.weight_quantization === 'GGUF_Q6_K' || rt.weight_quantization === 'GGUF_Q5_K_M') {
     recommended_quant = 'GGUF_Q4_K_M';
   }
 
   return {
-    max_params_b: Math.floor(best * 10) / 10, // round to 1 decimal
+    max_params_b: best > 0 ? Math.floor(best * 10) / 10 : 0,
     est_hidden_size: bestArch.hidden_size,
     est_num_layers: bestArch.num_layers,
     bottleneck,
     recommended_quant,
   };
+}
+
+/**
+ * Evaluate which real models from the preset database can run on the target hardware.
+ * First tests at the user's selected quantization; if OOM and the user selected >4-bit,
+ * also checks if the model fits with 4-bit quantization (AWQ / GGUF_Q4_K_M).
+ */
+export function runPresetDiscovery(
+  hw: HardwareSpec,
+  rt: RuntimeConfig,
+  wl: WorkloadSpec,
+  opts: AdvancedOpts,
+  presets: ModelPreset[]
+): PresetDiscoveryRow[] {
+  const rows: PresetDiscoveryRow[] = [];
+  const fallbackQuant: QuantizationType =
+    hw.arch_class === 'apple_silicon' || hw.vendor !== 'Nvidia' ? 'GGUF_Q4_K_M' : 'AWQ';
+
+  for (const preset of presets) {
+    const resCurrent = runForward(preset, hw, rt, wl, opts);
+    if (!resCurrent.vram.is_oom) {
+      rows.push({
+        preset,
+        fits_current_quant: true,
+        active_quant: rt.weight_quantization,
+        result: resCurrent,
+      });
+      continue;
+    }
+
+    // If current quant is wider than 4-bit, check if 4-bit fits
+    if (BYTES_PER_PARAM[rt.weight_quantization] > BYTES_PER_PARAM[fallbackQuant]) {
+      const rt4bit: RuntimeConfig = {
+        ...rt,
+        weight_quantization: fallbackQuant,
+      };
+      const res4bit = runForward(preset, hw, rt4bit, wl, opts);
+      if (!res4bit.vram.is_oom) {
+        rows.push({
+          preset,
+          fits_current_quant: false,
+          active_quant: fallbackQuant,
+          result: res4bit,
+        });
+      }
+    }
+  }
+
+  // Sort by total_params descending (largest capable models first)
+  rows.sort((a, b) => b.preset.total_params - a.preset.total_params);
+  return rows;
 }

@@ -487,11 +487,27 @@
   background: var(--color-primary-300);
 }
 
+.vram-legend-val {
+  color: var(--profiler-text);
+  font-variant-numeric: tabular-nums;
+  margin-left: 0.125rem;
+}
+
 .vram-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+
+.vram-stats.vram-stats-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 1100px) {
+  .vram-stats.vram-stats-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .vram-stat {
@@ -503,7 +519,7 @@
 }
 
 .vram-stat-value {
-  font-size: 1.125rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--profiler-text);
   font-variant-numeric: tabular-nums;
@@ -526,6 +542,25 @@
   font-weight: 600;
 }
 
+.status-badge.badge-sm {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.68rem;
+}
+
+.regime-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  background: var(--profiler-surface);
+  color: var(--profiler-text);
+  border: 1px solid var(--profiler-border);
+}
+
 /* Monochrome semantics: fits = cinnabar (pass), OOM = muted titanium (faded). */
 .status-badge.fit {
   background: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
@@ -537,6 +572,11 @@
   color: var(--color-neutral-600);
   border: 1px solid color-mix(in srgb, var(--color-neutral-500) 35%, transparent);
 }
+.status-badge.offload {
+  background: color-mix(in srgb, var(--color-accent-amber) 16%, transparent);
+  color: var(--color-accent-amber);
+  border: 1px solid color-mix(in srgb, var(--color-accent-amber) 40%, transparent);
+}
 
 :global(.dark) .status-badge.fit {
   color: var(--color-primary-300);
@@ -544,12 +584,25 @@
 :global(.dark) .status-badge.oom {
   color: var(--color-neutral-300);
 }
+:global(.dark) .status-badge.offload {
+  color: var(--color-accent-amber);
+}
 
 /* ─── Speed Cards ────────────────────────────────────────────────────────────── */
 .speed-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.625rem;
+}
+
+.speed-grid.speed-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1100px) {
+  .speed-grid.speed-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .speed-card {
@@ -577,6 +630,25 @@
   font-size: 0.68rem;
   color: var(--profiler-text-muted);
   margin-top: 0.25rem;
+}
+
+.effective-hw-bar {
+  margin-top: 0.625rem;
+  padding: 0.4rem 0.625rem;
+  border-radius: var(--profiler-radius);
+  background: var(--profiler-surface-2);
+  border: 1px solid var(--profiler-border);
+  font-size: 0.7rem;
+  color: var(--profiler-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  align-items: center;
+}
+
+.effective-hw-bar strong {
+  color: var(--profiler-text);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── Empty / Placeholder State ─────────────────────────────────────────────── */
@@ -647,11 +719,11 @@
   color: var(--profiler-text);
 }
 
-/* ─── Matchmaking Table ──────────────────────────────────────────────────────── */
+/* ─── Matchmaking & Quant Tables ─────────────────────────────────────────────── */
 .match-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .match-table th {
@@ -660,7 +732,7 @@
   background: var(--profiler-surface-2);
   color: var(--profiler-text-muted);
   font-weight: 600;
-  font-size: 0.68rem;
+  font-size: 0.67rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--profiler-border);
@@ -675,6 +747,15 @@
 
 .match-table tr:last-child td {
   border-bottom: none;
+}
+
+.match-table tr.clickable-row {
+  cursor: pointer;
+  transition: background var(--profiler-transition);
+}
+
+.match-table tr.clickable-row:hover {
+  background: var(--profiler-surface-2);
 }
 
 .match-table tr.best-roi {
@@ -692,6 +773,7 @@
   background: var(--profiler-accent);
   color: white;
   white-space: nowrap;
+  margin-left: 0.25rem;
 }
 
 /* ─── Toast ──────────────────────────────────────────────────────────────────── */

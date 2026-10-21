@@ -4,7 +4,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 
 <BaseLayout
   title="LLM Hardware Estimator | VinhMDev"
-  description="Roofline-based LLM inference capacity planning. Estimate VRAM, speed, and find the optimal hardware for any open-source model."
+  description="Roofline-based LLM inference capacity planning. Estimate VRAM, speed, and find the optimal GPU & OS configuration for any open-source model."
   lang="en"
   bodyClass="bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 h-[100dvh] overflow-hidden transition-colors duration-300"
   showFooter={false}
@@ -28,6 +28,9 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         <p data-i18n="subtitle">Roofline-based inference capacity planning</p>
       </a>
       <div class="profiler-header-actions">
+        <button id="share-link-btn" class="icon-btn" title="Copy shareable configuration link">
+          <i data-lucide="share-2" class="w-4 h-4"></i>
+        </button>
         <button id="theme-toggle-btn" class="icon-btn" title="Toggle theme">
           <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
           <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
@@ -76,7 +79,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       <span
         id="mode-desc"
         class="ml-auto text-xs text-neutral-500 self-center"
-        data-i18n="mode_forward_desc">Model + Hardware → VRAM &amp; Speed</span
+        data-i18n="mode_forward_desc">Model + Hardware + OS → VRAM, Speed &amp; Quant Matrix</span
       >
     </nav>
 
@@ -85,8 +88,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       <!-- ─── Input Panel ─── -->
       <aside class="input-panel">
         <div class="input-panel-inner">
-          <!-- Group 1: Model -->
-          <section class="form-section" id="section-model">
+          <!-- Group 1: Model (shown in Mode 1 & Mode 2) -->
+          <section class="form-section" id="section-model" data-visible-modes="forward,matchmaking">
             <div class="form-section-header">
               <i data-lucide="brain" class="section-icon"></i>
               <span data-i18n="section_model">Model Specifications</span>
@@ -97,7 +100,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   >Model Preset</label
                 >
                 <select id="model-preset" class="form-select">
-                  <option value="">— Custom —</option>
+                  <option value="" data-i18n="preset_custom">— Custom —</option>
                 </select>
               </div>
               <div class="form-section-body p-0 border-0">
@@ -206,11 +209,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             </div>
           </section>
 
-          <!-- Group 2: Hardware (hidden in Mode 3, shown in Mode 1 & 2) -->
+          <!-- Group 2: Hardware (shown in Mode 1 & Mode 3) -->
           <section
             class="form-section"
             id="section-hardware"
-            data-visible-modes="forward,matchmaking"
+            data-visible-modes="forward,discovery"
           >
             <div class="form-section-header">
               <i data-lucide="cpu" class="section-icon"></i>
@@ -222,7 +225,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   >Hardware Preset</label
                 >
                 <select id="hardware-preset" class="form-select">
-                  <option value="">— Custom —</option>
+                  <option value="" data-i18n="preset_custom">— Custom —</option>
                 </select>
               </div>
               <div class="form-section-body p-0 border-0">
@@ -236,7 +239,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                     min="1"
                     step="0.5"
                     class="form-input"
-                    placeholder="e.g. 80"
+                    placeholder="e.g. 24"
                   />
                 </div>
                 <div class="form-field">
@@ -248,7 +251,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                     type="number"
                     min="1"
                     class="form-input"
-                    placeholder="e.g. 2000"
+                    placeholder="e.g. 1008"
                   />
                 </div>
                 <div class="form-field">
@@ -260,7 +263,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                     type="number"
                     min="1"
                     class="form-input"
-                    placeholder="e.g. 312"
+                    placeholder="e.g. 82.6"
                   />
                 </div>
                 <div class="form-field">
@@ -280,13 +283,136 @@ import BaseLayout from '@layouts/BaseLayout.astro';
             </div>
           </section>
 
-          <!-- Group 3: Runtime -->
+          <!-- SLA & Hardware Filters (Mode 2 only) -->
+          <section class="form-section hidden" id="section-sla" data-visible-modes="matchmaking">
+            <div class="form-section-header">
+              <i data-lucide="gauge" class="section-icon"></i>
+              <span data-i18n="section_sla">SLA &amp; Hardware Filters</span>
+            </div>
+            <div class="form-section-body">
+              <div class="form-field">
+                <label class="form-label" for="min-tps" data-i18n="label_min_tps"
+                  >Min Tok/s per User</label
+                >
+                <input id="min-tps" type="number" min="1" class="form-input" value="15" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="max-ttft" data-i18n="label_max_ttft"
+                  >Max TTFT (ms)</label
+                >
+                <input id="max-ttft" type="number" min="50" class="form-input" value="3000" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="max-buy-price" data-i18n="label_max_buy_price"
+                  >Max Buy Budget ($)</label
+                >
+                <input
+                  id="max-buy-price"
+                  type="number"
+                  min="0"
+                  step="100"
+                  class="form-input"
+                  value="0"
+                  placeholder="0 = No limit"
+                />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="max-hourly-cost" data-i18n="label_max_hourly_cost"
+                  >Max Cloud Cost ($/hr)</label
+                >
+                <input
+                  id="max-hourly-cost"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  class="form-input"
+                  value="0"
+                  placeholder="0 = No limit"
+                />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="vendor-filter" data-i18n="label_vendor_filter"
+                  >GPU Vendor</label
+                >
+                <select id="vendor-filter" class="form-select">
+                  <option value="all" data-i18n="filter_all_vendors"
+                    >All Vendors (NVIDIA / AMD / Apple / Intel)</option
+                  >
+                  <option value="Nvidia">NVIDIA</option>
+                  <option value="AMD">AMD (Radeon / Instinct / Ryzen AI)</option>
+                  <option value="Apple">Apple Silicon</option>
+                  <option value="Intel">Intel Arc</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="arch-filter" data-i18n="label_arch_filter"
+                  >Hardware Tier</label
+                >
+                <select id="arch-filter" class="form-select">
+                  <option value="all" data-i18n="filter_all_tiers">All Tiers</option>
+                  <option value="consumer" data-i18n="tier_consumer">Consumer / Prosumer GPU</option
+                  >
+                  <option value="workstation" data-i18n="tier_workstation"
+                    >Workstation / Cloud Inference</option
+                  >
+                  <option value="apple_silicon" data-i18n="tier_apple_silicon"
+                    >Apple Silicon Unified</option
+                  >
+                  <option value="datacenter" data-i18n="tier_datacenter">Datacenter Server</option>
+                </select>
+              </div>
+              <div class="form-field span-2">
+                <label class="form-label" for="sort-by" data-i18n="label_sort_by"
+                  >Sort Ranking By</label
+                >
+                <select id="sort-by" class="form-select">
+                  <option value="cost_hr" data-i18n="sort_cost_hr"
+                    >Lowest Cloud / Hourly Cost ($/hr)</option
+                  >
+                  <option value="buy_price" data-i18n="sort_buy_price"
+                    >Lowest Hardware Buy Price ($)</option
+                  >
+                  <option value="roi" data-i18n="sort_roi">Best ROI (Tok/s per $/hr)</option>
+                  <option value="tps" data-i18n="sort_tps">Fastest Per-User Decode (Tok/s)</option>
+                  <option value="ttft" data-i18n="sort_ttft">Lowest Prefill Latency (TTFT)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Group 3: Runtime & OS -->
           <section class="form-section" id="section-runtime">
             <div class="form-section-header">
               <i data-lucide="settings-2" class="section-icon"></i>
-              <span data-i18n="section_runtime">Runtime Config</span>
+              <span data-i18n="section_runtime">Runtime &amp; OS Environment</span>
             </div>
             <div class="form-section-body">
+              <div class="form-field span-2">
+                <label class="form-label" for="os-profile" data-i18n="label_os_profile"
+                  >OS / Driver Environment</label
+                >
+                <select id="os-profile" class="form-select">
+                  <option value="auto" data-i18n="os_auto">Auto (Hardware Native Default)</option>
+                  <option value="linux_headless" data-i18n="os_linux_headless"
+                    >Linux Server / Headless (95% VRAM)</option
+                  >
+                  <option value="linux_gui" data-i18n="os_linux_gui"
+                    >Linux Desktop X11/Wayland (90% VRAM)</option
+                  >
+                  <option value="windows_wsl2" data-i18n="os_windows_wsl2"
+                    >Windows 11 + WSL2 (85% VRAM)</option
+                  >
+                  <option value="windows_native" data-i18n="os_windows_native"
+                    >Windows 11 Native WDDM (82% VRAM)</option
+                  >
+                  <option value="macos_default" data-i18n="os_macos_default"
+                    >macOS Unified Default (75% RAM)</option
+                  >
+                  <option value="macos_tuned" data-i18n="os_macos_tuned"
+                    >macOS sysctl Tuned (88% RAM)</option
+                  >
+                </select>
+              </div>
               <div class="form-field span-2">
                 <label class="form-label" for="weight-quant" data-i18n="label_weight_quant"
                   >Weight Quantization</label
@@ -294,10 +420,12 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                 <select id="weight-quant" class="form-select">
                   <option value="FP16">FP16 / BF16 (2.00 B/param)</option>
                   <option value="INT8">INT8 / FP8 (1.05 B/param)</option>
-                  <option value="AWQ">AWQ / GPTQ / EXL2 (0.60 B/param)</option>
-                  <option value="GGUF_Q4_K_M">GGUF Q4_K_M (0.62 B/param)</option>
-                  <option value="GGUF_Q5_K_M">GGUF Q5_K_M (0.72 B/param)</option>
                   <option value="GGUF_Q8_0">GGUF Q8_0 (1.10 B/param)</option>
+                  <option value="GGUF_Q6_K">GGUF Q6_K (0.82 B/param)</option>
+                  <option value="GGUF_Q5_K_M">GGUF Q5_K_M (0.72 B/param)</option>
+                  <option value="GGUF_Q4_K_M" selected>GGUF Q4_K_M (0.62 B/param)</option>
+                  <option value="AWQ">AWQ / GPTQ / EXL2 4-bit (0.60 B/param)</option>
+                  <option value="GGUF_IQ3_XXS">GGUF IQ3_XXS 3-bit (0.43 B/param)</option>
                 </select>
               </div>
               <div class="form-field">
@@ -306,18 +434,21 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                 >
                 <select id="kv-quant" class="form-select">
                   <option value="FP16">FP16 (2.0 B/param)</option>
-                  <option value="FP8">FP8 (1.0 B/param)</option>
+                  <option value="FP8">FP8 / Q8_0 (1.0 B/param)</option>
+                  <option value="INT4">INT4 / Q4_0 (0.55 B/param)</option>
                 </select>
               </div>
               <div class="form-field">
                 <label class="form-label" for="context-limit" data-i18n="label_context_limit"
-                  >Context Limit (tokens)</label
+                  >Active Context / User</label
                 >
                 <input
                   id="context-limit"
                   type="number"
                   min="512"
+                  step="512"
                   class="form-input"
+                  value="4096"
                   placeholder="e.g. 4096"
                 />
               </div>
@@ -326,8 +457,34 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   >Inference Engine</label
                 >
                 <select id="inference-engine" class="form-select">
-                  <option value="vLLM">vLLM / TGI (PagedAttention, 4% frag)</option>
-                  <option value="Standard_HF">Standard HuggingFace (20% frag)</option>
+                  <option value="vLLM" data-i18n="engine_vllm"
+                    >vLLM / SGLang (PagedAttention, 4% frag)</option
+                  >
+                  <option value="TensorRT_LLM" data-i18n="engine_trt_llm"
+                    >NVIDIA TensorRT-LLM (Paged + Fusion, 3% frag)</option
+                  >
+                  <option value="llama_cpp" data-i18n="engine_llama_cpp"
+                    >llama.cpp / Ollama (GGUF C++, 5% frag)</option
+                  >
+                  <option value="MLX" data-i18n="engine_mlx"
+                    >Apple MLX (Unified Zero-Copy, 4% frag)</option
+                  >
+                  <option value="Standard_HF" data-i18n="engine_standard_hf"
+                    >Standard HuggingFace (Unpaged, 20% frag)</option
+                  >
+                </select>
+              </div>
+              <div class="form-field span-2">
+                <label class="form-label" for="multi-gpu-mode" data-i18n="label_multi_gpu_mode"
+                  >Multi-GPU Strategy</label
+                >
+                <select id="multi-gpu-mode" class="form-select">
+                  <option value="tensor_parallel" data-i18n="mgpu_tensor"
+                    >Tensor Parallelism (vLLM / NCCL Sharded)</option
+                  >
+                  <option value="pipeline_parallel" data-i18n="mgpu_pipeline"
+                    >Pipeline / Layer Split (llama.cpp Sequential)</option
+                  >
                 </select>
               </div>
             </div>
@@ -352,7 +509,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   min="1"
                   max="1000"
                   class="form-input"
-                  value="10"
+                  value="4"
                 />
               </div>
               <div class="form-field">
@@ -468,49 +625,57 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   />
                 </div>
               </div>
+
+              <!-- Hybrid System RAM Offloading -->
+              <label class="toggle-item">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="toggle-ram-offload" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span class="toggle-label" data-i18n="toggle_ram_offload"
+                  >Hybrid System RAM Offload (CPU + GPU)</span
+                >
+              </label>
+              <div id="ram-offload-fields" class="sub-fields hidden">
+                <div class="form-field span-2">
+                  <label class="form-label" for="system-ram-tier" data-i18n="label_ram_tier"
+                    >System RAM Type</label
+                  >
+                  <select id="system-ram-tier" class="form-select">
+                    <option value="ddr5_dual" data-i18n="ram_ddr5_dual"
+                      >DDR5 Dual-Channel (~67 GB/s eff)</option
+                    >
+                    <option value="ddr4_dual" data-i18n="ram_ddr4_dual"
+                      >DDR4 Dual-Channel (~37 GB/s eff)</option
+                    >
+                    <option value="ddr5_server" data-i18n="ram_ddr5_server"
+                      >DDR5 8-Channel Server (~240 GB/s eff)</option
+                    >
+                  </select>
+                </div>
+                <div class="form-field span-2">
+                  <label class="form-label" for="system-ram-gb" data-i18n="label_ram_gb"
+                    >Available System RAM (GB)</label
+                  >
+                  <input
+                    id="system-ram-gb"
+                    type="number"
+                    min="4"
+                    max="2048"
+                    step="4"
+                    class="form-input"
+                    value="64"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
-          <!-- SLA Constraints (Mode 2 only) -->
-          <section class="form-section hidden" id="section-sla" data-visible-modes="matchmaking">
-            <div class="form-section-header">
-              <i data-lucide="gauge" class="section-icon"></i>
-              <span data-i18n="section_sla">SLA Constraints</span>
-            </div>
-            <div class="form-section-body">
-              <div class="form-field">
-                <label class="form-label" for="min-tps" data-i18n="label_min_tps"
-                  >Min Tok/s per User</label
-                >
-                <input id="min-tps" type="number" min="1" class="form-input" value="10" />
-              </div>
-              <div class="form-field">
-                <label class="form-label" for="max-ttft" data-i18n="label_max_ttft"
-                  >Max TTFT (ms)</label
-                >
-                <input id="max-ttft" type="number" min="100" class="form-input" value="5000" />
-              </div>
-            </div>
-          </section>
-
-          <!-- Hardware Selector (Mode 3 only) -->
+          <!-- Legacy synced selector kept for DOM compatibility -->
           <section class="form-section hidden" id="section-hardware-discovery">
-            <div class="form-section-header">
-              <i data-lucide="cpu" class="section-icon"></i>
-              <span data-i18n="section_hardware">Hardware Configuration</span>
-            </div>
-            <div class="form-section-body single-col">
-              <div class="form-field">
-                <label
-                  class="form-label"
-                  for="hardware-preset-discovery"
-                  data-i18n="label_hardware_preset">Hardware Preset</label
-                >
-                <select id="hardware-preset-discovery" class="form-select">
-                  <option value="">— Select Hardware —</option>
-                </select>
-              </div>
-            </div>
+            <select id="hardware-preset-discovery" class="form-select">
+              <option value="">— Select Hardware —</option>
+            </select>
           </section>
 
           <!-- Calculate Button -->
@@ -532,13 +697,13 @@ import BaseLayout from '@layouts/BaseLayout.astro';
           </p>
         </div>
         <div id="results-content" class="results-panel-inner hidden">
-          <!-- VRAM Result (Mode 1 & 2) -->
+          <!-- VRAM Result (Mode 1) -->
           <div id="result-vram" class="result-card">
             <div class="result-card-header">
               <i
                 data-lucide="memory-stick"
                 class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
-              <span data-i18n="result_vram_title">VRAM Breakdown</span>
+              <span data-i18n="result_vram_title">VRAM &amp; Capacity Breakdown</span>
               <span id="vram-status-badge" class="status-badge fit ml-auto" data-i18n="badge_fit"
                 >✓ Fits</span
               >
@@ -554,21 +719,21 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <span class="vram-legend-item"
                     ><span class="vram-legend-dot weights"></span><span data-i18n="result_weights"
                       >Weights</span
-                    ></span
+                    ><strong id="vram-val-weights" class="vram-legend-val">—</strong></span
                   >
                   <span class="vram-legend-item"
                     ><span class="vram-legend-dot kv"></span><span data-i18n="result_kv_cache"
                       >KV Cache</span
-                    ></span
+                    ><strong id="vram-val-kv" class="vram-legend-val">—</strong></span
                   >
                   <span class="vram-legend-item"
                     ><span class="vram-legend-dot overhead"></span><span data-i18n="result_overhead"
                       >Overhead</span
-                    ></span
+                    ><strong id="vram-val-overhead" class="vram-legend-val">—</strong></span
                   >
                 </div>
               </div>
-              <div class="vram-stats">
+              <div class="vram-stats vram-stats-5">
                 <div class="vram-stat">
                   <div class="vram-stat-value" id="vram-total">—</div>
                   <div class="vram-stat-label" data-i18n="result_total">Total Required</div>
@@ -581,6 +746,18 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <div class="vram-stat-value" id="vram-utilization">—</div>
                   <div class="vram-stat-label" data-i18n="result_utilization">Utilisation</div>
                 </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="vram-max-users">—</div>
+                  <div class="vram-stat-label" data-i18n="result_max_users">
+                    Max Concurrent Users
+                  </div>
+                </div>
+                <div class="vram-stat">
+                  <div class="vram-stat-value" id="vram-max-context">—</div>
+                  <div class="vram-stat-label" data-i18n="result_max_context">
+                    Max 1-User Context
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -589,10 +766,13 @@ import BaseLayout from '@layouts/BaseLayout.astro';
           <div id="result-speed" class="result-card">
             <div class="result-card-header">
               <i data-lucide="gauge" class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
-              <span data-i18n="result_speed_title">Speed Estimates</span>
+              <span data-i18n="result_speed_title">Speed &amp; Roofline Estimates</span>
+              <span id="speed-regime-badge" class="regime-badge ml-auto"
+                >Memory-Bandwidth Bound</span
+              >
             </div>
             <div class="result-card-body">
-              <div class="speed-grid">
+              <div class="speed-grid speed-grid-4">
                 <div class="speed-card">
                   <div class="speed-card-value" id="speed-ttft">—</div>
                   <div class="speed-card-unit" data-i18n="unit_ms">ms</div>
@@ -610,7 +790,71 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                   <div class="speed-card-unit" data-i18n="unit_tps">tok/s</div>
                   <div class="speed-card-label" data-i18n="result_user_tps">Per-User Speed</div>
                 </div>
+                <div class="speed-card">
+                  <div class="speed-card-value" id="speed-e2e">—</div>
+                  <div class="speed-card-unit" data-i18n="unit_s">s</div>
+                  <div class="speed-card-label" data-i18n="result_e2e_latency">
+                    E2E Response Time
+                  </div>
+                </div>
               </div>
+              <div class="effective-hw-bar">
+                <span data-i18n="label_effective_hw">Effective Hardware:</span>
+                <strong id="effective-hw-summary">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quantization Comparison Matrix (Mode 1) -->
+          <div id="result-quant-matrix" class="result-card">
+            <div class="result-card-header">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"
+              ></i>
+              <span data-i18n="result_quant_matrix_title"
+                >Quantization Comparison on This Hardware</span
+              >
+            </div>
+            <div class="result-card-body p-0 overflow-x-auto">
+              <table class="match-table" id="quant-matrix-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="col_quant">Quantization</th>
+                    <th data-i18n="col_weights_gb">Weights</th>
+                    <th data-i18n="col_total_vram">Total VRAM</th>
+                    <th data-i18n="col_status">Status</th>
+                    <th data-i18n="col_user_tps">Tok/s / User</th>
+                    <th data-i18n="col_max_ctx">Max 1-User Ctx</th>
+                  </tr>
+                </thead>
+                <tbody id="quant-matrix-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- OS & Driver Environment Comparison Matrix (Mode 1) -->
+          <div id="result-os-matrix" class="result-card">
+            <div class="result-card-header">
+              <i
+                data-lucide="monitor-cog"
+                class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
+              <span data-i18n="result_os_matrix_title"
+                >OS &amp; Driver Environment Comparison on This Hardware</span
+              >
+            </div>
+            <div class="result-card-body p-0 overflow-x-auto">
+              <table class="match-table" id="os-matrix-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="col_os_profile">OS / Driver Environment</th>
+                    <th data-i18n="col_usable_vram">Usable VRAM</th>
+                    <th data-i18n="col_status">Status</th>
+                    <th data-i18n="col_user_tps">Tok/s / User</th>
+                    <th data-i18n="col_max_users">Max Users</th>
+                    <th data-i18n="col_max_ctx">Max 1-User Ctx</th>
+                  </tr>
+                </thead>
+                <tbody id="os-matrix-body"></tbody>
+              </table>
             </div>
           </div>
 
@@ -620,16 +864,19 @@ import BaseLayout from '@layouts/BaseLayout.astro';
               <i
                 data-lucide="list-ordered"
                 class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
-              <span data-i18n="result_match_title">Hardware Options</span>
+              <span data-i18n="result_match_title">Compatible Hardware Options</span>
+              <span id="match-count-badge" class="regime-badge ml-auto">0</span>
             </div>
             <div class="result-card-body p-0 overflow-x-auto">
               <table class="match-table" id="match-table">
                 <thead>
                   <tr>
                     <th data-i18n="col_hardware">Hardware</th>
+                    <th data-i18n="col_tier">Vendor / Tier</th>
                     <th data-i18n="col_vram_fit">VRAM Fit</th>
                     <th data-i18n="col_user_tps">Tok/s / User</th>
                     <th data-i18n="col_ttft">TTFT</th>
+                    <th data-i18n="col_buy_price">Est. Buy $</th>
                     <th data-i18n="col_cost">$/hr</th>
                     <th data-i18n="col_roi">ROI</th>
                   </tr>
@@ -652,7 +899,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
               <i
                 data-lucide="package-search"
                 class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
-              <span data-i18n="result_discovery_title">Maximum Model Size</span>
+              <span data-i18n="result_discovery_title">Maximum Model Size (Synthetic Ceiling)</span>
             </div>
             <div class="result-card-body">
               <div class="vram-stats">
@@ -684,6 +931,41 @@ import BaseLayout from '@layouts/BaseLayout.astro';
                 >
                 <span id="discovery-quant" class="text-xs font-semibold">—</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Compatible Preset Models Table (Mode 3) -->
+          <div id="result-discovery-presets" class="result-card hidden">
+            <div class="result-card-header">
+              <i
+                data-lucide="check-circle-2"
+                class="w-3.5 h-3.5 text-primary-500 dark:text-primary-400"></i>
+              <span data-i18n="result_discovery_presets_title"
+                >Compatible Open-Source Models on This Hardware</span
+              >
+              <span id="discovery-presets-count" class="regime-badge ml-auto">0</span>
+            </div>
+            <div class="result-card-body p-0 overflow-x-auto">
+              <table class="match-table" id="discovery-presets-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="col_model">Model</th>
+                    <th data-i18n="col_params">Params</th>
+                    <th data-i18n="col_quant_used">Quantization</th>
+                    <th data-i18n="col_vram_fit">VRAM Fit</th>
+                    <th data-i18n="col_user_tps">Tok/s / User</th>
+                    <th data-i18n="col_ttft">TTFT</th>
+                  </tr>
+                </thead>
+                <tbody id="discovery-presets-body"></tbody>
+              </table>
+              <p
+                id="discovery-no-presets"
+                class="hidden p-3.5 text-xs text-neutral-500"
+                data-i18n="no_presets_fit"
+              >
+                No preset models fit with current settings.
+              </p>
             </div>
           </div>
         </div>
