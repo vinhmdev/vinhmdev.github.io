@@ -14,7 +14,14 @@
  *   - Both workspaces are strictly isolated with zero cross-mode merging.
  */
 import { encrypt, decrypt, generateKey, keyToString, keyFromString } from '@shared/paste/crypto';
-import { createPaste, updatePaste, fetchPaste, type PasteMode } from '@shared/paste/store';
+import {
+  createPaste,
+  updatePaste,
+  fetchPaste,
+  deletePaste,
+  extendPasteExpiry,
+  type PasteMode,
+} from '@shared/paste/store';
 import { encodePayload, decodePayload } from '@shared/paste/payload';
 import { isFirebaseConfigured } from '@shared/firebase/config';
 import {
@@ -68,8 +75,14 @@ export interface ShareDeps {
 
 let deps: ShareDeps;
 let store: DualDocStore;
-let current: { id: string; key: Uint8Array<ArrayBuffer>; mode: PasteMode; title: string } | null =
-  null;
+let current: {
+  id: string;
+  key: Uint8Array<ArrayBuffer>;
+  mode: PasteMode;
+  title: string;
+  expireAt: number | null;
+  ownerUid: string | null;
+} | null = null;
 let lastSaved = '';
 let lastSavedTitle = '';
 
@@ -147,6 +160,20 @@ function linkFor(id: string, key: Uint8Array<ArrayBuffer>): string {
   return `${location.origin}${deps.linkBase}#${id}.${keyToString(key)}`;
 }
 
+function formatExpiryStatus(expireAt: number | null): { text: string; expired: boolean } {
+  if (expireAt === null || expireAt === undefined) {
+    return { text: t('expiry_never'), expired: false };
+  }
+  if (expireAt <= Date.now()) {
+    return { text: t('mydocs_expired'), expired: true };
+  }
+  const formatted = new Date(expireAt).toLocaleString(locale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+  return { text: `${t('mydocs_expires')}: ${formatted}`, expired: false };
+}
+
 /** True when the editor content (or title) differs from the last saved state. */
 function isDirty(): boolean {
   if (deps.getValue() !== lastSaved) return true;
@@ -163,6 +190,65 @@ function detachCurrentLink(): void {
   updateBar();
 }
 
+async function extendSharedDocExpiry(id: string, rawMinutes: string): Promise<void> {
+  if (!store.isCloud()) return;
+  const ttlDays =
+    rawMinutes === '0' || rawMinutes === 'never' ? null : Number(rawMinutes) / (60 * 24);
+  const now = Date.now();
+  let nextExpireMs = ttlDays !== null && ttlDays > 0 ? now + ttlDays * DAY_MS : null;
+  if (isFirebaseConfigured) {
+    try {
+      const serverExpire = await extendPasteExpiry(id, ttlDays);
+      nextExpireMs = serverExpire ? serverExpire.getTime() : null;
+    } catch (err) {
+      console.error(`[share] Failed to extend expiry for paste ${id} on server:`, err);
+    }
+  }
+  const existing = store.getDoc(id);
+  if (existing) {
+    store.saveDoc({
+      id: existing.id,
+      key: existing.key,
+      title: existing.title,
+      url: existing.url,
+      mode: existing.mode,
+      createdAt: existing.createdAt,
+      updatedAt: Date.now(),
+      expireAt: nextExpireMs,
+    });
+  }
+  if (current?.id === id) {
+    current.expireAt = nextExpireMs;
+    updateBar();
+  }
+  if (drawer && !drawer.hidden) {
+    renderDocs();
+  }
+  deps.showToast('clock', t('toast_expiry_updated'));
+}
+
+async function revokeSharedDoc(id: string): Promise<void> {
+  const isCloud = store.isCloud();
+  if (isCloud && isFirebaseConfigured) {
+    try {
+      await deletePaste(id);
+    } catch (err) {
+      console.error(`[share] Failed to delete paste ${id} from server:`, err);
+    }
+  }
+  store.removeDoc(id);
+  if (current?.id === id) {
+    detachCurrentLink();
+    await deps.onDetach?.();
+  }
+  if (drawer && !drawer.hidden) {
+    renderDocs();
+  }
+  if (isCloud) {
+    deps.showToast('trash-2', t('toast_doc_revoked'));
+  }
+}
+
 // ─── status bar (shown while a shared doc is active) ─────────────────────────
 let bar: HTMLElement;
 
@@ -173,9 +259,22 @@ function buildBar(): void {
     <span class="md-sharebar-info">
       <i data-lucide="link" class="w-4 h-4"></i>
       <span id="md-bar-mode"></span>
+      <span id="md-bar-expiry" class="md-sharebar-expiry"></span>
       <span id="md-bar-state" class="md-sharebar-state"></span>
     </span>
     <span class="md-sharebar-actions">
+      <select id="md-bar-extend" class="md-select md-bar-select" hidden>
+        <option value="" selected disabled data-i18n="mydocs_extend">Extend…</option>
+        <option value="60" data-i18n="expiry_1h">1 hour</option>
+        <option value="1440" data-i18n="expiry_1d">1 day</option>
+        <option value="10080" data-i18n="expiry_7d">1 week</option>
+        <option value="43200" data-i18n="expiry_30d">1 month</option>
+        <option value="525600" data-i18n="expiry_365d">1 year</option>
+        <option value="0" data-i18n="expiry_never">Never expires</option>
+      </select>
+      <button id="md-bar-revoke" class="md-btn md-btn-danger-ghost" hidden>
+        <i data-lucide="trash-2" class="w-4 h-4"></i><span data-i18n="bar_revoke">Revoke</span>
+      </button>
       <button id="md-bar-copy" class="md-btn md-btn-ghost"><i data-lucide="copy" class="w-4 h-4"></i><span data-i18n="bar_copy">Copy link</span></button>
       <button id="md-bar-primary" class="md-btn md-btn-primary"></button>
       <button id="md-bar-detach" class="md-icon-btn" title=""><i data-lucide="x" class="w-4 h-4"></i></button>
@@ -183,6 +282,18 @@ function buildBar(): void {
   document.body.appendChild(bar);
   translateTree(bar);
 
+  bar.querySelector<HTMLSelectElement>('#md-bar-extend')?.addEventListener('change', (e) => {
+    const sel = e.currentTarget as HTMLSelectElement;
+    const val = sel.value;
+    sel.value = '';
+    if (val && current) {
+      void extendSharedDocExpiry(current.id, val);
+    }
+  });
+  bar.querySelector<HTMLButtonElement>('#md-bar-revoke')?.addEventListener('click', () => {
+    if (!current) return;
+    void revokeSharedDoc(current.id);
+  });
   bar.querySelector<HTMLButtonElement>('#md-bar-copy')?.addEventListener('click', async () => {
     if (!current) return;
     const ok = await copy(linkFor(current.id, current.key));
@@ -231,12 +342,37 @@ function updateBar(): void {
     modeEl.textContent = t(current.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
   }
 
+  const expiryEl = bar.querySelector<HTMLElement>('#md-bar-expiry');
+  if (expiryEl) {
+    const expiryInfo = formatExpiryStatus(current.expireAt);
+    expiryEl.textContent = `• ${expiryInfo.text}`;
+  }
+
   const dirty = isDirty();
   const stateEl = bar.querySelector<HTMLElement>('#md-bar-state');
   if (stateEl) {
     stateEl.textContent =
       current.mode === 'editable' ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
     stateEl.classList.toggle('is-dirty', current.mode === 'editable' && dirty);
+  }
+
+  const canManageCloudDoc =
+    store.isCloud() &&
+    Boolean(
+      (current.ownerUid && current.ownerUid === currentAuthUser?.uid) || store.getDoc(current.id)
+    );
+
+  const extendSelect = bar.querySelector<HTMLSelectElement>('#md-bar-extend');
+  if (extendSelect) {
+    extendSelect.hidden = !canManageCloudDoc;
+    extendSelect.title = t('mydocs_extend_title');
+    extendSelect.value = '';
+  }
+
+  const revokeBtn = bar.querySelector<HTMLButtonElement>('#md-bar-revoke');
+  if (revokeBtn) {
+    revokeBtn.hidden = !canManageCloudDoc;
+    revokeBtn.title = t('bar_revoke_title');
   }
 
   const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
@@ -272,6 +408,7 @@ async function persistCreate(mode: PasteMode, ttlDays: number | null): Promise<M
   const enc = await encrypt(encodePayload(explicitTitle, body), key);
   const id = await createPaste(enc, { ttlDays, mode });
   const now = Date.now();
+  const expireAt = ttlDays !== null && ttlDays > 0 ? now + ttlDays * DAY_MS : null;
   const doc: MyDoc = {
     id,
     key: keyToString(key),
@@ -280,11 +417,18 @@ async function persistCreate(mode: PasteMode, ttlDays: number | null): Promise<M
     mode,
     createdAt: now,
     updatedAt: now,
-    expireAt: ttlDays !== null && ttlDays > 0 ? now + ttlDays * DAY_MS : null,
+    expireAt,
     versions: [],
   };
   store.saveDoc({ ...doc }, body);
-  current = { id, key, mode, title: historyTitle };
+  current = {
+    id,
+    key,
+    mode,
+    title: historyTitle,
+    expireAt,
+    ownerUid: currentAuthUser?.uid ?? null,
+  };
   lastSaved = body;
   lastSavedTitle = explicitTitle;
   if (mode === 'editable') history.replaceState(null, '', `#${id}.${keyToString(key)}`);
@@ -316,7 +460,7 @@ async function saveInPlace(): Promise<void> {
         mode: 'editable',
         createdAt: existing?.createdAt ?? Date.now(),
         updatedAt: Date.now(),
-        expireAt: existing?.expireAt ?? null,
+        expireAt: existing?.expireAt ?? current.expireAt ?? null,
       },
       body
     );
@@ -368,7 +512,15 @@ async function loadShared(): Promise<void> {
     // Match the (possibly empty) loaded title, not a derived one, so a paste
     // saved with a blank title doesn't read as dirty the moment it opens.
     lastSavedTitle = title.trim();
-    current = { id: parsed.id, key, mode: stored.mode, title: title || deriveTitle(body) };
+    const resolvedExpireAt = stored.expireAt?.getTime() ?? null;
+    current = {
+      id: parsed.id,
+      key,
+      mode: stored.mode,
+      title: title || deriveTitle(body),
+      expireAt: resolvedExpireAt,
+      ownerUid: stored.ownerUid,
+    };
     const existing = store.getDoc(parsed.id);
     store.saveDoc(
       {
@@ -379,7 +531,7 @@ async function loadShared(): Promise<void> {
         mode: stored.mode,
         createdAt: existing?.createdAt ?? Date.now(),
         updatedAt: stored.updatedAt?.getTime() ?? Date.now(),
-        expireAt: stored.expireAt?.getTime() ?? null,
+        expireAt: resolvedExpireAt,
       },
       body
     );
@@ -398,6 +550,15 @@ async function loadShared(): Promise<void> {
 
 // ─── share modal ──────────────────────────────────────────────────────────────
 let modal: HTMLElement;
+
+function updateModalNote(): void {
+  if (!modal) return;
+  const noteText = modal.querySelector<HTMLElement>('#md-expiry-note-text');
+  if (!noteText) return;
+  const key = store.isCloud() ? 'share_expiry_note_cloud' : 'share_expiry_note';
+  noteText.setAttribute('data-i18n', key);
+  noteText.textContent = t(key);
+}
 
 function buildModal(): void {
   modal = el('div', 'md-overlay');
@@ -433,7 +594,7 @@ function buildModal(): void {
         </div>
         <p class="md-expiry-note">
           <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-          <span data-i18n="share_expiry_note">Once shared, it stays live until it expires and can't be deleted manually — pick a lifetime that fits. For sensitive data, choose a short one (e.g. 1 hour).</span>
+          <span id="md-expiry-note-text" data-i18n="share_expiry_note">Once shared, it stays live until it expires and can't be deleted manually — pick a lifetime that fits. For sensitive data, choose a short one (e.g. 1 hour).</span>
         </p>
 
         <button id="md-modal-create" class="md-btn md-btn-primary md-btn-block">
@@ -522,6 +683,7 @@ function buildModal(): void {
 }
 
 function openModal(): void {
+  updateModalNote();
   const formEl = modal.querySelector<HTMLElement>('#md-modal-form');
   if (formEl) formEl.hidden = false;
   const resultEl = modal.querySelector<HTMLElement>('#md-modal-result');
@@ -565,8 +727,16 @@ function buildDrawer(): void {
     if (e.target === drawer) close();
   });
   drawer.querySelector('#md-drawer-close')?.addEventListener('click', close);
-  drawer.querySelector('#md-drawer-clear')?.addEventListener('click', () => {
+  drawer.querySelector('#md-drawer-clear')?.addEventListener('click', async () => {
     const isCloud = store.isCloud();
+    const docs = store.getDocs();
+    if (isCloud && isFirebaseConfigured && docs.length > 0) {
+      await Promise.allSettled(docs.map((d) => deletePaste(d.id)));
+    }
+    if (isCloud && current && docs.some((d) => d.id === current?.id)) {
+      detachCurrentLink();
+      await deps.onDetach?.();
+    }
     store.clearDocs();
     renderDocs();
     deps.showToast('trash-2', t(isCloud ? 'toast_docs_cleared_cloud' : 'toast_docs_cleared'));
@@ -587,14 +757,16 @@ function renderDocs(): void {
 
 function renderDocItem(doc: MyDoc): HTMLLIElement {
   const li = el('li', 'md-doc-item');
+  const isCloud = store.isCloud();
   const modeLabel = t(doc.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
   const when = new Date(doc.updatedAt).toLocaleString(locale(), {
     dateStyle: 'short',
     timeStyle: 'short',
   });
+  const expiryInfo = formatExpiryStatus(doc.expireAt);
 
   const main = el('button', 'md-doc-main');
-  main.innerHTML = `<span class="md-doc-title"></span><span class="md-doc-sub"><span class="md-doc-badge md-doc-badge-${doc.mode}">${modeLabel}</span> · ${when} · ${doc.versions.length} ${t('mydocs_versions')}</span>`;
+  main.innerHTML = `<span class="md-doc-title"></span><span class="md-doc-sub"><span class="md-doc-badge md-doc-badge-${doc.mode}">${modeLabel}</span> · <span class="md-doc-expiry${expiryInfo.expired ? ' is-expired' : ''}">${expiryInfo.text}</span> · ${when} · ${doc.versions.length} ${t('mydocs_versions')}</span>`;
   const titleEl = main.querySelector<HTMLElement>('.md-doc-title');
   if (titleEl) titleEl.textContent = doc.title || t('untitled');
   main.addEventListener('click', () => {
@@ -608,6 +780,30 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
   });
 
   const actions = el('div', 'md-doc-actions');
+
+  if (isCloud) {
+    const extendSelect = el('select', 'md-select md-doc-extend-select');
+    extendSelect.title = t('mydocs_extend_title');
+    extendSelect.innerHTML = `
+      <option value="" selected disabled>${t('mydocs_extend')}</option>
+      <option value="60">${t('expiry_1h')}</option>
+      <option value="1440">${t('expiry_1d')}</option>
+      <option value="10080">${t('expiry_7d')}</option>
+      <option value="43200">${t('expiry_30d')}</option>
+      <option value="525600">${t('expiry_365d')}</option>
+      <option value="0">${t('expiry_never')}</option>`;
+    extendSelect.addEventListener('click', (e) => e.stopPropagation());
+    extendSelect.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const val = extendSelect.value;
+      extendSelect.value = '';
+      if (val) {
+        void extendSharedDocExpiry(doc.id, val);
+      }
+    });
+    actions.appendChild(extendSelect);
+  }
+
   const copyBtn = el('button', 'md-icon-btn', '<i data-lucide="copy" class="w-4 h-4"></i>');
   copyBtn.title = t('bar_copy');
   copyBtn.addEventListener('click', async (e) => {
@@ -618,12 +814,16 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
       t(ok ? 'toast_copied' : 'toast_copy_failed')
     );
   });
-  const delBtn = el('button', 'md-icon-btn', '<i data-lucide="trash-2" class="w-4 h-4"></i>');
-  delBtn.title = t('mydocs_remove');
+
+  const delBtn = el(
+    'button',
+    isCloud ? 'md-icon-btn md-icon-btn-danger' : 'md-icon-btn',
+    '<i data-lucide="trash-2" class="w-4 h-4"></i>'
+  );
+  delBtn.title = t(isCloud ? 'mydocs_revoke' : 'mydocs_remove');
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    store.removeDoc(doc.id);
-    renderDocs();
+    void revokeSharedDoc(doc.id);
   });
   actions.append(copyBtn, delBtn);
   li.append(main, actions);
@@ -755,6 +955,7 @@ function renderAuthUI(user: AuthUser | null): void {
 async function applyWorkspaceForUser(user: AuthUser | null): Promise<void> {
   await store.switchUser(user?.uid ?? null);
   renderAuthUI(user);
+  updateModalNote();
   updateDrawerNote();
   if (!drawer.hidden) {
     renderDocs();
@@ -848,9 +1049,13 @@ export function initShare(d: ShareDeps): void {
   // Re-translate all JS-built UI when the language switches.
   window.addEventListener(d.langChangeEvent ?? 'langchange', () => {
     translateTree(bar);
+    updateModalNote();
     translateTree(modal);
     updateDrawerNote();
     translateTree(drawer);
+    if (!drawer.hidden) {
+      renderDocs();
+    }
     if (authWrap) {
       renderAuthUI(currentAuthUser);
     }

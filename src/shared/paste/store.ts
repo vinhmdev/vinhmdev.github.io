@@ -17,12 +17,14 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   collection,
   serverTimestamp,
   Timestamp,
   type Firestore,
 } from 'firebase/firestore';
 import { getFirebaseApp } from '@shared/firebase/app';
+import { getCurrentUser } from '@shared/firebase/auth';
 import { isFirebaseConfigured } from '@shared/firebase/config';
 import type { Encrypted } from './crypto';
 
@@ -51,6 +53,7 @@ export interface StoredPaste {
   mode: PasteMode;
   expireAt: Date | null;
   updatedAt: Date | null;
+  ownerUid: string | null;
 }
 
 /** Store a new encrypted paste and return its generated id. */
@@ -58,11 +61,13 @@ export async function createPaste(
   enc: Encrypted,
   opts: { ttlDays: number | null; mode: PasteMode }
 ): Promise<string> {
+  const ownerUid = getCurrentUser()?.uid ?? null;
   const ref = await addDoc(collection(getDb(), COLLECTION), {
     ct: enc.ct,
     iv: enc.iv,
     v: SCHEMA_VERSION,
     mode: opts.mode,
+    ownerUid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     expireAt:
@@ -85,6 +90,27 @@ export async function updatePaste(id: string, enc: Encrypted): Promise<void> {
   });
 }
 
+/**
+ * Extend or update the expiration of a shared paste (signed-in owner only).
+ * Returns the new expiration `Date` or `null` if set to never expire.
+ */
+export async function extendPasteExpiry(id: string, ttlDays: number | null): Promise<Date | null> {
+  const nextExpire =
+    ttlDays !== null && ttlDays > 0 ? new Date(Date.now() + ttlDays * DAY_MS) : null;
+  await updateDoc(doc(getDb(), COLLECTION, id), {
+    expireAt: nextExpire ? Timestamp.fromDate(nextExpire) : null,
+    updatedAt: serverTimestamp(),
+  });
+  return nextExpire;
+}
+
+/**
+ * Permanently delete / revoke a shared paste on Firestore (signed-in owner only).
+ */
+export async function deletePaste(id: string): Promise<void> {
+  await deleteDoc(doc(getDb(), COLLECTION, id));
+}
+
 /** Fetch a paste by id. Returns null if missing or already expired. */
 export async function fetchPaste(id: string): Promise<StoredPaste | null> {
   const snapshot = await getDoc(doc(getDb(), COLLECTION, id));
@@ -102,5 +128,6 @@ export async function fetchPaste(id: string): Promise<StoredPaste | null> {
     mode: data.mode === 'editable' ? 'editable' : 'readonly',
     expireAt,
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : null,
+    ownerUid: typeof data.ownerUid === 'string' ? data.ownerUid : null,
   };
 }

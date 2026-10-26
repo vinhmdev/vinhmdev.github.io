@@ -22,8 +22,10 @@ service cloud.firestore {
       allow list: if false;
 
       // Create-only, strict shape + size validation.
+      // Signed-in creators may attach their `ownerUid` so they can later
+      // extend expiration or revoke/delete the shared paste.
       allow create: if
-        request.resource.data.keys().hasOnly(['ct', 'iv', 'v', 'mode', 'createdAt', 'updatedAt', 'expireAt'])
+        request.resource.data.keys().hasOnly(['ct', 'iv', 'v', 'mode', 'createdAt', 'updatedAt', 'expireAt', 'ownerUid'])
         && request.resource.data.v == 2
         && request.resource.data.mode in ['editable', 'readonly']
         && request.resource.data.ct is string
@@ -37,25 +39,36 @@ service cloud.firestore {
         && (request.resource.data.expireAt == null
             || (request.resource.data.expireAt is timestamp
                 && request.resource.data.expireAt > request.time
-                && request.resource.data.expireAt < request.time + duration.value(366, 'd')));
+                && request.resource.data.expireAt < request.time + duration.value(366, 'd')))
+        && (!('ownerUid' in request.resource.data)
+            || request.resource.data.ownerUid == null
+            || (request.auth != null && request.resource.data.ownerUid == request.auth.uid));
 
-      // Editable pastes: content-only, in-place updates. Everything else
-      // (mode, v, createdAt, expireAt) is immutable; readonly pastes reject
-      // updates entirely.
+      // Updates allowed in two cases:
+      // 1. Editable pastes: content-only, in-place updates by anyone with the link.
+      // 2. Signed-in owner: extending or updating `expireAt` (and `updatedAt`)
+      //    regardless of whether the paste is editable or readonly.
       allow update: if
-        resource.data.mode == 'editable'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ct', 'iv', 'updatedAt'])
-        && request.resource.data.ct is string
-        && request.resource.data.ct.size() > 0
-        && request.resource.data.ct.size() <= 900000
-        && request.resource.data.iv is string
-        && request.resource.data.iv.size() > 0
-        && request.resource.data.iv.size() <= 32
-        && request.resource.data.updatedAt == request.time;
+        (resource.data.mode == 'editable'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ct', 'iv', 'updatedAt'])
+          && request.resource.data.ct is string
+          && request.resource.data.ct.size() > 0
+          && request.resource.data.ct.size() <= 900000
+          && request.resource.data.iv is string
+          && request.resource.data.iv.size() > 0
+          && request.resource.data.iv.size() <= 32
+          && request.resource.data.updatedAt == request.time)
+        || (request.auth != null
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['expireAt', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && (request.resource.data.expireAt == null
+              || (request.resource.data.expireAt is timestamp
+                  && request.resource.data.expireAt > request.time
+                  && request.resource.data.expireAt < request.time + duration.value(366, 'd'))));
 
-      // Pastes are never deleted by clients (TTL policy reclaims expiring ones;
-      // null expireAt pastes are permanent).
-      allow delete: if false;
+      // Signed-in owners can revoke/delete their own shared pastes at any time.
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
     }
 
     // Authenticated Google Account Workspace (Dual Independent Storage):

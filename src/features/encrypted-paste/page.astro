@@ -55,14 +55,15 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     </a>
 
     <div class="flex items-center gap-2">
-      <!-- Share + My pastes (share layer wires these by id) -->
+      <!-- Document actions: Clear + My pastes + Share -->
       <button
-        id="share-btn"
-        class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
-        title="Share"
+        id="clear-btn"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:hover:bg-red-950/30 dark:hover:text-red-400 dark:hover:border-red-800/60 transition-all text-neutral-600 dark:text-neutral-300"
+        data-i18n="btn_clear_title"
+        data-i18n-attr="title"
+        title="Clear content"
       >
-        <i data-lucide="share-2" class="w-4 h-4"></i>
-        <span data-i18n="share_btn">Share</span>
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
       </button>
       <button
         id="mydocs-btn"
@@ -73,7 +74,16 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       >
         <i data-lucide="folder" class="w-4 h-4"></i>
       </button>
+      <button
+        id="share-btn"
+        class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
+        title="Share"
+      >
+        <i data-lucide="share-2" class="w-4 h-4"></i>
+        <span data-i18n="share_btn">Share</span>
+      </button>
 
+      <!-- Preferences & Account: Theme + Language + Auth -->
       <button
         id="theme-toggle-btn"
         class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
@@ -88,15 +98,6 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         title="Switch language"
       >
         <span class="text-base">🇻🇳</span><span class="text-xs font-semibold">VI</span>
-      </button>
-      <button
-        id="clear-btn"
-        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
-        data-i18n="btn_clear_title"
-        data-i18n-attr="title"
-        title="Clear content"
-      >
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
       </button>
       <div id="auth-slot" class="md-auth-wrap"></div>
     </div>

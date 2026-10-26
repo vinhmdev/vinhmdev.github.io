@@ -42,7 +42,7 @@
   .md-drawer {
     margin-left: auto;
     width: 100%;
-    max-width: 26rem;
+    max-width: 29rem;
     height: 100%;
     overflow-y: auto;
     background: #fff;
@@ -272,6 +272,14 @@
   .dark .md-icon-btn:hover {
     background: var(--color-neutral-800);
   }
+  .md-icon-btn-danger:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+  .dark .md-icon-btn-danger:hover {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.16);
+  }
 
   .md-link-btn {
     background: none;
@@ -346,6 +354,16 @@
     color: var(--color-neutral-400);
     margin-top: 0.15rem;
   }
+  .md-doc-expiry {
+    color: var(--color-neutral-500);
+    font-weight: 500;
+  }
+  .dark .md-doc-expiry {
+    color: var(--color-neutral-300);
+  }
+  .md-doc-expiry.is-expired {
+    color: #ef4444;
+  }
   .md-doc-badge {
     display: inline-block;
     padding: 0.05rem 0.4rem;
@@ -370,8 +388,20 @@
   }
   .md-doc-actions {
     display: flex;
-    gap: 0.1rem;
+    align-items: center;
+    gap: 0.2rem;
     flex-shrink: 0;
+  }
+  .md-doc-extend-select {
+    height: 1.85rem;
+    padding: 0 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border-radius: 0.45rem;
+    color: var(--color-neutral-600);
+  }
+  .dark .md-doc-extend-select {
+    color: var(--color-neutral-300);
   }
 
   /* ===== Bottom share status bar ===== */
@@ -405,6 +435,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .md-sharebar-expiry {
+    color: var(--color-neutral-300);
+    font-size: 0.75rem;
+  }
   .md-sharebar-state {
     color: var(--color-neutral-400);
   }
@@ -416,6 +450,30 @@
     align-items: center;
     gap: 0.4rem;
     flex-shrink: 0;
+  }
+  .md-bar-select {
+    height: 2rem;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    background: var(--color-neutral-800);
+    border-color: var(--color-neutral-600);
+    color: #e5e5e5;
+  }
+  .md-bar-select[hidden] {
+    display: none;
+  }
+  .md-btn-danger-ghost {
+    background: transparent;
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+  .md-btn-danger-ghost:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fecaca;
+    border-color: #f87171;
+  }
+  .md-btn-danger-ghost[hidden] {
+    display: none;
   }
   .md-sharebar .md-btn-ghost {
     color: #e5e5e5;
