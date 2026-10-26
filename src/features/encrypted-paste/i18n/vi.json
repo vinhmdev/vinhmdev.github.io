@@ -6,6 +6,8 @@
   "placeholder_title": "Ghi chú chưa đặt tên",
   "untitled": "Ghi chú chưa đặt tên",
   "chars": "ký tự",
+  "btn_clear_title": "Xóa nội dung",
+  "toast_cleared": "Đã xóa sạch nội dung!",
 
   "expiry_1h": "1 giờ",
   "expiry_1d": "1 ngày",

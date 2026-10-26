@@ -73,7 +73,6 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       >
         <i data-lucide="folder" class="w-4 h-4"></i>
       </button>
-      <div id="auth-slot" class="md-auth-wrap"></div>
 
       <button
         id="theme-toggle-btn"
@@ -90,6 +89,16 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       >
         <span class="text-base">🇻🇳</span><span class="text-xs font-semibold">VI</span>
       </button>
+      <button
+        id="clear-btn"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        data-i18n="btn_clear_title"
+        data-i18n-attr="title"
+        title="Clear content"
+      >
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+      <div id="auth-slot" class="md-auth-wrap"></div>
     </div>
   </header>
 

@@ -90,7 +90,6 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         >
           <i data-lucide="folder" class="w-4 h-4"></i>
         </button>
-        <div id="auth-slot" class="md-auth-wrap"></div>
 
         <!-- Settings Button + Dropdown -->
         <div class="settings-dropdown">
@@ -167,13 +166,15 @@ import BaseLayout from '@layouts/BaseLayout.astro';
         <!-- Clear Button -->
         <button
           id="clear-btn"
-          class="flex items-center justify-center w-8 h-8 mr-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+          class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
           data-i18n="btn_clear_title"
           data-i18n-attr="title"
           title="Clear content"
         >
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
+
+        <div id="auth-slot" class="md-auth-wrap mr-1"></div>
       </div>
     </header>
 

@@ -6,6 +6,8 @@
   "placeholder_title": "Untitled note",
   "untitled": "Untitled note",
   "chars": "chars",
+  "btn_clear_title": "Clear content",
+  "toast_cleared": "Content cleared!",
 
   "expiry_1h": "1 hour",
   "expiry_1d": "1 day",

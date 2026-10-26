@@ -651,7 +651,7 @@ function buildAuthUI(): void {
     const mydocsBtn = document.getElementById('mydocs-btn');
     if (!mydocsBtn || !mydocsBtn.parentElement) return;
     authWrap = el('div', 'md-auth-wrap');
-    mydocsBtn.insertAdjacentElement('afterend', authWrap);
+    mydocsBtn.parentElement.appendChild(authWrap);
   }
 
   renderAuthUI(null);
@@ -779,7 +779,15 @@ async function handleSignIn(): Promise<void> {
   } catch (err) {
     const code = (err as { code?: string })?.code;
     if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-      console.error('[share] Google sign-in failed:', err);
+      if (code === 'auth/unauthorized-domain') {
+        const host = window.location.hostname;
+        console.error(
+          `[share] Google sign-in failed (auth/unauthorized-domain): "${host}" is not an authorized domain. Add "${host}" in Firebase Console -> Authentication -> Settings -> Authorized domains.`,
+          err
+        );
+      } else {
+        console.error('[share] Google sign-in failed:', err);
+      }
       deps.showToast('alert-triangle', t('toast_auth_failed'));
     }
   } finally {

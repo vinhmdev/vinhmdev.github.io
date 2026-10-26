@@ -166,6 +166,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') openShare();
   });
 
+  // Clear button resets title + content and clears working draft if unshared.
+  document.getElementById('clear-btn')?.addEventListener('click', () => {
+    if (isReadOnly) {
+      showToast('lock', t('toast_readonly_hint'));
+      return;
+    }
+    setTitle('');
+    setValue('');
+    if (!hasActiveSharedDoc()) {
+      void draftStore.clear();
+    }
+    shareNotify();
+    showToast('trash-2', t('toast_cleared'));
+  });
+
   // Share layer (encrypt + share link, open shared pastes, Dual Local/Cloud history).
   initShare({
     getValue,
