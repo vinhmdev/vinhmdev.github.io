@@ -202,6 +202,8 @@ async function extendSharedDocExpiry(id: string, rawMinutes: string): Promise<vo
       nextExpireMs = serverExpire ? serverExpire.getTime() : null;
     } catch (err) {
       console.error(`[share] Failed to extend expiry for paste ${id} on server:`, err);
+      deps.showToast('alert-triangle', t('toast_save_failed'));
+      return;
     }
   }
   const existing = store.getDoc(id);
@@ -214,6 +216,17 @@ async function extendSharedDocExpiry(id: string, rawMinutes: string): Promise<vo
       mode: existing.mode,
       createdAt: existing.createdAt,
       updatedAt: Date.now(),
+      expireAt: nextExpireMs,
+    });
+  } else if (current?.id === id) {
+    store.saveDoc({
+      id: current.id,
+      key: keyToString(current.key),
+      title: current.title,
+      url: linkFor(current.id, current.key),
+      mode: current.mode,
+      createdAt: now,
+      updatedAt: now,
       expireAt: nextExpireMs,
     });
   }
@@ -359,7 +372,8 @@ function updateBar(): void {
   const canManageCloudDoc =
     store.isCloud() &&
     Boolean(
-      (current.ownerUid && current.ownerUid === currentAuthUser?.uid) || store.getDoc(current.id)
+      (current.ownerUid && current.ownerUid === currentAuthUser?.uid) ||
+      (!current.ownerUid && store.getDoc(current.id))
     );
 
   const extendSelect = bar.querySelector<HTMLSelectElement>('#md-bar-extend');
@@ -451,19 +465,25 @@ async function saveInPlace(): Promise<void> {
     lastSavedTitle = explicitTitle;
     current.title = historyTitle;
     const existing = store.getDoc(current.id);
-    store.saveDoc(
-      {
-        id: current.id,
-        key: keyToString(current.key),
-        title: historyTitle,
-        url: linkFor(current.id, current.key),
-        mode: 'editable',
-        createdAt: existing?.createdAt ?? Date.now(),
-        updatedAt: Date.now(),
-        expireAt: existing?.expireAt ?? current.expireAt ?? null,
-      },
-      body
-    );
+    const canSaveToActiveStore =
+      !store.isCloud() ||
+      Boolean(current.ownerUid && current.ownerUid === currentAuthUser?.uid) ||
+      Boolean(existing);
+    if (canSaveToActiveStore) {
+      store.saveDoc(
+        {
+          id: current.id,
+          key: keyToString(current.key),
+          title: historyTitle,
+          url: linkFor(current.id, current.key),
+          mode: 'editable',
+          createdAt: existing?.createdAt ?? Date.now(),
+          updatedAt: Date.now(),
+          expireAt: existing?.expireAt ?? current.expireAt ?? null,
+        },
+        body
+      );
+    }
     updateBar();
     deps.showToast('check-circle', t('toast_saved'));
   } catch (err) {
@@ -522,19 +542,25 @@ async function loadShared(): Promise<void> {
       ownerUid: stored.ownerUid,
     };
     const existing = store.getDoc(parsed.id);
-    store.saveDoc(
-      {
-        id: parsed.id,
-        key: parsed.key,
-        title: current.title,
-        url: linkFor(parsed.id, key),
-        mode: stored.mode,
-        createdAt: existing?.createdAt ?? Date.now(),
-        updatedAt: stored.updatedAt?.getTime() ?? Date.now(),
-        expireAt: resolvedExpireAt,
-      },
-      body
-    );
+    const canSaveToActiveStore =
+      !store.isCloud() ||
+      Boolean(stored.ownerUid && stored.ownerUid === currentAuthUser?.uid) ||
+      Boolean(existing);
+    if (canSaveToActiveStore) {
+      store.saveDoc(
+        {
+          id: parsed.id,
+          key: parsed.key,
+          title: current.title,
+          url: linkFor(parsed.id, key),
+          mode: stored.mode,
+          createdAt: existing?.createdAt ?? Date.now(),
+          updatedAt: stored.updatedAt?.getTime() ?? Date.now(),
+          expireAt: resolvedExpireAt,
+        },
+        body
+      );
+    }
     updateBar();
     deps.showToast(
       'check-circle',
