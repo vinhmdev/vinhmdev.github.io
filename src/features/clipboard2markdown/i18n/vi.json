@@ -50,6 +50,7 @@
   "expiry_7d": "1 tuần",
   "expiry_30d": "1 tháng",
   "expiry_365d": "1 năm",
+  "expiry_never": "Vĩnh viễn",
   "share_expiry_note": "Sau khi chia sẻ, nội dung tồn tại đến khi hết hạn và không thể xóa thủ công — hãy chọn thời hạn phù hợp. Với dữ liệu nhạy cảm, chọn thời hạn ngắn (vd 1 giờ).",
   "share_create": "Mã hóa & tạo link",
   "share_result_hint": "Ai có link này đều mở được. Khóa nằm trong link — hãy chia sẻ qua kênh tin cậy.",
@@ -81,5 +82,14 @@
   "toast_save_failed": "Không lưu được. Vui lòng thử lại.",
   "toast_copy_failed": "Sao chép thất bại — hãy chọn và copy thủ công",
   "toast_detached": "Đã tách khỏi link chia sẻ",
-  "toast_docs_cleared": "Đã xóa lịch sử tài liệu cục bộ"
+  "toast_docs_cleared": "Đã xóa lịch sử tài liệu cục bộ",
+  "toast_docs_cleared_cloud": "Đã xóa lịch sử tài liệu trên đám mây",
+  "toast_restored_from_history": "Link đã hết hạn — đã khôi phục bản lưu từ lịch sử của bạn",
+  "auth_signin": "Đăng nhập",
+  "auth_signout": "Đăng xuất",
+  "auth_signed_in_as": "Đang đăng nhập",
+  "mydocs_note_cloud": "(đồng bộ với tài khoản Google)",
+  "toast_signed_in": "Đã đăng nhập — chuyển sang bộ nhớ đám mây Google",
+  "toast_signed_out": "Đã đăng xuất — chuyển về bộ nhớ thiết bị này",
+  "toast_auth_failed": "Đăng nhập Google thất bại. Vui lòng thử lại."
 }

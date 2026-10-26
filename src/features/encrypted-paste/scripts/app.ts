@@ -16,7 +16,13 @@
  */
 import { initTheme } from '@shared/theme/toggle';
 import { init as initI18n, t } from './i18n-client';
-import { initShare, notifyChange as shareNotify, hasShareLink } from '@shared/paste-share/share';
+import {
+  initShare,
+  notifyChange as shareNotify,
+  hasShareLink,
+  hasActiveSharedDoc,
+} from '@shared/paste-share/share';
+import { createDualDraftStore } from '@shared/paste-share/draft-store';
 
 // ─── Toast ──────────────────────────────────────────────────────────────────
 let toastTimer: number | undefined;
@@ -89,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const title = document.getElementById('paste-title') as HTMLInputElement;
   const input = document.getElementById('paste-input') as HTMLTextAreaElement;
   const charCount = document.getElementById('char-count');
+  const draftStore = createDualDraftStore('paste');
 
   const getValue = (): string => input.value;
   const setValue = (s: string): void => {
@@ -134,13 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
   title.addEventListener('keydown', handleReadOnlyAttempt);
   input.addEventListener('keydown', handleReadOnlyAttempt);
 
-  // Keep char count + height in sync, and refresh the share bar's dirty state.
+  function persistDraftIfUnshared(): void {
+    if (!hasActiveSharedDoc()) {
+      draftStore.save({ title: title.value, content: input.value });
+    }
+  }
+
+  // Keep char count + height in sync, persist working draft, and refresh the share bar's dirty state.
   input.addEventListener('input', () => {
     if (charCount) charCount.textContent = String(input.value.length);
     autoGrow(input);
+    persistDraftIfUnshared();
     shareNotify();
   });
-  title.addEventListener('input', shareNotify);
+  title.addEventListener('input', () => {
+    persistDraftIfUnshared();
+    shareNotify();
+  });
   autoGrow(input);
 
   // Ctrl/Cmd+Enter opens the share dialog.
@@ -149,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') openShare();
   });
 
-  // Share layer (encrypt + share link, open shared pastes, local history).
+  // Share layer (encrypt + share link, open shared pastes, Dual Local/Cloud history).
   initShare({
     getValue,
     setValue,
@@ -159,10 +176,22 @@ document.addEventListener('DOMContentLoaded', () => {
     t,
     linkBase: '/paste/',
     storageKey: 'paste:docs',
+    cloudCollection: 'paste_docs',
     setReadOnly,
+    onBeforeSignOut: () => draftStore.flush(),
+    onAuthWorkspaceSwitch: async (user) => {
+      const draft = await draftStore.switchUser(user?.uid ?? null);
+      if (!hasShareLink()) {
+        setTitle(draft.title);
+        setValue(draft.content);
+      }
+    },
+    onDetach: async () => {
+      const draft = await draftStore.load();
+      setTitle(draft.title);
+      setValue(draft.content);
+    },
   });
 
-  // Nothing to restore on a fresh page — a share link (if present) is loaded
-  // by initShare() into the editor.
   if (!hasShareLink()) title.focus();
 });

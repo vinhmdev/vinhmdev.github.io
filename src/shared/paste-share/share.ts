@@ -7,26 +7,29 @@
  *   - editable : opening the link and saving updates the SAME link in place.
  *   - readonly : the shared content is frozen; editing forks a new link.
  *
- * Content is encrypted client-side (shared/paste/*) — Firestore only ever
- * holds ciphertext, and the key lives in the link fragment. "My docs" and
- * per-doc version snapshots are kept locally (history.ts); no account.
- *
- * The UI (modal, status bar, docs drawer) is built here in JS to stay a
- * self-contained slice; a host page only needs #share-btn and #mydocs-btn.
- *
- * Host tools plug in their editor via `ShareDeps`:
- *   - getValue/setValue  : read/write the body text.
- *   - getTitle/setTitle  : optional explicit title field (Markdown derives
- *                          the title from the first line instead).
- *   - linkBase           : URL path prefix, e.g. '/paste/'.
- *   - storageKey         : localStorage key for this tool's doc history.
- *   - langChangeEvent    : the tool's language-switch event name.
+ * Supports Dual Independent Storage:
+ *   - Logged Out (Anonymous Workspace): doc history lives in `localStorage`.
+ *   - Logged In (Google Account Workspace): doc history lives in Firestore
+ *     under `/users/{uid}/{md_docs|paste_docs}`.
+ *   - Both workspaces are strictly isolated with zero cross-mode merging.
  */
 import { encrypt, decrypt, generateKey, keyToString, keyFromString } from '@shared/paste/crypto';
 import { createPaste, updatePaste, fetchPaste, type PasteMode } from '@shared/paste/store';
 import { encodePayload, decodePayload } from '@shared/paste/payload';
 import { isFirebaseConfigured } from '@shared/firebase/config';
-import { createDocStore, type MyDoc, type DocStore } from './history';
+import {
+  waitForAuthInit,
+  signInWithGoogle,
+  signOutUser,
+  onAuthChange,
+  type AuthUser,
+} from '@shared/firebase/auth';
+import {
+  createDualDocStore,
+  type MyDoc,
+  type DualDocStore,
+  type CloudDocCollection,
+} from './history';
 
 const DAY_MS = 86400_000;
 
@@ -41,14 +44,30 @@ export interface ShareDeps {
   linkBase: string;
   /** localStorage key for this tool's "my docs" history. */
   storageKey: string;
+  /** Firestore subcollection name under `/users/{uid}/` for cloud doc history. */
+  cloudCollection?: CloudDocCollection;
   /** Language-switch event this tool dispatches (to re-translate JS-built UI). */
   langChangeEvent?: string;
   /** Toggle editor read-only state based on shared paste permissions. */
   setReadOnly?: (readOnly: boolean) => void;
+  /**
+   * Invoked when the active workspace switches (initial auth resolution, sign-in,
+   * or sign-out) so the host tool can switch and hydrate its `DualDraftStore`.
+   */
+  onAuthWorkspaceSwitch?: (user: AuthUser | null) => Promise<void>;
+  /**
+   * Invoked right before signing out so the host tool can flush any debounced
+   * cloud draft while still authenticated.
+   */
+  onBeforeSignOut?: () => Promise<void>;
+  /**
+   * Invoked when the user detaches from an active shared link (`#id.key`).
+   */
+  onDetach?: () => Promise<void> | void;
 }
 
 let deps: ShareDeps;
-let store: DocStore;
+let store: DualDocStore;
 let current: { id: string; key: Uint8Array<ArrayBuffer>; mode: PasteMode; title: string } | null =
   null;
 let lastSaved = '';
@@ -110,6 +129,11 @@ export function hasShareLink(): boolean {
   return parseHash() !== null;
 }
 
+/** True when a shared document is currently loaded or a valid share hash is in the URL. */
+export function hasActiveSharedDoc(): boolean {
+  return current !== null || parseHash() !== null;
+}
+
 async function copy(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -128,6 +152,15 @@ function isDirty(): boolean {
   if (deps.getValue() !== lastSaved) return true;
   if (deps.getTitle && deps.getTitle().trim() !== lastSavedTitle) return true;
   return false;
+}
+
+function detachCurrentLink(): void {
+  current = null;
+  if (hasShareLink()) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  deps.setReadOnly?.(false);
+  updateBar();
 }
 
 // ─── status bar (shown while a shared doc is active) ─────────────────────────
@@ -163,11 +196,9 @@ function buildBar(): void {
     if (current.mode === 'editable') void saveInPlace();
     else openModal(); // readonly → fork into a new link
   });
-  bar.querySelector<HTMLButtonElement>('#md-bar-detach')?.addEventListener('click', () => {
-    current = null;
-    history.replaceState(null, '', location.pathname);
-    deps.setReadOnly?.(false);
-    updateBar();
+  bar.querySelector<HTMLButtonElement>('#md-bar-detach')?.addEventListener('click', async () => {
+    detachCurrentLink();
+    await deps.onDetach?.();
     deps.showToast('unlink', t('toast_detached'));
   });
 }
@@ -230,7 +261,7 @@ export function notifyChange(): void {
 }
 
 // ─── create / save ───────────────────────────────────────────────────────────
-async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
+async function persistCreate(mode: PasteMode, ttlDays: number | null): Promise<MyDoc> {
   const body = deps.getValue();
   // The payload stores the EXPLICIT title (possibly empty) so reopening keeps
   // the title field exactly as the author left it. The resolved title (an
@@ -249,7 +280,7 @@ async function persistCreate(mode: PasteMode, ttlDays: number): Promise<MyDoc> {
     mode,
     createdAt: now,
     updatedAt: now,
-    expireAt: now + ttlDays * DAY_MS,
+    expireAt: ttlDays !== null && ttlDays > 0 ? now + ttlDays * DAY_MS : null,
     versions: [],
   };
   store.saveDoc({ ...doc }, body);
@@ -303,6 +334,8 @@ async function loadShared(): Promise<void> {
   const parsed = parseHash();
   if (!parsed) return;
   if (!isFirebaseConfigured) {
+    detachCurrentLink();
+    await deps.onDetach?.();
     deps.showToast('alert-triangle', t('toast_not_configured'));
     return;
   }
@@ -310,6 +343,19 @@ async function loadShared(): Promise<void> {
   try {
     const stored = await fetchPaste(parsed.id);
     if (!stored) {
+      // Fallback: if the server paste expired or was deleted, check if the
+      // active workspace (local or cloud) holds a saved content snapshot.
+      const fallbackDoc = store.getDoc(parsed.id);
+      const snapshot = fallbackDoc?.versions?.[0]?.content;
+      if (typeof snapshot === 'string' && snapshot.length > 0) {
+        deps.setValue(snapshot);
+        deps.setTitle?.(fallbackDoc?.title ?? '');
+        detachCurrentLink();
+        deps.showToast('history', t('toast_restored_from_history'));
+        return;
+      }
+      detachCurrentLink();
+      await deps.onDetach?.();
       deps.showToast('file-x', t('toast_not_found'));
       return;
     }
@@ -323,6 +369,7 @@ async function loadShared(): Promise<void> {
     // saved with a blank title doesn't read as dirty the moment it opens.
     lastSavedTitle = title.trim();
     current = { id: parsed.id, key, mode: stored.mode, title: title || deriveTitle(body) };
+    const existing = store.getDoc(parsed.id);
     store.saveDoc(
       {
         id: parsed.id,
@@ -330,7 +377,7 @@ async function loadShared(): Promise<void> {
         title: current.title,
         url: linkFor(parsed.id, key),
         mode: stored.mode,
-        createdAt: Date.now(),
+        createdAt: existing?.createdAt ?? Date.now(),
         updatedAt: stored.updatedAt?.getTime() ?? Date.now(),
         expireAt: stored.expireAt?.getTime() ?? null,
       },
@@ -343,6 +390,8 @@ async function loadShared(): Promise<void> {
     );
   } catch (err) {
     console.error('[share] load failed:', err);
+    detachCurrentLink();
+    await deps.onDetach?.();
     deps.showToast('lock', t('toast_decrypt_failed'));
   }
 }
@@ -379,6 +428,7 @@ function buildModal(): void {
             <option value="10080" data-i18n="expiry_7d">1 week</option>
             <option value="43200" selected data-i18n="expiry_30d">1 month</option>
             <option value="525600" data-i18n="expiry_365d">1 year</option>
+            <option value="0" data-i18n="expiry_never">Never expires</option>
           </select>
         </div>
         <p class="md-expiry-note">
@@ -425,9 +475,11 @@ function buildModal(): void {
       }
       const checkedMode = modal.querySelector<HTMLInputElement>('input[name="md-mode"]:checked');
       const mode = (checkedMode?.value === 'readonly' ? 'readonly' : 'editable') as PasteMode;
-      // Option values are in minutes so short lifetimes (1 hour) are exact.
+      // Option values are in minutes so short lifetimes (1 hour) are exact. 0 / never means permanent.
       const expirySelect = modal.querySelector<HTMLSelectElement>('#md-expiry');
-      const ttlDays = Number(expirySelect?.value ?? 43200) / (60 * 24);
+      const rawExpiry = expirySelect?.value ?? '43200';
+      const ttlDays =
+        rawExpiry === '0' || rawExpiry === 'never' ? null : Number(rawExpiry) / (60 * 24);
       const createBtn = modal.querySelector<HTMLButtonElement>('#md-modal-create');
       if (createBtn) {
         createBtn.disabled = true;
@@ -481,13 +533,22 @@ function openModal(): void {
 // ─── my docs drawer ───────────────────────────────────────────────────────────
 let drawer: HTMLElement;
 
+function updateDrawerNote(): void {
+  if (!drawer) return;
+  const noteEl = drawer.querySelector<HTMLElement>('#md-drawer-note');
+  if (!noteEl) return;
+  const key = store.isCloud() ? 'mydocs_note_cloud' : 'mydocs_note';
+  noteEl.setAttribute('data-i18n', key);
+  noteEl.textContent = t(key);
+}
+
 function buildDrawer(): void {
   drawer = el('div', 'md-overlay');
   drawer.hidden = true;
   drawer.innerHTML = `
     <div class="md-drawer" role="dialog" aria-modal="true">
       <div class="md-modal-head">
-        <h3><span data-i18n="mydocs_title">My shared docs</span> <span class="md-note" data-i18n="mydocs_note">(saved on this device)</span></h3>
+        <h3><span data-i18n="mydocs_title">My shared docs</span> <span id="md-drawer-note" class="md-note" data-i18n="mydocs_note">(saved on this device)</span></h3>
         <button class="md-icon-btn" id="md-drawer-close"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div class="md-drawer-actions"><button id="md-drawer-clear" class="md-link-btn" data-i18n="mydocs_clear">Clear all</button></div>
@@ -505,13 +566,16 @@ function buildDrawer(): void {
   });
   drawer.querySelector('#md-drawer-close')?.addEventListener('click', close);
   drawer.querySelector('#md-drawer-clear')?.addEventListener('click', () => {
+    const isCloud = store.isCloud();
     store.clearDocs();
     renderDocs();
-    deps.showToast('trash-2', t('toast_docs_cleared'));
+    deps.showToast('trash-2', t(isCloud ? 'toast_docs_cleared_cloud' : 'toast_docs_cleared'));
   });
 }
 
 function renderDocs(): void {
+  if (!drawer) return;
+  updateDrawerNote();
   const list = drawer.querySelector<HTMLUListElement>('#md-docs-list');
   const empty = drawer.querySelector<HTMLElement>('#md-docs-empty');
   if (!list || !empty) return;
@@ -535,8 +599,12 @@ function renderDocItem(doc: MyDoc): HTMLLIElement {
   if (titleEl) titleEl.textContent = doc.title || t('untitled');
   main.addEventListener('click', () => {
     drawer.hidden = true;
-    location.hash = `#${doc.id}.${doc.key}`;
-    void loadShared();
+    const targetHash = `#${doc.id}.${doc.key}`;
+    if (location.hash === targetHash) {
+      void loadShared();
+    } else {
+      location.hash = targetHash;
+    }
   });
 
   const actions = el('div', 'md-doc-actions');
@@ -568,13 +636,196 @@ function openDrawer(): void {
   window.lucide?.createIcons();
 }
 
+// ─── auth UI (Google Sign-In / Sign-Out) ──────────────────────────────────────
+let authWrap: HTMLElement | null = null;
+let authMenuOpen = false;
+let currentAuthUser: AuthUser | null = null;
+let isHandlingAuthAction = false;
+
+function buildAuthUI(): void {
+  const slot = document.getElementById('auth-slot');
+  if (slot) {
+    authWrap = slot;
+    authWrap.classList.add('md-auth-wrap');
+  } else {
+    const mydocsBtn = document.getElementById('mydocs-btn');
+    if (!mydocsBtn || !mydocsBtn.parentElement) return;
+    authWrap = el('div', 'md-auth-wrap');
+    mydocsBtn.insertAdjacentElement('afterend', authWrap);
+  }
+
+  renderAuthUI(null);
+
+  document.addEventListener('click', (e) => {
+    if (!authMenuOpen || !authWrap) return;
+    if (!authWrap.contains(e.target as Node)) {
+      closeAuthMenu();
+    }
+  });
+}
+
+function closeAuthMenu(): void {
+  authMenuOpen = false;
+  const menu = authWrap?.querySelector<HTMLElement>('.md-auth-menu');
+  if (menu) menu.hidden = true;
+}
+
+function renderAuthUI(user: AuthUser | null): void {
+  currentAuthUser = user;
+  if (!authWrap) return;
+  authMenuOpen = false;
+
+  if (!user) {
+    authWrap.innerHTML = `
+      <button id="auth-btn" class="md-auth-btn" type="button" data-i18n="auth_signin" data-i18n-attr="title" title="Sign in with Google">
+        <i data-lucide="user" class="w-4 h-4"></i>
+        <span class="md-auth-label" data-i18n="auth_signin">Sign in</span>
+      </button>`;
+    translateTree(authWrap);
+    window.lucide?.createIcons();
+    authWrap.querySelector<HTMLButtonElement>('#auth-btn')?.addEventListener('click', () => {
+      void handleSignIn();
+    });
+    return;
+  }
+
+  const label = user.email || user.displayName || 'Google User';
+  const initial = (user.displayName || user.email || 'U').trim().charAt(0).toUpperCase();
+
+  authWrap.innerHTML = `
+    <button id="auth-btn" class="md-auth-btn is-authed" type="button" title="">
+      <span class="md-auth-avatar-wrap"></span>
+      <span class="md-auth-cloud-dot" aria-hidden="true"></span>
+    </button>
+    <div class="md-auth-menu" hidden>
+      <div class="md-auth-menu-head">
+        <span class="md-auth-menu-sub" data-i18n="auth_signed_in_as">Signed in as</span>
+        <strong class="md-auth-menu-user"></strong>
+        <span class="md-auth-menu-badge" data-i18n="mydocs_note_cloud">(synced to Google account)</span>
+      </div>
+      <button id="auth-signout-btn" class="md-auth-menu-item" type="button">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+        <span data-i18n="auth_signout">Sign out</span>
+      </button>
+    </div>`;
+
+  const btn = authWrap.querySelector<HTMLButtonElement>('#auth-btn');
+  if (btn) btn.title = `${t('auth_signed_in_as')}: ${label}`;
+
+  const avatarWrap = authWrap.querySelector<HTMLElement>('.md-auth-avatar-wrap');
+  if (avatarWrap) {
+    if (user.photoURL) {
+      const img = document.createElement('img');
+      img.src = user.photoURL;
+      img.alt = initial;
+      img.className = 'md-auth-avatar';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => {
+        avatarWrap.textContent = initial;
+        avatarWrap.classList.add('md-auth-initial');
+      });
+      avatarWrap.appendChild(img);
+    } else {
+      avatarWrap.textContent = initial;
+      avatarWrap.classList.add('md-auth-initial');
+    }
+  }
+
+  const userEl = authWrap.querySelector<HTMLElement>('.md-auth-menu-user');
+  if (userEl) userEl.textContent = label;
+
+  translateTree(authWrap);
+  window.lucide?.createIcons();
+
+  btn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = authWrap?.querySelector<HTMLElement>('.md-auth-menu');
+    if (!menu) return;
+    authMenuOpen = !authMenuOpen;
+    menu.hidden = !authMenuOpen;
+  });
+
+  authWrap.querySelector<HTMLButtonElement>('#auth-signout-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAuthMenu();
+    void handleSignOut();
+  });
+}
+
+async function applyWorkspaceForUser(user: AuthUser | null): Promise<void> {
+  await store.switchUser(user?.uid ?? null);
+  renderAuthUI(user);
+  updateDrawerNote();
+  if (!drawer.hidden) {
+    renderDocs();
+  }
+  await deps.onAuthWorkspaceSwitch?.(user);
+}
+
+async function handleSignIn(): Promise<void> {
+  if (!isFirebaseConfigured) {
+    deps.showToast('alert-triangle', t('toast_not_configured'));
+    return;
+  }
+  if (isHandlingAuthAction) return;
+  isHandlingAuthAction = true;
+  try {
+    const user = await signInWithGoogle();
+    if (!user) return;
+    // Detach any active local shared document before switching to the Cloud workspace
+    detachCurrentLink();
+    await applyWorkspaceForUser(user);
+    deps.showToast('check-circle', t('toast_signed_in'));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+      console.error('[share] Google sign-in failed:', err);
+      deps.showToast('alert-triangle', t('toast_auth_failed'));
+    }
+  } finally {
+    isHandlingAuthAction = false;
+  }
+}
+
+async function handleSignOut(): Promise<void> {
+  if (isHandlingAuthAction) return;
+  isHandlingAuthAction = true;
+  try {
+    // Flush any pending cloud draft while still authenticated
+    await deps.onBeforeSignOut?.();
+    await signOutUser();
+    // Detach any active cloud shared document and switch back to the Local workspace
+    detachCurrentLink();
+    await applyWorkspaceForUser(null);
+    deps.showToast('log-out', t('toast_signed_out'));
+  } catch (err) {
+    console.error('[share] sign-out failed:', err);
+    deps.showToast('alert-triangle', t('toast_auth_failed'));
+  } finally {
+    isHandlingAuthAction = false;
+  }
+}
+
 // ─── init ─────────────────────────────────────────────────────────────────────
 export function initShare(d: ShareDeps): void {
   deps = d;
-  store = createDocStore(d.storageKey);
+  const cloudCollection: CloudDocCollection =
+    d.cloudCollection ?? (d.storageKey.startsWith('paste') ? 'paste_docs' : 'md_docs');
+
+  store = createDualDocStore({
+    localKey: d.storageKey,
+    cloudCollection,
+    onUpdate: () => {
+      if (drawer && !drawer.hidden) {
+        renderDocs();
+      }
+    },
+  });
+
   buildBar();
   buildModal();
   buildDrawer();
+  buildAuthUI();
 
   document.getElementById('share-btn')?.addEventListener('click', openModal);
   document.getElementById('mydocs-btn')?.addEventListener('click', openDrawer);
@@ -582,6 +833,7 @@ export function initShare(d: ShareDeps): void {
     if (e.key === 'Escape') {
       modal.hidden = true;
       drawer.hidden = true;
+      closeAuthMenu();
     }
   });
 
@@ -589,7 +841,11 @@ export function initShare(d: ShareDeps): void {
   window.addEventListener(d.langChangeEvent ?? 'langchange', () => {
     translateTree(bar);
     translateTree(modal);
+    updateDrawerNote();
     translateTree(drawer);
+    if (authWrap) {
+      renderAuthUI(currentAuthUser);
+    }
     updateBar();
   });
 
@@ -600,12 +856,32 @@ export function initShare(d: ShareDeps): void {
     if (hasShareLink()) {
       void loadShared();
     } else if (current) {
-      current = null;
-      deps.setReadOnly?.(false);
-      updateBar();
+      detachCurrentLink();
+      void deps.onDetach?.();
     }
   });
 
   deps.setReadOnly?.(false);
-  if (hasShareLink()) void loadShared();
+
+  // Boot sequence: resolve initial Firebase Auth state, activate the matching
+  // independent workspace (Cloud if signed in, Local if signed out), and then
+  // load the shared link if a `#id.key` hash is present.
+  void (async () => {
+    const initialUser = await waitForAuthInit();
+    await applyWorkspaceForUser(initialUser);
+
+    if (hasShareLink()) {
+      await loadShared();
+    }
+
+    // Listen for external auth state changes (e.g., token revocation or cross-tab sign-in/out).
+    onAuthChange((user) => {
+      if (isHandlingAuthAction) return;
+      const prevUid = currentAuthUser?.uid ?? null;
+      const nextUid = user?.uid ?? null;
+      if (prevUid === nextUid) return;
+      detachCurrentLink();
+      void applyWorkspaceForUser(user);
+    });
+  })();
 }

@@ -34,9 +34,10 @@ service cloud.firestore {
         && request.resource.data.iv.size() <= 32
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
-        && request.resource.data.expireAt is timestamp
-        && request.resource.data.expireAt > request.time
-        && request.resource.data.expireAt < request.time + duration.value(366, 'd');
+        && (request.resource.data.expireAt == null
+            || (request.resource.data.expireAt is timestamp
+                && request.resource.data.expireAt > request.time
+                && request.resource.data.expireAt < request.time + duration.value(366, 'd')));
 
       // Editable pastes: content-only, in-place updates. Everything else
       // (mode, v, createdAt, expireAt) is immutable; readonly pastes reject
@@ -52,8 +53,37 @@ service cloud.firestore {
         && request.resource.data.iv.size() <= 32
         && request.resource.data.updatedAt == request.time;
 
-      // Pastes are never deleted by clients (TTL policy reclaims them).
+      // Pastes are never deleted by clients (TTL policy reclaims expiring ones;
+      // null expireAt pastes are permanent).
       allow delete: if false;
+    }
+
+    // Authenticated Google Account Workspace (Dual Independent Storage):
+    // Strict owner isolation — only the signed-in owner (`request.auth.uid == uid`)
+    // can read, write, or delete their own shared doc history and working drafts.
+    match /users/{uid}/md_docs/{docId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.id is string
+        && request.resource.data.url is string;
+    }
+
+    match /users/{uid}/paste_docs/{docId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.id is string
+        && request.resource.data.url is string;
+    }
+
+    match /users/{uid}/drafts/{toolId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && toolId in ['c2md', 'paste']
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 900000;
     }
 
     // Everything else is denied by default.

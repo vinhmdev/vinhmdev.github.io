@@ -56,7 +56,7 @@ export interface StoredPaste {
 /** Store a new encrypted paste and return its generated id. */
 export async function createPaste(
   enc: Encrypted,
-  opts: { ttlDays: number; mode: PasteMode }
+  opts: { ttlDays: number | null; mode: PasteMode }
 ): Promise<string> {
   const ref = await addDoc(collection(getDb(), COLLECTION), {
     ct: enc.ct,
@@ -65,7 +65,10 @@ export async function createPaste(
     mode: opts.mode,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    expireAt: Timestamp.fromMillis(Date.now() + opts.ttlDays * DAY_MS),
+    expireAt:
+      opts.ttlDays !== null && opts.ttlDays > 0
+        ? Timestamp.fromMillis(Date.now() + opts.ttlDays * DAY_MS)
+        : null,
   });
   return ref.id;
 }

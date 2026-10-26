@@ -50,6 +50,7 @@
   "expiry_7d": "1 week",
   "expiry_30d": "1 month",
   "expiry_365d": "1 year",
+  "expiry_never": "Never expires",
   "share_expiry_note": "Once shared, it stays live until it expires and can't be deleted manually — pick a lifetime that fits. For sensitive data, choose a short one (e.g. 1 hour).",
   "share_create": "Encrypt & create link",
   "share_result_hint": "Anyone with this link can open it. The key is in the link — share over a trusted channel.",
@@ -81,5 +82,14 @@
   "toast_save_failed": "Could not save. Please try again.",
   "toast_copy_failed": "Copy failed — select and copy manually",
   "toast_detached": "Detached from the shared link",
-  "toast_docs_cleared": "Local doc history cleared"
+  "toast_docs_cleared": "Local doc history cleared",
+  "toast_docs_cleared_cloud": "Cloud doc history cleared",
+  "toast_restored_from_history": "Link expired — restored your saved version from history",
+  "auth_signin": "Sign in",
+  "auth_signout": "Sign out",
+  "auth_signed_in_as": "Signed in as",
+  "mydocs_note_cloud": "(synced to Google account)",
+  "toast_signed_in": "Signed in — switched to Google Cloud workspace",
+  "toast_signed_out": "Signed out — switched to local workspace",
+  "toast_auth_failed": "Google sign-in failed. Please try again."
 }

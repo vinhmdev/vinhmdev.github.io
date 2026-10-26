@@ -39,7 +39,13 @@ import {
 } from './preview';
 import { initExportPDF } from './export-pdf';
 import { initExportDocx } from './export-docx';
-import { initShare, notifyChange as shareNotify, hasShareLink } from '@shared/paste-share/share';
+import {
+  initShare,
+  notifyChange as shareNotify,
+  hasShareLink,
+  hasActiveSharedDoc,
+} from '@shared/paste-share/share';
+import { createDualDraftStore } from '@shared/paste-share/draft-store';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
@@ -49,6 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
   createEditor(document.getElementById('codemirror-host') as HTMLDivElement);
 
   const settings = initSettings();
+  const draftStore = createDualDraftStore('c2md');
+  let isProgrammaticSet = false;
+
+  function setProgrammaticValue(val: string): void {
+    isProgrammaticSet = true;
+    try {
+      setValue(val);
+      if (!val) {
+        getRenderer()?.clear();
+        updateEmptyStates('');
+      }
+    } finally {
+      isProgrammaticSet = false;
+    }
+  }
 
   const previewHostEl = document.getElementById('preview-host') as HTMLDivElement;
   const preview = initPreview(previewHostEl);
@@ -89,7 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Live preview ────────────────────────────────────────────────────────────
   onUpdate(async (val) => {
     updateEmptyStates(val);
-    localStorage.setItem('clipboard2markdown_content', val);
+    if (!isProgrammaticSet && !hasActiveSharedDoc()) {
+      draftStore.save({ content: val });
+    }
     shareNotify(); // refresh the share bar's unsaved indicator
     await renderPreview(val, getRenderOpts());
   });
@@ -269,11 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Clear ───────────────────────────────────────────────────────────────────
   document.getElementById('clear-btn')?.addEventListener('click', () => {
-    setValue('');
-    getRenderer()?.clear();
-    emptyState.style.opacity = '1';
-    previewEmptyState.style.opacity = '1';
-    localStorage.removeItem('clipboard2markdown_content');
+    setProgrammaticValue('');
+    if (!hasActiveSharedDoc()) {
+      void draftStore.clear();
+    }
     showToast('trash', t('toast_cleared'));
   });
 
@@ -295,21 +317,26 @@ document.addEventListener('DOMContentLoaded', () => {
   initI18n();
   syncPreviewTheme(isDark()); // set initial preview color mode
 
-  // Share layer (encrypt + share link, open shared docs, local history).
+  // Share layer (encrypt + share link, open shared docs, Dual Local/Cloud history).
   initShare({
     getValue,
-    setValue,
+    setValue: setProgrammaticValue,
     showToast,
     t,
     linkBase: '/clipboard2markdown/',
     storageKey: 'md:docs',
+    cloudCollection: 'md_docs',
     setReadOnly,
+    onBeforeSignOut: () => draftStore.flush(),
+    onAuthWorkspaceSwitch: async (user) => {
+      const draft = await draftStore.switchUser(user?.uid ?? null);
+      if (!hasShareLink()) {
+        setProgrammaticValue(draft.content);
+      }
+    },
+    onDetach: async () => {
+      const draft = await draftStore.load();
+      setProgrammaticValue(draft.content);
+    },
   });
-
-  // Restore saved content (this triggers onUpdate automatically). Skip when a
-  // share link is present — initShare() loads that doc into the editor instead.
-  const savedContent = localStorage.getItem('clipboard2markdown_content');
-  if (savedContent && !hasShareLink()) {
-    setValue(savedContent);
-  }
 });
