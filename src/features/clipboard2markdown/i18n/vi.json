@@ -91,6 +91,7 @@
   "toast_loaded_owner_edit": "Đã tải (chỉ chủ sở hữu sửa) — bạn là chủ sở hữu nên có thể sửa và lưu.",
   "toast_loaded_owner_view": "Đã tải (chỉ chủ sở hữu mới được sửa — chế độ chỉ xem). Sửa sẽ tạo link mới.",
   "toast_loaded_readonly": "Đã tải (chỉ xem). Sửa sẽ tạo một link mới.",
+  "toast_readonly_hint": "Tài liệu đang ở chế độ chỉ xem. Bấm 'Tách khỏi link' hoặc 'Tách bản để sửa'.",
   "toast_share_created": "Đã tạo link mã hóa",
   "toast_saved": "Đã lưu vào link",
   "toast_save_failed": "Không lưu được. Vui lòng thử lại.",

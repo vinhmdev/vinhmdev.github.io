@@ -198,7 +198,7 @@ export function createEditor(parent: HTMLElement): EditorView {
             ? clipboard.getData('text/plain')
             : '';
           const result = pasteCallback(html, plain);
-          if (result === null) return false;
+          if (result === null || view.state.readOnly) return false;
 
           e.preventDefault();
           view.dispatch(view.state.replaceSelection(result));

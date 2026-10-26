@@ -91,6 +91,7 @@
   "toast_loaded_owner_edit": "Loaded (owner-only) — signed in as owner, you can edit and save.",
   "toast_loaded_owner_view": "Loaded (owner-only — view only). Editing will fork a new link.",
   "toast_loaded_readonly": "Loaded (read-only). Editing will fork a new link.",
+  "toast_readonly_hint": "This document is read-only. Detach from link or fork to edit.",
   "toast_share_created": "Encrypted link created",
   "toast_saved": "Saved to the link",
   "toast_save_failed": "Could not save. Please try again.",

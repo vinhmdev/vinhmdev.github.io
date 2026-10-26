@@ -57,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const settings = initSettings();
   const draftStore = createDualDraftStore('c2md');
   let isProgrammaticSet = false;
+  let isEditorReadOnly = false;
+
+  function handleSetReadOnly(ro: boolean): void {
+    isEditorReadOnly = ro;
+    setReadOnly(ro);
+  }
 
   function setProgrammaticValue(val: string): void {
     isProgrammaticSet = true;
@@ -96,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Paste handler ───────────────────────────────────────────────────────────
   onPaste((html, plain) => {
+    if (isEditorReadOnly) {
+      showToast('lock', t('toast_readonly_hint'));
+      return null;
+    }
     if (settings.get('autoConvert') && html) {
       showToast('clipboard', t('toast_html_success'));
       return convert(html);
@@ -213,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('format-md-btn')?.addEventListener('click', async () => {
+    if (isEditorReadOnly) return showToast('lock', t('toast_readonly_hint'));
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
     showToast('loader', t('toast_formatting'));
@@ -242,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Compact Markdown ──────────────────────────────────────────────────────────
   document.getElementById('compact-md-btn')?.addEventListener('click', () => {
+    if (isEditorReadOnly) return showToast('lock', t('toast_readonly_hint'));
     const text = getValue();
     if (!text) return showToast('alert-triangle', t('toast_nothing_to_copy'));
 
@@ -292,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Clear ───────────────────────────────────────────────────────────────────
   document.getElementById('clear-btn')?.addEventListener('click', () => {
+    if (isEditorReadOnly) return showToast('lock', t('toast_readonly_hint'));
     setProgrammaticValue('');
     if (!hasActiveSharedDoc()) {
       void draftStore.clear();
@@ -326,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     linkBase: '/clipboard2markdown/',
     storageKey: 'md:docs',
     cloudCollection: 'md_docs',
-    setReadOnly,
+    setReadOnly: handleSetReadOnly,
     onBeforeSignOut: () => draftStore.flush(),
     onAuthWorkspaceSwitch: async (user) => {
       const draft = await draftStore.switchUser(user?.uid ?? null);
