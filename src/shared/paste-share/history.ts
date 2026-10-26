@@ -192,7 +192,8 @@ export function createCloudDocStore(
             key: typeof data.key === 'string' ? data.key : '',
             title: typeof data.title === 'string' ? data.title : '',
             url: typeof data.url === 'string' ? data.url : '',
-            mode: data.mode === 'readonly' ? 'readonly' : 'editable',
+            mode:
+              data.mode === 'readonly' ? 'readonly' : data.mode === 'owner' ? 'owner' : 'editable',
             createdAt: typeof data.createdAt === 'number' ? data.createdAt : now,
             updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : now,
             expireAt: typeof data.expireAt === 'number' ? data.expireAt : null,

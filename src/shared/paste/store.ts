@@ -6,10 +6,11 @@
  *
  * A paste carries a `mode`:
  *   - 'readonly'  : immutable once created (paste.sh-style share).
+ *   - 'owner'     : only the signed-in creator (`ownerUid`) can update in place.
  *   - 'editable'  : anyone with the link can update the content in place.
  * The mode is a plaintext field so firestore.rules can enforce it: readonly
- * pastes reject updates at the database, editable ones allow content-only
- * updates. Access is create/get/update(if editable) — never list or delete.
+ * pastes reject updates at the database, owner pastes require matching auth,
+ * and editable ones allow content-only updates.
  */
 import {
   getFirestore,
@@ -28,7 +29,7 @@ import { getCurrentUser } from '@shared/firebase/auth';
 import { isFirebaseConfigured } from '@shared/firebase/config';
 import type { Encrypted } from './crypto';
 
-export type PasteMode = 'editable' | 'readonly';
+export type PasteMode = 'editable' | 'owner' | 'readonly';
 
 const COLLECTION = 'pastes';
 const SCHEMA_VERSION = 2;
@@ -123,9 +124,12 @@ export async function fetchPaste(id: string): Promise<StoredPaste | null> {
   // TTL deletion can lag hours behind expiry, so honor it client-side too.
   if (expireAt && expireAt.getTime() <= Date.now()) return null;
 
+  const mode: PasteMode =
+    data.mode === 'editable' ? 'editable' : data.mode === 'owner' ? 'owner' : 'readonly';
+
   return {
     enc: { ct: data.ct, iv: data.iv },
-    mode: data.mode === 'editable' ? 'editable' : 'readonly',
+    mode,
     expireAt,
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : null,
     ownerUid: typeof data.ownerUid === 'string' ? data.ownerUid : null,

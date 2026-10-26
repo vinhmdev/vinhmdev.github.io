@@ -181,6 +181,71 @@ function isDirty(): boolean {
   return false;
 }
 
+/** True when the current viewer has write permission to save in place on `doc`. */
+function canCurrentUserEdit(doc: { mode: PasteMode; ownerUid: string | null }): boolean {
+  if (doc.mode === 'editable') return true;
+  if (doc.mode === 'owner') {
+    return Boolean(currentAuthUser?.uid && doc.ownerUid && doc.ownerUid === currentAuthUser.uid);
+  }
+  return false;
+}
+
+// ─── header mode indicator pill (#md-mode-badge) ─────────────────────────────
+let modeBadge: HTMLElement | null = null;
+
+function buildModeIndicator(): void {
+  const shareBtn = document.getElementById('share-btn');
+  if (!shareBtn || !shareBtn.parentElement) return;
+  const existing = document.getElementById('md-mode-badge');
+  if (existing) {
+    modeBadge = existing;
+  } else {
+    modeBadge = el('span', 'md-mode-pill');
+    modeBadge.id = 'md-mode-badge';
+    shareBtn.parentElement.insertBefore(modeBadge, shareBtn);
+  }
+  updateModeIndicator();
+}
+
+function updateModeIndicator(): void {
+  if (!modeBadge) return;
+  let variant = 'is-draft-local';
+  let icon = 'hard-drive';
+  let labelKey = 'pill_draft_local';
+
+  if (!current) {
+    if (store.isCloud()) {
+      variant = 'is-draft-cloud';
+      icon = 'cloud';
+      labelKey = 'pill_draft_cloud';
+    }
+  } else if (current.mode === 'editable') {
+    variant = 'is-editable';
+    icon = 'globe';
+    labelKey = 'pill_editable';
+  } else if (current.mode === 'owner') {
+    if (canCurrentUserEdit(current)) {
+      variant = 'is-owner-edit';
+      icon = 'user-check';
+      labelKey = 'pill_owner_edit';
+    } else {
+      variant = 'is-owner-view';
+      icon = 'eye';
+      labelKey = 'pill_owner_view';
+    }
+  } else {
+    variant = 'is-readonly';
+    icon = 'lock';
+    labelKey = 'pill_readonly';
+  }
+
+  const text = t(labelKey);
+  modeBadge.className = `md-mode-pill ${variant}`;
+  modeBadge.title = text;
+  modeBadge.innerHTML = `<i data-lucide="${icon}" class="w-3.5 h-3.5"></i><span class="md-mode-pill-label">${text}</span>`;
+  window.lucide?.createIcons();
+}
+
 function detachCurrentLink(): void {
   current = null;
   if (hasShareLink()) {
@@ -188,6 +253,7 @@ function detachCurrentLink(): void {
   }
   deps.setReadOnly?.(false);
   updateBar();
+  updateModeIndicator();
 }
 
 async function extendSharedDocExpiry(id: string, rawMinutes: string): Promise<void> {
@@ -270,7 +336,7 @@ function buildBar(): void {
   bar.hidden = true;
   bar.innerHTML = `
     <span class="md-sharebar-info">
-      <i data-lucide="link" class="w-4 h-4"></i>
+      <i id="md-bar-icon" data-lucide="link" class="w-4 h-4"></i>
       <span id="md-bar-mode"></span>
       <span id="md-bar-expiry" class="md-sharebar-expiry"></span>
       <span id="md-bar-state" class="md-sharebar-state"></span>
@@ -317,8 +383,8 @@ function buildBar(): void {
   });
   bar.querySelector<HTMLButtonElement>('#md-bar-primary')?.addEventListener('click', () => {
     if (!current) return;
-    if (current.mode === 'editable') void saveInPlace();
-    else openModal(); // readonly → fork into a new link
+    if (canCurrentUserEdit(current)) void saveInPlace();
+    else openModal(); // view-only / readonly → fork into a new link
   });
   bar.querySelector<HTMLButtonElement>('#md-bar-detach')?.addEventListener('click', async () => {
     detachCurrentLink();
@@ -344,15 +410,20 @@ function syncBarSpacing(): void {
 }
 
 function updateBar(): void {
+  updateModeIndicator();
   if (!current) {
     bar.hidden = true;
     syncBarSpacing();
     return;
   }
   bar.hidden = false;
+  const canEdit = canCurrentUserEdit(current);
   const modeEl = bar.querySelector<HTMLElement>('#md-bar-mode');
   if (modeEl) {
-    modeEl.textContent = t(current.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
+    let modeKey = 'bar_readonly';
+    if (current.mode === 'editable') modeKey = 'bar_editable';
+    else if (current.mode === 'owner') modeKey = canEdit ? 'bar_owner_edit' : 'bar_owner_view';
+    modeEl.textContent = t(modeKey);
   }
 
   const expiryEl = bar.querySelector<HTMLElement>('#md-bar-expiry');
@@ -364,9 +435,8 @@ function updateBar(): void {
   const dirty = isDirty();
   const stateEl = bar.querySelector<HTMLElement>('#md-bar-state');
   if (stateEl) {
-    stateEl.textContent =
-      current.mode === 'editable' ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
-    stateEl.classList.toggle('is-dirty', current.mode === 'editable' && dirty);
+    stateEl.textContent = canEdit ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
+    stateEl.classList.toggle('is-dirty', canEdit && dirty);
   }
 
   const canManageCloudDoc =
@@ -391,11 +461,10 @@ function updateBar(): void {
 
   const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
   if (primary) {
-    primary.innerHTML =
-      current.mode === 'editable'
-        ? `<i data-lucide="save" class="w-4 h-4"></i><span>${t('bar_save')}</span>`
-        : `<i data-lucide="git-fork" class="w-4 h-4"></i><span>${t('bar_fork')}</span>`;
-    primary.disabled = current.mode === 'editable' && !dirty;
+    primary.innerHTML = canEdit
+      ? `<i data-lucide="save" class="w-4 h-4"></i><span>${t('bar_save')}</span>`
+      : `<i data-lucide="git-fork" class="w-4 h-4"></i><span>${t('bar_fork')}</span>`;
+    primary.disabled = canEdit && !dirty;
   }
   const detachBtn = bar.querySelector<HTMLButtonElement>('#md-bar-detach');
   if (detachBtn) {
@@ -445,14 +514,16 @@ async function persistCreate(mode: PasteMode, ttlDays: number | null): Promise<M
   };
   lastSaved = body;
   lastSavedTitle = explicitTitle;
-  if (mode === 'editable') history.replaceState(null, '', `#${id}.${keyToString(key)}`);
-  deps.setReadOnly?.(mode === 'readonly');
+  if (mode === 'editable' || mode === 'owner') {
+    history.replaceState(null, '', `#${id}.${keyToString(key)}`);
+  }
+  deps.setReadOnly?.(!canCurrentUserEdit(current));
   updateBar();
   return doc;
 }
 
 async function saveInPlace(): Promise<void> {
-  if (!current) return;
+  if (!current || !canCurrentUserEdit(current)) return;
   const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
   if (primary) primary.disabled = true;
   try {
@@ -476,7 +547,7 @@ async function saveInPlace(): Promise<void> {
           key: keyToString(current.key),
           title: historyTitle,
           url: linkFor(current.id, current.key),
-          mode: 'editable',
+          mode: current.mode,
           createdAt: existing?.createdAt ?? Date.now(),
           updatedAt: Date.now(),
           expireAt: existing?.expireAt ?? current.expireAt ?? null,
@@ -527,7 +598,6 @@ async function loadShared(): Promise<void> {
     const { title, body } = decodePayload(await decrypt(stored.enc, key));
     deps.setValue(body);
     deps.setTitle?.(title);
-    deps.setReadOnly?.(stored.mode === 'readonly');
     lastSaved = body;
     // Match the (possibly empty) loaded title, not a derived one, so a paste
     // saved with a blank title doesn't read as dirty the moment it opens.
@@ -541,6 +611,8 @@ async function loadShared(): Promise<void> {
       expireAt: resolvedExpireAt,
       ownerUid: stored.ownerUid,
     };
+    const canEdit = canCurrentUserEdit(current);
+    deps.setReadOnly?.(!canEdit);
     const existing = store.getDoc(parsed.id);
     const canSaveToActiveStore =
       !store.isCloud() ||
@@ -562,10 +634,12 @@ async function loadShared(): Promise<void> {
       );
     }
     updateBar();
-    deps.showToast(
-      'check-circle',
-      t(stored.mode === 'editable' ? 'toast_loaded_editable' : 'toast_loaded_readonly')
-    );
+    let loadedToastKey = 'toast_loaded_readonly';
+    if (stored.mode === 'editable') loadedToastKey = 'toast_loaded_editable';
+    else if (stored.mode === 'owner') {
+      loadedToastKey = canEdit ? 'toast_loaded_owner_edit' : 'toast_loaded_owner_view';
+    }
+    deps.showToast('check-circle', t(loadedToastKey));
   } catch (err) {
     console.error('[share] load failed:', err);
     detachCurrentLink();
@@ -579,11 +653,31 @@ let modal: HTMLElement;
 
 function updateModalNote(): void {
   if (!modal) return;
+  const isCloud = store.isCloud();
   const noteText = modal.querySelector<HTMLElement>('#md-expiry-note-text');
-  if (!noteText) return;
-  const key = store.isCloud() ? 'share_expiry_note_cloud' : 'share_expiry_note';
-  noteText.setAttribute('data-i18n', key);
-  noteText.textContent = t(key);
+  if (noteText) {
+    const key = isCloud ? 'share_expiry_note_cloud' : 'share_expiry_note';
+    noteText.setAttribute('data-i18n', key);
+    noteText.textContent = t(key);
+  }
+  const ownerRadioLabel = modal.querySelector<HTMLElement>('#md-mode-owner-label');
+  const ownerRadioInput = modal.querySelector<HTMLInputElement>(
+    'input[name="md-mode"][value="owner"]'
+  );
+  const ownerLoginHint = modal.querySelector<HTMLElement>('#md-mode-owner-hint');
+  if (ownerRadioLabel && ownerRadioInput) {
+    ownerRadioInput.disabled = !isCloud;
+    ownerRadioLabel.classList.toggle('is-disabled', !isCloud);
+    if (!isCloud && ownerRadioInput.checked) {
+      const editableInput = modal.querySelector<HTMLInputElement>(
+        'input[name="md-mode"][value="editable"]'
+      );
+      if (editableInput) editableInput.checked = true;
+    }
+  }
+  if (ownerLoginHint) {
+    ownerLoginHint.hidden = isCloud;
+  }
 }
 
 function buildModal(): void {
@@ -601,6 +695,16 @@ function buildModal(): void {
         <label class="md-radio">
           <input type="radio" name="md-mode" value="editable" checked />
           <span><b data-i18n="mode_editable">Anyone with the link can edit</b><small data-i18n="mode_editable_desc">Opening the link and saving updates this same link.</small></span>
+        </label>
+        <label id="md-mode-owner-label" class="md-radio">
+          <input type="radio" name="md-mode" value="owner" />
+          <span>
+            <b class="md-radio-title-row">
+              <span data-i18n="mode_owner">Only I can edit (others read-only)</span>
+              <em id="md-mode-owner-hint" class="md-radio-hint" data-i18n="mode_owner_login_hint">(Sign in required)</em>
+            </b>
+            <small data-i18n="mode_owner_desc">Anyone with the link can view; only your signed-in Google account can save changes.</small>
+          </span>
         </label>
         <label class="md-radio">
           <input type="radio" name="md-mode" value="readonly" />
@@ -639,6 +743,7 @@ function buildModal(): void {
     </div>`;
   document.body.appendChild(modal);
   translateTree(modal);
+  updateModalNote();
 
   const close = (): void => {
     modal.hidden = true;
@@ -661,7 +766,12 @@ function buildModal(): void {
         return;
       }
       const checkedMode = modal.querySelector<HTMLInputElement>('input[name="md-mode"]:checked');
-      const mode = (checkedMode?.value === 'readonly' ? 'readonly' : 'editable') as PasteMode;
+      const mode: PasteMode =
+        checkedMode?.value === 'readonly'
+          ? 'readonly'
+          : checkedMode?.value === 'owner' && store.isCloud()
+            ? 'owner'
+            : 'editable';
       // Option values are in minutes so short lifetimes (1 hour) are exact. 0 / never means permanent.
       const expirySelect = modal.querySelector<HTMLSelectElement>('#md-expiry');
       const rawExpiry = expirySelect?.value ?? '43200';
@@ -784,7 +894,9 @@ function renderDocs(): void {
 function renderDocItem(doc: MyDoc): HTMLLIElement {
   const li = el('li', 'md-doc-item');
   const isCloud = store.isCloud();
-  const modeLabel = t(doc.mode === 'editable' ? 'bar_editable' : 'bar_readonly');
+  const modeLabel = t(
+    doc.mode === 'editable' ? 'bar_editable' : doc.mode === 'owner' ? 'badge_owner' : 'bar_readonly'
+  );
   const when = new Date(doc.updatedAt).toLocaleString(locale(), {
     dateStyle: 'short',
     timeStyle: 'short',
@@ -986,6 +1098,10 @@ async function applyWorkspaceForUser(user: AuthUser | null): Promise<void> {
   if (!drawer.hidden) {
     renderDocs();
   }
+  if (current) {
+    deps.setReadOnly?.(!canCurrentUserEdit(current));
+  }
+  updateBar();
   await deps.onAuthWorkspaceSwitch?.(user);
 }
 
@@ -1057,6 +1173,7 @@ export function initShare(d: ShareDeps): void {
     },
   });
 
+  buildModeIndicator();
   buildBar();
   buildModal();
   buildDrawer();
@@ -1075,8 +1192,8 @@ export function initShare(d: ShareDeps): void {
   // Re-translate all JS-built UI when the language switches.
   window.addEventListener(d.langChangeEvent ?? 'langchange', () => {
     translateTree(bar);
-    updateModalNote();
     translateTree(modal);
+    updateModalNote();
     updateDrawerNote();
     translateTree(drawer);
     if (!drawer.hidden) {

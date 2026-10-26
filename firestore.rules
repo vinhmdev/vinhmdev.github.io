@@ -7,6 +7,8 @@ rules_version = '2';
 // is to stop abuse (cap size, forbid enumeration) and to enforce the paste's
 // share mode:
 //   - mode 'readonly' : immutable once created.
+//   - mode 'owner'    : content can be overwritten in place only by the
+//                       signed-in creator (`ownerUid == request.auth.uid`).
 //   - mode 'editable' : content can be overwritten in place by anyone with the
 //                       link (there is no auth; the link IS the capability).
 //
@@ -23,11 +25,13 @@ service cloud.firestore {
 
       // Create-only, strict shape + size validation.
       // Signed-in creators may attach their `ownerUid` so they can later
-      // extend expiration or revoke/delete the shared paste.
+      // extend expiration, revoke/delete the shared paste, or use `owner` mode.
       allow create: if
         request.resource.data.keys().hasOnly(['ct', 'iv', 'v', 'mode', 'createdAt', 'updatedAt', 'expireAt', 'ownerUid'])
         && request.resource.data.v == 2
-        && request.resource.data.mode in ['editable', 'readonly']
+        && request.resource.data.mode in ['editable', 'owner', 'readonly']
+        && (request.resource.data.mode != 'owner'
+            || (request.auth != null && request.resource.data.ownerUid == request.auth.uid))
         && request.resource.data.ct is string
         && request.resource.data.ct.size() > 0
         && request.resource.data.ct.size() <= 900000          // ~900 KB ciphertext cap (Firestore doc limit is 1 MiB)
@@ -45,11 +49,15 @@ service cloud.firestore {
             || (request.auth != null && request.resource.data.ownerUid == request.auth.uid));
 
       // Updates allowed in two cases:
-      // 1. Editable pastes: content-only, in-place updates by anyone with the link.
+      // 1. Editable pastes (anyone with the link) or owner-only pastes
+      //    (signed-in owner only): content-only, in-place updates.
       // 2. Signed-in owner: extending or updating `expireAt` (and `updatedAt`)
-      //    regardless of whether the paste is editable or readonly.
+      //    regardless of paste mode.
       allow update: if
-        (resource.data.mode == 'editable'
+        ((resource.data.mode == 'editable'
+            || (resource.data.mode == 'owner'
+                && request.auth != null
+                && resource.data.ownerUid == request.auth.uid))
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ct', 'iv', 'updatedAt'])
           && request.resource.data.ct is string
           && request.resource.data.ct.size() > 0
