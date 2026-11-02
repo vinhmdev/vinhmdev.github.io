@@ -197,6 +197,107 @@ export function compileJet2Kernel(
         break;
       }
 
+      case 'Cot': {
+        const a = childIds[0];
+        statements.push(
+          `const s_${id} = Math.sin(v${a}), c_${id} = Math.cos(v${a}), v${id} = s_${id} === 0.0 ? NaN : c_${id} / s_${id}, csc2_${id} = 1.0 / (s_${id} * s_${id}); ` +
+            `const d1_${id} = -csc2_${id} * d1_${a}, d2_${id} = -csc2_${id} * d2_${a} + 2.0 * csc2_${id} * v${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (s_${id} >= 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = Math.sin(v${a}) === 0.0 ? NaN : Math.cos(v${a}) / Math.sin(v${a});`);
+        break;
+      }
+
+      case 'Sec': {
+        const a = childIds[0];
+        statements.push(
+          `const c_${id} = Math.cos(v${a}), v${id} = c_${id} === 0.0 ? NaN : 1.0 / c_${id}, t_${id} = Math.tan(v${a}); ` +
+            `const fp_${id} = v${id} * t_${id}, fpp_${id} = v${id} * (t_${id} * t_${id} + v${id} * v${id}); ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (c_${id} >= 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = Math.cos(v${a}) === 0.0 ? NaN : 1.0 / Math.cos(v${a});`);
+        break;
+      }
+
+      case 'Csc': {
+        const a = childIds[0];
+        statements.push(
+          `const s_${id} = Math.sin(v${a}), v${id} = s_${id} === 0.0 ? NaN : 1.0 / s_${id}, cot_${id} = Math.cos(v${a}) / s_${id}; ` +
+            `const fp_${id} = -v${id} * cot_${id}, fpp_${id} = v${id} * (cot_${id} * cot_${id} + v${id} * v${id}); ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (s_${id} >= 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = Math.sin(v${a}) === 0.0 ? NaN : 1.0 / Math.sin(v${a});`);
+        break;
+      }
+
+      case 'Asin': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.abs(v${a}) <= 1.0 ? Math.asin(v${a}) : NaN; ` +
+            `const q_${id} = 1.0 - v${a} * v${a}, fp_${id} = q_${id} > 1e-15 ? 1.0 / Math.sqrt(q_${id}) : NaN; ` +
+            `const fpp_${id} = q_${id} > 1e-15 ? v${a} / (q_${id} * Math.sqrt(q_${id})) : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = Math.abs(v${a}) <= 1.0 ? Math.asin(v${a}) : NaN;`);
+        break;
+      }
+
+      case 'Acos': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.abs(v${a}) <= 1.0 ? Math.acos(v${a}) : NaN; ` +
+            `const q_${id} = 1.0 - v${a} * v${a}, fp_${id} = q_${id} > 1e-15 ? -1.0 / Math.sqrt(q_${id}) : NaN; ` +
+            `const fpp_${id} = q_${id} > 1e-15 ? -v${a} / (q_${id} * Math.sqrt(q_${id})) : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = Math.abs(v${a}) <= 1.0 ? Math.acos(v${a}) : NaN;`);
+        break;
+      }
+
+      case 'Atan': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.atan(v${a}), fp_${id} = 1.0 / (1.0 + v${a} * v${a}), fpp_${id} = -2.0 * v${a} * fp_${id} * fp_${id}; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
+        );
+        scalarStatements.push(`const v${id} = Math.atan(v${a});`);
+        break;
+      }
+
+      case 'Sinh': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.sinh(v${a}), ch_${id} = Math.cosh(v${a}); ` +
+            `const d1_${id} = ch_${id} * d1_${a}, d2_${id} = ch_${id} * d2_${a} + v${id} * d1_${a} * d1_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
+        );
+        scalarStatements.push(`const v${id} = Math.sinh(v${a});`);
+        break;
+      }
+
+      case 'Cosh': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.cosh(v${a}), sh_${id} = Math.sinh(v${a}); ` +
+            `const d1_${id} = sh_${id} * d1_${a}, d2_${id} = sh_${id} * d2_${a} + v${id} * d1_${a} * d1_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
+        );
+        scalarStatements.push(`const v${id} = Math.cosh(v${a});`);
+        break;
+      }
+
+      case 'Sinc': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = rt.sinc(v${a}), fp_${id} = rt.sincDeriv1(v${a}), fpp_${id} = rt.sincDeriv2(v${a}); ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
+        );
+        scalarStatements.push(`const v${id} = rt.sinc(v${a});`);
+        break;
+      }
+
       case 'Exp': {
         const a = childIds[0];
         statements.push(
@@ -218,6 +319,34 @@ export function compileJet2Kernel(
         break;
       }
 
+      case 'Log10': {
+        const a = childIds[0];
+        const invLn10 = 1.0 / Math.LN10;
+        statements.push(
+          `const v${id} = v${a} > 0.0 ? Math.log10(v${a}) : NaN; ` +
+            `const fp_${id} = v${a} > 0.0 ? ${invLn10} / v${a} : NaN; ` +
+            `const fpp_${id} = v${a} > 0.0 ? -${invLn10} / (v${a} * v${a}) : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = v${a} > 0.0 ? Math.log10(v${a}) : NaN;`);
+        break;
+      }
+
+      case 'Log2': {
+        const a = childIds[0];
+        const invLn2 = 1.0 / Math.LN2;
+        statements.push(
+          `const v${id} = v${a} > 0.0 ? Math.log2(v${a}) : NaN; ` +
+            `const fp_${id} = v${a} > 0.0 ? ${invLn2} / v${a} : NaN; ` +
+            `const fpp_${id} = v${a} > 0.0 ? -${invLn2} / (v${a} * v${a}) : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(`const v${id} = v${a} > 0.0 ? Math.log2(v${a}) : NaN;`);
+        break;
+      }
+
       case 'Sqrt': {
         const a = childIds[0];
         statements.push(
@@ -228,6 +357,19 @@ export function compileJet2Kernel(
             `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = v${a} >= 0.0 ? Math.sqrt(v${a}) : NaN;`);
+        break;
+      }
+
+      case 'Cbrt': {
+        const a = childIds[0];
+        statements.push(
+          `const v${id} = Math.cbrt(v${a}); ` +
+            `const fp_${id} = Math.abs(v${id}) > 1e-12 ? 1.0 / (3.0 * v${id} * v${id}) : NaN; ` +
+            `const fpp_${id} = Math.abs(v${id}) > 1e-12 ? -2.0 / (9.0 * v${a} * v${id} * v${id}) : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a};`
+        );
+        scalarStatements.push(`const v${id} = Math.cbrt(v${a});`);
         break;
       }
 

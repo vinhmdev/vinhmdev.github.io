@@ -84,9 +84,24 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
       return ['Divide', diffNode(u, v), u];
     }
 
+    case 'Log10': {
+      const u = args[0];
+      return ['Divide', diffNode(u, v), ['Multiply', ['Ln', 10], u]];
+    }
+
+    case 'Log2': {
+      const u = args[0];
+      return ['Divide', diffNode(u, v), ['Multiply', ['Ln', 2], u]];
+    }
+
     case 'Sqrt': {
       const u = args[0];
       return ['Divide', diffNode(u, v), ['Multiply', 2, ['Sqrt', u]]];
+    }
+
+    case 'Cbrt': {
+      const u = args[0];
+      return ['Divide', diffNode(u, v), ['Multiply', 3, ['Power', ['Cbrt', u], 2]]];
     }
 
     case 'Sin': {
@@ -102,6 +117,55 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
     case 'Tan': {
       const u = args[0];
       return ['Divide', diffNode(u, v), ['Power', ['Cos', u], 2]];
+    }
+
+    case 'Cot': {
+      const u = args[0];
+      return ['Negate', ['Divide', diffNode(u, v), ['Power', ['Sin', u], 2]]];
+    }
+
+    case 'Sec': {
+      const u = args[0];
+      return ['Multiply', ['Multiply', ['Sec', u], ['Tan', u]], diffNode(u, v)];
+    }
+
+    case 'Csc': {
+      const u = args[0];
+      return ['Negate', ['Multiply', ['Multiply', ['Csc', u], ['Cot', u]], diffNode(u, v)]];
+    }
+
+    case 'Asin': {
+      const u = args[0];
+      return ['Divide', diffNode(u, v), ['Sqrt', ['Subtract', 1, ['Power', u, 2]]]];
+    }
+
+    case 'Acos': {
+      const u = args[0];
+      return ['Negate', ['Divide', diffNode(u, v), ['Sqrt', ['Subtract', 1, ['Power', u, 2]]]]];
+    }
+
+    case 'Atan': {
+      const u = args[0];
+      return ['Divide', diffNode(u, v), ['Add', 1, ['Power', u, 2]]];
+    }
+
+    case 'Sinh': {
+      const u = args[0];
+      return ['Multiply', ['Cosh', u], diffNode(u, v)];
+    }
+
+    case 'Cosh': {
+      const u = args[0];
+      return ['Multiply', ['Sinh', u], diffNode(u, v)];
+    }
+
+    case 'Sinc': {
+      const u = args[0];
+      return [
+        'Multiply',
+        ['Divide', ['Subtract', ['Multiply', u, ['Cos', u]], ['Sin', u]], ['Power', u, 2]],
+        diffNode(u, v),
+      ];
     }
 
     case 'Tanh': {

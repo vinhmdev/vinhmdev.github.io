@@ -223,17 +223,47 @@ export function bce(y: number, p: number): number {
   return -(safeXLogY(y, cp) + safeXLogY(1.0 - y, 1.0 - cp));
 }
 
+/** Numerically stable unnormalized sinc(x) = sin(x) / x with Taylor expansion near 0 */
+export function sinc(x: number): number {
+  if (Number.isNaN(x)) return NaN;
+  const ax = Math.abs(x);
+  if (ax < 1e-4) {
+    const x2 = x * x;
+    return 1.0 - x2 / 6.0 + (x2 * x2) / 120.0;
+  }
+  return Math.sin(x) / x;
+}
+
+export function sincDeriv1(x: number): number {
+  if (Number.isNaN(x)) return NaN;
+  const ax = Math.abs(x);
+  if (ax < 1e-4) {
+    return -x / 3.0 + (x * x * x) / 30.0;
+  }
+  return (x * Math.cos(x) - Math.sin(x)) / (x * x);
+}
+
+export function sincDeriv2(x: number): number {
+  if (Number.isNaN(x)) return NaN;
+  const ax = Math.abs(x);
+  if (ax < 1e-3) {
+    const x2 = x * x;
+    return -1.0 / 3.0 + x2 / 10.0 - (x2 * x2) / 168.0;
+  }
+  return ((2.0 - x * x) * Math.sin(x) - 2.0 * x * Math.cos(x)) / (x * x * x);
+}
+
 /** Evaluates a registered MathFunctionPlugin by name */
 export function evalPluginFn(name: string, ...args: number[]): number {
   const plugin = getRegisteredMathFunction(name);
-  if (!plugin) return args[0] ?? 0;
+  if (!plugin) return NaN;
   return plugin.evaluateScalar(...args);
 }
 
 /** Central finite-difference 1st derivative of a unary MathFunctionPlugin */
 export function evalPluginDeriv1(name: string, x: number): number {
   const plugin = getRegisteredMathFunction(name);
-  if (!plugin) return 1.0;
+  if (!plugin) return NaN;
   const h = 1e-5;
   return (plugin.evaluateScalar(x + h) - plugin.evaluateScalar(x - h)) / (2.0 * h);
 }
@@ -241,7 +271,7 @@ export function evalPluginDeriv1(name: string, x: number): number {
 /** Central finite-difference 2nd derivative of a unary MathFunctionPlugin */
 export function evalPluginDeriv2(name: string, x: number): number {
   const plugin = getRegisteredMathFunction(name);
-  if (!plugin) return 0.0;
+  if (!plugin) return NaN;
   const h = 1e-4;
   return (
     (plugin.evaluateScalar(x + h) - 2.0 * plugin.evaluateScalar(x) + plugin.evaluateScalar(x - h)) /
@@ -274,7 +304,11 @@ export const SafeMathRuntime = {
   heaviside,
   clarkeSign,
   diracMollifier,
+  sinc,
+  sincDeriv1,
+  sincDeriv2,
   evalPluginFn,
   evalPluginDeriv1,
   evalPluginDeriv2,
 } as const;
+

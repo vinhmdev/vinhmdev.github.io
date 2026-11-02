@@ -83,6 +83,16 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
           >
             {t('paste_csv')}
           </button>
+          {graph.dataPoints.length > 0 && (
+            <button
+              type="button"
+              onClick={() => storeState.setDataPoints([])}
+              class="p-1 rounded text-neutral-400 hover:text-red-500"
+              title="Clear all data points"
+            >
+              <IconTrash class="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -132,11 +142,43 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             key={pt.id}
             onMouseEnter={() => storeState.setHoveredDataPoint(pt.id)}
             onMouseLeave={() => storeState.setHoveredDataPoint(null)}
-            class="flex items-center justify-between gap-1 px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800/70 font-mono text-[11px]"
+            class="flex items-center justify-between gap-1 px-1.5 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800/70 font-mono text-[11px]"
           >
-            <span>
-              ({pt.x.toFixed(2)}, {pt.y.toFixed(2)})
-            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-400">(</span>
+              <input
+                type="number"
+                step="0.1"
+                aria-label="Point X coordinate"
+                value={Number(pt.x.toFixed(2))}
+                onChange={(e) => {
+                  const nx = Number((e.target as HTMLInputElement).value);
+                  const sib = (e.currentTarget as HTMLElement).parentElement?.querySelectorAll('input')[1] as HTMLInputElement | undefined;
+                  const ny = sib ? Number(sib.value) : pt.y;
+                  if (Number.isFinite(nx)) {
+                    storeState.updateDataPoint(pt.id, nx, Number.isFinite(ny) ? ny : pt.y);
+                  }
+                }}
+                class="w-14 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-transparent text-center focus:border-orange-500 focus:outline-none"
+              />
+              <span class="text-neutral-400">,</span>
+              <input
+                type="number"
+                step="0.1"
+                aria-label="Point Y coordinate"
+                value={Number(pt.y.toFixed(2))}
+                onChange={(e) => {
+                  const ny = Number((e.target as HTMLInputElement).value);
+                  const sib = (e.currentTarget as HTMLElement).parentElement?.querySelectorAll('input')[0] as HTMLInputElement | undefined;
+                  const nx = sib ? Number(sib.value) : pt.x;
+                  if (Number.isFinite(ny)) {
+                    storeState.updateDataPoint(pt.id, Number.isFinite(nx) ? nx : pt.x, ny);
+                  }
+                }}
+                class="w-14 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-transparent text-center focus:border-orange-500 focus:outline-none"
+              />
+              <span class="text-neutral-400">)</span>
+            </div>
             <div class="flex items-center gap-1.5">
               <button
                 type="button"

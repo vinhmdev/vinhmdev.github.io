@@ -26,10 +26,25 @@ export const ML_FUNCTION_HEADS: Record<string, string> = {
   sin: 'Sin',
   cos: 'Cos',
   tan: 'Tan',
+  cot: 'Cot',
+  sec: 'Sec',
+  csc: 'Csc',
+  asin: 'Asin',
+  arcsin: 'Asin',
+  acos: 'Acos',
+  arccos: 'Acos',
+  atan: 'Atan',
+  arctan: 'Atan',
+  sinh: 'Sinh',
+  cosh: 'Cosh',
+  sinc: 'Sinc',
   exp: 'Exp',
   ln: 'Ln',
   log: 'Ln',
+  log10: 'Log10',
+  log2: 'Log2',
   sqrt: 'Sqrt',
+  cbrt: 'Cbrt',
   abs: 'Abs',
   sign: 'Sign',
   sgn: 'Sign',
@@ -133,8 +148,8 @@ export function normalizeLatexToAscii(raw: string): string {
   // Replace \left and \right and unescape \_
   s = s.replace(/\\left\s*/g, '').replace(/\\right\s*/g, '').replace(/\\_/g, '_');
 
-  // Replace \text{...} and \operatorname{...}
-  s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\\]+)\s*\}/g, '$1');
+  // Replace \text{...} and \operatorname{...} with surrounding spaces so adjacent identifiers do not fuse
+  s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\\]+)\s*\}/g, ' $1 ');
 
   // Recursively expand \frac{A}{B} -> ((A)/(B))
   let prev = '';
@@ -144,32 +159,41 @@ export function normalizeLatexToAscii(raw: string): string {
     s = replaceCmd1(s, '\\sqrt', 'sqrt');
   }
 
-  // Greek & math commands
+  // Greek & math commands (leading space prevents fusing with preceding variables like a\cos(x) or x\ln(x))
   const greekMap: [RegExp, string][] = [
-    [/\\sigma\b/g, 'sigma'],
-    [/\\theta\b/g, 'theta'],
-    [/\\mu\b/g, 'mu'],
-    [/\\eta\b/g, 'eta'],
-    [/\\alpha\b/g, 'alpha'],
-    [/\\beta\b/g, 'beta'],
-    [/\\lambda\b/g, 'lambda'],
-    [/\\gamma\b/g, 'gamma'],
-    [/\\delta\b/g, 'delta'],
-    [/\\tau\b/g, 'tau'],
-    [/\\pi\b/g, 'Pi'],
+    [/\\sigma\b/g, ' sigma'],
+    [/\\theta\b/g, ' theta'],
+    [/\\mu\b/g, ' mu'],
+    [/\\eta\b/g, ' eta'],
+    [/\\alpha\b/g, ' alpha'],
+    [/\\beta\b/g, ' beta'],
+    [/\\lambda\b/g, ' lambda'],
+    [/\\gamma\b/g, ' gamma'],
+    [/\\delta\b/g, ' delta'],
+    [/\\tau\b/g, ' tau'],
+    [/\\pi\b/g, ' Pi'],
     [/\\cdot\b/g, '*'],
     [/\\times\b/g, '*'],
     [/\\div\b/g, '/'],
-    [/\\ln\b/g, 'ln'],
-    [/\\log\b/g, 'log'],
-    [/\\exp\b/g, 'exp'],
-    [/\\sin\b/g, 'sin'],
-    [/\\cos\b/g, 'cos'],
-    [/\\tan\b/g, 'tan'],
-    [/\\tanh\b/g, 'tanh'],
-    [/\\max\b/g, 'max'],
-    [/\\min\b/g, 'min'],
-    [/\\operatorname\b/g, ''],
+    [/\\ln\b/g, ' ln'],
+    [/\\log\b/g, ' log'],
+    [/\\exp\b/g, ' exp'],
+    [/\\arcsin\b/g, ' arcsin'],
+    [/\\arccos\b/g, ' arccos'],
+    [/\\arctan\b/g, ' arctan'],
+    [/\\sinh\b/g, ' sinh'],
+    [/\\cosh\b/g, ' cosh'],
+    [/\\tanh\b/g, ' tanh'],
+    [/\\sinc\b/g, ' sinc'],
+    [/\\sin\b/g, ' sin'],
+    [/\\cos\b/g, ' cos'],
+    [/\\tan\b/g, ' tan'],
+    [/\\cot\b/g, ' cot'],
+    [/\\sec\b/g, ' sec'],
+    [/\\csc\b/g, ' csc'],
+    [/\\max\b/g, ' max'],
+    [/\\min\b/g, ' min'],
+    [/\\operatorname\b/g, ' '],
   ];
   for (const [re, rep] of greekMap) {
     s = s.replace(re, rep);
@@ -222,7 +246,7 @@ function replaceCmd1(str: string, cmd: string, fnName: string): string {
   const endArg = findBalancedBrace(str, p);
   if (endArg === -1) return str;
   const arg = str.slice(p + 1, endArg);
-  return `${str.slice(0, idx)}${fnName}(${arg})${str.slice(endArg + 1)}`;
+  return `${str.slice(0, idx)} ${fnName}(${arg})${str.slice(endArg + 1)}`;
 }
 
 function isKnownFunctionName(name: string): boolean {
@@ -329,11 +353,14 @@ function tokenize(input: string): Token[] {
 
     if (currIsValue && nextIsStart) {
       // Do NOT insert '*' if curr is a function identifier followed by '('
-      const isFnCall =
+      // or an unknown multi-letter identifier followed by '(' (so parsePrimary reports 'Unknown function')
+      const isValidVar =
+        KNOWN_SYMBOLS.has(curr.value) || /^[a-zA-Z](?:_[0-9]+)?$/.test(curr.value);
+      const isFnCallOrUnknownFn =
         curr.type === 'id' &&
         next.type === 'lparen' &&
-        isKnownFunctionName(curr.value);
-      if (!isFnCall) {
+        (isKnownFunctionName(curr.value) || !isValidVar);
+      if (!isFnCallOrUnknownFn) {
         out.push({ type: 'op', value: '*', pos: curr.pos });
       }
     }
@@ -438,6 +465,9 @@ export function parseLatexToMathJson(rawInput: string): ParseResult {
         const name = tok.value;
         // Function call check
         if (peek()?.type === 'lparen') {
+          if (!isKnownFunctionName(name)) {
+            throw new Error(`Unknown function '${name}'`);
+          }
           consume(); // '('
           const args: MathJsonExpr[] = [];
           if (peek()?.type !== 'rparen') {
@@ -461,6 +491,9 @@ export function parseLatexToMathJson(rawInput: string): ParseResult {
         }
         if (name === 'e') return 'ExponentialE';
         if (name === 'pi') return 'Pi';
+        if (!KNOWN_SYMBOLS.has(name) && !/^[a-zA-Z](?:_[0-9]+)?$/.test(name)) {
+          throw new Error(`Unknown symbol '${name}'`);
+        }
         return name;
       }
       throw new Error(`Unexpected token '${tok.value}' at position ${tok.pos}`);

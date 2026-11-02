@@ -103,12 +103,16 @@ export function createInitialGraphState(templateId = 'T-01'): GraphStateV2 {
 export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const nextSliders: Record<string, SliderState> = { ...state.sliders };
   const activeSymbols = new Set<string>();
-  let anyValidExpr = false;
+  let hasInvalidNonEmptyExpr = false;
 
   for (const expr of state.expressions) {
-    const classified = classifyLatexExpression(expr.latex, state.symbolOverrides);
-    if (!classified.valid) continue;
-    anyValidExpr = true;
+    const trimmed = expr.latex.trim();
+    if (!trimmed) continue;
+    const classified = classifyLatexExpression(trimmed, state.symbolOverrides);
+    if (!classified.valid) {
+      hasInvalidNonEmptyExpr = true;
+      continue;
+    }
 
     for (const sym of classified.symbols) {
       if (sym.role === 'param' || sym.role === 'hyperparam') {
@@ -139,8 +143,8 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     }
   }
 
-  // In Freeform Blank Graph mode (T-00), prune unused sliders when expressions change
-  if (state.activeTemplateId === 'T-00' && anyValidExpr) {
+  // In Freeform Blank Graph mode (T-00), prune unused sliders when expressions change or are cleared
+  if (state.activeTemplateId === 'T-00' && !hasInvalidNonEmptyExpr) {
     for (const key of Object.keys(nextSliders)) {
       if (!activeSymbols.has(key)) {
         delete nextSliders[key];
@@ -617,11 +621,36 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     eraseWhiteboardAt(wx, wy, radiusWorld) {
       const rSq = radiusWorld * radiusWorld;
+      const distToSegmentSq = (
+        px: number,
+        py: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number
+      ): number => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq < 1e-12) {
+          return (px - x1) * (px - x1) + (py - y1) * (py - y1);
+        }
+        const t = Math.min(Math.max(((px - x1) * dx + (py - y1) * dy) / lenSq, 0.0), 1.0);
+        const projX = x1 + t * dx;
+        const projY = y1 + t * dy;
+        return (px - projX) * (px - projX) + (py - projY) * (py - projY);
+      };
+
       const filtered = get().whiteboardStrokes.filter((stroke) => {
-        for (const pt of stroke.points) {
-          const dx = pt.x - wx;
-          const dy = pt.y - wy;
-          if (dx * dx + dy * dy <= rSq) {
+        const pts = stroke.points;
+        if (pts.length === 0) return false;
+        if (pts.length === 1) {
+          const dx = pts[0].x - wx;
+          const dy = pts[0].y - wy;
+          return dx * dx + dy * dy > rSq;
+        }
+        for (let i = 0; i + 1 < pts.length; i++) {
+          if (distToSegmentSq(wx, wy, pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y) <= rSq) {
             return false;
           }
         }

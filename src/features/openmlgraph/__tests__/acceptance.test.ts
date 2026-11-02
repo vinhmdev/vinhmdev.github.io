@@ -601,10 +601,37 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(blankGraph.dataPoints.length).toBe(0);
     expect(Object.keys(blankGraph.sliders).sort()).toEqual(['a', 'b', 'c']);
 
-    // Mainstream implicit multiplication: ax^2 + bx + c and mx + d
+    // Mainstream implicit multiplication: ax^2 + bx + c and mx + d, plus LaTeX macros without spaces (a\sqrt{x}, x\ln(x), a\cos(x), a\pi)
     const quadClassified = classifyLatexExpression('ax^2 + bx + c');
     expect(quadClassified.valid).toBe(true);
     expect(quadClassified.symbols.map((s) => s.name)).toEqual(['a', 'x', 'b', 'c']);
+
+    const macroImplicit = classifyLatexExpression('a\\sqrt{x} + x\\ln(x) + b\\cos(x) + c\\pi');
+    expect(macroImplicit.valid).toBe(true);
+    expect(macroImplicit.symbols.map((s) => s.name)).toEqual(['a', 'x', 'b', 'c']);
+
+    // Standard graphing calculator functions: sinc(x), asin(x), acos(x), atan(x), sinh(x), cosh(x), cot(x), sec(x), csc(x), cbrt(x), log10(x), log2(x)
+    const sincKernel = compileJet2Kernel(parseLatexToMathJson('sinc(x)').expr, 'x');
+    expect(sincKernel.evalJet2(0, {}).v).toBeCloseTo(1.0, 10);
+    expect(sincKernel.evalJet2(0, {}).d1).toBeCloseTo(0.0, 10);
+    expect(sincKernel.evalJet2(0, {}).d2).toBeCloseTo(-1 / 3, 6);
+
+    const trigHypKernel = compileJet2Kernel(
+      parseLatexToMathJson('asin(x) + acos(x) + atan(x) + sinh(x) + cosh(x) + cbrt(x)').expr,
+      'x'
+    );
+    expect(Number.isFinite(trigHypKernel.evalJet2(0.5, {}).v)).toBe(true);
+    expect(Number.isFinite(trigHypKernel.evalJet2(0.5, {}).d1)).toBe(true);
+
+    const logRecipKernel = compileJet2Kernel(
+      parseLatexToMathJson('cot(x) + sec(x) + csc(x) + log10(x) + log2(x)').expr,
+      'x'
+    );
+    expect(Number.isFinite(logRecipKernel.evalJet2(1.0, {}).v)).toBe(true);
+
+    // Unknown function names (e.g. sinn(x)) and unknown multi-letter identifiers fail validation instead of silently plotting y = x
+    expect(classifyLatexExpression('sinn(x)').valid).toBe(false);
+    expect(classifyLatexExpression('foobar + 1').valid).toBe(false);
 
     // Remove second expression and update first expression to m*x + d -> old sliders a,b,c pruned in T-00
     const secondId = blankGraph.expressions[1].id;
@@ -613,12 +640,17 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     graphStore.getState().updateExpressionLatex(firstId, 'mx + d');
     expect(Object.keys(graphStore.getState().graph.sliders).sort()).toEqual(['d', 'm']);
 
-    // Removing the last remaining expression clears its latex to '' without deleting the card
+    // Temporary syntax error mid-typing preserves existing sliders
+    graphStore.getState().updateExpressionLatex(firstId, 'm * sin(');
+    expect(Object.keys(graphStore.getState().graph.sliders).sort()).toEqual(['d', 'm']);
+
+    // Removing the last remaining expression clears its latex to '' AND prunes orphaned sliders
     graphStore.getState().removeExpression(firstId);
     expect(graphStore.getState().graph.expressions.length).toBe(1);
     expect(graphStore.getState().graph.expressions[0].latex).toBe('');
+    expect(Object.keys(graphStore.getState().graph.sliders)).toEqual([]);
 
-    // Whiteboard Pen, Highlighter, Eraser & Clear actions
+    // Whiteboard Pen, Highlighter, Eraser (including segment interior hit-testing) & Clear actions
     graphStore.getState().setWhiteboardTool('pen');
     graphStore.getState().setWhiteboardColor('#3b82f6');
     expect(graphStore.getState().whiteboardTool).toBe('pen');
@@ -631,7 +663,7 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
       width: 2.8,
       points: [
         { x: 0, y: 0 },
-        { x: 1, y: 1 },
+        { x: 10, y: 0 },
       ],
     });
     graphStore.getState().addWhiteboardStroke({
@@ -646,8 +678,8 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     });
     expect(graphStore.getState().whiteboardStrokes.length).toBe(2);
 
-    // Erase near (0.1, 0.1) removes wb-1 and keeps wb-2
-    graphStore.getState().eraseWhiteboardAt(0.1, 0.1, 0.5);
+    // Erase at midpoint (5, 0) of long segment [(0, 0), (10, 0)] removes wb-1 and keeps wb-2
+    graphStore.getState().eraseWhiteboardAt(5.0, 0.1, 0.5);
     expect(graphStore.getState().whiteboardStrokes.length).toBe(1);
     expect(graphStore.getState().whiteboardStrokes[0].id).toBe('wb-2');
 

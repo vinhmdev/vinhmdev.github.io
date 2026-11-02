@@ -589,6 +589,17 @@ export function DualViewportPanel({
                 isBrushingLeftRef.current = false;
                 isDraggingProbeLeftRef.current = false;
               }}
+              onPointerCancel={(e) => {
+                touchMapLeftRef.current.delete(e.pointerId);
+                prevPinchDistLeftRef.current = null;
+                draftStrokeRef.current = null;
+                setDraftStroke(null);
+                isErasingWhiteboardRef.current = false;
+                draggingPointIdRef.current = null;
+                isPanningLeftRef.current = false;
+                isBrushingLeftRef.current = false;
+                isDraggingProbeLeftRef.current = false;
+              }}
               onWheel={(e) => {
                 e.preventDefault();
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
@@ -786,6 +797,9 @@ export function DualViewportPanel({
                 updateRightParamsFromWorld(wx, wy);
               }}
               onPointerUp={() => {
+                rightDragModeRef.current = 'none';
+              }}
+              onPointerCancel={() => {
                 rightDragModeRef.current = 'none';
               }}
             />
