@@ -3,7 +3,11 @@
  * Undo/Redo, Local Save, JSON Import/Export, and 2x DPI PNG Export.
  */
 import type { JSX } from 'preact';
-import { ALL_ML_TEMPLATES, BLANK_CANVAS_TEMPLATE } from '../extensions/templates';
+import {
+  ALL_ML_TEMPLATES,
+  BLANK_CANVAS_TEMPLATE,
+  MATH_TEMPLATES,
+} from '../extensions/templates';
 import { downloadStateJsonFile, saveStateToLocalStorage } from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
@@ -20,7 +24,7 @@ export function ToolbarSubheader({
   onExportPng,
   onToast,
 }: ToolbarProps): JSX.Element {
-  const { graph, undoStack, redoStack } = storeState;
+  const { graph, workspaceMode, undoStack, redoStack } = storeState;
 
   const handleSaveLocal = (): void => {
     const ok = saveStateToLocalStorage(graph);
@@ -28,11 +32,44 @@ export function ToolbarSubheader({
   };
 
   const isBlankMode = graph.activeTemplateId === 'T-00';
+  const isMlMode = workspaceMode === 'ml';
 
   return (
     <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
-      {/* Left: Bảng trắng (Blank Graph) Quick Button, 15 ML Templates Selector & View Mode Pills */}
+      {/* Left: Workspace Perspective Switcher (Math vs ML), Blank Graph, Categorized Templates & View Modes */}
       <div class="flex flex-wrap items-center gap-2">
+        {/* Perspective Mode Switcher (GeoGebra / Desmos inspired) */}
+        <div
+          class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden bg-white dark:bg-neutral-800 p-0.5 gap-0.5"
+          role="group"
+          aria-label="Workspace Perspective"
+        >
+          <button
+            type="button"
+            onClick={() => storeState.setWorkspaceMode('math')}
+            class={`px-2.5 py-1 rounded-xs font-semibold transition-colors ${
+              !isMlMode
+                ? 'bg-orange-500 text-white shadow-2xs'
+                : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+            }`}
+            title="Chế độ Toán học & Đồ thị chuẩn (ẩn các thông số ML phức tạp)"
+          >
+            {t('mode_math')}
+          </button>
+          <button
+            type="button"
+            onClick={() => storeState.setWorkspaceMode('ml')}
+            class={`px-2.5 py-1 rounded-xs font-semibold transition-colors ${
+              isMlMode
+                ? 'bg-orange-500 text-white shadow-2xs'
+                : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+            }`}
+            title="Chế độ Tối ưu hóa 3D & Học máy (Loss Surface, Optimizer Race, Param/Hyper)"
+          >
+            {t('mode_ml')}
+          </button>
+        </div>
+
         <button
           id="blank-graph-btn"
           type="button"
@@ -42,12 +79,12 @@ export function ToolbarSubheader({
           }}
           class={`flex items-center gap-1.5 h-7 px-2.5 rounded-md border font-semibold transition-colors ${
             isBlankMode
-              ? 'bg-orange-500 text-white border-orange-500 shadow-2xs'
-              : 'border-orange-500/50 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20'
+              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+              : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
           }`}
           title={t('t00_title')}
         >
-          <IconBoard class="w-3.5 h-3.5" />
+          <IconBoard class="w-3.5 h-3.5 text-orange-500" />
           <span>{t('blank_mode_btn')}</span>
         </button>
 
@@ -55,56 +92,68 @@ export function ToolbarSubheader({
           {t('templates_label')}:
         </label>
         <select
-          aria-label="Select ML Template"
+          aria-label="Select Graph Template"
           value={graph.activeTemplateId}
           onChange={(e) => storeState.selectTemplate((e.target as HTMLSelectElement).value)}
-          class="h-7 max-w-[235px] px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500 truncate"
+          class="h-7 max-w-[245px] px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500 truncate"
         >
-          <option value={BLANK_CANVAS_TEMPLATE.id}>
-            {t(BLANK_CANVAS_TEMPLATE.titleKey)}
-          </option>
-          {ALL_ML_TEMPLATES.map((tpl) => (
-            <option key={tpl.id} value={tpl.id}>
-              {t(tpl.titleKey)}
+          <optgroup label={t('tpl_group_math')}>
+            <option value={BLANK_CANVAS_TEMPLATE.id}>
+              {t(BLANK_CANVAS_TEMPLATE.titleKey)}
             </option>
-          ))}
+            {MATH_TEMPLATES.map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {t(tpl.titleKey)}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label={t('tpl_group_ml')}>
+            {ALL_ML_TEMPLATES.map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {t(tpl.titleKey)}
+              </option>
+            ))}
+          </optgroup>
         </select>
 
-        {/* 3 View Modes [FR-1.4] */}
-        <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-          {(['inference', 'optimization', 'dual'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => storeState.setViewMode(m)}
-              class={`px-2.5 py-1 font-medium transition-colors ${
-                graph.viewMode === m
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-              }`}
-            >
-              {m === 'inference'
-                ? t('view_inference')
-                : m === 'optimization'
-                  ? t('view_optimization')
-                  : t('view_dual')}
-            </button>
-          ))}
-        </div>
+        {/* 3 View Modes & Clarke Subgradient (Shown in ML & 3D Optimization perspective) */}
+        {isMlMode && (
+          <>
+            <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
+              {(['inference', 'optimization', 'dual'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => storeState.setViewMode(m)}
+                  class={`px-2.5 py-1 font-medium transition-colors ${
+                    graph.viewMode === m
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                  }`}
+                >
+                  {m === 'inference'
+                    ? t('view_inference')
+                    : m === 'optimization'
+                      ? t('view_optimization')
+                      : t('view_dual')}
+                </button>
+              ))}
+            </div>
 
-        {/* Clarke Subgradient Convention Toggle [FR-2.1] */}
-        <button
-          type="button"
-          onClick={() =>
-            storeState.setSubgradConvention(
-              graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
-            )
-          }
-          class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors"
-          title="Toggle Clarke Subdifferential at kink u = 0"
-        >
-          {graph.subgradConvention === 'zero' ? t('subgrad_zero') : t('subgrad_sym')}
-        </button>
+            <button
+              type="button"
+              onClick={() =>
+                storeState.setSubgradConvention(
+                  graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
+                )
+              }
+              class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+              title="Toggle Clarke Subdifferential at kink u = 0"
+            >
+              {graph.subgradConvention === 'zero' ? t('subgrad_zero') : t('subgrad_sym')}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Right: Undo/Redo, Save, JSON Backup, PNG Export & Frame Budget Telemetry */}

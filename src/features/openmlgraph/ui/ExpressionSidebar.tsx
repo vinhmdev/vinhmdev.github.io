@@ -5,9 +5,10 @@
  */
 import katex from 'katex';
 import type { JSX } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { classifyLatexExpression } from '../core/parser/ast-classifier';
-import type { GraphStoreState } from '../state/store';
+import { graphStore, type GraphStoreState } from '../state/store';
+import type { SymbolRole } from '../types/math';
 import { t } from '../scripts/i18n-client';
 import { IconEye, IconPause, IconPlay, IconTrash } from './icons';
 
@@ -31,18 +32,63 @@ const ROLE_BADGE_STYLE = {
   primitive: 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400 border-neutral-500/30',
 } as const;
 
-const QUICK_PRESETS: { label: string; latex: string }[] = [
-  { label: 'sin(x)', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
+const MATH_QUICK_PRESETS: { label: string; latex: string }[] = [
+  { label: 'a·sin(bx)+c', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
+  { label: 'x³ - 3x', latex: 'x^3 - 3 \\cdot x' },
   { label: 'x² - 4', latex: 'x^2 - 4' },
-  { label: 'σ(wx+b)', latex: '\\sigma(w \\cdot x + b)' },
-  { label: 'ReLU(x)', latex: '\\operatorname{relu}(x)' },
   { label: 'e^(-x²)', latex: 'e^{-x^2}' },
+  { label: 'ln(x)', latex: '\\ln(x)' },
   { label: 'sinc(x)', latex: '\\frac{\\sin(x)}{x}' },
 ];
 
+const ML_QUICK_PRESETS: { label: string; latex: string }[] = [
+  { label: 'σ(wx+b)', latex: '\\sigma(w \\cdot x + b)' },
+  { label: 'ReLU(wx+b)', latex: '\\operatorname{relu}(w \\cdot x + b)' },
+  { label: 'GELU(x)', latex: '\\operatorname{gelu}(x)' },
+  { label: 'tanh(wx+b)', latex: '\\tanh(w \\cdot x + b)' },
+  { label: 'Softplus', latex: '\\operatorname{softplus}(w \\cdot x + b)' },
+  { label: 'wx + b', latex: 'w \\cdot x + b' },
+];
+
+const ROLE_OPTIONS: {
+  role: 'data_var' | 'param' | 'hyperparam';
+  shortLabel: string;
+  desc: string;
+  dotClass: string;
+}[] = [
+  {
+    role: 'data_var',
+    shortLabel: 'Data',
+    desc: 'Axis / d/dx',
+    dotClass: 'bg-cyan-500',
+  },
+  {
+    role: 'param',
+    shortLabel: 'Param',
+    desc: 'Weight',
+    dotClass: 'bg-blue-500',
+  },
+  {
+    role: 'hyperparam',
+    shortLabel: 'Hyper',
+    desc: 'Config',
+    dotClass: 'bg-purple-500',
+  },
+];
+
 export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
-  const { graph, curves } = storeState;
+  const { graph, curves, workspaceMode } = storeState;
+  const isMlMode = workspaceMode === 'ml';
+  const quickPresets = isMlMode ? ML_QUICK_PRESETS : MATH_QUICK_PRESETS;
   const sliderList = Object.values(graph.sliders);
+  const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openRoleMenuKey || typeof window === 'undefined') return;
+    const closeMenu = (): void => setOpenRoleMenuKey(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, [openRoleMenuKey]);
 
   // Configure MathLive custom element offline (disable external audio requests) [FR-1.1]
   useEffect(() => {
@@ -57,47 +103,25 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   }, []);
 
   // Parameter Slider Animation Loop (requestAnimationFrame) [FR-1.3]
+  const anySliderPlaying = sliderList.some((s) => s.playing);
   useEffect(() => {
-    const playingSliders = sliderList.filter((s) => s.playing);
-    if (playingSliders.length === 0) return;
+    if (!anySliderPlaying) return;
 
     let rafId = 0;
     let lastTime = performance.now();
 
     const tick = (now: number): void => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      const dt = Math.min(Math.max((now - lastTime) / 1000, 0.001), 0.1);
       lastTime = now;
 
-      for (const s of playingSliders) {
-        const span = s.max - s.min;
-        const delta = span * 0.25 * s.speed * dt * s.direction;
-        let nextVal = s.value + delta;
-        let nextDir = s.direction;
-
-        if (nextVal >= s.max) {
-          if (s.loopMode === 'bounce') {
-            nextVal = s.max;
-            nextDir = -1;
-          } else {
-            nextVal = s.min;
-          }
-        } else if (nextVal <= s.min) {
-          if (s.loopMode === 'bounce') {
-            nextVal = s.min;
-            nextDir = 1;
-          } else {
-            nextVal = s.max;
-          }
-        }
-
-        storeState.updateSliderBounds(s.name, { value: nextVal, direction: nextDir });
+      if (graphStore.getState().stepPlayingSliders(dt)) {
+        rafId = requestAnimationFrame(tick);
       }
-      rafId = requestAnimationFrame(tick);
     };
 
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [sliderList.map((s) => `${s.name}:${s.playing}:${s.speed}:${s.loopMode}`).join(',')]);
+  }, [anySliderPlaying]);
 
   const handleInsertPreset = (latex: string): void => {
     const emptyExpr = graph.expressions.find((e) => e.latex.trim().length === 0);
@@ -112,9 +136,8 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     storeState.loadFullState(
       {
         ...graph,
-        activeTemplateId: 'T-00',
-        viewMode: 'inference',
-        dataPoints: [],
+        activeTemplateId: isMlMode ? graph.activeTemplateId : 'T-00',
+        viewMode: isMlMode ? graph.viewMode : 'inference',
         sliders: {},
         expressions: [
           {
@@ -163,7 +186,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
         <span class="text-[10px] font-semibold text-neutral-400 mr-0.5">
           {t('quick_presets_label')}:
         </span>
-        {QUICK_PRESETS.map((p) => (
+        {quickPresets.map((p) => (
           <button
             key={p.label}
             type="button"
@@ -181,6 +204,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           const isEmpty = expr.latex.trim().length === 0;
           const classified = classifyLatexExpression(expr.latex, graph.symbolOverrides);
           const curvePacket = curves.find((c) => c.exprId === expr.id);
+          const sliderSyms = classified.symbols.filter((s) => s.role !== 'data_var');
 
           return (
             <div
@@ -248,7 +272,11 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 onInput={(e) =>
                   storeState.updateExpressionLatex(expr.id, (e.target as HTMLInputElement).value)
                 }
-                placeholder="Type any function: sin(x), x^2 - 4, a*sin(b*x)+c, \sigma(w*x+b)..."
+                placeholder={
+                  isMlMode
+                    ? 'Type model or activation: \\sigma(w*x+b), relu(w*x+b), gelu(x)...'
+                    : 'Type any function: sin(x), x^3 - 3x, a*sin(b*x)+c, ln(x)...'
+                }
                 class={`w-full px-2.5 py-1.5 rounded border font-mono text-xs bg-neutral-50 dark:bg-neutral-950 ${
                   isEmpty || classified.valid
                     ? 'border-neutral-300 dark:border-neutral-700 focus:border-orange-500'
@@ -282,23 +310,126 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 />
               )}
 
-              {/* Role-Swapping Interactive Badges [FR-1.4] */}
-              {classified.symbols.length > 0 && (
-                <div class="flex flex-wrap gap-1 pt-0.5">
-                  {classified.symbols.map((sym) => (
+              {/* Standard Math Mode: Clean Axis Selector & Slider Summary (No ML Jargon) */}
+              {!isMlMode && classified.symbols.length > 1 && (
+                <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5 text-[10px]">
+                  <div class="relative inline-block">
                     <button
-                      key={sym.name}
                       type="button"
-                      onClick={() => storeState.cycleSymbolRole(sym.name)}
-                      class={`px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-transform active:scale-95 ${
-                        ROLE_BADGE_STYLE[sym.role]
-                      }`}
-                      title="Click to swap symbol role (Data <-> Param <-> Hyperparam)"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const key = `axis:${expr.id}`;
+                        setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
+                      }}
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-semibold"
+                      title="Chọn biến làm trục hoành (các ký hiệu còn lại tự động thành thanh trượt)"
                     >
-                      [{sym.role === 'data_var' ? 'Data' : sym.role === 'param' ? 'Param' : 'Hyper'}:{' '}
-                      {sym.name}]
+                      <span>
+                        {t('axis_var_label')}: <b class="font-mono">{classified.primaryVar}</b>
+                      </span>
+                      <span class="opacity-70 text-[9px]">▾</span>
                     </button>
-                  ))}
+
+                    {openRoleMenuKey === `axis:${expr.id}` && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        class="absolute left-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                      >
+                        {classified.symbols.map((sym) => {
+                          const active = sym.name === classified.primaryVar;
+                          return (
+                            <button
+                              key={sym.name}
+                              type="button"
+                              onClick={() => {
+                                storeState.setSymbolRole(sym.name, 'data_var');
+                                setOpenRoleMenuKey(null);
+                              }}
+                              class={`flex items-center justify-between px-2.5 py-1 text-left font-mono hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                              }`}
+                            >
+                              <span>{sym.name}</span>
+                              {active && <span>✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {sliderSyms.length > 0 && (
+                    <span class="text-neutral-500 dark:text-neutral-400">
+                      {t('sliders_summary_label')}:{' '}
+                      <b class="font-mono text-neutral-700 dark:text-neutral-200">
+                        {sliderSyms.map((s) => s.name).join(', ')}
+                      </b>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* ML & Optimization Mode: Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}
+              {isMlMode && classified.symbols.length > 0 && (
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  {classified.symbols.map((sym) => {
+                    const menuKey = `expr:${expr.id}:${sym.name}`;
+                    const isOpen = openRoleMenuKey === menuKey;
+                    const roleLabel =
+                      sym.role === 'data_var' ? 'Data' : sym.role === 'param' ? 'Param' : 'Hyper';
+
+                    return (
+                      <div key={sym.name} class="relative inline-block">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenRoleMenuKey(isOpen ? null : menuKey);
+                          }}
+                          class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-transform active:scale-95 ${
+                            ROLE_BADGE_STYLE[sym.role]
+                          }`}
+                          title="Choose symbol role: Data (Axis), Param, or Hyper"
+                        >
+                          <span>
+                            {roleLabel}: {sym.name}
+                          </span>
+                          <span class="opacity-70 text-[9px]">▾</span>
+                        </button>
+
+                        {isOpen && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            class="absolute left-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                          >
+                            {ROLE_OPTIONS.map((opt) => {
+                              const active = sym.role === opt.role;
+                              return (
+                                <button
+                                  key={opt.role}
+                                  type="button"
+                                  onClick={() => {
+                                    storeState.setSymbolRole(sym.name, opt.role as SymbolRole);
+                                    setOpenRoleMenuKey(null);
+                                  }}
+                                  class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                    active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                                  }`}
+                                >
+                                  <span class="flex items-center gap-1.5">
+                                    <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
+                                    <span>{opt.shortLabel}</span>
+                                    <span class="text-[9px] text-neutral-400">({opt.desc})</span>
+                                  </span>
+                                  {active && <span>✓</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -306,10 +437,10 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
         })}
       </div>
 
-      {/* Section 2: Dynamic Parameter & Hyperparameter Sliders [FR-1.3] */}
+      {/* Section 2: Dynamic Parameter Sliders [FR-1.3] */}
       <div class="pt-2 border-t border-neutral-200 dark:border-neutral-800">
         <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] mb-2">
-          {t('sliders_title')}
+          {isMlMode ? t('sliders_title') : t('math_sliders_title')}
         </h2>
 
         <div class="flex flex-col gap-2">
@@ -332,11 +463,54 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     {sl.name} = {sl.value.toFixed(3)}
                   </span>
                 </div>
-                <span
-                  class={`px-1.5 py-0.2 rounded text-[10px] border ${ROLE_BADGE_STYLE[sl.role]}`}
-                >
-                  {sl.role === 'param' ? 'Param' : 'Hyper'}
-                </span>
+                {isMlMode && (
+                  <div class="relative inline-block">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const key = `slider:${sl.name}`;
+                        setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
+                      }}
+                      class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
+                      title="Change slider role"
+                    >
+                      <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
+                      <span class="opacity-70 text-[9px]">▾</span>
+                    </button>
+
+                    {openRoleMenuKey === `slider:${sl.name}` && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                      >
+                        {ROLE_OPTIONS.map((opt) => {
+                          const active = sl.role === opt.role;
+                          return (
+                            <button
+                              key={opt.role}
+                              type="button"
+                              onClick={() => {
+                                storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
+                                setOpenRoleMenuKey(null);
+                              }}
+                              class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                              }`}
+                            >
+                              <span class="flex items-center gap-1.5">
+                                <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
+                                <span>{opt.shortLabel}</span>
+                                <span class="text-[9px] text-neutral-400">({opt.desc})</span>
+                              </span>
+                              {active && <span>✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <input

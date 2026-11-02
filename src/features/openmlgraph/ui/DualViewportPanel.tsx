@@ -9,6 +9,7 @@
  */
 import type { JSX, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { renderDataSpaceCanvas2D } from '../renderers/canvas2d-renderer';
 import {
   renderMlpSpaceFoldingCanvas,
@@ -112,17 +113,21 @@ export function DualViewportPanel({
   const rightDragModeRef = useRef<'none' | 'param' | 'orbit' | 'reg_radius'>('none');
   const lastMouseRightRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  const isMlMode = storeState.workspaceMode === 'ml';
   const showLeft =
+    !isMlMode ||
     graph.viewMode === 'inference' ||
     (graph.viewMode === 'dual' && (mobileTab === 'data' || mobileTab === 'split'));
   const showRight =
-    graph.viewMode === 'optimization' ||
-    (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split'));
+    isMlMode &&
+    (graph.viewMode === 'optimization' ||
+      (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split')));
 
   const paramValues: Record<string, number> = {};
   for (const [k, s] of Object.entries(graph.sliders)) {
     paramValues[k] = s.value;
   }
+  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(graph.sliders);
 
   // Observe Left & Right viewport container dimensions + devicePixelRatio changes
   useEffect(() => {
@@ -287,9 +292,6 @@ export function DualViewportPanel({
       );
     }
 
-    const w1 = paramValues['w'] ?? paramValues['w_1'] ?? paramValues['mu'] ?? 1.0;
-    const w2 = paramValues['b'] ?? paramValues['w_2'] ?? paramValues['sigma'] ?? 0.0;
-
     renderLossSpaceOverlay2D({
       ctx,
       width: W,
@@ -333,17 +335,18 @@ export function DualViewportPanel({
     vectorField,
     trajectories,
     linkedBrushPull,
+    w1,
+    w2,
     JSON.stringify(paramValues),
   ]);
 
   const updateRightParamsFromWorld = (wx: number, wy: number): void => {
-    if (graph.sliders['w']) storeState.setSliderValue('w', wx);
-    else if (graph.sliders['w_1']) storeState.setSliderValue('w_1', wx);
-    else if (graph.sliders['mu']) storeState.setSliderValue('mu', wx);
-
-    if (graph.sliders['b']) storeState.setSliderValue('b', wy);
-    else if (graph.sliders['w_2']) storeState.setSliderValue('w_2', wy);
-    else if (graph.sliders['sigma']) storeState.setSliderValue('sigma', Math.max(0.1, wy));
+    if (graph.sliders[w1Key]) {
+      storeState.setSliderValue(w1Key, wx);
+    }
+    if (graph.sliders[w2Key] && w2Key !== w1Key) {
+      storeState.setSliderValue(w2Key, w2Key === 'sigma' ? Math.max(0.1, wy) : wy);
+    }
   };
 
   const handleResetLeftViewport = (): void => {
@@ -821,6 +824,34 @@ export function DualViewportPanel({
                     Test Loss: {testLoss.toFixed(4)}
                   </span>
                 )}
+                {graph.rightViewportMode === 'loss_surface' && (
+                  <span
+                    class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono text-neutral-600 dark:text-neutral-300"
+                    title="Active 3D Surface Parameter Axes (drag on surface to adjust)"
+                  >
+                    Axes: ({w1Key}, {w2Key})
+                  </span>
+                )}
+                {graph.dataPoints.length === 0 &&
+                  graph.rightViewportMode === 'loss_surface' &&
+                  ['mse', 'mae', 'huber', 'bce', 'hinge'].includes(graph.lossKind) && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        storeState.setDataPoints([
+                          { id: 's1', x: -2.0, y: -1.4, split: 'train' },
+                          { id: 's2', x: -1.0, y: -0.6, split: 'train' },
+                          { id: 's3', x: 0.0, y: 0.1, split: 'train' },
+                          { id: 's4', x: 1.0, y: 0.9, split: 'train' },
+                          { id: 's5', x: 2.0, y: 1.8, split: 'train' },
+                        ])
+                      }
+                      class="px-2 py-0.5 rounded bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
+                      title="Generate 5 sample training points for empirical loss surface"
+                    >
+                      + Sample Data
+                    </button>
+                  )}
               </div>
 
               {graph.rightViewportMode === 'loss_surface' && (

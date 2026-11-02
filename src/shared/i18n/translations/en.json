@@ -23,6 +23,6 @@
   "tool_llm_profiler_desc": "Calculate VRAM requirements and estimate hardware performance for LLMs.",
   "tool_paste": "Encrypted Paste",
   "tool_paste_desc": "Share notes with end-to-end encryption. Text is encrypted in your browser; the key stays in the link.",
-  "tool_openmlgraph": "OpenMLGraph",
-  "tool_openmlgraph_desc": "Interactive ML math sandbox, symbolic/AutoDiff graphing & 3D optimizer race."
+  "tool_openmlgraph": "OpenMathGraph",
+  "tool_openmlgraph_desc": "Interactive 2D/3D graphing calculator, symbolic calculus, whiteboard & optimization lab."
 }

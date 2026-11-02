@@ -22,6 +22,7 @@ import {
   evaluateEmpiricalLossAndGrad,
   evaluateSingleSamplePull,
   packDataset,
+  resolveSurfaceParamPair,
 } from '../core/simulation/loss-evaluator';
 import { runOptimizerRace } from '../core/simulation/optimizers';
 import type { SymbolRole } from '../types/math';
@@ -172,8 +173,7 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
 
   // Evaluate Dual-Space Empirical Loss, 128x128 Landscape, 50x50 Vector Field & 4-Optimizer Race
   const packed = packDataset(req.dataPoints, req.batchNormEnabled);
-  const w1 = req.paramValues['w'] ?? req.paramValues['w_1'] ?? req.paramValues['mu'] ?? 1.0;
-  const w2 = req.paramValues['b'] ?? req.paramValues['w_2'] ?? req.paramValues['sigma'] ?? 0.0;
+  const { w1, w2 } = resolveSurfaceParamPair(req.paramValues);
   const delta = req.paramValues['delta'] ?? 1.0;
   const lambda = req.paramValues['lambda'] ?? 0.1;
   const eta = req.paramValues['eta'] ?? 0.08;

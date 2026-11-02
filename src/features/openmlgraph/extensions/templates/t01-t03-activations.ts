@@ -41,7 +41,7 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
     pedagogicalFocusKey: 'Vanishing Gradient in Deep Sigmoid/Tanh Networks',
     buildInitialState: () => ({
       activeTemplateId: 'T-01',
-      title: 'T-01: Sigmoid, Tanh & Vanishing Gradient',
+      title: 'Sigmoid, Tanh & Vanishing Gradient',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       showResiduals: false,
@@ -93,7 +93,7 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
     pedagogicalFocusKey: 'Dead ReLU & Smooth Gate Rescue (GELU / Swish)',
     buildInitialState: () => ({
       activeTemplateId: 'T-02',
-      title: 'T-02: ReLU Family: LeakyReLU, ELU, Swish & GELU',
+      title: 'ReLU Family: LeakyReLU, ELU, Swish & GELU',
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       showResiduals: false,
@@ -144,7 +144,7 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
     pedagogicalFocusKey: 'Temperature Scaling & Barycentric 2-Simplex',
     buildInitialState: () => ({
       activeTemplateId: 'T-03',
-      title: 'T-03: Softmax with Temperature τ & 2-Simplex',
+      title: 'Temperature Softmax & 2-Simplex',
       viewMode: 'dual',
       rightViewportMode: 'softmax_simplex',
       showResiduals: false,

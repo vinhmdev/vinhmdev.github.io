@@ -5,7 +5,7 @@
 import type { JSX } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { OptimizerId } from '../types/state';
-import type { GraphStoreState } from '../state/store';
+import { graphStore, type GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
 import { IconPause, IconPlay } from './icons';
 
@@ -36,12 +36,7 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
   useEffect(() => {
     if (!race.playing) return;
     const timer = setInterval(() => {
-      const cur = storeState.graph.optimizerRace;
-      if (cur.currentStep >= cur.steps) {
-        storeState.updateOptimizerRace({ playing: false });
-      } else {
-        storeState.updateOptimizerRace({ currentStep: cur.currentStep + 1 });
-      }
+      graphStore.getState().stepOptimizerRace();
     }, 45);
     return () => clearInterval(timer);
   }, [race.playing]);

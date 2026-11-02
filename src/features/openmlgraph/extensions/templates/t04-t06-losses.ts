@@ -15,7 +15,7 @@ export const TEMPLATES_T04_T06: LessonTemplate[] = [
     pedagogicalFocusKey: 'Outlier Robustness: Quadratic MSE vs Linear-Tail Huber & MAE',
     buildInitialState: () => ({
       activeTemplateId: 'T-04',
-      title: 'T-04: Loss Showdown: MSE vs. MAE vs. Huber',
+      title: 'Loss Showdown: MSE, MAE & Huber',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'huber',
@@ -77,7 +77,7 @@ export const TEMPLATES_T04_T06: LessonTemplate[] = [
     pedagogicalFocusKey: 'Convexity of BCEWithLogits vs Non-Convex Saturation of MSE on Sigmoid',
     buildInitialState: () => ({
       activeTemplateId: 'T-05',
-      title: 'T-05: Binary Cross-Entropy vs. Classification MSE',
+      title: 'Binary Cross-Entropy vs. Classification MSE',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'bce',
@@ -126,7 +126,7 @@ export const TEMPLATES_T04_T06: LessonTemplate[] = [
     pedagogicalFocusKey: 'SVM Hinge Kink at Margin = 1 & Support Vector Sparsity',
     buildInitialState: () => ({
       activeTemplateId: 'T-06',
-      title: 'T-06: Hinge Loss & SVM Maximum Margin',
+      title: 'Hinge Loss & SVM Max Margin',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'hinge',

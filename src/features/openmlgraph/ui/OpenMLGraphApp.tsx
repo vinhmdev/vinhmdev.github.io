@@ -19,8 +19,7 @@ import { runCustomOptimizerTrajectoryInWasm } from '../extensions/quickjs-sandbo
 import { exportDualViewportPng } from '../renderers/image-exporter';
 import { fetchCommunityGraph } from '../state/firebase-gallery-store';
 import { classifyUrlHash } from '../state/hash-router';
-import { loadStateFromLocalStorage } from '../state/local-persistence';
-import { graphStore, type GraphStoreState } from '../state/store';
+import { createInitialGraphState, graphStore, type GraphStoreState } from '../state/store';
 import {
   decodeStateFromUrlHashSync,
   encodeStateToUrlHashSync,
@@ -269,11 +268,9 @@ export default function OpenMLGraphApp(): JSX.Element {
       }
 
       if (isInitialLoad) {
-        // Fallback: restore local auto-saved state
-        const savedLocal = loadStateFromLocalStorage();
-        if (savedLocal) {
-          st.loadFullState(migrateSchemaToV2(savedLocal, st.graph), false);
-        }
+        // Default on entering the web app without a URL hash is always Blank Canvas (T-00)
+        st.setSessionMode('local_url', null);
+        st.loadFullState(createInitialGraphState('T-00'), false);
       }
     };
 
@@ -358,8 +355,8 @@ export default function OpenMLGraphApp(): JSX.Element {
         />
       </div>
 
-      {/* Bottom 4-Optimizer Race Bar (Shown in Optimization / Dual-Space modes) */}
-      {storeState.graph.viewMode !== 'inference' && (
+      {/* Bottom 4-Optimizer Race Bar (Shown in ML Optimization / Dual-Space modes) */}
+      {storeState.workspaceMode === 'ml' && storeState.graph.viewMode !== 'inference' && (
         <OptimizerRaceBar storeState={storeState} />
       )}
 

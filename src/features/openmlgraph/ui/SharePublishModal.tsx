@@ -37,7 +37,7 @@ export function SharePublishModal({
   const [activeTab, setActiveTab] = useState<'e2ee' | 'gallery' | 'stateless'>('e2ee');
   const [e2eeMode, setE2eeMode] = useState<PasteMode>('editable');
   const [ttlDays, setTtlDays] = useState(30);
-  const [title, setTitle] = useState(graph.title || 'Interactive ML Graph');
+  const [title, setTitle] = useState(graph.title || 'Interactive Math Graph');
   const [author, setAuthor] = useState('VinhMDev');
   const [category, setCategory] = useState<PublicGraphCategory>('activation');
   const [description, setDescription] = useState('');
@@ -47,7 +47,7 @@ export function SharePublishModal({
   const statelessHash = encodeStateToUrlHashSync(graph);
   const statelessFullUrl =
     typeof location !== 'undefined'
-      ? `${location.origin}/openmlgraph/${statelessHash}`
+      ? `${location.origin}${location.pathname}${statelessHash}`
       : `/openmlgraph/${statelessHash}`;
 
   const handleCreateE2eeLink = async (): Promise<void> => {
@@ -62,7 +62,7 @@ export function SharePublishModal({
       const keyStr = keyToString(key);
       const enc = await encrypt(encodePayload(title, serialized), key);
       const pasteId = await createPaste(enc, { ttlDays, mode: e2eeMode });
-      const url = `${location.origin}/openmlgraph/#${pasteId}.${keyStr}`;
+      const url = `${location.origin}${location.pathname}#${pasteId}.${keyStr}`;
 
       const now = Date.now();
       docHistoryStore.saveDoc(
@@ -113,7 +113,7 @@ export function SharePublishModal({
         payload: statelessHash,
         ttlDays: 365,
       });
-      const url = `${location.origin}/openmlgraph/#g.${id}`;
+      const url = `${location.origin}${location.pathname}#g.${id}`;
       storeState.setSessionMode('public_gallery', null);
       history.replaceState(null, '', `#g.${id}`);
       setGeneratedUrl(url);
@@ -255,7 +255,7 @@ export function SharePublishModal({
           {activeTab === 'gallery' && (
             <>
               <p class="text-neutral-500">
-                Share publicly with everyone in the OpenMLGraph Community Gallery (`public_graphs`).
+                Share publicly with everyone in the OpenMathGraph Community Gallery (`public_graphs`).
               </p>
               <div class="grid grid-cols-2 gap-2">
                 <input

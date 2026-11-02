@@ -56,12 +56,12 @@ export function downloadStateJsonFile(state: GraphStateV2): void {
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const slug = (state.title || 'openmlgraph-session')
+  const slug = (state.title || 'openmathgraph-session')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
   a.href = url;
-  a.download = `${slug || 'openmlgraph'}.json`;
+  a.download = `${slug || 'openmathgraph'}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }

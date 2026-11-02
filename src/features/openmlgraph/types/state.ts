@@ -7,6 +7,9 @@ export type { SubgradConvention };
 /** Three primary view modes in [FR-1.4] */
 export type ViewMode = 'inference' | 'optimization' | 'dual';
 
+/** Two high-level workspace perspectives: General Math/Graphing vs ML/Optimization Lab */
+export type WorkspaceMode = 'math' | 'ml';
+
 /** Interactive Whiteboard / Freehand Annotation tool on the 2D Graph Canvas */
 export type WhiteboardTool = 'cursor' | 'pen' | 'highlighter' | 'eraser';
 

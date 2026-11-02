@@ -67,6 +67,6 @@ export function exportDualViewportPng(opts: {
   const dataUrl = outCanvas.toDataURL('image/png');
   const a = document.createElement('a');
   a.href = dataUrl;
-  a.download = 'openmlgraph-export.png';
+  a.download = 'openmathgraph-export.png';
   a.click();
 }

@@ -19,26 +19,28 @@ import type {
   Viewport2DBounds,
   WhiteboardStroke,
   WhiteboardTool,
+  WorkspaceMode,
 } from '../types/state';
 import {
   classifyLatexExpression,
   classifySymbolRole,
 } from '../core/parser/ast-classifier';
-import { getTemplateById } from '../extensions/templates';
+import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
+import { getTemplateById, isMathTemplateId } from '../extensions/templates';
 import { scheduleAutoSave } from './local-persistence';
 import { scheduleStatelessUrlUpdate } from './hash-router';
 import { encodeStateToUrlHashSync } from './url-codec';
 
 const MAX_UNDO_STEPS = 50;
 
-export function createInitialGraphState(templateId = 'T-01'): GraphStateV2 {
+export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
   const tpl = getTemplateById(templateId);
   const partial = tpl.buildInitialState();
 
   const base: GraphStateV2 = {
     v: 2,
     activeTemplateId: tpl.id,
-    title: partial.title ?? 'OpenMLGraph Session',
+    title: partial.title ?? 'OpenMathGraph Session',
     viewMode: partial.viewMode ?? 'dual',
     rightViewportMode: partial.rightViewportMode ?? 'loss_surface',
     subgradConvention: partial.subgradConvention ?? 'zero',
@@ -143,8 +145,8 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     }
   }
 
-  // In Freeform Blank Graph mode (T-00), prune unused sliders when expressions change or are cleared
-  if (state.activeTemplateId === 'T-00' && !hasInvalidNonEmptyExpr) {
+  // In General Math / Blank Graph mode (T-00, M-*), prune unused sliders when expressions change or are cleared
+  if (isMathTemplateId(state.activeTemplateId) && !hasInvalidNonEmptyExpr) {
     for (const key of Object.keys(nextSliders)) {
       if (!activeSymbols.has(key)) {
         delete nextSliders[key];
@@ -160,6 +162,7 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
 
 export interface GraphStoreState {
   graph: GraphStateV2;
+  workspaceMode: WorkspaceMode;
   undoStack: GraphStateV2[];
   redoStack: GraphStateV2[];
   sessionMode: HashSessionMode;
@@ -198,6 +201,7 @@ export interface GraphStoreState {
   loadFullState: (next: GraphStateV2, pushUndo?: boolean) => void;
   selectTemplate: (templateId: string) => void;
   resetToBlankCanvas: () => void;
+  setWorkspaceMode: (mode: WorkspaceMode) => void;
   setViewMode: (mode: ViewMode) => void;
   setMobileTab: (tab: MobileTabMode) => void;
   setSubgradConvention: (conv: SubgradConvention) => void;
@@ -208,9 +212,11 @@ export interface GraphStoreState {
     id: string,
     prop: 'visible' | 'showFirstDerivative' | 'showSecondDerivative'
   ) => void;
+  setSymbolRole: (symbolName: string, nextRole: SymbolRole) => void;
   cycleSymbolRole: (symbolName: string) => void;
   setSliderValue: (name: string, value: number, commitUndo?: boolean) => void;
   updateSliderBounds: (name: string, bounds: Partial<SliderState>) => void;
+  stepPlayingSliders: (dtSec: number) => boolean;
   addDataPoint: (pt: Omit<DataPoint2D, 'id'>) => void;
   updateDataPoint: (id: string, x: number, y: number) => void;
   removeDataPoint: (id: string) => void;
@@ -224,6 +230,7 @@ export interface GraphStoreState {
   setRightViewport: (vp: Viewport2DBounds) => void;
   setOrbit3D: (pitch: number, yaw: number, zScale?: number) => void;
   updateOptimizerRace: (patch: Partial<GraphStateV2['optimizerRace']>) => void;
+  stepOptimizerRace: () => boolean;
   flipBayesianCoins: (numFlips: number, trueProb?: number) => void;
   undo: () => void;
   redo: () => void;
@@ -275,7 +282,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
   }
 
   return {
-    graph: createInitialGraphState('T-01'),
+    graph: createInitialGraphState('T-00'),
+    workspaceMode: 'math',
     undoStack: [],
     redoStack: [],
     sessionMode: 'local_url',
@@ -299,22 +307,56 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     computeDurationMs: 0,
 
     loadFullState(next, pushUndo = false) {
+      const inferredMode: WorkspaceMode =
+        isMathTemplateId(next.activeTemplateId) && next.viewMode === 'inference'
+          ? 'math'
+          : 'ml';
+      set({ workspaceMode: inferredMode });
       commitGraph(next, pushUndo);
     },
 
     selectTemplate(templateId) {
       const next = createInitialGraphState(templateId);
-      set({ whiteboardStrokes: [], whiteboardTool: 'cursor', brushActive: false });
+      const nextMode: WorkspaceMode = isMathTemplateId(templateId) ? 'math' : 'ml';
+      set({
+        workspaceMode: nextMode,
+        whiteboardStrokes: [],
+        whiteboardTool: 'cursor',
+        brushActive: false,
+      });
       commitGraph(next, true);
     },
 
     resetToBlankCanvas() {
       const next = createInitialGraphState('T-00');
-      set({ whiteboardStrokes: [], whiteboardTool: 'cursor', brushActive: false });
+      set({
+        workspaceMode: 'math',
+        whiteboardStrokes: [],
+        whiteboardTool: 'cursor',
+        brushActive: false,
+      });
       commitGraph(next, true);
     },
 
+    setWorkspaceMode(workspaceMode) {
+      const g = get().graph;
+      if (workspaceMode === 'math') {
+        set({ workspaceMode: 'math' });
+        if (g.viewMode !== 'inference') {
+          commitGraph({ ...g, viewMode: 'inference' }, false);
+        }
+      } else {
+        set({ workspaceMode: 'ml' });
+        if (g.viewMode === 'inference') {
+          commitGraph({ ...g, viewMode: 'dual' }, false);
+        }
+      }
+    },
+
     setViewMode(viewMode) {
+      if (viewMode !== 'inference' && get().workspaceMode === 'math') {
+        set({ workspaceMode: 'ml' });
+      }
       commitGraph({ ...get().graph, viewMode }, true);
     },
 
@@ -336,7 +378,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const g = get().graph;
       const idx = g.expressions.length;
       const defaultExpr =
-        customLatex ?? (g.activeTemplateId === 'T-00' ? '\\sin(x)' : 'w \\cdot x + b');
+        customLatex ?? (isMathTemplateId(g.activeTemplateId) ? '\\sin(x)' : 'w \\cdot x + b');
       const newExpr: ExpressionItem = {
         id: `expr-${Date.now()}-${idx}`,
         latex: defaultExpr,
@@ -374,11 +416,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       commitGraph({ ...g, expressions }, true);
     },
 
-    cycleSymbolRole(symbolName) {
+    setSymbolRole(symbolName, nextRole) {
       const g = get().graph;
       const current = classifySymbolRole(symbolName, g.symbolOverrides);
-      const order: SymbolRole[] = ['param', 'data_var', 'hyperparam'];
-      const nextRole = order[(order.indexOf(current) + 1) % order.length];
+      if (current === nextRole) return;
+
       const symbolOverrides: Record<string, SymbolRole> = {
         ...g.symbolOverrides,
         [symbolName]: nextRole,
@@ -401,27 +443,39 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           }
         }
       } else if (current === 'data_var') {
-        // Ensure at least one symbol acts as horizontal axis ('data_var')
+        // Ensure at least one symbol acts as horizontal axis ('data_var'), preferring 'x' first
         const hasOtherDataVar = Array.from(allSyms.entries()).some(
           ([name, role]) => name !== symbolName && (symbolOverrides[name] ?? role) === 'data_var'
         );
         if (!hasOtherDataVar) {
-          const candidateParam = Array.from(allSyms.entries()).find(
-            ([name, role]) => name !== symbolName && (symbolOverrides[name] ?? role) === 'param'
-          );
-          if (candidateParam) {
-            symbolOverrides[candidateParam[0]] = 'data_var';
+          if (symbolName !== 'x' && allSyms.has('x')) {
+            symbolOverrides['x'] = 'data_var';
+          } else {
+            const candidateParam = Array.from(allSyms.entries()).find(
+              ([name, role]) => name !== symbolName && (symbolOverrides[name] ?? role) === 'param'
+            );
+            if (candidateParam) {
+              symbolOverrides[candidateParam[0]] = 'data_var';
+            }
           }
         }
       }
 
       const viewMode: ViewMode =
-        nextRole === 'data_var' && symbolName !== 'x'
-          ? 'optimization'
-          : nextRole === 'param' && symbolName !== 'x'
-            ? 'inference'
+        get().workspaceMode === 'math'
+          ? 'inference'
+          : g.viewMode === 'optimization' && nextRole === 'data_var'
+            ? 'dual'
             : g.viewMode;
       commitGraph({ ...g, symbolOverrides, viewMode }, true);
+    },
+
+    cycleSymbolRole(symbolName) {
+      const g = get().graph;
+      const current = classifySymbolRole(symbolName, g.symbolOverrides);
+      const order: SymbolRole[] = ['param', 'data_var', 'hyperparam'];
+      const nextRole = order[(order.indexOf(current) + 1) % order.length];
+      get().setSymbolRole(symbolName, nextRole);
     },
 
     setSliderValue(name, value, commitUndo = false) {
@@ -445,6 +499,47 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         [name]: { ...existing, ...bounds },
       };
       commitGraph({ ...g, sliders }, false);
+    },
+
+    stepPlayingSliders(dtSec) {
+      const g = get().graph;
+      const clampedDt = Math.min(Math.max(dtSec, 0.001), 0.1);
+      let anyUpdated = false;
+      const nextSliders: Record<string, SliderState> = { ...g.sliders };
+
+      for (const [key, s] of Object.entries(g.sliders)) {
+        if (!s.playing) continue;
+        const span = s.max - s.min;
+        if (span <= 0) continue;
+        const dir: 1 | -1 = s.direction === -1 ? -1 : 1;
+        const delta = span * 0.25 * (s.speed || 1) * clampedDt * dir;
+        let nextVal = s.value + delta;
+        let nextDir: 1 | -1 = dir;
+
+        if (nextVal >= s.max) {
+          if (s.loopMode === 'bounce') {
+            nextVal = s.max;
+            nextDir = -1;
+          } else {
+            nextVal = s.min;
+          }
+        } else if (nextVal <= s.min) {
+          if (s.loopMode === 'bounce') {
+            nextVal = s.min;
+            nextDir = 1;
+          } else {
+            nextVal = s.max;
+          }
+        }
+
+        nextSliders[key] = { ...s, value: nextVal, direction: nextDir };
+        anyUpdated = true;
+      }
+
+      if (anyUpdated) {
+        commitGraph({ ...g, sliders: nextSliders }, false);
+      }
+      return anyUpdated;
     },
 
     addDataPoint(pt) {
@@ -535,6 +630,71 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       );
     },
 
+    stepOptimizerRace() {
+      const { graph: g, trajectories } = get();
+      const cur = g.optimizerRace;
+      if (!cur.playing) return false;
+      if (cur.currentStep >= cur.steps) {
+        commitGraph(
+          {
+            ...g,
+            optimizerRace: { ...cur, playing: false },
+          },
+          false
+        );
+        return false;
+      }
+
+      const nextStep = cur.currentStep + 1;
+      const nextSliders: Record<string, SliderState> = { ...g.sliders };
+
+      // Sync active model parameter pair (w/b, w_1/w_2, mu/sigma, a/b, etc.) to leading enabled trajectory
+      const priorityOrder: OptimizerId[] = ['adam', 'momentum', 'rmsprop', 'sgd', 'custom_js'];
+      const leadOpt = priorityOrder.find(
+        (id) => cur.enabledOptimizers[id] && trajectories[id] && trajectories[id].length > 0
+      );
+      if (leadOpt) {
+        const traj = trajectories[leadOpt];
+        const pt = traj[Math.min(nextStep, traj.length - 1)];
+        if (pt && Number.isFinite(pt.w1) && Number.isFinite(pt.w2)) {
+          const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
+          if (nextSliders[w1Key]) {
+            nextSliders[w1Key] = {
+              ...nextSliders[w1Key],
+              value: Math.min(
+                Math.max(pt.w1, nextSliders[w1Key].min),
+                nextSliders[w1Key].max
+              ),
+            };
+          }
+          if (nextSliders[w2Key] && w2Key !== w1Key) {
+            const rawW2 = w2Key === 'sigma' ? Math.max(0.1, pt.w2) : pt.w2;
+            nextSliders[w2Key] = {
+              ...nextSliders[w2Key],
+              value: Math.min(
+                Math.max(rawW2, nextSliders[w2Key].min),
+                nextSliders[w2Key].max
+              ),
+            };
+          }
+        }
+      }
+
+      commitGraph(
+        {
+          ...g,
+          sliders: nextSliders,
+          optimizerRace: {
+            ...cur,
+            currentStep: nextStep,
+            playing: nextStep < cur.steps,
+          },
+        },
+        false
+      );
+      return nextStep < cur.steps;
+    },
+
     flipBayesianCoins(numFlips, trueProb = 0.65) {
       const g = get().graph;
       const kSlider = g.sliders['k'];
@@ -563,8 +723,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const { undoStack, redoStack, graph } = get();
       if (undoStack.length === 0) return;
       const previous = undoStack[undoStack.length - 1];
+      const workspaceMode: WorkspaceMode =
+        isMathTemplateId(previous.activeTemplateId) && previous.viewMode === 'inference'
+          ? 'math'
+          : 'ml';
       set({
         graph: previous,
+        workspaceMode,
         undoStack: undoStack.slice(0, -1),
         redoStack: [graph, ...redoStack].slice(0, MAX_UNDO_STEPS),
       });
@@ -574,8 +739,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const { undoStack, redoStack, graph } = get();
       if (redoStack.length === 0) return;
       const next = redoStack[0];
+      const workspaceMode: WorkspaceMode =
+        isMathTemplateId(next.activeTemplateId) && next.viewMode === 'inference'
+          ? 'math'
+          : 'ml';
       set({
         graph: next,
+        workspaceMode,
         undoStack: [...undoStack, graph].slice(-MAX_UNDO_STEPS),
         redoStack: redoStack.slice(1),
       });

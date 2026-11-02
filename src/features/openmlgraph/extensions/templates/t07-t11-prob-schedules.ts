@@ -15,7 +15,7 @@ export const TEMPLATES_T07_T11: LessonTemplate[] = [
     pedagogicalFocusKey: 'Gaussian Density Drop-Lines & Negative Log-Likelihood Surface (μ, σ)',
     buildInitialState: () => ({
       activeTemplateId: 'T-07',
-      title: 'T-07: Gaussian Maximum Likelihood (MLE)',
+      title: 'Gaussian Maximum Likelihood (MLE)',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'gaussian_nll',
@@ -55,7 +55,7 @@ export const TEMPLATES_T07_T11: LessonTemplate[] = [
     pedagogicalFocusKey: 'Forward KL (Mean-Seeking) vs Reverse KL (Mode-Seeking) via 32-Pt Gauss-Legendre',
     buildInitialState: () => ({
       activeTemplateId: 'T-08',
-      title: 'T-08: Forward vs. Reverse KL Divergence',
+      title: 'Forward vs. Reverse KL Divergence',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'kl_div',
@@ -96,7 +96,7 @@ export const TEMPLATES_T07_T11: LessonTemplate[] = [
     pedagogicalFocusKey: 'Bayesian Conjugate Prior-to-Posterior Updating with Lanczos lgamma',
     buildInitialState: () => ({
       activeTemplateId: 'T-09',
-      title: 'T-09: Bayesian Posterior Update (Beta-Bernoulli)',
+      title: 'Bayesian Posterior Update (Beta-Bernoulli)',
       viewMode: 'inference',
       leftViewport: { xMin: 0.0, xMax: 1.0, yMin: -0.2, yMax: 5.5 },
       expressions: [
@@ -137,7 +137,7 @@ export const TEMPLATES_T07_T11: LessonTemplate[] = [
     pedagogicalFocusKey: 'Spectral Stability Threshold η = 2 / λ_max & Divergence Guard',
     buildInitialState: () => ({
       activeTemplateId: 'T-10',
-      title: 'T-10: Learning Rate Divergence Threshold (η > 2/λ)',
+      title: 'Learning Rate Divergence (η > 2/λ)',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'mse',
@@ -170,7 +170,7 @@ export const TEMPLATES_T07_T11: LessonTemplate[] = [
     pedagogicalFocusKey: 'SGDR Cosine Annealing & Warm Restarts on Rastrigin-like Landscape',
     buildInitialState: () => ({
       activeTemplateId: 'T-11',
-      title: 'T-11: Cosine Annealing & Warm Restarts',
+      title: 'Cosine Annealing & Warm Restarts',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'rastrigin',

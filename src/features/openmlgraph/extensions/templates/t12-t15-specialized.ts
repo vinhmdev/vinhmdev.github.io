@@ -15,7 +15,7 @@ export const TEMPLATES_T12_T15: LessonTemplate[] = [
     pedagogicalFocusKey: 'Hessian Condition Number Reduction via Batch Normalization',
     buildInitialState: () => ({
       activeTemplateId: 'T-12',
-      title: 'T-12: Batch Normalization & Loss Landscape Conditioning',
+      title: 'BatchNorm & Loss Surface Conditioning',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
       lossKind: 'mse',
@@ -56,7 +56,7 @@ export const TEMPLATES_T12_T15: LessonTemplate[] = [
     pedagogicalFocusKey: 'Decision Threshold τ Trade-off (FPR vs TPR) & Area Under ROC Curve',
     buildInitialState: () => ({
       activeTemplateId: 'T-13',
-      title: 'T-13: 2D Logistic Regression & ROC-AUC Curve',
+      title: '2D Logistic Regression & ROC-AUC',
       viewMode: 'dual',
       rightViewportMode: 'roc_curve',
       lossKind: 'bce',
@@ -99,7 +99,7 @@ export const TEMPLATES_T12_T15: LessonTemplate[] = [
     pedagogicalFocusKey: 'Cover’s Theorem & RBF Kernel Feature Space Lift',
     buildInitialState: () => ({
       activeTemplateId: 'T-14',
-      title: 'T-14: SVM Kernel Trick (2D Rings → 3D RBF)',
+      title: 'SVM Kernel Trick (2D Rings → 3D RBF)',
       viewMode: 'dual',
       rightViewportMode: 'svm_feature_3d',
       expressions: [
@@ -139,7 +139,7 @@ export const TEMPLATES_T12_T15: LessonTemplate[] = [
     pedagogicalFocusKey: 'Topological Space Folding by Hidden Layer Representations (XOR)',
     buildInitialState: () => ({
       activeTemplateId: 'T-15',
-      title: 'T-15: 2-Layer MLP & Homotopy Space Folding (XOR)',
+      title: '2-Layer MLP & Space Folding (XOR)',
       viewMode: 'dual',
       rightViewportMode: 'mlp_grid_warp',
       expressions: [

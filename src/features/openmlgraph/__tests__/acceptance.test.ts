@@ -28,6 +28,7 @@ import {
   computeLossSurfaceAndVectorField,
   evaluateEmpiricalLossAndGrad,
   packDataset,
+  resolveSurfaceParamPair,
 } from '../core/simulation/loss-evaluator';
 import { runOptimizerRace } from '../core/simulation/optimizers';
 import {
@@ -36,7 +37,11 @@ import {
   warpMlpHomotopyPoint,
 } from '../core/simulation/special-kernels';
 import { getRegisteredMathFunction } from '../extensions/contracts';
-import { ALL_ML_TEMPLATES } from '../extensions/templates';
+import {
+  ALL_ML_TEMPLATES,
+  isMathTemplateId,
+  MATH_TEMPLATES,
+} from '../extensions/templates';
 import {
   getDefaultCustomOptimizerCode,
   runCustomOptimizerInWasmSandbox,
@@ -687,6 +692,178 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     graphStore.getState().clearWhiteboard();
     expect(graphStore.getState().whiteboardStrokes.length).toBe(0);
   });
+
+  it('defaults createInitialGraphState() to T-00 Blank template and animates parameter sliders + Drop-Ring Launch playback across consecutive ticks', () => {
+    // 1. Default template is T-00 (Blank Canvas)
+    const defaultInit = createInitialGraphState();
+    expect(defaultInit.activeTemplateId).toBe('T-00');
+    expect(defaultInit.viewMode).toBe('inference');
+
+    // 2. Parameter & Hyperparameter slider Play animation advances continuously across ticks
+    graphStore.getState().resetToBlankCanvas();
+    const initialA = graphStore.getState().graph.sliders['a'].value;
+    graphStore.getState().updateSliderBounds('a', { playing: true, speed: 2, direction: 1 });
+
+    expect(graphStore.getState().stepPlayingSliders(0.05)).toBe(true);
+    const afterTick1 = graphStore.getState().graph.sliders['a'].value;
+    expect(afterTick1).toBeGreaterThan(initialA);
+
+    expect(graphStore.getState().stepPlayingSliders(0.05)).toBe(true);
+    const afterTick2 = graphStore.getState().graph.sliders['a'].value;
+    expect(afterTick2).toBeGreaterThan(afterTick1);
+
+    // Bounce at upper bound
+    graphStore.getState().updateSliderBounds('a', {
+      value: 4.95,
+      max: 5,
+      min: -5,
+      direction: 1,
+      loopMode: 'bounce',
+    });
+    graphStore.getState().stepPlayingSliders(0.1);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(5);
+    expect(graphStore.getState().graph.sliders['a'].direction).toBe(-1);
+
+    // 3. Drop-Ring Launch playback advances currentStep from 0 -> steps and syncs (w, b) sliders
+    graphStore.getState().selectTemplate('T-04');
+    const g4 = graphStore.getState().graph;
+    const jobRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 1,
+      expressions: g4.expressions,
+      paramValues: { w: 1.0, b: 0.0, delta: 1.0, lambda: 0.1, eta: 0.08, beta: 0.9 },
+      symbolOverrides: g4.symbolOverrides,
+      subgradConvention: g4.subgradConvention,
+      leftViewport: g4.leftViewport,
+      rightViewport: g4.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: g4.dataPoints,
+      lossKind: g4.lossKind,
+      regularizationKind: g4.regularizationKind,
+      regularizationRadius: g4.regularizationRadius,
+      batchNormEnabled: g4.batchNormEnabled,
+      optimizerRace: { ...g4.optimizerRace, steps: 5 },
+      hoveredDataPointId: null,
+    });
+    graphStore.getState().applyWorkerResult(jobRes);
+    graphStore.getState().updateOptimizerRace({ steps: 5, currentStep: 0, playing: true });
+
+    for (let step = 1; step <= 5; step++) {
+      const keepPlaying = graphStore.getState().stepOptimizerRace();
+      expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(step);
+      expect(keepPlaying).toBe(step < 5);
+    }
+    expect(graphStore.getState().graph.optimizerRace.playing).toBe(false);
+    expect(graphStore.getState().graph.sliders['w'].value).toBeCloseTo(
+      jobRes.trajectories.adam[5].w1,
+      4
+    );
+
+    // 4. Direct setSymbolRole(name, role) switches Param <-> Hyper without hijacking Data role
+    graphStore.getState().resetToBlankCanvas();
+    graphStore.getState().setSymbolRole('c', 'data_var');
+    expect(graphStore.getState().graph.symbolOverrides['c']).toBe('data_var');
+    // Switching 'a' directly from Param -> Hyper must NOT steal 'data_var' from 'c'
+    graphStore.getState().setSymbolRole('a', 'hyperparam');
+    expect(graphStore.getState().graph.symbolOverrides['a']).toBe('hyperparam');
+    expect(graphStore.getState().graph.symbolOverrides['c']).toBe('data_var');
+    expect(graphStore.getState().graph.sliders['a'].role).toBe('hyperparam');
+  });
+
+  it('validates General Math templates (M-01..M-05) and WorkspaceMode (math vs ml) perspective transitions', () => {
+    expect(MATH_TEMPLATES.length).toBe(5);
+    for (const tpl of MATH_TEMPLATES) {
+      expect(isMathTemplateId(tpl.id)).toBe(true);
+      graphStore.getState().selectTemplate(tpl.id);
+      const st = graphStore.getState();
+      expect(st.workspaceMode).toBe('math');
+      expect(st.graph.activeTemplateId).toBe(tpl.id);
+      expect(st.graph.viewMode).toBe('inference');
+      for (const expr of st.graph.expressions) {
+        expect(classifyLatexExpression(expr.latex).valid).toBe(true);
+      }
+    }
+
+    // Selecting an ML template switches perspective to 'ml'
+    graphStore.getState().selectTemplate('T-04');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
+    expect(graphStore.getState().graph.viewMode).toBe('dual');
+
+    // Manual perspective switch to 'math' forces clean 2D inference view
+    graphStore.getState().setWorkspaceMode('math');
+    expect(graphStore.getState().workspaceMode).toBe('math');
+    expect(graphStore.getState().graph.viewMode).toBe('inference');
+
+    // Manual perspective switch back to 'ml' opens Dual-Space 2D + 3D view
+    graphStore.getState().setWorkspaceMode('ml');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
+    expect(graphStore.getState().graph.viewMode).toBe('dual');
+
+    // In 'math' mode, selecting a non-'x' plot axis (e.g. 'a') must keep viewMode === 'inference' (never hide 2D graph)
+    graphStore.getState().resetToBlankCanvas();
+    expect(graphStore.getState().workspaceMode).toBe('math');
+    graphStore.getState().setSymbolRole('a', 'data_var');
+    expect(graphStore.getState().graph.symbolOverrides['a']).toBe('data_var');
+    expect(graphStore.getState().graph.viewMode).toBe('inference');
+    expect(graphStore.getState().workspaceMode).toBe('math');
+
+    // Undo / Redo across template transitions keeps workspaceMode synchronized
+    graphStore.getState().resetToBlankCanvas();
+    expect(graphStore.getState().workspaceMode).toBe('math');
+    graphStore.getState().selectTemplate('T-04');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
+    graphStore.getState().undo();
+    expect(graphStore.getState().graph.activeTemplateId).toBe('T-00');
+    expect(graphStore.getState().workspaceMode).toBe('math');
+    graphStore.getState().redo();
+    expect(graphStore.getState().graph.activeTemplateId).toBe('T-04');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
+
+    // resolveSurfaceParamPair maps both ML (w/b, mu/sigma) and Math (a/b, a/k, m/d) sliders to 3D surface axes
+    graphStore.getState().resetToBlankCanvas();
+    const blankPair = resolveSurfaceParamPair(graphStore.getState().graph.sliders);
+    expect(blankPair.w1Key).toBe('a');
+    expect(blankPair.w2Key).toBe('b');
+
+    graphStore.getState().selectTemplate('M-04');
+    const m04Pair = resolveSurfaceParamPair(graphStore.getState().graph.sliders);
+    expect(m04Pair.w1Key).toBe('a');
+    expect(m04Pair.w2Key).toBe('k');
+
+    // Drop-Ring Launch on T-00 after switching to 'ml' mode animates sliders (a, b)
+    graphStore.getState().resetToBlankCanvas();
+    graphStore.getState().setWorkspaceMode('ml');
+    const g0 = graphStore.getState().graph;
+    const res0 = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 2,
+      expressions: g0.expressions,
+      paramValues: { a: 2.0, b: 1.0, c: 0.0 },
+      symbolOverrides: g0.symbolOverrides,
+      subgradConvention: g0.subgradConvention,
+      leftViewport: g0.leftViewport,
+      rightViewport: g0.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: g0.dataPoints,
+      lossKind: g0.lossKind,
+      regularizationKind: g0.regularizationKind,
+      regularizationRadius: g0.regularizationRadius,
+      batchNormEnabled: g0.batchNormEnabled,
+      optimizerRace: { ...g0.optimizerRace, steps: 3 },
+      hoveredDataPointId: null,
+    });
+    graphStore.getState().applyWorkerResult(res0);
+    graphStore.getState().updateOptimizerRace({ steps: 3, currentStep: 0, playing: true });
+    graphStore.getState().stepOptimizerRace();
+    expect(graphStore.getState().graph.sliders['a'].value).toBeCloseTo(
+      res0.trajectories.adam[1].w1,
+      4
+    );
+    expect(graphStore.getState().graph.sliders['b'].value).toBeCloseTo(
+      res0.trajectories.adam[1].w2,
+      4
+    );
+  });
 });
-
-

@@ -35,6 +35,83 @@ export interface PackedDataset {
   stdX: number;
 }
 
+const HYPERPARAM_KEYS = new Set(['delta', 'lambda', 'eta', 'beta', 'gamma', 'alpha']);
+
+const CANONICAL_PARAM_PAIRS: [string, string][] = [
+  ['w', 'b'],
+  ['w_1', 'w_2'],
+  ['mu', 'sigma'],
+  ['a', 'b'],
+  ['a', 'k'],
+  ['a', 'c'],
+  ['m', 'b'],
+  ['m', 'c'],
+  ['m', 'd'],
+];
+
+/**
+ * Resolves which two parameter symbols map to the 3D Loss Surface axes (w1, w2).
+ * Supports canonical ML pairs (w/b, w_1/w_2, mu/sigma) as well as General Math
+ * sliders (a/b, a/k, a/c, m/d, or any custom user parameter pair).
+ */
+export function resolveSurfaceParamPair(
+  slidersOrValues: Record<string, unknown>
+): { w1Key: string; w2Key: string; w1: number; w2: number } {
+  const keys = Object.keys(slidersOrValues);
+  const getNum = (k: string, fallback: number): number => {
+    const entry = slidersOrValues[k];
+    if (typeof entry === 'number') return Number.isFinite(entry) ? entry : fallback;
+    if (entry && typeof entry === 'object' && 'value' in entry) {
+      const val = (entry as { value: number }).value;
+      return typeof val === 'number' && Number.isFinite(val) ? val : fallback;
+    }
+    return fallback;
+  };
+
+  for (const [k1, k2] of CANONICAL_PARAM_PAIRS) {
+    if (k1 in slidersOrValues && k2 in slidersOrValues) {
+      return {
+        w1Key: k1,
+        w2Key: k2,
+        w1: getNum(k1, 1.0),
+        w2: getNum(k2, 0.0),
+      };
+    }
+  }
+
+  const paramCandidates = keys.filter((k) => {
+    const entry = slidersOrValues[k];
+    if (entry && typeof entry === 'object' && 'role' in entry) {
+      return (entry as { role?: string }).role === 'param';
+    }
+    return !HYPERPARAM_KEYS.has(k);
+  });
+
+  const w1Key =
+    ('w' in slidersOrValues ? 'w' : '') ||
+    ('w_1' in slidersOrValues ? 'w_1' : '') ||
+    ('mu' in slidersOrValues ? 'mu' : '') ||
+    ('a' in slidersOrValues ? 'a' : '') ||
+    paramCandidates[0] ||
+    keys[0] ||
+    'w';
+
+  const w2Key =
+    ('b' in slidersOrValues && w1Key !== 'b' ? 'b' : '') ||
+    ('w_2' in slidersOrValues && w1Key !== 'w_2' ? 'w_2' : '') ||
+    ('sigma' in slidersOrValues && w1Key !== 'sigma' ? 'sigma' : '') ||
+    paramCandidates.find((k) => k !== w1Key) ||
+    keys.find((k) => k !== w1Key) ||
+    'b';
+
+  return {
+    w1Key,
+    w2Key,
+    w1: getNum(w1Key, 1.0),
+    w2: getNum(w2Key, 0.0),
+  };
+}
+
 /** Packs DataPoint2D[] into flat contiguous Float64Arrays for zero-overhead SIMD-like loops */
 export function packDataset(
   points: DataPoint2D[],
