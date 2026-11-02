@@ -85,9 +85,14 @@ export default function OpenMLGraphApp(): JSX.Element {
     }
 
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/openmlgraph-sw.js').catch(() => {
-        /* ignore SW registration errors in dev */
-      });
+      navigator.serviceWorker
+        .register('/openmlgraph-sw.js', { updateViaCache: 'none' })
+        .then((reg) => {
+          void reg.update();
+        })
+        .catch(() => {
+          /* ignore SW registration errors in dev */
+        });
     }
 
     return () => {
@@ -353,8 +358,10 @@ export default function OpenMLGraphApp(): JSX.Element {
         />
       </div>
 
-      {/* Bottom 4-Optimizer Race Bar */}
-      <OptimizerRaceBar storeState={storeState} />
+      {/* Bottom 4-Optimizer Race Bar (Shown in Optimization / Dual-Space modes) */}
+      {storeState.graph.viewMode !== 'inference' && (
+        <OptimizerRaceBar storeState={storeState} />
+      )}
 
       {/* Active Cloud E2EE Session Status Bar */}
       {storeState.sessionMode === 'cloud_e2ee' && storeState.cloudMeta && (

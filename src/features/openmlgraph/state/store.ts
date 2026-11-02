@@ -67,9 +67,9 @@ export function createInitialGraphState(templateId = 'T-01'): GraphStateV2 {
     batchNormEnabled: partial.batchNormEnabled ?? false,
     showResiduals: partial.showResiduals ?? true,
     showVectorField: partial.showVectorField ?? true,
-    surface3DOrbitPitch: 0.55,
-    surface3DOrbitYaw: -0.65,
-    surface3DZScale: 0.65,
+    surface3DOrbitPitch: partial.surface3DOrbitPitch ?? 0.55,
+    surface3DOrbitYaw: partial.surface3DOrbitYaw ?? -0.65,
+    surface3DZScale: partial.surface3DZScale ?? 0.0,
     leftViewport: partial.leftViewport ?? { xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 },
     rightViewport: partial.rightViewport ?? { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
     optimizerRace: partial.optimizerRace ?? {

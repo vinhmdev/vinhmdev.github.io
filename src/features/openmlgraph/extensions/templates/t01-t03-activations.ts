@@ -44,6 +44,8 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
       title: 'T-01: Sigmoid, Tanh & Vanishing Gradient',
       viewMode: 'dual',
       rightViewportMode: 'loss_surface',
+      showResiduals: false,
+      dataPoints: [],
       expressions: [
         {
           id: 'expr-1',
@@ -94,6 +96,8 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
       title: 'T-02: ReLU Family: LeakyReLU, ELU, Swish & GELU',
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
+      showResiduals: false,
+      dataPoints: [],
       probeX: 0.0,
       expressions: [
         {
@@ -143,6 +147,8 @@ export const TEMPLATES_T01_T03: LessonTemplate[] = [
       title: 'T-03: Softmax with Temperature τ & 2-Simplex',
       viewMode: 'dual',
       rightViewportMode: 'softmax_simplex',
+      showResiduals: false,
+      dataPoints: [],
       expressions: [
         {
           id: 'expr-1',

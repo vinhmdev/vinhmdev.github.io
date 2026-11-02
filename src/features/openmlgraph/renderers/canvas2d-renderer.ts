@@ -120,11 +120,12 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   // Axis Tick Labels
   ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.65)' : 'rgba(23, 23, 23, 0.62)';
   ctx.font = '500 11px Inter, system-ui, sans-serif';
-  const labelY = Math.min(Math.max(origin.sy + 14, 14), height - 6);
+  const labelY = Math.min(Math.max(origin.sy + 14, 18), height - 8);
   ctx.textAlign = 'center';
   for (const tx of xTicks) {
     if (tx === 0) continue;
     const { sx } = worldToScreen(tx, 0, viewport, width, height);
+    if (sx < 22 || sx > width - 22) continue;
     ctx.fillText(String(tx), sx, labelY);
   }
   ctx.textAlign = 'left';
@@ -132,6 +133,7 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   for (const ty of yTicks) {
     if (ty === 0) continue;
     const { sy } = worldToScreen(0, ty, viewport, width, height);
+    if (sy < 22 || sy > height - 16) continue;
     ctx.fillText(String(ty), labelX, sy + 4);
   }
   ctx.restore();

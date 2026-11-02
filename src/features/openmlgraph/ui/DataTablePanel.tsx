@@ -46,15 +46,15 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
 
   return (
     <div class="flex flex-col gap-2 p-3 border-t border-neutral-200 dark:border-neutral-800 text-xs">
-      <div class="flex items-center justify-between">
-        <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] whitespace-nowrap">
           {t('data_table_title')} ({graph.dataPoints.length})
         </h2>
-        <div class="flex items-center gap-1">
+        <div class="flex flex-wrap items-center gap-1">
           <button
             type="button"
             onClick={() => storeState.setBrushActive(!brushActive)}
-            class={`px-2 py-0.5 rounded font-semibold border transition-colors ${
+            class={`px-2 py-0.5 rounded font-semibold border transition-colors whitespace-nowrap ${
               brushActive
                 ? 'bg-orange-500 text-white border-orange-500'
                 : 'border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300'
@@ -72,14 +72,14 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
                 split: 'train',
               })
             }
-            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold"
+            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold whitespace-nowrap"
           >
             {t('add_point')}
           </button>
           <button
             type="button"
             onClick={() => setShowCsvBox(!showCsvBox)}
-            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700"
+            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 whitespace-nowrap"
           >
             {t('paste_csv')}
           </button>

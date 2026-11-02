@@ -356,6 +356,12 @@ export interface LossOverlayRenderParams {
   regularizationRadius: number;
   trajectories: Record<OptimizerId, OptimizerTrajectoryStep[]>;
   currentStep: number;
+  zScale?: number;
+  pitch?: number;
+  yaw?: number;
+  minLoss?: number;
+  maxLoss?: number;
+  lossGrid?: Float32Array;
   linkedBrushPull?: {
     pointId: string;
     sampleLoss: number;
@@ -387,8 +393,57 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
     regularizationRadius,
     trajectories,
     currentStep,
+    zScale = 0,
+    pitch = 0.55,
+    yaw = -0.65,
+    minLoss = 0,
+    maxLoss = 1,
+    lossGrid,
     linkedBrushPull,
   } = p;
+
+  const sampleGridHeight = (wx: number, wy: number): number => {
+    if (!lossGrid || lossGrid.length === 0) return minLoss;
+    const N = Math.round(Math.sqrt(lossGrid.length));
+    if (N < 2) return minLoss;
+    const u = Math.min(Math.max((wx - viewport.xMin) / Math.max(viewport.xMax - viewport.xMin, 1e-5), 0), 1);
+    const v = Math.min(Math.max((wy - viewport.yMin) / Math.max(viewport.yMax - viewport.yMin, 1e-5), 0), 1);
+    const c = Math.min(Math.floor(u * (N - 1)), N - 1);
+    const r = Math.min(Math.floor(v * (N - 1)), N - 1);
+    return lossGrid[r * N + c] ?? minLoss;
+  };
+
+  const toScreen = (wx: number, wy: number, explicitLoss?: number): { sx: number; sy: number } => {
+    if (zScale <= 0.01) {
+      return worldToScreen(wx, wy, viewport, width, height);
+    }
+    const u = (wx - viewport.xMin) / Math.max(viewport.xMax - viewport.xMin, 1e-5);
+    const v = (wy - viewport.yMin) / Math.max(viewport.yMax - viewport.yMin, 1e-5);
+    const pos2dX = u * 2.0 - 1.0;
+    const pos2dY = v * 2.0 - 1.0;
+    const rawH = explicitLoss !== undefined && Number.isFinite(explicitLoss)
+      ? explicitLoss
+      : sampleGridHeight(wx, wy);
+    const span = Math.max(maxLoss - minLoss, 1e-5);
+    const normH = Math.min(Math.max((rawH - minLoss) / span, 0.0), 1.0);
+    const z = (normH - 0.35) * zScale;
+
+    const cy = Math.cos(yaw);
+    const sy = Math.sin(yaw);
+    const cp = Math.cos(pitch);
+    const sp = Math.sin(pitch);
+
+    const px = pos2dX * 0.78;
+    const py = pos2dY * 0.78;
+    const rotZX = px * cy - py * sy;
+    const rotZY = px * sy + py * cy;
+    const rotXY = rotZY * cp - z * sp;
+
+    return {
+      sx: (rotZX * 0.5 + 0.5) * width,
+      sy: (0.5 - rotXY * 0.5) * height,
+    };
+  };
 
   const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
   const scaleY = ctx.canvas ? ctx.canvas.height / Math.max(height, 1) : 1;
@@ -398,11 +453,11 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
 
   // 1. Regularization Constraint Geometry: L1 Diamond (Lasso) or L2 Circle (Ridge) [FR-4.3]
   if (regularizationKind !== 'none' && regularizationRadius > 0) {
-    const origin = worldToScreen(0, 0, viewport, width, height);
-    const pTop = worldToScreen(0, regularizationRadius, viewport, width, height);
-    const pRight = worldToScreen(regularizationRadius, 0, viewport, width, height);
-    const pBottom = worldToScreen(0, -regularizationRadius, viewport, width, height);
-    const pLeft = worldToScreen(-regularizationRadius, 0, viewport, width, height);
+    const origin = toScreen(0, 0);
+    const pTop = toScreen(0, regularizationRadius);
+    const pRight = toScreen(regularizationRadius, 0);
+    const pBottom = toScreen(0, -regularizationRadius);
+    const pLeft = toScreen(-regularizationRadius, 0);
 
     ctx.save();
     ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
@@ -425,8 +480,8 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
     ctx.restore();
   }
 
-  // 2. Negative Gradient Vector Field Arrows (sampled from 50x50 buffer)
-  if (showVectorField && vectorField.length >= 4) {
+  // 2. Negative Gradient Vector Field Arrows (only in 2D Contour mode so arrows don't float outside 3D mesh)
+  if (showVectorField && zScale <= 0.01 && vectorField.length >= 4) {
     ctx.save();
     ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(23, 23, 23, 0.22)';
     ctx.lineWidth = 1;
@@ -465,7 +520,7 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
     ctx.beginPath();
     for (let k = 0; k <= maxIdx; k++) {
       const step = traj[k];
-      const { sx, sy } = worldToScreen(step.w1, step.w2, viewport, width, height);
+      const { sx, sy } = toScreen(step.w1, step.w2, step.loss);
       if (k === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
@@ -473,7 +528,7 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
 
     // Active head particle at step t
     const head = traj[maxIdx];
-    const headScreen = worldToScreen(head.w1, head.w2, viewport, width, height);
+    const headScreen = toScreen(head.w1, head.w2, head.loss);
 
     // RMSProp / Adam adaptive second-moment elliptical halo
     if (id === 'rmsprop' || id === 'adam') {
@@ -494,13 +549,7 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
       head.nagLookaheadW1 !== undefined &&
       head.nagLookaheadW2 !== undefined
     ) {
-      const look = worldToScreen(
-        head.nagLookaheadW1,
-        head.nagLookaheadW2,
-        viewport,
-        width,
-        height
-      );
+      const look = toScreen(head.nagLookaheadW1, head.nagLookaheadW2);
       ctx.setLineDash([2, 2]);
       ctx.beginPath();
       ctx.moveTo(headScreen.sx, headScreen.sy);
@@ -520,14 +569,11 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
   }
 
   // 4. Linked Brushing Single-Sample Pull Vector `-grad l_i(w, b)` [FR-4.1]
-  const currentPos = worldToScreen(w1, w2, viewport, width, height);
+  const currentPos = toScreen(w1, w2);
   if (linkedBrushPull) {
-    const target = worldToScreen(
+    const target = toScreen(
       w1 + linkedBrushPull.pullW1 * 0.35,
-      w2 + linkedBrushPull.pullW2 * 0.35,
-      viewport,
-      width,
-      height
+      w2 + linkedBrushPull.pullW2 * 0.35
     );
     ctx.save();
     ctx.strokeStyle = '#10b981';

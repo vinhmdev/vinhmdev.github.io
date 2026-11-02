@@ -304,6 +304,12 @@ export function DualViewportPanel({
       regularizationRadius: graph.regularizationRadius,
       trajectories,
       currentStep: graph.optimizerRace.currentStep,
+      zScale: graph.surface3DZScale,
+      pitch: graph.surface3DOrbitPitch,
+      yaw: graph.surface3DOrbitYaw,
+      minLoss,
+      maxLoss,
+      lossGrid,
       linkedBrushPull,
     });
   }, [

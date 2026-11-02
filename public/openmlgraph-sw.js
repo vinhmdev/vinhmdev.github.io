@@ -9,7 +9,7 @@
  *    scripts (`.js`), styles (`.css`), and `/openmlgraph/` HTML shell so the application
  *    boots in < 1 second when completely offline.
  */
-const CACHE_NAME = 'openmlgraph-offline-v2';
+const CACHE_NAME = 'openmlgraph-offline-v3';
 const PRECACHE_URLS = ['/openmlgraph/'];
 
 self.addEventListener('install', (event) => {
@@ -58,19 +58,18 @@ self.addEventListener('fetch', (event) => {
 
   if (!isStaticAsset) return;
 
+  // Network-First with Offline Cache Fallback:
+  // Ensures new deployments (new /_astro/* hashes) always load fresh when online,
+  // while falling back seamlessly to cached HTML/CSS/JS/WASM/fonts when offline [AC-06].
   event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req)
-        .then((netRes) => {
-          if (netRes && netRes.status === 200) {
-            const clone = netRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-          }
-          return netRes;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
-    })
+    fetch(req)
+      .then((netRes) => {
+        if (netRes && netRes.status === 200) {
+          const clone = netRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+        }
+        return netRes;
+      })
+      .catch(() => caches.match(req))
   );
 });

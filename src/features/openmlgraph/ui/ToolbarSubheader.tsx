@@ -51,14 +51,14 @@ export function ToolbarSubheader({
           <span>{t('blank_mode_btn')}</span>
         </button>
 
-        <label class="font-semibold text-neutral-500 dark:text-neutral-400">
+        <label class="hidden xl:inline font-semibold text-neutral-500 dark:text-neutral-400">
           {t('templates_label')}:
         </label>
         <select
           aria-label="Select ML Template"
           value={graph.activeTemplateId}
           onChange={(e) => storeState.selectTemplate((e.target as HTMLSelectElement).value)}
-          class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500"
+          class="h-7 max-w-[235px] px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500 truncate"
         >
           <option value={BLANK_CANVAS_TEMPLATE.id}>
             {t(BLANK_CANVAS_TEMPLATE.titleKey)}

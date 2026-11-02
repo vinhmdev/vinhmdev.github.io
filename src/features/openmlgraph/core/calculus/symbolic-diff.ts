@@ -436,6 +436,32 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       return `e^{${s[0]}}`;
     case 'Ln':
       return `\\ln(${s[0]})`;
+    case 'Sin':
+      return `\\sin(${s[0]})`;
+    case 'Cos':
+      return `\\cos(${s[0]})`;
+    case 'Tan':
+      return `\\tan(${s[0]})`;
+    case 'Tanh':
+      return `\\tanh(${s[0]})`;
+    case 'Sinh':
+      return `\\sinh(${s[0]})`;
+    case 'Cosh':
+      return `\\cosh(${s[0]})`;
+    case 'Sec':
+      return `\\sec(${s[0]})`;
+    case 'Csc':
+      return `\\csc(${s[0]})`;
+    case 'Cot':
+      return `\\cot(${s[0]})`;
+    case 'Arcsin':
+      return `\\arcsin(${s[0]})`;
+    case 'Arccos':
+      return `\\arccos(${s[0]})`;
+    case 'Arctan':
+      return `\\arctan(${s[0]})`;
+    case 'Sinc':
+      return `\\operatorname{sinc}(${s[0]})`;
     case 'Abs':
       return `\\left|${s[0]}\\right|`;
     case 'SafeSigmoid':
