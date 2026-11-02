@@ -13,6 +13,16 @@ import {
   warpMlpHomotopyPoint,
 } from '../core/simulation/special-kernels';
 
+function applyHiDpiTransform(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
+  const scaleY = ctx.canvas ? ctx.canvas.height / Math.max(height, 1) : 1;
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+}
+
 export function renderSoftmaxSimplexCanvas(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -20,6 +30,8 @@ export function renderSoftmaxSimplexCanvas(
   isDark: boolean,
   params: Record<string, number>
 ): void {
+  ctx.save();
+  applyHiDpiTransform(ctx, width, height);
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
@@ -37,7 +49,6 @@ export function renderSoftmaxSimplexCanvas(
   const v2 = { x: cx - 0.85 * scale, y: cy + 0.65 * scale };
   const v3 = { x: cx + 0.85 * scale, y: cy + 0.65 * scale };
 
-  ctx.save();
   ctx.fillStyle = isDark ? 'rgba(249, 115, 22, 0.12)' : 'rgba(249, 115, 22, 0.08)';
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(23, 23, 23, 0.35)';
   ctx.lineWidth = 2;
@@ -98,6 +109,8 @@ export function renderRocCurveCanvas(
   points: DataPoint2D[],
   params: Record<string, number>
 ): void {
+  ctx.save();
+  applyHiDpiTransform(ctx, width, height);
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
@@ -116,7 +129,6 @@ export function renderRocCurveCanvas(
     y: pad + (1.0 - tpr) * plotH,
   });
 
-  ctx.save();
   // Shaded AUC region
   ctx.fillStyle = 'rgba(249, 115, 22, 0.22)';
   ctx.beginPath();
@@ -181,6 +193,8 @@ export function renderSvmFeature3DCanvas(
   points: DataPoint2D[],
   params: Record<string, number>
 ): void {
+  ctx.save();
+  applyHiDpiTransform(ctx, width, height);
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
@@ -196,7 +210,6 @@ export function renderSvmFeature3DCanvas(
     return { sx: cx + isoX * scale, sy: cy + isoY * scale };
   };
 
-  ctx.save();
   // Wireframe RBF Gaussian hill
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(23, 23, 23, 0.16)';
   ctx.lineWidth = 1;
@@ -255,6 +268,8 @@ export function renderMlpSpaceFoldingCanvas(
   points: DataPoint2D[],
   params: Record<string, number>
 ): void {
+  ctx.save();
+  applyHiDpiTransform(ctx, width, height);
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
@@ -268,7 +283,6 @@ export function renderMlpSpaceFoldingCanvas(
     sy: cy - wy * scale,
   });
 
-  ctx.save();
   ctx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.28)' : 'rgba(249, 115, 22, 0.25)';
   ctx.lineWidth = 1.2;
 

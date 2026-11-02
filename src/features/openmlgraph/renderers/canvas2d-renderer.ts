@@ -10,6 +10,7 @@ import type {
   CurveRenderPacket,
   DataPoint2D,
   Viewport2DBounds,
+  WhiteboardStroke,
 } from '../types/state';
 import { computeNiceTicks, worldToScreen } from './viewport-controller';
 
@@ -26,6 +27,7 @@ export interface Canvas2DRenderParams {
   hoveredDataPointId: string | null;
   activeTemplateId: string;
   paramValues?: Record<string, number>;
+  whiteboardStrokes?: WhiteboardStroke[];
 }
 
 export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
@@ -42,7 +44,13 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     hoveredDataPointId,
     activeTemplateId,
     paramValues = {},
+    whiteboardStrokes = [],
   } = p;
+
+  const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
+  const scaleY = ctx.canvas ? ctx.canvas.height / Math.max(height, 1) : 1;
+  ctx.save();
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
 
   // 1. Background Fill (Pure Titanium #FAFAFA / #171717)
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
@@ -53,6 +61,32 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   const yTicks = computeNiceTicks(viewport.yMin, viewport.yMax, 6);
 
   ctx.save();
+  // Minor subdivisions (Desmos/GeoGebra style 5-subdivision grid)
+  if (xTicks.length >= 2 && yTicks.length >= 2) {
+    const dxSub = (xTicks[1] - xTicks[0]) / 5;
+    const dySub = (yTicks[1] - yTicks[0]) / 5;
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.045)' : 'rgba(23, 23, 23, 0.04)';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    if (dxSub > 0) {
+      const startX = Math.floor(viewport.xMin / dxSub) * dxSub;
+      for (let gx = startX; gx <= viewport.xMax; gx += dxSub) {
+        const { sx } = worldToScreen(gx, 0, viewport, width, height);
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx, height);
+      }
+    }
+    if (dySub > 0) {
+      const startY = Math.floor(viewport.yMin / dySub) * dySub;
+      for (let gy = startY; gy <= viewport.yMax; gy += dySub) {
+        const { sy } = worldToScreen(0, gy, viewport, width, height);
+        ctx.moveTo(0, sy);
+        ctx.lineTo(width, sy);
+      }
+    }
+    ctx.stroke();
+  }
+
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(23, 23, 23, 0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -84,14 +118,16 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   ctx.stroke();
 
   // Axis Tick Labels
-  ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(23, 23, 23, 0.55)';
-  ctx.font = '11px Inter, system-ui, sans-serif';
+  ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.65)' : 'rgba(23, 23, 23, 0.62)';
+  ctx.font = '500 11px Inter, system-ui, sans-serif';
   const labelY = Math.min(Math.max(origin.sy + 14, 14), height - 6);
+  ctx.textAlign = 'center';
   for (const tx of xTicks) {
     if (tx === 0) continue;
     const { sx } = worldToScreen(tx, 0, viewport, width, height);
-    ctx.fillText(String(tx), sx - 8, labelY);
+    ctx.fillText(String(tx), sx, labelY);
   }
+  ctx.textAlign = 'left';
   const labelX = Math.min(Math.max(origin.sx + 6, 6), width - 34);
   for (const ty of yTicks) {
     if (ty === 0) continue;
@@ -336,6 +372,50 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
       ctx.restore();
     }
   }
+
+  // 9. Freehand Whiteboard Annotations (Pen & Highlighter in World Coordinates)
+  if (whiteboardStrokes.length > 0) {
+    for (const stroke of whiteboardStrokes) {
+      if (stroke.points.length === 0) continue;
+      ctx.save();
+      ctx.strokeStyle = stroke.color;
+      ctx.fillStyle = stroke.color;
+      ctx.lineWidth = stroke.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalAlpha = stroke.tool === 'highlighter' ? 0.34 : 0.95;
+
+      if (stroke.points.length === 1) {
+        const { sx, sy } = worldToScreen(
+          stroke.points[0].x,
+          stroke.points[0].y,
+          viewport,
+          width,
+          height
+        );
+        ctx.beginPath();
+        ctx.arc(sx, sy, stroke.width * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        for (let i = 0; i < stroke.points.length; i++) {
+          const { sx, sy } = worldToScreen(
+            stroke.points[i].x,
+            stroke.points[i].y,
+            viewport,
+            width,
+            height
+          );
+          if (i === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
 }
 
 function drawPolylineWithBreaks(

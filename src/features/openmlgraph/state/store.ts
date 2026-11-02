@@ -17,6 +17,8 @@ import type {
   SliderState,
   ViewMode,
   Viewport2DBounds,
+  WhiteboardStroke,
+  WhiteboardTool,
 } from '../types/state';
 import {
   classifyLatexExpression,
@@ -100,13 +102,17 @@ export function createInitialGraphState(templateId = 'T-01'): GraphStateV2 {
  */
 export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const nextSliders: Record<string, SliderState> = { ...state.sliders };
+  const activeSymbols = new Set<string>();
+  let anyValidExpr = false;
 
   for (const expr of state.expressions) {
     const classified = classifyLatexExpression(expr.latex, state.symbolOverrides);
     if (!classified.valid) continue;
+    anyValidExpr = true;
 
     for (const sym of classified.symbols) {
       if (sym.role === 'param' || sym.role === 'hyperparam') {
+        activeSymbols.add(sym.name);
         if (!nextSliders[sym.name]) {
           nextSliders[sym.name] = {
             name: sym.name,
@@ -133,6 +139,15 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     }
   }
 
+  // In Freeform Blank Graph mode (T-00), prune unused sliders when expressions change
+  if (state.activeTemplateId === 'T-00' && anyValidExpr) {
+    for (const key of Object.keys(nextSliders)) {
+      if (!activeSymbols.has(key)) {
+        delete nextSliders[key];
+      }
+    }
+  }
+
   return {
     ...state,
     sliders: nextSliders,
@@ -152,6 +167,9 @@ export interface GraphStoreState {
   } | null;
   mobileTab: MobileTabMode;
   brushActive: boolean;
+  whiteboardTool: WhiteboardTool;
+  whiteboardColor: string;
+  whiteboardStrokes: WhiteboardStroke[];
   shareModalOpen: boolean;
   galleryDrawerOpen: boolean;
   customOptModalOpen: boolean;
@@ -175,11 +193,12 @@ export interface GraphStoreState {
   // Actions
   loadFullState: (next: GraphStateV2, pushUndo?: boolean) => void;
   selectTemplate: (templateId: string) => void;
+  resetToBlankCanvas: () => void;
   setViewMode: (mode: ViewMode) => void;
   setMobileTab: (tab: MobileTabMode) => void;
   setSubgradConvention: (conv: SubgradConvention) => void;
   updateExpressionLatex: (id: string, latex: string) => void;
-  addExpression: () => void;
+  addExpression: (customLatex?: string) => void;
   removeExpression: (id: string) => void;
   toggleExpressionProp: (
     id: string,
@@ -212,6 +231,11 @@ export interface GraphStoreState {
   setGalleryDrawerOpen: (open: boolean) => void;
   setCustomOptModalOpen: (open: boolean) => void;
   setBrushActive: (active: boolean) => void;
+  setWhiteboardTool: (tool: WhiteboardTool) => void;
+  setWhiteboardColor: (color: string) => void;
+  addWhiteboardStroke: (stroke: WhiteboardStroke) => void;
+  eraseWhiteboardAt: (wx: number, wy: number, radiusWorld: number) => void;
+  clearWhiteboard: () => void;
   applyWorkerResult: (res: {
     curves: CurveRenderPacket[];
     trainLoss: number;
@@ -254,6 +278,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     cloudMeta: null,
     mobileTab: 'split',
     brushActive: false,
+    whiteboardTool: 'cursor',
+    whiteboardColor: '#f97316',
+    whiteboardStrokes: [],
     shareModalOpen: false,
     galleryDrawerOpen: false,
     customOptModalOpen: false,
@@ -273,6 +300,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     selectTemplate(templateId) {
       const next = createInitialGraphState(templateId);
+      set({ whiteboardStrokes: [], whiteboardTool: 'cursor', brushActive: false });
+      commitGraph(next, true);
+    },
+
+    resetToBlankCanvas() {
+      const next = createInitialGraphState('T-00');
+      set({ whiteboardStrokes: [], whiteboardTool: 'cursor', brushActive: false });
       commitGraph(next, true);
     },
 
@@ -294,12 +328,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       commitGraph({ ...g, expressions }, true);
     },
 
-    addExpression() {
+    addExpression(customLatex) {
       const g = get().graph;
       const idx = g.expressions.length;
+      const defaultExpr =
+        customLatex ?? (g.activeTemplateId === 'T-00' ? '\\sin(x)' : 'w \\cdot x + b');
       const newExpr: ExpressionItem = {
-        id: `expr-${Date.now()}`,
-        latex: 'w \\cdot x + b',
+        id: `expr-${Date.now()}-${idx}`,
+        latex: defaultExpr,
         color: EXPRESSION_COLORS[idx % EXPRESSION_COLORS.length],
         visible: true,
         showFirstDerivative: false,
@@ -310,7 +346,16 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     removeExpression(id) {
       const g = get().graph;
-      if (g.expressions.length <= 1) return;
+      if (g.expressions.length <= 1) {
+        commitGraph(
+          {
+            ...g,
+            expressions: g.expressions.map((e) => (e.id === id ? { ...e, latex: '' } : e)),
+          },
+          true
+        );
+        return;
+      }
       commitGraph(
         { ...g, expressions: g.expressions.filter((e) => e.id !== id) },
         true
@@ -549,7 +594,46 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     setBrushActive(brushActive) {
-      set({ brushActive });
+      set({
+        brushActive,
+        whiteboardTool: brushActive ? 'cursor' : get().whiteboardTool,
+      });
+    },
+
+    setWhiteboardTool(whiteboardTool) {
+      set({
+        whiteboardTool,
+        brushActive: whiteboardTool !== 'cursor' ? false : get().brushActive,
+      });
+    },
+
+    setWhiteboardColor(whiteboardColor) {
+      set({ whiteboardColor });
+    },
+
+    addWhiteboardStroke(stroke) {
+      set({ whiteboardStrokes: [...get().whiteboardStrokes, stroke] });
+    },
+
+    eraseWhiteboardAt(wx, wy, radiusWorld) {
+      const rSq = radiusWorld * radiusWorld;
+      const filtered = get().whiteboardStrokes.filter((stroke) => {
+        for (const pt of stroke.points) {
+          const dx = pt.x - wx;
+          const dy = pt.y - wy;
+          if (dx * dx + dy * dy <= rSq) {
+            return false;
+          }
+        }
+        return true;
+      });
+      if (filtered.length !== get().whiteboardStrokes.length) {
+        set({ whiteboardStrokes: filtered });
+      }
+    },
+
+    clearWhiteboard() {
+      set({ whiteboardStrokes: [] });
     },
 
     applyWorkerResult(res) {

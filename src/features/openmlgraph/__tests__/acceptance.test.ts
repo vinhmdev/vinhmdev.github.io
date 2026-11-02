@@ -590,5 +590,71 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(asyncRestored?.activeTemplateId).toBe('T-11');
     expect(asyncRestored?.lossKind).toBe('rastrigin');
   });
+
+  it('supports T-00 Bảng trắng (Blank Graph) mode, mainstream algebra implicit multiplication (ax^2 + bx + c), slider auto-pruning, and Whiteboard annotations', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+
+    const blankGraph = graphStore.getState().graph;
+    expect(blankGraph.activeTemplateId).toBe('T-00');
+    expect(blankGraph.viewMode).toBe('inference');
+    expect(blankGraph.dataPoints.length).toBe(0);
+    expect(Object.keys(blankGraph.sliders).sort()).toEqual(['a', 'b', 'c']);
+
+    // Mainstream implicit multiplication: ax^2 + bx + c and mx + d
+    const quadClassified = classifyLatexExpression('ax^2 + bx + c');
+    expect(quadClassified.valid).toBe(true);
+    expect(quadClassified.symbols.map((s) => s.name)).toEqual(['a', 'x', 'b', 'c']);
+
+    // Remove second expression and update first expression to m*x + d -> old sliders a,b,c pruned in T-00
+    const secondId = blankGraph.expressions[1].id;
+    const firstId = blankGraph.expressions[0].id;
+    graphStore.getState().removeExpression(secondId);
+    graphStore.getState().updateExpressionLatex(firstId, 'mx + d');
+    expect(Object.keys(graphStore.getState().graph.sliders).sort()).toEqual(['d', 'm']);
+
+    // Removing the last remaining expression clears its latex to '' without deleting the card
+    graphStore.getState().removeExpression(firstId);
+    expect(graphStore.getState().graph.expressions.length).toBe(1);
+    expect(graphStore.getState().graph.expressions[0].latex).toBe('');
+
+    // Whiteboard Pen, Highlighter, Eraser & Clear actions
+    graphStore.getState().setWhiteboardTool('pen');
+    graphStore.getState().setWhiteboardColor('#3b82f6');
+    expect(graphStore.getState().whiteboardTool).toBe('pen');
+    expect(graphStore.getState().whiteboardColor).toBe('#3b82f6');
+
+    graphStore.getState().addWhiteboardStroke({
+      id: 'wb-1',
+      tool: 'pen',
+      color: '#3b82f6',
+      width: 2.8,
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    });
+    graphStore.getState().addWhiteboardStroke({
+      id: 'wb-2',
+      tool: 'highlighter',
+      color: '#f97316',
+      width: 14,
+      points: [
+        { x: 5, y: 5 },
+        { x: 6, y: 5 },
+      ],
+    });
+    expect(graphStore.getState().whiteboardStrokes.length).toBe(2);
+
+    // Erase near (0.1, 0.1) removes wb-1 and keeps wb-2
+    graphStore.getState().eraseWhiteboardAt(0.1, 0.1, 0.5);
+    expect(graphStore.getState().whiteboardStrokes.length).toBe(1);
+    expect(graphStore.getState().whiteboardStrokes[0].id).toBe('wb-2');
+
+    // Clear all whiteboard annotations
+    graphStore.getState().clearWhiteboard();
+    expect(graphStore.getState().whiteboardStrokes.length).toBe(0);
+  });
 });
+
 

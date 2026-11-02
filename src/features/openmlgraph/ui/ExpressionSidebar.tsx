@@ -31,6 +31,15 @@ const ROLE_BADGE_STYLE = {
   primitive: 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400 border-neutral-500/30',
 } as const;
 
+const QUICK_PRESETS: { label: string; latex: string }[] = [
+  { label: 'sin(x)', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
+  { label: 'x² - 4', latex: 'x^2 - 4' },
+  { label: 'σ(wx+b)', latex: '\\sigma(w \\cdot x + b)' },
+  { label: 'ReLU(x)', latex: '\\operatorname{relu}(x)' },
+  { label: 'e^(-x²)', latex: 'e^{-x^2}' },
+  { label: 'sinc(x)', latex: '\\frac{\\sin(x)}{x}' },
+];
+
 export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const { graph, curves } = storeState;
   const sliderList = Object.values(graph.sliders);
@@ -90,24 +99,86 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     return () => cancelAnimationFrame(rafId);
   }, [sliderList.map((s) => `${s.name}:${s.playing}:${s.speed}:${s.loopMode}`).join(',')]);
 
+  const handleInsertPreset = (latex: string): void => {
+    const emptyExpr = graph.expressions.find((e) => e.latex.trim().length === 0);
+    if (emptyExpr) {
+      storeState.updateExpressionLatex(emptyExpr.id, latex);
+    } else {
+      storeState.addExpression(latex);
+    }
+  };
+
+  const handleClearAllExpressions = (): void => {
+    storeState.loadFullState(
+      {
+        ...graph,
+        activeTemplateId: 'T-00',
+        viewMode: 'inference',
+        dataPoints: [],
+        sliders: {},
+        expressions: [
+          {
+            id: 'expr-1',
+            latex: '',
+            color: '#f97316',
+            visible: true,
+            showFirstDerivative: false,
+            showSecondDerivative: false,
+            label: 'f(x)',
+          },
+        ],
+      },
+      true
+    );
+  };
+
   return (
     <div class="flex flex-col gap-3 p-3 text-xs">
       {/* Section 1: Algebra & Expressions */}
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-1">
         <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
           {t('expressions_title')}
         </h2>
-        <button
-          type="button"
-          onClick={() => storeState.addExpression()}
-          class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors"
-        >
-          {t('add_expression')}
-        </button>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleClearAllExpressions}
+            class="px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            title="Clear all expressions to a blank input"
+          >
+            {t('clear_expr_btn')}
+          </button>
+          <button
+            type="button"
+            onClick={() => storeState.addExpression()}
+            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors"
+          >
+            {t('add_expression')}
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Formula Presets Bar (Desmos / GeoGebra style) */}
+      <div class="flex flex-wrap items-center gap-1">
+        <span class="text-[10px] font-semibold text-neutral-400 mr-0.5">
+          {t('quick_presets_label')}:
+        </span>
+        {QUICK_PRESETS.map((p) => (
+          <button
+            key={p.label}
+            type="button"
+            onClick={() => handleInsertPreset(p.latex)}
+            class="px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-orange-500 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 transition-colors"
+            title={`Insert ${p.latex}`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
       <div class="flex flex-col gap-2.5">
-        {graph.expressions.map((expr) => {
+        {graph.expressions.map((expr, idx) => {
+          const isEmpty = expr.latex.trim().length === 0;
           const classified = classifyLatexExpression(expr.latex, graph.symbolOverrides);
           const curvePacket = curves.find((c) => c.exprId === expr.id);
 
@@ -123,7 +194,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     style={{ backgroundColor: expr.color }}
                   />
                   <span class="font-semibold text-neutral-700 dark:text-neutral-200 truncate">
-                    {expr.label || `f(${classified.primaryVar})`}
+                    {expr.label || `f_${idx + 1}(${classified.primaryVar})`}
                   </span>
                 </div>
                 <div class="flex items-center gap-1">
@@ -159,16 +230,14 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   >
                     <IconEye />
                   </button>
-                  {graph.expressions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => storeState.removeExpression(expr.id)}
-                      class="p-1 rounded text-neutral-400 hover:text-red-500"
-                      title="Delete expression"
-                    >
-                      <IconTrash />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => storeState.removeExpression(expr.id)}
+                    class="p-1 rounded text-neutral-400 hover:text-red-500"
+                    title={graph.expressions.length > 1 ? 'Delete expression' : 'Clear expression'}
+                  >
+                    <IconTrash />
+                  </button>
                 </div>
               </div>
 
@@ -179,15 +248,15 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 onInput={(e) =>
                   storeState.updateExpressionLatex(expr.id, (e.target as HTMLInputElement).value)
                 }
-                placeholder="e.g. \sigma(w \cdot x + b) or relu(x)"
+                placeholder="Type any function: sin(x), x^2 - 4, a*sin(b*x)+c, \sigma(w*x+b)..."
                 class={`w-full px-2.5 py-1.5 rounded border font-mono text-xs bg-neutral-50 dark:bg-neutral-950 ${
-                  classified.valid
+                  isEmpty || classified.valid
                     ? 'border-neutral-300 dark:border-neutral-700 focus:border-orange-500'
                     : 'border-red-500 text-red-600 dark:text-red-400'
                 } focus:outline-none`}
               />
 
-              {!classified.valid && (
+              {!isEmpty && !classified.valid && (
                 <p class="text-[11px] text-red-500 font-medium">{classified.errorMessage}</p>
               )}
 

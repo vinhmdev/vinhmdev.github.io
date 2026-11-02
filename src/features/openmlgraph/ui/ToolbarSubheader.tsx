@@ -3,11 +3,11 @@
  * Undo/Redo, Local Save, JSON Import/Export, and 2x DPI PNG Export.
  */
 import type { JSX } from 'preact';
-import { ALL_ML_TEMPLATES } from '../extensions/templates';
+import { ALL_ML_TEMPLATES, BLANK_CANVAS_TEMPLATE } from '../extensions/templates';
 import { downloadStateJsonFile, saveStateToLocalStorage } from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
-import { IconDownload, IconRedo, IconSave, IconUndo } from './icons';
+import { IconBoard, IconDownload, IconRedo, IconSave, IconUndo } from './icons';
 
 interface ToolbarProps {
   storeState: GraphStoreState;
@@ -27,10 +27,30 @@ export function ToolbarSubheader({
     onToast(ok ? t('status_saved') : 'Failed to save to localStorage');
   };
 
+  const isBlankMode = graph.activeTemplateId === 'T-00';
+
   return (
     <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
-      {/* Left: 15 ML Templates Selector & View Mode Pills */}
+      {/* Left: Bảng trắng (Blank Graph) Quick Button, 15 ML Templates Selector & View Mode Pills */}
       <div class="flex flex-wrap items-center gap-2">
+        <button
+          id="blank-graph-btn"
+          type="button"
+          onClick={() => {
+            storeState.resetToBlankCanvas();
+            onToast(t('blank_mode_toast'));
+          }}
+          class={`flex items-center gap-1.5 h-7 px-2.5 rounded-md border font-semibold transition-colors ${
+            isBlankMode
+              ? 'bg-orange-500 text-white border-orange-500 shadow-2xs'
+              : 'border-orange-500/50 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20'
+          }`}
+          title={t('t00_title')}
+        >
+          <IconBoard class="w-3.5 h-3.5" />
+          <span>{t('blank_mode_btn')}</span>
+        </button>
+
         <label class="font-semibold text-neutral-500 dark:text-neutral-400">
           {t('templates_label')}:
         </label>
@@ -40,6 +60,9 @@ export function ToolbarSubheader({
           onChange={(e) => storeState.selectTemplate((e.target as HTMLSelectElement).value)}
           class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500"
         >
+          <option value={BLANK_CANVAS_TEMPLATE.id}>
+            {t(BLANK_CANVAS_TEMPLATE.titleKey)}
+          </option>
           {ALL_ML_TEMPLATES.map((tpl) => (
             <option key={tpl.id} value={tpl.id}>
               {t(tpl.titleKey)}

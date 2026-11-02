@@ -94,7 +94,7 @@ export function getDefaultSliderBounds(
     min: -5.0,
     max: 5.0,
     step: 0.05,
-    defaultValue: name === 'b' ? 0.0 : 1.0,
+    defaultValue: name === 'b' || name === 'c' ? 0.0 : 1.0,
   };
 }
 

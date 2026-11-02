@@ -103,6 +103,17 @@ export default function OpenMLGraphApp(): JSX.Element {
       paramValues[k] = sl.value;
     }
 
+    const dpr =
+      typeof window !== 'undefined'
+        ? Math.min(Math.max(window.devicePixelRatio || 1, 2), 3)
+        : 2;
+    const screenWidth = Math.round(
+      (leftCanvasRef.current?.clientWidth || 720) * Math.min(dpr, 2)
+    );
+    const screenHeight = Math.round(
+      (leftCanvasRef.current?.clientHeight || 520) * Math.min(dpr, 2)
+    );
+
     const req: ComputeJobRequest = {
       type: 'EVALUATE_FRAME',
       seq: ++seqRef.current,
@@ -112,8 +123,8 @@ export default function OpenMLGraphApp(): JSX.Element {
       subgradConvention: g.subgradConvention,
       leftViewport: g.leftViewport,
       rightViewport: g.rightViewport,
-      screenWidth: 720,
-      screenHeight: 520,
+      screenWidth,
+      screenHeight,
       dataPoints: g.dataPoints,
       lossKind: g.lossKind,
       regularizationKind: g.regularizationKind,

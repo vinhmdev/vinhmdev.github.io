@@ -285,7 +285,9 @@ export class WebGL2SurfaceRenderer {
     if (!gl || !this.program || !this.vao || !this.heightBuffer) return false;
     if (lossGrid.length !== this.gridSize * this.gridSize) return false;
 
-    gl.viewport(0, 0, width, height);
+    const fbW = gl.drawingBufferWidth || width;
+    const fbH = gl.drawingBufferHeight || height;
+    gl.viewport(0, 0, fbW, fbH);
     gl.clearColor(isDark ? 0.09 : 0.98, isDark ? 0.09 : 0.98, isDark ? 0.09 : 0.98, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
@@ -388,6 +390,10 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
     linkedBrushPull,
   } = p;
 
+  const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
+  const scaleY = ctx.canvas ? ctx.canvas.height / Math.max(height, 1) : 1;
+  ctx.save();
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
   // 1. Regularization Constraint Geometry: L1 Diamond (Lasso) or L2 Circle (Ridge) [FR-4.3]
@@ -542,5 +548,6 @@ export function renderLossSpaceOverlay2D(p: LossOverlayRenderParams): void {
   ctx.lineWidth = 2.2;
   ctx.strokeStyle = '#ffffff';
   ctx.stroke();
+  ctx.restore();
   ctx.restore();
 }

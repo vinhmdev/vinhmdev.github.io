@@ -1,13 +1,14 @@
 /**
  * Coordinated Dual-Space Viewport Panel [FR-3.4, FR-4.1, FR-4.3].
  *
- * Left Pane  : 2D Data / Function Space (Interactive curves, POIs, Tangent Probe,
- *              Data Point Dragging, Data Brush, Residual Squares r_i^2).
- * Right Pane : 3D WebGL2 Loss Surface + Hardware fwidth() Contours + 2D Particle Overlay
+ * Left Pane  : HiDPI 2D Data / Function Space (Interactive curves, POIs, Tangent Probe,
+ *              Data Point Dragging, Data Brush, Residual Squares r_i^2, and
+ *              Interactive Whiteboard Freehand Annotations).
+ * Right Pane : HiDPI 3D WebGL2 Loss Surface + Hardware fwidth() Contours + 2D Particle Overlay
  *              (or Specialized Phase 5 Canvas for Softmax Simplex, ROC-AUC, 3D RBF, MLP Folding).
  */
 import type { JSX, RefObject } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { renderDataSpaceCanvas2D } from '../renderers/canvas2d-renderer';
 import {
   renderMlpSpaceFoldingCanvas,
@@ -26,8 +27,21 @@ import {
   WebGL2SurfaceRenderer,
 } from '../renderers/webgl2-surface';
 import type { GraphStoreState } from '../state/store';
-import type { LossKind, RegularizationKind } from '../types/state';
+import type {
+  LossKind,
+  RegularizationKind,
+  WhiteboardStroke,
+  WhiteboardTool,
+} from '../types/state';
 import { t } from '../scripts/i18n-client';
+import {
+  IconCursor,
+  IconEraser,
+  IconHighlighter,
+  IconHome,
+  IconPen,
+  IconTrash,
+} from './icons';
 
 interface DualViewportProps {
   storeState: GraphStoreState;
@@ -35,6 +49,14 @@ interface DualViewportProps {
   leftCanvasRef: RefObject<HTMLCanvasElement | null>;
   rightGlCanvasRef: RefObject<HTMLCanvasElement | null>;
   rightOverlayCanvasRef: RefObject<HTMLCanvasElement | null>;
+}
+
+const WHITEBOARD_COLORS = ['#f97316', '#3b82f6', '#10b981', '#ef4444', '#a855f7'];
+
+function getHiDpiRatio(): number {
+  if (typeof window === 'undefined') return 2;
+  // Minimum 2x supersampling guarantees razor-sharp curves and text even on 1x monitors
+  return Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
 }
 
 export function DualViewportPanel({
@@ -57,13 +79,32 @@ export function DualViewportPanel({
     linkedBrushPull,
     mobileTab,
     brushActive,
+    whiteboardTool,
+    whiteboardColor,
+    whiteboardStrokes,
   } = storeState;
 
+  const leftContainerRef = useRef<HTMLDivElement>(null);
+  const rightContainerRef = useRef<HTMLDivElement>(null);
+  const [leftSize, setLeftSize] = useState<{ width: number; height: number }>({
+    width: 720,
+    height: 520,
+  });
+  const [rightSize, setRightSize] = useState<{ width: number; height: number }>({
+    width: 720,
+    height: 520,
+  });
+  const [dpr, setDpr] = useState<number>(() => getHiDpiRatio());
+  const [draftStroke, setDraftStroke] = useState<WhiteboardStroke | null>(null);
+
   const glRendererRef = useRef<WebGL2SurfaceRenderer | null>(null);
+  const glCanvasBoundRef = useRef<HTMLCanvasElement | null>(null);
   const draggingPointIdRef = useRef<string | null>(null);
   const isPanningLeftRef = useRef(false);
   const isBrushingLeftRef = useRef(false);
   const isDraggingProbeLeftRef = useRef(false);
+  const isErasingWhiteboardRef = useRef(false);
+  const draftStrokeRef = useRef<WhiteboardStroke | null>(null);
   const lastMouseLeftRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchMapLeftRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const prevPinchDistLeftRef = useRef<number | null>(null);
@@ -71,29 +112,95 @@ export function DualViewportPanel({
   const rightDragModeRef = useRef<'none' | 'param' | 'orbit' | 'reg_radius'>('none');
   const lastMouseRightRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  const showLeft =
+    graph.viewMode === 'inference' ||
+    (graph.viewMode === 'dual' && (mobileTab === 'data' || mobileTab === 'split'));
+  const showRight =
+    graph.viewMode === 'optimization' ||
+    (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split'));
+
   const paramValues: Record<string, number> = {};
   for (const [k, s] of Object.entries(graph.sliders)) {
     paramValues[k] = s.value;
   }
 
-  // Initialize WebGL2 renderer on rightGlCanvas
+  // Observe Left & Right viewport container dimensions + devicePixelRatio changes
   useEffect(() => {
-    if (rightGlCanvasRef.current && !glRendererRef.current) {
-      glRendererRef.current = new WebGL2SurfaceRenderer(rightGlCanvasRef.current, 128);
-    }
-  }, [rightGlCanvasRef.current]);
+    if (typeof window === 'undefined') return;
 
-  // Render Left 2D Canvas on every state/worker frame update
+    const updateSizes = (): void => {
+      setDpr(getHiDpiRatio());
+      if (leftContainerRef.current) {
+        const r = leftContainerRef.current.getBoundingClientRect();
+        if (r.width >= 40 && r.height >= 40) {
+          const w = Math.round(r.width);
+          const h = Math.round(r.height);
+          setLeftSize((prev) =>
+            prev.width === w && prev.height === h ? prev : { width: w, height: h }
+          );
+        }
+      }
+      if (rightContainerRef.current) {
+        const r = rightContainerRef.current.getBoundingClientRect();
+        if (r.width >= 40 && r.height >= 40) {
+          const w = Math.round(r.width);
+          const h = Math.round(r.height);
+          setRightSize((prev) =>
+            prev.width === w && prev.height === h ? prev : { width: w, height: h }
+          );
+        }
+      }
+    };
+
+    updateSizes();
+    const ro =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => updateSizes())
+        : null;
+    if (ro) {
+      if (leftContainerRef.current) ro.observe(leftContainerRef.current);
+      if (rightContainerRef.current) ro.observe(rightContainerRef.current);
+    }
+    window.addEventListener('resize', updateSizes);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', updateSizes);
+    };
+  }, [showLeft, showRight, graph.viewMode, mobileTab]);
+
+  // Initialize or re-bind WebGL2 renderer whenever rightGlCanvas mounts
+  useEffect(() => {
+    const glCanvas = rightGlCanvasRef.current;
+    if (glCanvas && glCanvasBoundRef.current !== glCanvas) {
+      glRendererRef.current = new WebGL2SurfaceRenderer(glCanvas, 128);
+      glCanvasBoundRef.current = glCanvas;
+    } else if (!glCanvas) {
+      glRendererRef.current = null;
+      glCanvasBoundRef.current = null;
+    }
+  }, [showRight, rightGlCanvasRef.current]);
+
+  // Render Left 2D Canvas on every state/worker/resize/whiteboard update
   useEffect(() => {
     const canvas = leftCanvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !showLeft) return;
+
+    const physW = Math.max(1, Math.round(leftSize.width * dpr));
+    const physH = Math.max(1, Math.round(leftSize.height * dpr));
+    if (canvas.width !== physW) canvas.width = physW;
+    if (canvas.height !== physH) canvas.height = physH;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const allStrokes = draftStroke
+      ? [...whiteboardStrokes, draftStroke]
+      : whiteboardStrokes;
+
     renderDataSpaceCanvas2D({
       ctx,
-      width: canvas.width,
-      height: canvas.height,
+      width: leftSize.width,
+      height: leftSize.height,
       isDark,
       viewport: graph.leftViewport,
       curves,
@@ -103,8 +210,13 @@ export function DualViewportPanel({
       hoveredDataPointId: graph.hoveredDataPointId,
       activeTemplateId: graph.activeTemplateId,
       paramValues,
+      whiteboardStrokes: allStrokes,
     });
   }, [
+    showLeft,
+    leftSize.width,
+    leftSize.height,
+    dpr,
     isDark,
     graph.leftViewport,
     curves,
@@ -113,18 +225,32 @@ export function DualViewportPanel({
     graph.probeX,
     graph.hoveredDataPointId,
     graph.activeTemplateId,
+    whiteboardStrokes,
+    draftStroke,
     JSON.stringify(paramValues),
   ]);
 
   // Render Right Viewport (WebGL2 3D Loss Surface + 2D Overlay OR Specialized Phase 5 Canvas)
   useEffect(() => {
     const overlay = rightOverlayCanvasRef.current;
-    if (!overlay) return;
+    if (!overlay || !showRight) return;
+
+    const physW = Math.max(1, Math.round(rightSize.width * dpr));
+    const physH = Math.max(1, Math.round(rightSize.height * dpr));
+    if (overlay.width !== physW) overlay.width = physW;
+    if (overlay.height !== physH) overlay.height = physH;
+
+    const glCanvas = rightGlCanvasRef.current;
+    if (glCanvas) {
+      if (glCanvas.width !== physW) glCanvas.width = physW;
+      if (glCanvas.height !== physH) glCanvas.height = physH;
+    }
+
     const ctx = overlay.getContext('2d');
     if (!ctx) return;
 
-    const W = overlay.width;
-    const H = overlay.height;
+    const W = rightSize.width;
+    const H = rightSize.height;
 
     if (graph.rightViewportMode === 'softmax_simplex') {
       renderSoftmaxSimplexCanvas(ctx, W, H, isDark, paramValues);
@@ -153,8 +279,8 @@ export function DualViewportPanel({
         graph.surface3DOrbitPitch,
         graph.surface3DOrbitYaw,
         isDark,
-        W,
-        H,
+        physW,
+        physH,
         vectorField,
         graph.rightViewport,
         graph.showVectorField
@@ -181,6 +307,10 @@ export function DualViewportPanel({
       linkedBrushPull,
     });
   }, [
+    showRight,
+    rightSize.width,
+    rightSize.height,
+    dpr,
     isDark,
     graph.rightViewportMode,
     graph.rightViewport,
@@ -200,13 +330,6 @@ export function DualViewportPanel({
     JSON.stringify(paramValues),
   ]);
 
-  const showLeft =
-    graph.viewMode === 'inference' ||
-    (graph.viewMode === 'dual' && (mobileTab === 'data' || mobileTab === 'split'));
-  const showRight =
-    graph.viewMode === 'optimization' ||
-    (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split'));
-
   const updateRightParamsFromWorld = (wx: number, wy: number): void => {
     if (graph.sliders['w']) storeState.setSliderValue('w', wx);
     else if (graph.sliders['w_1']) storeState.setSliderValue('w_1', wx);
@@ -216,6 +339,21 @@ export function DualViewportPanel({
     else if (graph.sliders['w_2']) storeState.setSliderValue('w_2', wy);
     else if (graph.sliders['sigma']) storeState.setSliderValue('sigma', Math.max(0.1, wy));
   };
+
+  const handleResetLeftViewport = (): void => {
+    if (graph.activeTemplateId === 'T-00') {
+      storeState.setLeftViewport({ xMin: -10, xMax: 10, yMin: -6, yMax: 6 });
+    } else {
+      storeState.setLeftViewport({ xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 });
+    }
+  };
+
+  const wbTools: { id: WhiteboardTool; labelKey: string; icon: JSX.Element }[] = [
+    { id: 'cursor', labelKey: 'wb_cursor', icon: <IconCursor /> },
+    { id: 'pen', labelKey: 'wb_pen', icon: <IconPen /> },
+    { id: 'highlighter', labelKey: 'wb_highlighter', icon: <IconHighlighter /> },
+    { id: 'eraser', labelKey: 'wb_eraser', icon: <IconEraser /> },
+  ];
 
   return (
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -243,22 +381,33 @@ export function DualViewportPanel({
 
       {/* Main Split Viewports */}
       <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
-        {/* LEFT PANE: 2D Data / Function Space */}
+        {/* LEFT PANE: 2D Data / Function Space + Interactive Whiteboard */}
         {showLeft && (
           <div
+            ref={leftContainerRef}
             class={`relative min-h-[260px] h-full border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 overflow-hidden ${
               !showRight ? 'lg:col-span-2' : ''
             }`}
           >
             <canvas
               ref={leftCanvasRef}
-              width={720}
-              height={520}
-              class="w-full h-full block cursor-crosshair touch-none"
+              width={Math.round(leftSize.width * dpr)}
+              height={Math.round(leftSize.height * dpr)}
+              class={`w-full h-full block touch-none ${
+                whiteboardTool === 'cursor' ? 'cursor-crosshair' : 'cursor-pointer'
+              }`}
               onPointerDown={(e) => {
-                const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
-                const sx = ((e.clientX - rect.left) / rect.width) * 720;
-                const sy = ((e.clientY - rect.top) / rect.height) * 520;
+                const canvasEl = e.currentTarget as HTMLCanvasElement;
+                try {
+                  canvasEl.setPointerCapture?.(e.pointerId);
+                } catch {
+                  /* ignore synthetic pointerId in automated tests */
+                }
+                const rect = canvasEl.getBoundingClientRect();
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
 
                 touchMapLeftRef.current.set(e.pointerId, { x: sx, y: sy });
                 if (touchMapLeftRef.current.size === 2) {
@@ -271,10 +420,34 @@ export function DualViewportPanel({
                   return;
                 }
 
+                // Whiteboard Freehand Pen / Highlighter / Eraser Mode
+                if (whiteboardTool === 'pen' || whiteboardTool === 'highlighter') {
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                  const newStroke: WhiteboardStroke = {
+                    id: `wb-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    tool: whiteboardTool,
+                    color: whiteboardColor,
+                    width: whiteboardTool === 'highlighter' ? 14 : 2.8,
+                    points: [{ x: wx, y: wy }],
+                  };
+                  draftStrokeRef.current = newStroke;
+                  setDraftStroke(newStroke);
+                  return;
+                }
+
+                if (whiteboardTool === 'eraser') {
+                  isErasingWhiteboardRef.current = true;
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                  const radiusWorld =
+                    ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
+                  storeState.eraseWhiteboardAt(wx, wy, radiusWorld);
+                  return;
+                }
+
                 if (brushActive) {
                   isBrushingLeftRef.current = true;
                   lastMouseLeftRef.current = { x: sx, y: sy };
-                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, 720, 520);
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                   storeState.addDataPoint({ x: wx, y: wy, split: 'train' });
                   return;
                 }
@@ -284,8 +457,8 @@ export function DualViewportPanel({
                   sy,
                   graph.dataPoints,
                   graph.leftViewport,
-                  720,
-                  520
+                  W,
+                  H
                 );
                 if (hit) {
                   draggingPointIdRef.current = hit.id;
@@ -293,7 +466,7 @@ export function DualViewportPanel({
                   return;
                 }
 
-                const { wx } = screenToWorld(sx, sy, graph.leftViewport, 720, 520);
+                const { wx } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                 if (
                   e.shiftKey ||
                   (graph.probeX !== null &&
@@ -309,8 +482,10 @@ export function DualViewportPanel({
               }}
               onPointerMove={(e) => {
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
-                const sx = ((e.clientX - rect.left) / rect.width) * 720;
-                const sy = ((e.clientY - rect.top) / rect.height) * 520;
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
 
                 if (touchMapLeftRef.current.has(e.pointerId)) {
                   touchMapLeftRef.current.set(e.pointerId, { x: sx, y: sy });
@@ -325,10 +500,29 @@ export function DualViewportPanel({
                     const midX = (pts[0].x + pts[1].x) * 0.5;
                     const midY = (pts[0].y + pts[1].y) * 0.5;
                     storeState.setLeftViewport(
-                      zoomViewportAt(graph.leftViewport, factor, midX, midY, 720, 520)
+                      zoomViewportAt(graph.leftViewport, factor, midX, midY, W, H)
                     );
                   }
                   prevPinchDistLeftRef.current = dist;
+                  return;
+                }
+
+                if (draftStrokeRef.current) {
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                  const updated: WhiteboardStroke = {
+                    ...draftStrokeRef.current,
+                    points: [...draftStrokeRef.current.points, { x: wx, y: wy }],
+                  };
+                  draftStrokeRef.current = updated;
+                  setDraftStroke(updated);
+                  return;
+                }
+
+                if (isErasingWhiteboardRef.current && whiteboardTool === 'eraser') {
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                  const radiusWorld =
+                    ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
+                  storeState.eraseWhiteboardAt(wx, wy, radiusWorld);
                   return;
                 }
 
@@ -339,20 +533,20 @@ export function DualViewportPanel({
                   );
                   if (distPx >= 16) {
                     lastMouseLeftRef.current = { x: sx, y: sy };
-                    const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, 720, 520);
+                    const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                     storeState.addDataPoint({ x: wx, y: wy, split: 'train' });
                   }
                   return;
                 }
 
                 if (isDraggingProbeLeftRef.current) {
-                  const { wx } = screenToWorld(sx, sy, graph.leftViewport, 720, 520);
+                  const { wx } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                   storeState.setProbeX(wx);
                   return;
                 }
 
                 if (draggingPointIdRef.current) {
-                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, 720, 520);
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                   storeState.updateDataPoint(draggingPointIdRef.current, wx, wy);
                   return;
                 }
@@ -362,7 +556,7 @@ export function DualViewportPanel({
                   const dy = sy - lastMouseLeftRef.current.y;
                   lastMouseLeftRef.current = { x: sx, y: sy };
                   storeState.setLeftViewport(
-                    panViewport(graph.leftViewport, dx, dy, 720, 520)
+                    panViewport(graph.leftViewport, dx, dy, W, H)
                   );
                   return;
                 }
@@ -372,8 +566,8 @@ export function DualViewportPanel({
                   sy,
                   graph.dataPoints,
                   graph.leftViewport,
-                  720,
-                  520
+                  W,
+                  H
                 );
                 if (hit?.id !== graph.hoveredDataPointId) {
                   storeState.setHoveredDataPoint(hit?.id ?? null);
@@ -384,6 +578,12 @@ export function DualViewportPanel({
                 if (touchMapLeftRef.current.size < 2) {
                   prevPinchDistLeftRef.current = null;
                 }
+                if (draftStrokeRef.current) {
+                  storeState.addWhiteboardStroke(draftStrokeRef.current);
+                  draftStrokeRef.current = null;
+                  setDraftStroke(null);
+                }
+                isErasingWhiteboardRef.current = false;
                 draggingPointIdRef.current = null;
                 isPanningLeftRef.current = false;
                 isBrushingLeftRef.current = false;
@@ -392,33 +592,105 @@ export function DualViewportPanel({
               onWheel={(e) => {
                 e.preventDefault();
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
-                const sx = ((e.clientX - rect.left) / rect.width) * 720;
-                const sy = ((e.clientY - rect.top) / rect.height) * 520;
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
                 const factor = e.deltaY > 0 ? 1.1 : 0.9;
                 storeState.setLeftViewport(
-                  zoomViewportAt(graph.leftViewport, factor, sx, sy, 720, 520)
+                  zoomViewportAt(graph.leftViewport, factor, sx, sy, W, H)
                 );
               }}
             />
 
-            {/* Top-Left Overlay Controls: Tangent Probe & Residuals Toggle */}
-            <div class="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5 pointer-events-auto text-[11px]">
-              <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-semibold">
-                {t('tab_data')}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  storeState.setProbeX(graph.probeX === null ? 0.0 : null)
-                }
-                class={`px-2 py-0.5 rounded border font-medium ${
-                  graph.probeX !== null
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700'
-                }`}
-              >
-                Tangent Probe {graph.probeX !== null ? `x₀=${graph.probeX.toFixed(2)}` : 'OFF'}
-              </button>
+            {/* Top-Left & Top-Right Overlay Controls: Tangent Probe, Reset View & Whiteboard Bar */}
+            <div class="absolute top-2.5 left-2.5 right-2.5 flex flex-wrap items-center justify-between gap-1.5 pointer-events-none text-[11px]">
+              {/* Left: Space Badge, Home Viewport Reset, Tangent Probe */}
+              <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+                <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-semibold shadow-2xs">
+                  {graph.activeTemplateId === 'T-00' ? t('whiteboard_label') : t('tab_data')}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetLeftViewport}
+                  class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs"
+                  title={t('reset_view_btn')}
+                >
+                  <IconHome class="w-3 h-3" />
+                  <span>{t('reset_view_btn')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    storeState.setProbeX(graph.probeX === null ? 0.0 : null)
+                  }
+                  class={`px-2 py-0.5 rounded border font-medium shadow-2xs ${
+                    graph.probeX !== null
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700'
+                  }`}
+                >
+                  Tangent Probe {graph.probeX !== null ? `x₀=${graph.probeX.toFixed(2)}` : 'OFF'}
+                </button>
+              </div>
+
+              {/* Right: Interactive Whiteboard Annotation Toolbar */}
+              <div class="flex flex-wrap items-center gap-1 px-1.5 py-1 rounded-lg bg-white/92 dark:bg-neutral-900/92 border border-neutral-200 dark:border-neutral-800 shadow-xs pointer-events-auto">
+                {wbTools.map((tool) => {
+                  const active = whiteboardTool === tool.id;
+                  return (
+                    <button
+                      key={tool.id}
+                      type="button"
+                      onClick={() => storeState.setWhiteboardTool(tool.id)}
+                      class={`flex items-center gap-1 px-2 py-0.5 rounded font-medium transition-colors ${
+                        active
+                          ? 'bg-orange-500 text-white'
+                          : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                      title={t(tool.labelKey)}
+                    >
+                      {tool.icon}
+                      <span class="hidden sm:inline">{t(tool.labelKey)}</span>
+                    </button>
+                  );
+                })}
+
+                {/* Color Swatches */}
+                <div class="flex items-center gap-1 px-1 border-l border-neutral-200 dark:border-neutral-700">
+                  {WHITEBOARD_COLORS.map((col) => (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => {
+                        storeState.setWhiteboardColor(col);
+                        if (whiteboardTool === 'cursor' || whiteboardTool === 'eraser') {
+                          storeState.setWhiteboardTool('pen');
+                        }
+                      }}
+                      class={`w-3.5 h-3.5 rounded-full transition-transform ${
+                        whiteboardColor === col
+                          ? 'scale-125 ring-2 ring-neutral-900 dark:ring-white'
+                          : 'opacity-75 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: col }}
+                      title={`Ink color ${col}`}
+                    />
+                  ))}
+                </div>
+
+                {whiteboardStrokes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => storeState.clearWhiteboard()}
+                    class="flex items-center gap-1 px-1.5 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-500/10 font-medium"
+                    title={t('wb_clear')}
+                  >
+                    <IconTrash class="w-3 h-3" />
+                    <span class="hidden md:inline">{t('wb_clear')}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -426,28 +698,31 @@ export function DualViewportPanel({
         {/* RIGHT PANE: 3D WebGL2 Loss Surface + 2D Particle Overlay / Specialized ML View */}
         {showRight && (
           <div
+            ref={rightContainerRef}
             class={`relative min-h-[260px] h-full overflow-hidden ${
               !showLeft ? 'lg:col-span-2' : ''
             }`}
           >
             <canvas
               ref={rightGlCanvasRef}
-              width={720}
-              height={520}
+              width={Math.round(rightSize.width * dpr)}
+              height={Math.round(rightSize.height * dpr)}
               class={`w-full h-full block ${
                 graph.rightViewportMode === 'loss_surface' ? '' : 'hidden'
               }`}
             />
             <canvas
               ref={rightOverlayCanvasRef}
-              width={720}
-              height={520}
+              width={Math.round(rightSize.width * dpr)}
+              height={Math.round(rightSize.height * dpr)}
               class="absolute inset-0 w-full h-full block cursor-pointer touch-none"
               onPointerDown={(e) => {
                 if (graph.rightViewportMode !== 'loss_surface') return;
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
-                const sx = ((e.clientX - rect.left) / rect.width) * 720;
-                const sy = ((e.clientY - rect.top) / rect.height) * 520;
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
                 lastMouseRightRef.current = { x: sx, y: sy };
 
                 if (e.shiftKey) {
@@ -455,7 +730,7 @@ export function DualViewportPanel({
                   return;
                 }
 
-                const { wx, wy } = screenToWorld(sx, sy, graph.rightViewport, 720, 520);
+                const { wx, wy } = screenToWorld(sx, sy, graph.rightViewport, W, H);
                 if (graph.regularizationKind !== 'none') {
                   const normVal =
                     graph.regularizationKind === 'l1'
@@ -479,8 +754,10 @@ export function DualViewportPanel({
                   return;
                 }
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
-                const sx = ((e.clientX - rect.left) / rect.width) * 720;
-                const sy = ((e.clientY - rect.top) / rect.height) * 520;
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
 
                 if (rightDragModeRef.current === 'orbit') {
                   const dx = sx - lastMouseRightRef.current.x;
@@ -493,7 +770,7 @@ export function DualViewportPanel({
                   return;
                 }
 
-                const { wx, wy } = screenToWorld(sx, sy, graph.rightViewport, 720, 520);
+                const { wx, wy } = screenToWorld(sx, sy, graph.rightViewport, W, H);
                 if (rightDragModeRef.current === 'reg_radius') {
                   const nextRadius =
                     graph.regularizationKind === 'l1'

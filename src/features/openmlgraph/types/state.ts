@@ -7,6 +7,18 @@ export type { SubgradConvention };
 /** Three primary view modes in [FR-1.4] */
 export type ViewMode = 'inference' | 'optimization' | 'dual';
 
+/** Interactive Whiteboard / Freehand Annotation tool on the 2D Graph Canvas */
+export type WhiteboardTool = 'cursor' | 'pen' | 'highlighter' | 'eraser';
+
+export interface WhiteboardStroke {
+  id: string;
+  tool: 'pen' | 'highlighter';
+  color: string;
+  width: number;
+  /** World-space points (wx, wy) so annotations pan and zoom with the graph */
+  points: { x: number; y: number }[];
+}
+
 /** Mobile responsive active tab (< 1024px) */
 export type MobileTabMode = 'data' | 'loss' | 'split';
 

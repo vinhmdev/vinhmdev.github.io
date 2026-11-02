@@ -1,9 +1,9 @@
 /**
  * 2x DPI High-Resolution PNG Graph Exporter.
  *
- * Composites the Left Data/Function Canvas, Right WebGL2 Surface Canvas,
- * Right 2D Particle Overlay Canvas, and Title/Formula Header into a single
- * publication-ready `.png` image.
+ * Composites the Left Data/Function Canvas (with Whiteboard annotations),
+ * Right WebGL2 Surface Canvas, Right 2D Particle Overlay Canvas, and
+ * Title/Formula Header into a single publication-ready `.png` image.
  */
 
 export function exportDualViewportPng(opts: {
@@ -15,17 +15,29 @@ export function exportDualViewportPng(opts: {
   isDark: boolean;
 }): void {
   const { leftCanvas, rightGlCanvas, rightOverlayCanvas, title, primaryLatex, isDark } = opts;
-  if (!leftCanvas) return;
+  if (!leftCanvas && !rightOverlayCanvas && !rightGlCanvas) return;
 
-  const headerH = 56;
-  const lW = leftCanvas.width;
-  const lH = leftCanvas.height;
-  const rW = rightOverlayCanvas?.width ?? 0;
-  const rH = rightOverlayCanvas?.height ?? 0;
+  const activeCanvas = leftCanvas ?? rightOverlayCanvas ?? rightGlCanvas;
+  const dpr =
+    activeCanvas && activeCanvas.clientWidth > 0
+      ? Math.max(activeCanvas.width / activeCanvas.clientWidth, 1)
+      : typeof window !== 'undefined'
+        ? Math.max(window.devicePixelRatio || 1, 2)
+        : 2;
+
+  const headerH = Math.round(56 * dpr);
+  const lW = leftCanvas?.width ?? 0;
+  const lH = leftCanvas?.height ?? 0;
+  const rW = rightOverlayCanvas?.width ?? rightGlCanvas?.width ?? 0;
+  const rH = rightOverlayCanvas?.height ?? rightGlCanvas?.height ?? 0;
+
+  const totalW = lW + rW;
+  const maxPaneH = Math.max(lH, rH);
+  if (totalW <= 0 || maxPaneH <= 0) return;
 
   const outCanvas = document.createElement('canvas');
-  outCanvas.width = lW + rW;
-  outCanvas.height = Math.max(lH, rH) + headerH;
+  outCanvas.width = totalW;
+  outCanvas.height = maxPaneH + headerH;
 
   const ctx = outCanvas.getContext('2d');
   if (!ctx) return;
@@ -33,13 +45,19 @@ export function exportDualViewportPng(opts: {
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
 
-  // Header bar
+  // Header bar scaled to HiDPI
   ctx.fillStyle = isDark ? '#f5f5f5' : '#171717';
-  ctx.font = 'bold 20px Inter, system-ui, sans-serif';
-  ctx.fillText(`${title}  —  ${primaryLatex}`, 20, 36);
+  ctx.font = `bold ${Math.round(18 * dpr)}px Inter, system-ui, sans-serif`;
+  ctx.fillText(
+    `${title}  —  ${primaryLatex}`,
+    Math.round(20 * dpr),
+    Math.round(35 * dpr)
+  );
 
-  ctx.drawImage(leftCanvas, 0, headerH);
-  if (rightGlCanvas && rW > 0) {
+  if (leftCanvas && lW > 0) {
+    ctx.drawImage(leftCanvas, 0, headerH);
+  }
+  if (rightGlCanvas && rW > 0 && !rightGlCanvas.classList.contains('hidden')) {
     ctx.drawImage(rightGlCanvas, lW, headerH);
   }
   if (rightOverlayCanvas && rW > 0) {
