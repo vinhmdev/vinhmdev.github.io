@@ -65,6 +65,12 @@ export interface ExpressionItem {
   label?: string;
 }
 
+export type PlaybackSpeed = 0.25 | 0.5 | 1 | 2 | 4;
+
+export type SliderLoopMode = 'bounce' | 'wrap' | 'wrap_reverse' | 'once';
+
+export type OptimizerLoopMode = 'once' | 'loop' | 'bounce';
+
 export interface SliderState {
   name: string;
   latex: string;
@@ -74,8 +80,8 @@ export interface SliderState {
   max: number;
   step: number;
   playing: boolean;
-  speed: 0.5 | 1 | 2 | 4;
-  loopMode: 'bounce' | 'wrap';
+  speed: PlaybackSpeed;
+  loopMode: SliderLoopMode;
   direction: 1 | -1;
 }
 
@@ -126,6 +132,9 @@ export interface OptimizerRaceConfig {
   currentStep: number;
   playing: boolean;
   lrSchedule: 'constant' | 'cosine_warm_restart' | 'catapult';
+  speed?: PlaybackSpeed;
+  loopMode?: OptimizerLoopMode;
+  direction?: 1 | -1;
   customJsCode?: string;
 }
 

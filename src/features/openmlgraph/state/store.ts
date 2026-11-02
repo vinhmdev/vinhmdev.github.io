@@ -74,7 +74,7 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
     surface3DZScale: partial.surface3DZScale ?? 0.0,
     leftViewport: partial.leftViewport ?? { xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 },
     rightViewport: partial.rightViewport ?? { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
-    optimizerRace: partial.optimizerRace ?? {
+    optimizerRace: {
       enabledOptimizers: {
         sgd: true,
         momentum: true,
@@ -90,6 +90,10 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
       currentStep: 60,
       playing: false,
       lrSchedule: 'constant',
+      speed: 1,
+      loopMode: 'once',
+      direction: 1,
+      ...partial.optimizerRace,
     },
     probeX: partial.probeX ?? null,
     hoveredDataPointId: null,
@@ -216,6 +220,8 @@ export interface GraphStoreState {
   cycleSymbolRole: (symbolName: string) => void;
   setSliderValue: (name: string, value: number, commitUndo?: boolean) => void;
   updateSliderBounds: (name: string, bounds: Partial<SliderState>) => void;
+  stepSliderByDelta: (name: string, dir: 1 | -1) => void;
+  toggleAllSlidersPlay: () => void;
   stepPlayingSliders: (dtSec: number) => boolean;
   addDataPoint: (pt: Omit<DataPoint2D, 'id'>) => void;
   updateDataPoint: (id: string, x: number, y: number) => void;
@@ -263,10 +269,57 @@ export interface GraphStoreState {
 
 const EXPRESSION_COLORS = ['#f97316', '#3b82f6', '#10b981', '#a855f7', '#ec4899'];
 
+function syncSlidersToRaceStep(
+  sliders: Record<string, SliderState>,
+  race: GraphStateV2['optimizerRace'],
+  trajectories: Record<OptimizerId, OptimizerTrajectoryStep[]>,
+  step: number
+): Record<string, SliderState> {
+  const priorityOrder: OptimizerId[] = ['adam', 'momentum', 'rmsprop', 'sgd', 'custom_js'];
+  const leadOpt = priorityOrder.find(
+    (id) => race.enabledOptimizers[id] && trajectories[id] && trajectories[id].length > 0
+  );
+  if (!leadOpt) return sliders;
+
+  const traj = trajectories[leadOpt];
+  const pt = traj[Math.min(Math.max(0, step), traj.length - 1)];
+  if (!pt || !Number.isFinite(pt.w1) || !Number.isFinite(pt.w2)) return sliders;
+
+  const nextSliders: Record<string, SliderState> = { ...sliders };
+  const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
+  if (nextSliders[w1Key]) {
+    const s1 = nextSliders[w1Key];
+    const w1Val = Math.round(pt.w1 * 1e6) / 1e6;
+    nextSliders[w1Key] = {
+      ...s1,
+      min: Math.min(s1.min, Math.floor(w1Val * 10) / 10),
+      max: Math.max(s1.max, Math.ceil(w1Val * 10) / 10),
+      value: w1Val,
+      playing: false,
+    };
+  }
+  if (nextSliders[w2Key] && w2Key !== w1Key) {
+    const s2 = nextSliders[w2Key];
+    const rawW2 = Math.round((w2Key === 'sigma' ? Math.max(0.1, pt.w2) : pt.w2) * 1e6) / 1e6;
+    nextSliders[w2Key] = {
+      ...s2,
+      min: Math.min(s2.min, Math.floor(rawW2 * 10) / 10),
+      max: Math.max(s2.max, Math.ceil(rawW2 * 10) / 10),
+      value: rawW2,
+      playing: false,
+    };
+  }
+  return nextSliders;
+}
+
 export const graphStore = createStore<GraphStoreState>((set, get) => {
-  function commitGraph(nextGraph: GraphStateV2, recordUndo = false): void {
+  function commitGraph(
+    nextGraph: GraphStateV2,
+    recordUndo = false,
+    skipExprSync = false
+  ): void {
     const prev = get();
-    const synced = syncSlidersFromExpressions(nextGraph);
+    const synced = skipExprSync ? nextGraph : syncSlidersFromExpressions(nextGraph);
     const undoStack = recordUndo
       ? [...prev.undoStack.slice(-(MAX_UNDO_STEPS - 1)), prev.graph]
       : prev.undoStack;
@@ -481,45 +534,185 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     setSliderValue(name, value, commitUndo = false) {
       const g = get().graph;
       const existing = g.sliders[name];
-      if (!existing) return;
+      if (!existing || !Number.isFinite(value)) return;
       const clamped = Math.min(Math.max(value, existing.min), existing.max);
       const sliders = {
         ...g.sliders,
         [name]: { ...existing, value: clamped },
       };
-      commitGraph({ ...g, sliders }, commitUndo);
+      const optimizerRace = g.optimizerRace.playing
+        ? { ...g.optimizerRace, playing: false }
+        : g.optimizerRace;
+      commitGraph({ ...g, sliders, optimizerRace }, commitUndo, true);
     },
 
     updateSliderBounds(name, bounds) {
       const g = get().graph;
       const existing = g.sliders[name];
       if (!existing) return;
+
+      let nextMin =
+        bounds.min !== undefined && Number.isFinite(bounds.min)
+          ? bounds.min
+          : existing.min;
+      let nextMax =
+        bounds.max !== undefined && Number.isFinite(bounds.max)
+          ? bounds.max
+          : existing.max;
+      const nextStep =
+        bounds.step !== undefined && Number.isFinite(bounds.step)
+          ? Math.max(1e-4, bounds.step)
+          : existing.step;
+
+      if (nextMin > nextMax) {
+        if (bounds.min !== undefined && bounds.max === undefined) {
+          nextMax = nextMin + Math.max(nextStep, 1);
+        } else {
+          nextMin = nextMax - Math.max(nextStep, 1);
+        }
+      }
+
+      const nextLoopMode = bounds.loopMode ?? existing.loopMode;
+      let nextDir: 1 | -1 = bounds.direction ?? existing.direction;
+      if (bounds.loopMode === 'wrap' && bounds.direction === undefined) {
+        nextDir = 1;
+      } else if (bounds.loopMode === 'wrap_reverse' && bounds.direction === undefined) {
+        nextDir = -1;
+      }
+
+      let nextValue =
+        bounds.value !== undefined && Number.isFinite(bounds.value)
+          ? bounds.value
+          : existing.value;
+      nextValue = Math.min(Math.max(nextValue, nextMin), nextMax);
+
+      // Commercial Play button auto-rewind when starting from a target boundary
+      if (bounds.playing === true && !existing.playing && bounds.value === undefined) {
+        if (nextLoopMode === 'once') {
+          if (nextDir === 1 && nextValue >= nextMax) {
+            nextValue = nextMin;
+          } else if (nextDir === -1 && nextValue <= nextMin) {
+            nextValue = nextMax;
+          }
+        } else if (nextLoopMode === 'wrap' && nextValue >= nextMax) {
+          nextValue = nextMin;
+        } else if (nextLoopMode === 'wrap_reverse' && nextValue <= nextMin) {
+          nextValue = nextMax;
+        } else if (nextLoopMode === 'bounce') {
+          if (nextValue >= nextMax) nextDir = -1;
+          else if (nextValue <= nextMin) nextDir = 1;
+        }
+      }
+
       const sliders = {
         ...g.sliders,
-        [name]: { ...existing, ...bounds },
+        [name]: {
+          ...existing,
+          ...bounds,
+          min: nextMin,
+          max: nextMax,
+          step: nextStep,
+          value: nextValue,
+          loopMode: nextLoopMode,
+          direction: nextDir,
+        },
       };
-      commitGraph({ ...g, sliders }, false);
+      commitGraph({ ...g, sliders }, false, true);
+    },
+
+    stepSliderByDelta(name, dir) {
+      const g = get().graph;
+      const existing = g.sliders[name];
+      if (!existing) return;
+      const step = Math.max(1e-4, existing.step || 0.05);
+      const rawNext = existing.value + dir * step;
+      const rounded = Math.round(rawNext * 1e6) / 1e6;
+      const clamped = Math.min(Math.max(rounded, existing.min), existing.max);
+      const sliders = {
+        ...g.sliders,
+        [name]: {
+          ...existing,
+          value: clamped,
+          direction: dir,
+          playing: false,
+        },
+      };
+      commitGraph({ ...g, sliders }, true, true);
+    },
+
+    toggleAllSlidersPlay() {
+      const g = get().graph;
+      const keys = Object.keys(g.sliders);
+      if (keys.length === 0) return;
+      const anyPlaying = keys.some((k) => g.sliders[k].playing);
+      const nextPlaying = !anyPlaying;
+      const nextSliders: Record<string, SliderState> = {};
+
+      for (const k of keys) {
+        const s = g.sliders[k];
+        let val = s.value;
+        let dir: 1 | -1 =
+          s.loopMode === 'wrap'
+            ? 1
+            : s.loopMode === 'wrap_reverse'
+              ? -1
+              : s.direction === -1
+                ? -1
+                : 1;
+        if (nextPlaying) {
+          if (s.loopMode === 'once') {
+            if (dir === 1 && val >= s.max) val = s.min;
+            else if (dir === -1 && val <= s.min) val = s.max;
+          } else if (s.loopMode === 'wrap' && val >= s.max) {
+            val = s.min;
+          } else if (s.loopMode === 'wrap_reverse' && val <= s.min) {
+            val = s.max;
+          } else if (s.loopMode === 'bounce') {
+            if (val >= s.max) dir = -1;
+            else if (val <= s.min) dir = 1;
+          }
+        }
+        nextSliders[k] = { ...s, playing: nextPlaying, value: val, direction: dir };
+      }
+
+      commitGraph({ ...g, sliders: nextSliders }, false, true);
     },
 
     stepPlayingSliders(dtSec) {
       const g = get().graph;
       const clampedDt = Math.min(Math.max(dtSec, 0.001), 0.1);
       let anyUpdated = false;
+      let anyStillPlaying = false;
       const nextSliders: Record<string, SliderState> = { ...g.sliders };
 
       for (const [key, s] of Object.entries(g.sliders)) {
         if (!s.playing) continue;
         const span = s.max - s.min;
-        if (span <= 0) continue;
-        const dir: 1 | -1 = s.direction === -1 ? -1 : 1;
+        if (span <= 0) {
+          nextSliders[key] = { ...s, playing: false };
+          anyUpdated = true;
+          continue;
+        }
+        const dir: 1 | -1 =
+          s.loopMode === 'wrap'
+            ? 1
+            : s.loopMode === 'wrap_reverse'
+              ? -1
+              : s.direction === -1
+                ? -1
+                : 1;
         const delta = span * 0.25 * (s.speed || 1) * clampedDt * dir;
         let nextVal = s.value + delta;
         let nextDir: 1 | -1 = dir;
+        let nextPlaying = true;
 
         if (nextVal >= s.max) {
           if (s.loopMode === 'bounce') {
             nextVal = s.max;
             nextDir = -1;
+          } else if (s.loopMode === 'once') {
+            nextVal = s.max;
+            nextPlaying = false;
           } else {
             nextVal = s.min;
           }
@@ -527,19 +720,28 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           if (s.loopMode === 'bounce') {
             nextVal = s.min;
             nextDir = 1;
+          } else if (s.loopMode === 'once') {
+            nextVal = s.min;
+            nextPlaying = false;
           } else {
             nextVal = s.max;
           }
         }
 
-        nextSliders[key] = { ...s, value: nextVal, direction: nextDir };
+        nextSliders[key] = {
+          ...s,
+          value: nextVal,
+          direction: nextDir,
+          playing: nextPlaying,
+        };
         anyUpdated = true;
+        if (nextPlaying) anyStillPlaying = true;
       }
 
       if (anyUpdated) {
-        commitGraph({ ...g, sliders: nextSliders }, false);
+        commitGraph({ ...g, sliders: nextSliders }, false, true);
       }
-      return anyUpdated;
+      return anyStillPlaying;
     },
 
     addDataPoint(pt) {
@@ -556,7 +758,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const dataPoints = g.dataPoints.map((p) =>
         p.id === id ? { ...p, x, y, x2: y } : p
       );
-      commitGraph({ ...g, dataPoints }, false);
+      commitGraph({ ...g, dataPoints }, false, true);
     },
 
     removeDataPoint(id) {
@@ -591,7 +793,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           regularizationKind,
           regularizationRadius: radius ?? g.regularizationRadius,
         },
-        false
+        false,
+        true
       );
     },
 
@@ -600,11 +803,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     setLeftViewport(leftViewport) {
-      commitGraph({ ...get().graph, leftViewport }, false);
+      commitGraph({ ...get().graph, leftViewport }, false, true);
     },
 
     setRightViewport(rightViewport) {
-      commitGraph({ ...get().graph, rightViewport }, false);
+      commitGraph({ ...get().graph, rightViewport }, false, true);
     },
 
     setOrbit3D(pitch, yaw, zScale) {
@@ -620,13 +823,87 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     updateOptimizerRace(patch) {
-      const g = get().graph;
+      const { graph: g, trajectories } = get();
+      const cur = g.optimizerRace;
+
+      const nextSteps =
+        patch.steps !== undefined && Number.isFinite(patch.steps)
+          ? Math.min(Math.max(Math.round(patch.steps), 1), 1000)
+          : cur.steps;
+
+      let nextCurrentStep = cur.currentStep;
+      if (patch.currentStep !== undefined && Number.isFinite(patch.currentStep)) {
+        nextCurrentStep = Math.min(Math.max(Math.round(patch.currentStep), 0), nextSteps);
+      } else if (patch.steps !== undefined) {
+        if (!cur.playing && cur.currentStep >= cur.steps) {
+          nextCurrentStep = nextSteps;
+        } else {
+          nextCurrentStep = Math.min(cur.currentStep, nextSteps);
+        }
+      }
+
+      const nextLoopMode = patch.loopMode ?? cur.loopMode ?? 'once';
+      let nextDirection: 1 | -1 = patch.direction ?? cur.direction ?? 1;
+
+      if (patch.playing === true && patch.currentStep === undefined) {
+        if (nextLoopMode === 'bounce') {
+          if (nextCurrentStep >= nextSteps) nextDirection = -1;
+          else if (nextCurrentStep <= 0) nextDirection = 1;
+        } else {
+          if (nextDirection === 1 && nextCurrentStep >= nextSteps) {
+            nextCurrentStep = 0;
+          } else if (nextDirection === -1 && nextCurrentStep <= 0) {
+            nextCurrentStep = nextSteps;
+          }
+        }
+      }
+
+      const nextRace: GraphStateV2['optimizerRace'] = {
+        ...cur,
+        ...patch,
+        steps: nextSteps,
+        currentStep: nextCurrentStep,
+        loopMode: nextLoopMode,
+        direction: nextDirection,
+      };
+
+      let nextSliders = g.sliders;
+      if (nextRace.playing) {
+        const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
+        if (nextSliders[w1Key]?.playing || nextSliders[w2Key]?.playing) {
+          nextSliders = { ...nextSliders };
+          if (nextSliders[w1Key]?.playing) {
+            nextSliders[w1Key] = { ...nextSliders[w1Key], playing: false };
+          }
+          if (nextSliders[w2Key]?.playing) {
+            nextSliders[w2Key] = { ...nextSliders[w2Key], playing: false };
+          }
+        }
+      }
+
+      const shouldSyncStepToSliders =
+        (patch.currentStep !== undefined ||
+          (patch.playing === true && nextCurrentStep !== cur.currentStep)) &&
+        patch.startW1 === undefined &&
+        patch.startW2 === undefined;
+
+      if (shouldSyncStepToSliders) {
+        nextSliders = syncSlidersToRaceStep(
+          nextSliders,
+          nextRace,
+          trajectories,
+          nextCurrentStep
+        );
+      }
+
       commitGraph(
         {
           ...g,
-          optimizerRace: { ...g.optimizerRace, ...patch },
+          sliders: nextSliders,
+          optimizerRace: nextRace,
         },
-        false
+        false,
+        true
       );
     },
 
@@ -634,51 +911,58 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const { graph: g, trajectories } = get();
       const cur = g.optimizerRace;
       if (!cur.playing) return false;
-      if (cur.currentStep >= cur.steps) {
-        commitGraph(
-          {
-            ...g,
-            optimizerRace: { ...cur, playing: false },
-          },
-          false
-        );
-        return false;
-      }
 
-      const nextStep = cur.currentStep + 1;
-      const nextSliders: Record<string, SliderState> = { ...g.sliders };
+      const loopMode = cur.loopMode ?? 'once';
+      let dir: 1 | -1 = cur.direction === -1 ? -1 : 1;
 
-      // Sync active model parameter pair (w/b, w_1/w_2, mu/sigma, a/b, etc.) to leading enabled trajectory
-      const priorityOrder: OptimizerId[] = ['adam', 'momentum', 'rmsprop', 'sgd', 'custom_js'];
-      const leadOpt = priorityOrder.find(
-        (id) => cur.enabledOptimizers[id] && trajectories[id] && trajectories[id].length > 0
-      );
-      if (leadOpt) {
-        const traj = trajectories[leadOpt];
-        const pt = traj[Math.min(nextStep, traj.length - 1)];
-        if (pt && Number.isFinite(pt.w1) && Number.isFinite(pt.w2)) {
-          const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
-          if (nextSliders[w1Key]) {
-            nextSliders[w1Key] = {
-              ...nextSliders[w1Key],
-              value: Math.min(
-                Math.max(pt.w1, nextSliders[w1Key].min),
-                nextSliders[w1Key].max
-              ),
-            };
-          }
-          if (nextSliders[w2Key] && w2Key !== w1Key) {
-            const rawW2 = w2Key === 'sigma' ? Math.max(0.1, pt.w2) : pt.w2;
-            nextSliders[w2Key] = {
-              ...nextSliders[w2Key],
-              value: Math.min(
-                Math.max(rawW2, nextSliders[w2Key].min),
-                nextSliders[w2Key].max
-              ),
-            };
-          }
+      if (loopMode === 'once') {
+        if ((dir === 1 && cur.currentStep >= cur.steps) || (dir === -1 && cur.currentStep <= 0)) {
+          commitGraph(
+            {
+              ...g,
+              optimizerRace: { ...cur, playing: false },
+            },
+            false,
+            true
+          );
+          return false;
         }
       }
+
+      let nextStep = cur.currentStep + dir;
+      let nextPlaying = true;
+
+      if (nextStep >= cur.steps) {
+        if (loopMode === 'bounce') {
+          nextStep = cur.steps;
+          dir = -1;
+        } else if (loopMode === 'loop') {
+          if (cur.currentStep >= cur.steps) {
+            nextStep = 0;
+          } else {
+            nextStep = cur.steps;
+          }
+        } else {
+          nextStep = cur.steps;
+          nextPlaying = false;
+        }
+      } else if (nextStep <= 0) {
+        if (loopMode === 'bounce') {
+          nextStep = 0;
+          dir = 1;
+        } else if (loopMode === 'loop') {
+          if (cur.currentStep <= 0) {
+            nextStep = cur.steps;
+          } else {
+            nextStep = 0;
+          }
+        } else {
+          nextStep = 0;
+          nextPlaying = false;
+        }
+      }
+
+      const nextSliders = syncSlidersToRaceStep(g.sliders, cur, trajectories, nextStep);
 
       commitGraph(
         {
@@ -687,12 +971,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           optimizerRace: {
             ...cur,
             currentStep: nextStep,
-            playing: nextStep < cur.steps,
+            direction: dir,
+            playing: nextPlaying,
           },
         },
-        false
+        false,
+        true
       );
-      return nextStep < cur.steps;
+      return nextPlaying;
     },
 
     flipBayesianCoins(numFlips, trueProb = 0.65) {
@@ -836,6 +1122,15 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     applyWorkerResult(res) {
+      const prevCustomTraj = get().trajectories.custom_js;
+      const incomingCustomTraj = res.trajectories.custom_js;
+      const trajectories =
+        incomingCustomTraj && incomingCustomTraj.length > 0
+          ? res.trajectories
+          : prevCustomTraj && prevCustomTraj.length > 0 && get().graph.optimizerRace.enabledOptimizers.custom_js
+            ? { ...res.trajectories, custom_js: prevCustomTraj }
+            : res.trajectories;
+
       set({
         curves: res.curves,
         trainLoss: res.trainLoss,
@@ -844,7 +1139,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         minLoss: res.minLoss,
         maxLoss: res.maxLoss,
         vectorField: res.vectorField,
-        trajectories: res.trajectories,
+        trajectories,
         linkedBrushPull: res.linkedBrushPull,
         computeDurationMs: res.computeDurationMs,
       });

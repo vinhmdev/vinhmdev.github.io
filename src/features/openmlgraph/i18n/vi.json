@@ -74,5 +74,16 @@
   "t12_title": "BatchNorm & Làm mượt bề mặt Loss",
   "t13_title": "Logistic Regression 2D & Đường cong ROC-AUC",
   "t14_title": "Kernel Trick SVM (Vòng tròn 2D → 3D RBF)",
-  "t15_title": "Mạng Nơ-ron 2 tầng & Gấp không gian (XOR)"
+  "t15_title": "Mạng Nơ-ron 2 tầng & Gấp không gian (XOR)",
+  "play_all_btn": "Chạy tất cả",
+  "pause_all_btn": "Tạm dừng",
+  "loop_bounce_desc": "Chạy qua lại trái-phải (min ↔ max)",
+  "loop_forward_desc": "Chạy sang phải lặp lại (min → max)",
+  "loop_reverse_desc": "Chạy sang trái lặp lại (max → min)",
+  "loop_once_desc": "Chạy 1 lần đến biên rồi dừng",
+  "slider_setup_title": "Cấu hình Biên (Min / Max / Bước Δ) & Chế độ Play",
+  "race_pause": "Tạm dừng",
+  "race_step_back": "Lùi 1 bước",
+  "race_step_fwd": "Tiến 1 bước",
+  "race_total_steps": "Tổng số bước T (1–1000)"
 }

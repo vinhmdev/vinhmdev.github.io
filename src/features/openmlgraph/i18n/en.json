@@ -74,5 +74,16 @@
   "t12_title": "BatchNorm & Loss Surface Conditioning",
   "t13_title": "2D Logistic Regression & ROC-AUC",
   "t14_title": "SVM Kernel Trick (2D Rings → 3D RBF)",
-  "t15_title": "2-Layer MLP & Space Folding (XOR)"
+  "t15_title": "2-Layer MLP & Space Folding (XOR)",
+  "play_all_btn": "Play All",
+  "pause_all_btn": "Pause All",
+  "loop_bounce_desc": "Oscillate left & right (min ↔ max)",
+  "loop_forward_desc": "Repeat forward to the right (min → max)",
+  "loop_reverse_desc": "Repeat backward to the left (max → min)",
+  "loop_once_desc": "Play once and stop at boundary",
+  "slider_setup_title": "Configure Bounds (Min / Max / Step) & Animation",
+  "race_pause": "Pause",
+  "race_step_back": "Step -1",
+  "race_step_fwd": "Step +1",
+  "race_total_steps": "Total steps T (1–1000)"
 }

@@ -48,6 +48,7 @@ export default function OpenMLGraphApp(): JSX.Element {
 
   const workerRef = useRef<Worker | null>(null);
   const seqRef = useRef(0);
+  const wasmSeqRef = useRef(0);
   const leftCanvasRef = useRef<HTMLCanvasElement>(null);
   const rightGlCanvasRef = useRef<HTMLCanvasElement>(null);
   const rightOverlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -144,60 +145,83 @@ export default function OpenMLGraphApp(): JSX.Element {
       const res = executeComputeJob(req);
       graphStore.getState().applyWorkerResult(res);
     }
-
-    // If Custom JS WASM optimizer is active, compute its trajectory asynchronously in QuickJS WASM
-    if (g.optimizerRace.enabledOptimizers.custom_js && g.optimizerRace.customJsCode) {
-      const packed = packDataset(g.dataPoints, g.batchNormEnabled);
-      const delta = paramValues['delta'] ?? 1.0;
-      const lambda = paramValues['lambda'] ?? 0.1;
-      const eta = paramValues['eta'] ?? 0.08;
-      const beta1 = paramValues['beta'] ?? 0.9;
-
-      void runCustomOptimizerTrajectoryInWasm(
-        g.optimizerRace.customJsCode,
-        {
-          startW1: g.optimizerRace.startW1,
-          startW2: g.optimizerRace.startW2,
-          steps: g.optimizerRace.steps,
-          eta,
-          beta1,
-          beta2: 0.99,
-          epsilon: 1e-8,
-        },
-        (w1, w2) =>
-          evaluateEmpiricalLossAndGrad(
-            w1,
-            w2,
-            packed.trainX,
-            packed.trainY,
-            g.lossKind,
-            delta,
-            g.regularizationKind,
-            lambda,
-            g.subgradConvention
-          ),
-        50
-      ).then((wasmRes) => {
-        if (!wasmRes.ok) return;
-        const curr = graphStore.getState();
-        curr.applyWorkerResult({
-          curves: curr.curves,
-          trainLoss: curr.trainLoss,
-          testLoss: curr.testLoss,
-          lossGrid: curr.lossGrid,
-          minLoss: curr.minLoss,
-          maxLoss: curr.maxLoss,
-          vectorField: curr.vectorField,
-          trajectories: {
-            ...curr.trajectories,
-            custom_js: wasmRes.trajectory,
-          },
-          linkedBrushPull: curr.linkedBrushPull,
-          computeDurationMs: curr.computeDurationMs,
-        });
-      });
-    }
   }, [storeState.graph]);
+
+  // Recompute QuickJS WASM trajectory only when trajectory-defining inputs change (not on every currentStep playback tick)
+  const gForWasm = storeState.graph;
+  const wasmDelta = gForWasm.sliders['delta']?.value ?? 1.0;
+  const wasmLambda = gForWasm.sliders['lambda']?.value ?? 0.1;
+  const wasmEta = gForWasm.sliders['eta']?.value ?? 0.08;
+  const wasmBeta1 = gForWasm.sliders['beta']?.value ?? 0.9;
+
+  useEffect(() => {
+    const g = storeState.graph;
+    if (!g.optimizerRace.enabledOptimizers.custom_js || !g.optimizerRace.customJsCode) {
+      return;
+    }
+
+    const myWasmSeq = ++wasmSeqRef.current;
+    const packed = packDataset(g.dataPoints, g.batchNormEnabled);
+
+    void runCustomOptimizerTrajectoryInWasm(
+      g.optimizerRace.customJsCode,
+      {
+        startW1: g.optimizerRace.startW1,
+        startW2: g.optimizerRace.startW2,
+        steps: g.optimizerRace.steps,
+        eta: wasmEta,
+        beta1: wasmBeta1,
+        beta2: 0.99,
+        epsilon: 1e-8,
+      },
+      (w1, w2) =>
+        evaluateEmpiricalLossAndGrad(
+          w1,
+          w2,
+          packed.trainX,
+          packed.trainY,
+          g.lossKind,
+          wasmDelta,
+          g.regularizationKind,
+          wasmLambda,
+          g.subgradConvention
+        ),
+      50
+    ).then((wasmRes) => {
+      if (!wasmRes.ok || myWasmSeq !== wasmSeqRef.current) return;
+      const curr = graphStore.getState();
+      curr.applyWorkerResult({
+        curves: curr.curves,
+        trainLoss: curr.trainLoss,
+        testLoss: curr.testLoss,
+        lossGrid: curr.lossGrid,
+        minLoss: curr.minLoss,
+        maxLoss: curr.maxLoss,
+        vectorField: curr.vectorField,
+        trajectories: {
+          ...curr.trajectories,
+          custom_js: wasmRes.trajectory,
+        },
+        linkedBrushPull: curr.linkedBrushPull,
+        computeDurationMs: curr.computeDurationMs,
+      });
+    });
+  }, [
+    gForWasm.optimizerRace.enabledOptimizers.custom_js,
+    gForWasm.optimizerRace.customJsCode,
+    gForWasm.optimizerRace.startW1,
+    gForWasm.optimizerRace.startW2,
+    gForWasm.optimizerRace.steps,
+    gForWasm.dataPoints,
+    gForWasm.batchNormEnabled,
+    gForWasm.lossKind,
+    gForWasm.regularizationKind,
+    gForWasm.subgradConvention,
+    wasmDelta,
+    wasmLambda,
+    wasmEta,
+    wasmBeta1,
+  ]);
 
   // Wire Header buttons (#share-btn, #mydocs-btn), Theme & Lang events, and Initial / Dynamic URL Hash
   useEffect(() => {

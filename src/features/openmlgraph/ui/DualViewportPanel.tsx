@@ -341,11 +341,32 @@ export function DualViewportPanel({
   ]);
 
   const updateRightParamsFromWorld = (wx: number, wy: number): void => {
-    if (graph.sliders[w1Key]) {
-      storeState.setSliderValue(w1Key, wx);
+    const s1 = graph.sliders[w1Key];
+    if (s1) {
+      if (wx < s1.min || wx > s1.max) {
+        storeState.updateSliderBounds(w1Key, {
+          min: Math.min(s1.min, Math.floor(wx * 10) / 10),
+          max: Math.max(s1.max, Math.ceil(wx * 10) / 10),
+          value: wx,
+          playing: false,
+        });
+      } else {
+        storeState.setSliderValue(w1Key, wx);
+      }
     }
-    if (graph.sliders[w2Key] && w2Key !== w1Key) {
-      storeState.setSliderValue(w2Key, w2Key === 'sigma' ? Math.max(0.1, wy) : wy);
+    const s2 = graph.sliders[w2Key];
+    if (s2 && w2Key !== w1Key) {
+      const targetWy = w2Key === 'sigma' ? Math.max(0.1, wy) : wy;
+      if (targetWy < s2.min || targetWy > s2.max) {
+        storeState.updateSliderBounds(w2Key, {
+          min: Math.min(s2.min, Math.floor(targetWy * 10) / 10),
+          max: Math.max(s2.max, Math.ceil(targetWy * 10) / 10),
+          value: targetWy,
+          playing: false,
+        });
+      } else {
+        storeState.setSliderValue(w2Key, targetWy);
+      }
     }
   };
 
@@ -764,7 +785,12 @@ export function DualViewportPanel({
 
                 rightDragModeRef.current = 'param';
                 updateRightParamsFromWorld(wx, wy);
-                storeState.updateOptimizerRace({ startW1: wx, startW2: wy, currentStep: 60 });
+                storeState.updateOptimizerRace({
+                  startW1: wx,
+                  startW2: wy,
+                  currentStep: graph.optimizerRace.steps,
+                  playing: false,
+                });
               }}
               onPointerMove={(e) => {
                 if (
@@ -804,6 +830,12 @@ export function DualViewportPanel({
                 }
 
                 updateRightParamsFromWorld(wx, wy);
+                storeState.updateOptimizerRace({
+                  startW1: wx,
+                  startW2: wy,
+                  currentStep: graph.optimizerRace.steps,
+                  playing: false,
+                });
               }}
               onPointerUp={() => {
                 rightDragModeRef.current = 'none';

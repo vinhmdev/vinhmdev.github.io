@@ -18,9 +18,12 @@ import type {
   ExpressionItem,
   GraphStateV2,
   LossKind,
+  OptimizerLoopMode,
   OptimizerRaceConfig,
+  PlaybackSpeed,
   RegularizationKind,
   RightViewportMode,
+  SliderLoopMode,
   SliderState,
   ViewMode,
   Viewport2DBounds,
@@ -58,7 +61,18 @@ function num4(n: number): number {
 }
 
 type CompactExprTuple = [string, string, string, number, string?];
-type CompactSliderTuple = [string, string, SymbolRole, number, number, number, number];
+type CompactSliderTuple = [
+  string,
+  string,
+  SymbolRole,
+  number,
+  number,
+  number,
+  number,
+  SliderLoopMode?,
+  PlaybackSpeed?,
+  (1 | -1)?,
+];
 
 interface CompactPayloadV2 {
   /** Schema version */
@@ -79,7 +93,7 @@ interface CompactPayloadV2 {
   ];
   /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2), label?] */
   e: CompactExprTuple[];
-  /** Sliders: [name, latex, role, value, min, max, step] */
+  /** Sliders: [name, latex, role, value, min, max, step, loopMode?, speed?, direction?] */
   s: CompactSliderTuple[];
   /** Binary delta-encoded Int32Array of [dx_scaled, dy_scaled, flags] in Base64URL */
   db?: string;
@@ -89,8 +103,19 @@ interface CompactPayloadV2 {
   vp: [number, number, number, number, number, number, number, number];
   /** Symbol overrides */
   o?: Record<string, SymbolRole>;
-  /** Optimizer race config: [startW1, startW2, steps, currentStep, flags, lrSchedule] */
-  r?: [number, number, number, number, number, OptimizerRaceConfig['lrSchedule'], string?];
+  /** Optimizer race config: [startW1, startW2, steps, currentStep, flags, lrSchedule, customJsCode?, loopMode?, speed?, direction?] */
+  r?: [
+    number,
+    number,
+    number,
+    number,
+    number,
+    OptimizerRaceConfig['lrSchedule'],
+    (string | undefined)?,
+    OptimizerLoopMode?,
+    PlaybackSpeed?,
+    (1 | -1)?,
+  ];
 }
 
 export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
@@ -104,15 +129,32 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
       : [item.id, item.latex, item.color, flags];
   });
 
-  const s: CompactSliderTuple[] = Object.values(state.sliders).map((sl) => [
-    sl.name,
-    sl.latex,
-    sl.role,
-    num4(sl.value),
-    num4(sl.min),
-    num4(sl.max),
-    num4(sl.step),
-  ]);
+  const s: CompactSliderTuple[] = Object.values(state.sliders).map((sl) => {
+    const hasCustomAnim =
+      sl.loopMode !== 'bounce' || sl.speed !== 1 || sl.direction !== 1;
+    return hasCustomAnim
+      ? [
+          sl.name,
+          sl.latex,
+          sl.role,
+          num4(sl.value),
+          num4(sl.min),
+          num4(sl.max),
+          num4(sl.step),
+          sl.loopMode,
+          sl.speed,
+          sl.direction,
+        ]
+      : [
+          sl.name,
+          sl.latex,
+          sl.role,
+          num4(sl.value),
+          num4(sl.min),
+          num4(sl.max),
+          num4(sl.step),
+        ];
+  });
 
   // Delta-encode scaled integer coordinates (x * 10000, y * 10000) into binary Int32Array
   const nPts = state.dataPoints.length;
@@ -141,6 +183,43 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
     (race.enabledOptimizers.adam ? 8 : 0) |
     (race.useNesterov ? 16 : 0) |
     (race.adamBiasCorrection ? 32 : 0);
+
+  const hasCustomRaceAnim =
+    (race.loopMode && race.loopMode !== 'once') ||
+    (race.speed && race.speed !== 1) ||
+    (race.direction && race.direction !== 1);
+
+  const rTuple: CompactPayloadV2['r'] = hasCustomRaceAnim
+    ? [
+        num4(race.startW1),
+        num4(race.startW2),
+        race.steps,
+        race.currentStep,
+        raceFlags,
+        race.lrSchedule,
+        race.customJsCode,
+        race.loopMode ?? 'once',
+        race.speed ?? 1,
+        race.direction ?? 1,
+      ]
+    : race.customJsCode
+      ? [
+          num4(race.startW1),
+          num4(race.startW2),
+          race.steps,
+          race.currentStep,
+          raceFlags,
+          race.lrSchedule,
+          race.customJsCode,
+        ]
+      : [
+          num4(race.startW1),
+          num4(race.startW2),
+          race.steps,
+          race.currentStep,
+          raceFlags,
+          race.lrSchedule,
+        ];
 
   return {
     v: 2,
@@ -171,15 +250,7 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
       num4(state.rightViewport.yMax),
     ],
     o: Object.keys(state.symbolOverrides).length > 0 ? state.symbolOverrides : undefined,
-    r: [
-      num4(race.startW1),
-      num4(race.startW2),
-      race.steps,
-      race.currentStep,
-      raceFlags,
-      race.lrSchedule,
-      race.customJsCode,
-    ],
+    r: rTuple,
   };
 }
 
@@ -212,7 +283,7 @@ export function unpackCompactV2ToState(
   }));
 
   const sliders: Record<string, SliderState> = {};
-  for (const [name, latex, role, value, min, max, step] of compact.s) {
+  for (const [name, latex, role, value, min, max, step, loopMode, speed, direction] of compact.s) {
     sliders[name] = {
       name,
       latex,
@@ -222,9 +293,9 @@ export function unpackCompactV2ToState(
       max,
       step,
       playing: false,
-      speed: 1,
-      loopMode: 'bounce',
-      direction: 1,
+      speed: speed ?? 1,
+      loopMode: loopMode ?? 'bounce',
+      direction: direction === -1 ? -1 : 1,
     };
   }
 
@@ -326,6 +397,9 @@ export function unpackCompactV2ToState(
           currentStep: r[3],
           playing: false,
           lrSchedule: r[5],
+          speed: r[8] ?? 1,
+          loopMode: r[7] ?? 'once',
+          direction: r[9] === -1 ? -1 : 1,
           customJsCode: r[6],
         }
       : fallbackBase.optimizerRace,

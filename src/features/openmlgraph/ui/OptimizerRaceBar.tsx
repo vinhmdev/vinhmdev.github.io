@@ -4,10 +4,16 @@
  */
 import type { JSX } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { OptimizerId } from '../types/state';
+import type { OptimizerId, OptimizerLoopMode, PlaybackSpeed } from '../types/state';
 import { graphStore, type GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
-import { IconPause, IconPlay } from './icons';
+import {
+  IconPause,
+  IconPlay,
+  IconSkipBack,
+  IconStepBack,
+  IconStepForward,
+} from './icons';
 
 interface RaceBarProps {
   storeState: GraphStoreState;
@@ -24,22 +30,34 @@ const OPT_META: { id: OptimizerId; label: string; colorClass: string }[] = [
   { id: 'adam', label: 'Adam', colorClass: 'border-blue-500 text-blue-600 dark:text-blue-400' },
 ];
 
+const RACE_SPEEDS: PlaybackSpeed[] = [0.25, 0.5, 1, 2, 4];
+
+const RACE_LOOP_MODES: { id: OptimizerLoopMode; icon: string; title: string }[] = [
+  { id: 'once', icon: '→|', title: 'Play once and stop at boundary' },
+  { id: 'loop', icon: '↻', title: 'Repeat loop continuously' },
+  { id: 'bounce', icon: '⇄', title: 'Bounce forward and backward (0 ↔ T)' },
+];
+
 export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
   const { graph, trajectories } = storeState;
   const race = graph.optimizerRace;
+  const speed: PlaybackSpeed = race.speed ?? 1;
+  const loopMode: OptimizerLoopMode = race.loopMode ?? 'once';
+  const direction: 1 | -1 = race.direction === -1 ? -1 : 1;
 
   const anyDiverged = Object.values(trajectories).some((traj) =>
     traj.some((s) => s.diverged)
   );
 
-  // Scrubber playback animation
+  // Scrubber playback animation scaled by selected playback speed
   useEffect(() => {
     if (!race.playing) return;
+    const intervalMs = Math.max(12, Math.round(48 / speed));
     const timer = setInterval(() => {
       graphStore.getState().stepOptimizerRace();
-    }, 45);
+    }, intervalMs);
     return () => clearInterval(timer);
-  }, [race.playing]);
+  }, [race.playing, speed]);
 
   return (
     <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/95 dark:bg-neutral-900/95 text-xs">
@@ -127,22 +145,68 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
         </button>
       </div>
 
-      {/* Center: Timeline Scrubber t in [0, T] */}
-      <div class="flex items-center gap-2 flex-1 max-w-md">
-        <button
-          type="button"
-          onClick={() =>
-            storeState.updateOptimizerRace({
-              currentStep: race.currentStep >= race.steps ? 0 : race.currentStep,
-              playing: !race.playing,
-            })
-          }
-          class="flex items-center gap-1 px-2.5 py-1 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600"
-        >
-          {race.playing ? <IconPause /> : <IconPlay />}
-          <span>{t('race_launch')}</span>
-        </button>
+      {/* Center: Commercial Timeline Transport + Scrubber + Customizable t = [currentStep] / [steps] */}
+      <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-[280px] max-w-2xl">
+        {/* Transport Group: Reset (t=0), Step -1, Play/Pause, Step +1 */}
+        <div class="inline-flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() =>
+              storeState.updateOptimizerRace({
+                currentStep: 0,
+                playing: false,
+              })
+            }
+            class="p-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 hover:text-orange-500"
+            title={`${t('race_reset')} (t = 0)`}
+          >
+            <IconSkipBack class="w-3 h-3" />
+          </button>
 
+          <button
+            type="button"
+            onClick={() =>
+              storeState.updateOptimizerRace({
+                currentStep: Math.max(0, race.currentStep - 1),
+                playing: false,
+              })
+            }
+            class="p-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 hover:text-orange-500"
+            title={t('race_step_back')}
+          >
+            <IconStepBack class="w-3 h-3" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              storeState.updateOptimizerRace({
+                playing: !race.playing,
+              })
+            }
+            class="flex items-center gap-1 px-2.5 py-1 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600 shadow-2xs"
+            title={race.playing ? t('race_pause') : t('race_launch')}
+          >
+            {race.playing ? <IconPause /> : <IconPlay />}
+            <span>{race.playing ? t('race_pause') : t('race_launch')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              storeState.updateOptimizerRace({
+                currentStep: Math.min(race.steps, race.currentStep + 1),
+                playing: false,
+              })
+            }
+            class="p-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 hover:text-orange-500"
+            title={t('race_step_fwd')}
+          >
+            <IconStepForward class="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Scrubber Track */}
         <input
           type="range"
           min={0}
@@ -155,11 +219,99 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
               playing: false,
             })
           }
-          class="omlg-slider flex-1"
+          class="omlg-slider flex-1 min-w-[90px]"
         />
-        <span class="font-mono text-[11px] w-16 text-right">
-          t = {race.currentStep}/{race.steps}
-        </span>
+
+        {/* Customizable t = [currentStep] / [steps] */}
+        <div class="inline-flex items-center gap-0.5 font-mono text-[11px] bg-white dark:bg-neutral-800 px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700">
+          <span class="text-neutral-500">t=</span>
+          <input
+            type="number"
+            min={0}
+            max={race.steps}
+            step={1}
+            aria-label="Current step t"
+            value={race.currentStep}
+            onChange={(e) => {
+              const val = Number((e.target as HTMLInputElement).value);
+              if (!Number.isFinite(val)) return;
+              storeState.updateOptimizerRace({
+                currentStep: val,
+                playing: false,
+              });
+            }}
+            class="w-11 px-1 py-0.5 rounded bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-right font-bold text-neutral-800 dark:text-neutral-100 focus:border-orange-500 focus:outline-none"
+            title="Current step t (0..T)"
+          />
+          <span class="text-neutral-400">/</span>
+          <input
+            type="number"
+            min={1}
+            max={1000}
+            step={10}
+            aria-label="Total steps T"
+            value={race.steps}
+            onChange={(e) => {
+              const val = Number((e.target as HTMLInputElement).value);
+              if (!Number.isFinite(val)) return;
+              storeState.updateOptimizerRace({
+                steps: val,
+              });
+            }}
+            class="w-12 px-1 py-0.5 rounded bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-right font-bold text-orange-600 dark:text-orange-400 focus:border-orange-500 focus:outline-none"
+            title={t('race_total_steps')}
+          />
+        </div>
+
+        {/* Loop Mode (Once / Loop / Bounce), Direction (→ / ←) & Speed (0.25x..4x) */}
+        <div class="inline-flex items-center gap-0.5">
+          <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-0.5 gap-0.5">
+            {RACE_LOOP_MODES.map((m) => {
+              const active = loopMode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => storeState.updateOptimizerRace({ loopMode: m.id })}
+                  class={`px-1 py-0.5 rounded font-mono text-[10px] leading-none ${
+                    active
+                      ? 'bg-orange-500 text-white font-bold'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                  }`}
+                  title={m.title}
+                >
+                  {m.icon}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              storeState.updateOptimizerRace({
+                direction: direction === 1 ? -1 : 1,
+              })
+            }
+            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 font-mono text-[10px] font-bold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
+            title={direction === 1 ? 'Direction: Forward (0 → T)' : 'Direction: Reverse (T → 0)'}
+          >
+            {direction === 1 ? '→' : '←'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const nextSpeed =
+                RACE_SPEEDS[(RACE_SPEEDS.indexOf(speed) + 1) % RACE_SPEEDS.length];
+              storeState.updateOptimizerRace({ speed: nextSpeed });
+            }}
+            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 font-mono text-[10px] font-semibold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
+            title="Playback speed (0.25x, 0.5x, 1x, 2x, 4x)"
+          >
+            {speed}x
+          </button>
+        </div>
       </div>
 
       {/* Right: Divergence Guard Alert or LR Schedule */}
@@ -188,3 +340,4 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
     </div>
   );
 }
+

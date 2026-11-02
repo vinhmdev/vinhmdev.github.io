@@ -866,4 +866,207 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
       4
     );
   });
+
+  it('supports commercial Slider Play modes (bounce, wrap, wrap_reverse, once), Play All, step nudge, min/max auto-repair, and custom t/T Optimizer Race transport', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+
+    // 1. Slider 'wrap' (→↻ forward loop) wraps from max -> min
+    store.updateSliderBounds('a', {
+      min: -5,
+      max: 5,
+      value: 4.95,
+      loopMode: 'wrap',
+      playing: true,
+      speed: 2,
+    });
+    expect(graphStore.getState().graph.sliders['a'].direction).toBe(1);
+    expect(graphStore.getState().stepPlayingSliders(0.1)).toBe(true);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(-5);
+
+    // 2. Slider 'wrap_reverse' (←↺ reverse loop) moves left and wraps from min -> max
+    store.updateSliderBounds('a', {
+      min: -5,
+      max: 5,
+      value: -4.95,
+      loopMode: 'wrap_reverse',
+      playing: true,
+      speed: 2,
+    });
+    expect(graphStore.getState().graph.sliders['a'].direction).toBe(-1);
+    expect(graphStore.getState().stepPlayingSliders(0.1)).toBe(true);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(5);
+
+    // 3. Slider 'once' (→| play once) stops at max and auto-rewinds to min when Play is clicked again
+    store.updateSliderBounds('a', {
+      min: -5,
+      max: 5,
+      value: 4.95,
+      direction: 1,
+      loopMode: 'once',
+      playing: true,
+      speed: 2,
+    });
+    expect(graphStore.getState().stepPlayingSliders(0.1)).toBe(false);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(5);
+    expect(graphStore.getState().graph.sliders['a'].playing).toBe(false);
+
+    // Clicking Play again at max in 'once' mode auto-rewinds to min (-5) and plays
+    store.updateSliderBounds('a', { playing: true });
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(-5);
+    expect(graphStore.getState().graph.sliders['a'].playing).toBe(true);
+
+    // 4. stepSliderByDelta nudges by ±step and pauses playing slider
+    store.updateSliderBounds('a', { value: 1.0, step: 0.25, playing: true });
+    store.stepSliderByDelta('a', 1);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(1.25);
+    expect(graphStore.getState().graph.sliders['a'].playing).toBe(false);
+    store.stepSliderByDelta('a', -1);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(1.0);
+
+    // 5. Play All / Pause All toggles all sliders simultaneously
+    store.toggleAllSlidersPlay();
+    expect(Object.values(graphStore.getState().graph.sliders).every((s) => s.playing)).toBe(true);
+    store.toggleAllSlidersPlay();
+    expect(Object.values(graphStore.getState().graph.sliders).every((s) => !s.playing)).toBe(true);
+
+    // 6. Editing min > max automatically repairs bounds and clamps value
+    store.updateSliderBounds('a', { min: 10 });
+    expect(graphStore.getState().graph.sliders['a'].min).toBe(10);
+    expect(graphStore.getState().graph.sliders['a'].max).toBeGreaterThanOrEqual(10);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(10);
+
+    // 7. Optimizer Race custom T (steps), scrubbing sync, auto-rewind on Play, loop & bounce modes
+    store.selectTemplate('T-04');
+    // Customizing steps when at T/T (60/60) keeps currentStep at new T (120/120)
+    store.updateOptimizerRace({ steps: 120 });
+    expect(graphStore.getState().graph.optimizerRace.steps).toBe(120);
+    expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(120);
+
+    // Clamps steps into [1, 1000]
+    store.updateOptimizerRace({ steps: 5000 });
+    expect(graphStore.getState().graph.optimizerRace.steps).toBe(1000);
+    store.updateOptimizerRace({ steps: 0 });
+    expect(graphStore.getState().graph.optimizerRace.steps).toBe(1);
+
+    // Compute 4-step trajectory and verify scrubbing t syncs sliders (w, b)
+    const g4 = graphStore.getState().graph;
+    const jobRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 10,
+      expressions: g4.expressions,
+      paramValues: { w: 1.0, b: 0.0, delta: 1.0, lambda: 0.1, eta: 0.08, beta: 0.9 },
+      symbolOverrides: g4.symbolOverrides,
+      subgradConvention: g4.subgradConvention,
+      leftViewport: g4.leftViewport,
+      rightViewport: g4.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: g4.dataPoints,
+      lossKind: g4.lossKind,
+      regularizationKind: g4.regularizationKind,
+      regularizationRadius: g4.regularizationRadius,
+      batchNormEnabled: g4.batchNormEnabled,
+      optimizerRace: { ...g4.optimizerRace, steps: 4, currentStep: 4 },
+      hoveredDataPointId: null,
+    });
+    store.applyWorkerResult(jobRes);
+    store.updateOptimizerRace({ steps: 4, currentStep: 4, playing: false });
+
+    // Scrubbing to t = 2 syncs w and b sliders to step 2
+    store.updateOptimizerRace({ currentStep: 2 });
+    expect(graphStore.getState().graph.sliders['w'].value).toBeCloseTo(
+      jobRes.trajectories.adam[2].w1,
+      4
+    );
+
+    // Clicking Play when at t = 4/4 auto-rewinds to t = 0 and starts playing
+    store.updateOptimizerRace({ currentStep: 4 });
+    store.updateOptimizerRace({ playing: true });
+    expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(0);
+    expect(graphStore.getState().graph.optimizerRace.playing).toBe(true);
+
+    // Optimizer Race 'loop' mode wraps from 4 -> 0 and keeps playing
+    store.updateOptimizerRace({
+      steps: 2,
+      currentStep: 2,
+      loopMode: 'loop',
+      direction: 1,
+      playing: true,
+    });
+    expect(store.stepOptimizerRace()).toBe(true);
+    expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(0);
+    expect(graphStore.getState().graph.optimizerRace.playing).toBe(true);
+
+    // Optimizer Race 'bounce' mode reverses direction at upper and lower bounds
+    store.updateOptimizerRace({
+      steps: 2,
+      currentStep: 1,
+      loopMode: 'bounce',
+      direction: 1,
+      playing: true,
+    });
+    expect(store.stepOptimizerRace()).toBe(true);
+    expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(2);
+    expect(graphStore.getState().graph.optimizerRace.direction).toBe(-1);
+    expect(store.stepOptimizerRace()).toBe(true);
+    expect(graphStore.getState().graph.optimizerRace.currentStep).toBe(1);
+
+    // 8. Trajectory step beyond initial slider [min, max] auto-expands slider bounds instead of clamping
+    store.updateSliderBounds('w', { min: -2, max: 2, value: 0 });
+    store.applyWorkerResult({
+      ...jobRes,
+      trajectories: {
+        ...jobRes.trajectories,
+        adam: [
+          { step: 0, w1: -3.5, w2: 1.0, loss: 5, gradW1: 1, gradW2: 1, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: false },
+          { step: 1, w1: 4.2, w2: -0.5, loss: 2, gradW1: 0.5, gradW2: 0.5, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: false },
+        ],
+      },
+    });
+    store.updateOptimizerRace({ steps: 1, currentStep: 0, playing: false });
+    expect(graphStore.getState().graph.sliders['w'].value).toBe(-3.5);
+    expect(graphStore.getState().graph.sliders['w'].min).toBeLessThanOrEqual(-3.5);
+    store.updateOptimizerRace({ currentStep: 1 });
+    expect(graphStore.getState().graph.sliders['w'].value).toBe(4.2);
+    expect(graphStore.getState().graph.sliders['w'].max).toBeGreaterThanOrEqual(4.2);
+
+    // 9. applyWorkerResult preserves active custom_js WASM trajectory across synchronous worker frame updates
+    const customTraj = [
+      { step: 0, w1: -1.0, w2: 1.0, loss: 2, gradW1: 1, gradW2: 1, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: false },
+      { step: 1, w1: -0.5, w2: 0.5, loss: 0.5, gradW1: 0.5, gradW2: 0.5, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: false },
+    ];
+    store.updateOptimizerRace({
+      enabledOptimizers: {
+        ...graphStore.getState().graph.optimizerRace.enabledOptimizers,
+        custom_js: true,
+      },
+    });
+    store.applyWorkerResult({
+      ...jobRes,
+      trajectories: { ...jobRes.trajectories, custom_js: customTraj },
+    });
+    // Subsequent worker frame with empty custom_js must not wipe out the WASM trajectory
+    store.applyWorkerResult({
+      ...jobRes,
+      trajectories: { ...jobRes.trajectories, custom_js: [] },
+    });
+    expect(graphStore.getState().trajectories.custom_js.length).toBe(2);
+
+    // 10. URL hash codec round-trips custom slider loopMode/speed/direction and Optimizer Race loopMode/speed/direction
+    store.updateSliderBounds('w', { loopMode: 'wrap_reverse', speed: 4, direction: -1 });
+    store.updateOptimizerRace({ steps: 150, currentStep: 45, loopMode: 'bounce', speed: 2, direction: -1 });
+    const encodedHash = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const decodedGraph = decodeStateFromUrlHashSync(encodedHash, createInitialGraphState('T-04'));
+    expect(decodedGraph).not.toBeNull();
+    expect(decodedGraph!.sliders['w'].loopMode).toBe('wrap_reverse');
+    expect(decodedGraph!.sliders['w'].speed).toBe(4);
+    expect(decodedGraph!.sliders['w'].direction).toBe(-1);
+    expect(decodedGraph!.optimizerRace.steps).toBe(150);
+    expect(decodedGraph!.optimizerRace.currentStep).toBe(45);
+    expect(decodedGraph!.optimizerRace.loopMode).toBe('bounce');
+    expect(decodedGraph!.optimizerRace.speed).toBe(2);
+    expect(decodedGraph!.optimizerRace.direction).toBe(-1);
+  });
 });
+
