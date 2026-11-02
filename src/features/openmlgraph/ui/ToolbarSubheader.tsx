@@ -97,16 +97,18 @@ export function ToolbarSubheader({
           onChange={(e) => storeState.selectTemplate((e.target as HTMLSelectElement).value)}
           class="h-7 max-w-[245px] px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium focus:outline-none focus:border-orange-500 truncate"
         >
+          <option value={BLANK_CANVAS_TEMPLATE.id}>
+            {t(BLANK_CANVAS_TEMPLATE.titleKey)}
+          </option>
+          <hr class="border-neutral-200 dark:border-neutral-700 my-1" />
           <optgroup label={t('tpl_group_math')}>
-            <option value={BLANK_CANVAS_TEMPLATE.id}>
-              {t(BLANK_CANVAS_TEMPLATE.titleKey)}
-            </option>
             {MATH_TEMPLATES.map((tpl) => (
               <option key={tpl.id} value={tpl.id}>
                 {t(tpl.titleKey)}
               </option>
             ))}
           </optgroup>
+          <hr class="border-neutral-200 dark:border-neutral-700 my-1" />
           <optgroup label={t('tpl_group_ml')}>
             {ALL_ML_TEMPLATES.map((tpl) => (
               <option key={tpl.id} value={tpl.id}>
