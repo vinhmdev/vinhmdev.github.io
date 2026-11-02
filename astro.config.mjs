@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import preact from '@astrojs/preact';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -8,7 +9,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://tools.vinhmdev.com',
   output: 'static',
-  integrations: [sitemap()],
+  integrations: [sitemap(), preact({ compat: true })],
   // Prefetch links only when they enter the viewport — cheap network usage,
   // noticeably snappier nav between the two tool pages.
   prefetch: {
@@ -22,6 +23,9 @@ export default defineConfig({
   compressHTML: true,
   vite: {
     plugins: [tailwindcss()],
+    worker: {
+      format: 'es',
+    },
     optimizeDeps: {
       // Force re-optimize on each dev server start to avoid stale dep hash
       // mismatches (504 errors) when many new packages are added at once.

@@ -22,5 +22,7 @@
   "tool_llm_profiler": "LLM Hardware Profiler",
   "tool_llm_profiler_desc": "Công cụ tính toán VRAM và ước lượng phần cứng cho Large Language Models (LLM).",
   "tool_paste": "Paste Mã Hóa",
-  "tool_paste_desc": "Chia sẻ ghi chú với mã hóa đầu-cuối. Nội dung được mã hóa ngay trên trình duyệt, khóa nằm trong link."
+  "tool_paste_desc": "Chia sẻ ghi chú với mã hóa đầu-cuối. Nội dung được mã hóa ngay trên trình duyệt, khóa nằm trong link.",
+  "tool_openmlgraph": "OpenMLGraph",
+  "tool_openmlgraph_desc": "Phòng thí nghiệm toán học ML tương tác, giải tích đạo hàm & mô phỏng tối ưu hóa 3D."
 }

@@ -11,12 +11,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "typecheck": "astro check"
+    "typecheck": "astro check",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@astrojs/preact": "^6.1.1",
     "@astrojs/sitemap": "^3.7.1",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/language-data": "^6.5.2",
+    "@cortex-js/compute-engine": "^0.173.0",
     "@m2d/md2docx": "^0.0.1",
     "@tailwindcss/vite": "^4.2.1",
     "@types/dompurify": "^3.0.5",
@@ -25,6 +28,7 @@
     "astro": "^6.0.2",
     "codemirror": "^6.0.2",
     "dompurify": "^3.4.2",
+    "fflate": "^0.8.3",
     "firebase": "^12.10.0",
     "github-markdown-css": "^5.9.0",
     "highlight.js": "^11.11.1",
@@ -46,12 +50,17 @@
     "markdown-it-task-lists": "^2.1.1",
     "markdown-it-texmath": "^1.0.0",
     "markdown-it-toc-done-right": "^4.2.0",
-    "tailwindcss": "^4.2.1"
+    "mathlive": "^0.111.4",
+    "preact": "^11.1.1",
+    "quickjs-emscripten": "^0.32.0",
+    "tailwindcss": "^4.2.1",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^5.0.5"
   }
 }

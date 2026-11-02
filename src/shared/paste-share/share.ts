@@ -133,9 +133,13 @@ function explicitTitleOf(): string {
 
 function parseHash(): { id: string; key: string } | null {
   const raw = location.hash.replace(/^#/, '');
+  if (/^(v\d+\.(dr|fl)|g)\./.test(raw)) return null;
   const dot = raw.indexOf('.');
   if (dot <= 0 || dot === raw.length - 1) return null;
-  return { id: raw.slice(0, dot), key: raw.slice(dot + 1) };
+  const id = raw.slice(0, dot);
+  const key = raw.slice(dot + 1);
+  if (key.length !== 43) return null;
+  return { id, key };
 }
 
 export function hasShareLink(): boolean {

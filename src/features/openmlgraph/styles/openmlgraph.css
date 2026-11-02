@@ -1,0 +1,69 @@
+/**
+ * OpenMLGraph Theme & Perceptual Opacity Layering [NFR-4]
+ * Aligned with vinhmetal theme (Pure Titanium #FAFAFA / #171717 & Academic Cinnabar #F97316).
+ */
+
+:root {
+  --omlg-bg-canvas: #fafafa;
+  --omlg-bg-panel: #ffffff;
+  --omlg-border: #e5e5e5;
+  --omlg-text: #171717;
+  --omlg-text-muted: #525252;
+  --omlg-accent: #f97316;
+  --omlg-opacity-primary: 1;
+  --omlg-opacity-context: 0.32;
+  --omlg-opacity-grid: 0.15;
+}
+
+html.dark {
+  --omlg-bg-canvas: #171717;
+  --omlg-bg-panel: #1f1f1f;
+  --omlg-border: #2e2e2e;
+  --omlg-text: #f5f5f5;
+  --omlg-text-muted: #a3a3a3;
+  --omlg-accent: #f97316;
+}
+
+/* MathLive Custom Element Styling Overrides */
+math-field {
+  display: block;
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--omlg-border);
+  background: var(--omlg-bg-canvas);
+  color: var(--omlg-text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition: border-color 0.15s ease;
+}
+
+math-field:focus-within {
+  outline: none;
+  border-color: var(--omlg-accent);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+}
+
+/* Custom Range Sliders */
+.omlg-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(163, 163, 163, 0.35);
+  outline: none;
+}
+
+.omlg-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #f97316;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}

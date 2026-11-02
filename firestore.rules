@@ -107,6 +107,41 @@ service cloud.firestore {
         && request.resource.data.content.size() <= 900000;
     }
 
+    // Public Community Gallery for OpenMLGraph
+    match /public_graphs/{graphId} {
+      allow get: if true;
+      allow list: if request.query.limit != null && request.query.limit <= 30;
+
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'v', 'title', 'author', 'category', 'description',
+          'primaryLatex', 'payload', 'createdAt', 'expireAt'
+        ])
+        && request.resource.data.v == 2
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.author is string
+        && request.resource.data.author.size() >= 1
+        && request.resource.data.author.size() <= 50
+        && request.resource.data.category in [
+          'activation', 'loss', 'optimization', 'probability', 'boundary', 'custom'
+        ]
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 500
+        && request.resource.data.primaryLatex is string
+        && request.resource.data.primaryLatex.size() <= 500
+        && request.resource.data.payload is string
+        && request.resource.data.payload.size() > 0
+        && request.resource.data.payload.size() <= 200000
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expireAt is timestamp
+        && request.resource.data.expireAt > request.time
+        && request.resource.data.expireAt <= request.time + duration.value(366, 'd');
+
+      allow update, delete: if false;
+    }
+
     // Everything else is denied by default.
   }
 }

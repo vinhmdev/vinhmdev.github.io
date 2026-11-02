@@ -1,0 +1,160 @@
+---
+/**
+ * OpenMLGraph — Interactive ML Math Sandbox, Symbolic/AutoDiff Plotter & 3D Optimizer Race.
+ * Vertical Slice Architecture (VSA) aligned with vinhmdev.github.io conventions.
+ * Self-contained inline SVGs guarantee 100% offline operation with zero CDN dependency [AC-06].
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import OpenMLGraphApp from './ui/OpenMLGraphApp';
+---
+
+<BaseLayout
+  title="OpenMLGraph | ML Math Sandbox & 3D Optimizer Race"
+  description="Interactive client-side Machine Learning math graphing, symbolic/AutoDiff calculus, and 3D loss landscape optimizer race."
+  lang="en"
+  bodyClass="bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 h-[100dvh] overflow-hidden flex flex-col transition-colors duration-300"
+  showFooter={false}
+>
+  <!-- ===== Top Header (Consistent with Encrypted Paste & Clipboard2Markdown) ===== -->
+  <header
+    class="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-2 backdrop-blur bg-neutral-50/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800 shrink-0"
+  >
+    <a
+      href="/"
+      class="flex items-center gap-2 no-underline text-inherit hover:opacity-80 transition-opacity"
+    >
+      <svg
+        class="w-5 h-5 text-orange-500"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      <h1
+        class="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
+        data-i18n="heading"
+      >
+        OpenMLGraph
+      </h1>
+    </a>
+
+    <div class="flex items-center gap-2">
+      <button
+        id="share-btn"
+        type="button"
+        class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
+        title="Share or Publish Graph"
+      >
+        <svg
+          class="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        <span data-i18n="share_btn">Share</span>
+      </button>
+
+      <button
+        id="mydocs-btn"
+        type="button"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        data-i18n="mydocs_btn_title"
+        data-i18n-attr="title"
+        title="My Graphs & Community Gallery"
+      >
+        <svg
+          class="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+
+      <button
+        id="theme-toggle-btn"
+        type="button"
+        class="flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        title="Toggle dark/light mode"
+      >
+        <svg
+          class="w-4 h-4 hidden dark:block"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg
+          class="w-4 h-4 block dark:hidden"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
+      <button
+        id="lang-switch-btn"
+        type="button"
+        class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300"
+        title="Switch language"
+      >
+        <span class="text-base">🇻🇳</span><span class="text-xs font-semibold">VI</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Interactive Preact Island ===== -->
+  <OpenMLGraphApp client:only="preact" />
+
+  <script>
+    import { initTheme } from '@shared/theme/toggle';
+    import { init as initI18n } from './scripts/i18n-client';
+    import 'katex/dist/katex.min.css';
+
+    initTheme();
+    initI18n();
+  </script>
+
+  <style is:global>
+    @import './styles/openmlgraph.css';
+  </style>
+</BaseLayout>
