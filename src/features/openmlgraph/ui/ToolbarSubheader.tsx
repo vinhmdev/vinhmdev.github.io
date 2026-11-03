@@ -25,7 +25,7 @@ export function ToolbarSubheader({
   onExportPng,
   onToast,
 }: ToolbarProps): JSX.Element {
-  const { graph, workspaceMode, undoStack, redoStack } = storeState;
+  const { graph, undoStack, redoStack } = storeState;
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
 
   const handleSaveLocal = (): void => {
@@ -34,45 +34,12 @@ export function ToolbarSubheader({
   };
 
   const isBlankMode = graph.activeTemplateId === 'T-00';
-  const isMlMode = workspaceMode === 'ml';
 
   return (
     <div class="flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between gap-1.5 px-2.5 sm:px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
-      {/* Primary Row: Perspective Switcher (Math vs ML), Blank Graph, Template Select & Mobile Tools Toggle */}
+      {/* Primary Row: Blank Graph, Template Select, View Modes & Mobile Tools Toggle */}
       <div class="flex items-center justify-between md:justify-start gap-1.5 w-full md:w-auto">
         <div class="flex items-center gap-1.5 min-w-0 flex-1 md:flex-initial">
-          {/* Perspective Mode Switcher (GeoGebra / Desmos inspired) */}
-          <div
-            class="inline-flex shrink-0 rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden bg-white dark:bg-neutral-800 p-0.5 gap-0.5"
-            role="group"
-            aria-label="Workspace Perspective"
-          >
-            <button
-              type="button"
-              onClick={() => storeState.setWorkspaceMode('math')}
-              class={`px-2 sm:px-2.5 py-1 rounded-xs font-semibold transition-colors whitespace-nowrap ${
-                !isMlMode
-                  ? 'bg-orange-500 text-white shadow-2xs'
-                  : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-              }`}
-              title="Chế độ Toán học & Đồ thị chuẩn (ẩn các thông số ML phức tạp)"
-            >
-              {t('mode_math')}
-            </button>
-            <button
-              type="button"
-              onClick={() => storeState.setWorkspaceMode('ml')}
-              class={`px-2 sm:px-2.5 py-1 rounded-xs font-semibold transition-colors whitespace-nowrap ${
-                isMlMode
-                  ? 'bg-orange-500 text-white shadow-2xs'
-                  : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-              }`}
-              title="Chế độ Tối ưu hóa 3D & Học máy (Loss Surface, Optimizer Race, Param/Hyper)"
-            >
-              {t('mode_ml')}
-            </button>
-          </div>
-
           <button
             id="blank-graph-btn"
             type="button"
@@ -138,44 +105,42 @@ export function ToolbarSubheader({
           <span class="text-[10px]">{mobileToolsOpen ? '▴' : '▾'}</span>
         </button>
 
-        {/* Desktop ML View Modes & Clarke Subgradient (hidden on mobile unless Tools drawer is expanded) */}
-        {isMlMode && (
-          <div class="hidden md:flex items-center gap-1.5">
-            <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-              {(['inference', 'optimization', 'dual'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => storeState.setViewMode(m)}
-                  class={`px-2.5 py-1 font-medium transition-colors ${
-                    graph.viewMode === m
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-                  }`}
-                >
-                  {m === 'inference'
-                    ? t('view_inference')
-                    : m === 'optimization'
-                      ? t('view_optimization')
-                      : t('view_dual')}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                storeState.setSubgradConvention(
-                  graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
-                )
-              }
-              class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors"
-              title="Toggle Clarke Subdifferential at kink u = 0"
-            >
-              {graph.subgradConvention === 'zero' ? t('subgrad_zero') : t('subgrad_sym')}
-            </button>
+        {/* Desktop View Modes & Clarke Subgradient (hidden on mobile unless Tools drawer is expanded) */}
+        <div class="hidden md:flex items-center gap-1.5">
+          <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
+            {(['inference', 'optimization', 'dual'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => storeState.setViewMode(m)}
+                class={`px-2.5 py-1 font-medium transition-colors ${
+                  graph.viewMode === m
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                }`}
+              >
+                {m === 'inference'
+                  ? t('view_inference')
+                  : m === 'optimization'
+                    ? t('view_optimization')
+                    : t('view_dual')}
+              </button>
+            ))}
           </div>
-        )}
+
+          <button
+            type="button"
+            onClick={() =>
+              storeState.setSubgradConvention(
+                graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
+              )
+            }
+            class="h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            title="Toggle Clarke Subdifferential at kink u = 0"
+          >
+            {graph.subgradConvention === 'zero' ? t('subgrad_zero') : t('subgrad_sym')}
+          </button>
+        </div>
       </div>
 
       {/* Secondary Row / Right Actions: Collapsible on Mobile, Always Visible on Desktop */}
@@ -184,43 +149,41 @@ export function ToolbarSubheader({
           mobileToolsOpen ? 'flex' : 'hidden md:flex'
         } flex-wrap items-center justify-between md:justify-end gap-1.5 pt-1 md:pt-0 border-t md:border-t-0 border-neutral-200/70 dark:border-neutral-800/70`}
       >
-        {/* Mobile-only ML View Modes & Clarke Subgradient inside collapsible drawer */}
-        {isMlMode && (
-          <div class="flex md:hidden flex-wrap items-center gap-1.5">
-            <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-              {(['inference', 'optimization', 'dual'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => storeState.setViewMode(m)}
-                  class={`px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                    graph.viewMode === m
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
-                  }`}
-                >
-                  {m === 'inference'
-                    ? t('view_inference')
-                    : m === 'optimization'
-                      ? t('view_optimization')
-                      : t('view_dual')}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                storeState.setSubgradConvention(
-                  graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
-                )
-              }
-              class="h-6 px-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[11px] text-neutral-700 dark:text-neutral-300"
-            >
-              {graph.subgradConvention === 'zero' ? 'H(0)=0' : 'H(0)=0.5'}
-            </button>
+        {/* Mobile-only View Modes & Clarke Subgradient inside collapsible drawer */}
+        <div class="flex md:hidden flex-wrap items-center gap-1.5">
+          <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
+            {(['inference', 'optimization', 'dual'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => storeState.setViewMode(m)}
+                class={`px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                  graph.viewMode === m
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                }`}
+              >
+                {m === 'inference'
+                  ? t('view_inference')
+                  : m === 'optimization'
+                    ? t('view_optimization')
+                    : t('view_dual')}
+              </button>
+            ))}
           </div>
-        )}
+
+          <button
+            type="button"
+            onClick={() =>
+              storeState.setSubgradConvention(
+                graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
+              )
+            }
+            class="h-6 px-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[11px] text-neutral-700 dark:text-neutral-300"
+          >
+            {graph.subgradConvention === 'zero' ? 'H(0)=0' : 'H(0)=0.5'}
+          </button>
+        </div>
 
         <div class="flex items-center gap-1.5 ml-auto md:ml-0">
           <span

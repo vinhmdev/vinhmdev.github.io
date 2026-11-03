@@ -115,15 +115,12 @@ export function DualViewportPanel({
   const rightDragModeRef = useRef<'none' | 'param' | 'orbit' | 'reg_radius'>('none');
   const lastMouseRightRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const isMlMode = storeState.workspaceMode === 'ml';
   const showLeft =
-    !isMlMode ||
     graph.viewMode === 'inference' ||
     (graph.viewMode === 'dual' && (mobileTab === 'data' || mobileTab === 'split'));
   const showRight =
-    isMlMode &&
-    (graph.viewMode === 'optimization' ||
-      (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split')));
+    graph.viewMode === 'optimization' ||
+    (graph.viewMode === 'dual' && (mobileTab === 'loss' || mobileTab === 'split'));
 
   const paramValues: Record<string, number> = {};
   for (const [k, s] of Object.entries(graph.sliders)) {

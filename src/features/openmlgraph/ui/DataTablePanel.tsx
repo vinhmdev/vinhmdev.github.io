@@ -14,8 +14,7 @@ interface DataTableProps {
 }
 
 export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
-  const { graph, brushActive, workspaceMode } = storeState;
-  const isMlMode = workspaceMode === 'ml';
+  const { graph, brushActive } = storeState;
   const [csvText, setCsvText] = useState('');
   const [showCsvBox, setShowCsvBox] = useState(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(() => graph.dataPoints.length > 0);
@@ -57,7 +56,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
         >
           <span>{isExpanded ? '▾' : '▸'}</span>
           <span>
-            {isMlMode ? t('data_table_title') : t('math_points_title')} ({graph.dataPoints.length})
+            {t('data_table_title')} ({graph.dataPoints.length})
           </span>
         </button>
         <div class="flex flex-wrap items-center gap-1">
@@ -194,26 +193,24 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
                 <span class="text-neutral-400">)</span>
               </div>
               <div class="flex items-center gap-1.5">
-                {isMlMode && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updated = graph.dataPoints.map((d) =>
-                        d.id === pt.id
-                          ? { ...d, split: (d.split === 'train' ? 'test' : 'train') as 'train' | 'test' }
-                          : d
-                      );
-                      storeState.setDataPoints(updated);
-                    }}
-                    class={`px-1.5 rounded text-[10px] ${
-                      pt.split === 'train'
-                        ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400'
-                        : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
-                    }`}
-                  >
-                    {pt.split}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = graph.dataPoints.map((d) =>
+                      d.id === pt.id
+                        ? { ...d, split: (d.split === 'train' ? 'test' : 'train') as 'train' | 'test' }
+                        : d
+                    );
+                    storeState.setDataPoints(updated);
+                  }}
+                  class={`px-1.5 rounded text-[10px] ${
+                    pt.split === 'train'
+                      ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400'
+                      : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                  }`}
+                >
+                  {pt.split}
+                </button>
                 <button
                   type="button"
                   onClick={() => storeState.removeDataPoint(pt.id)}

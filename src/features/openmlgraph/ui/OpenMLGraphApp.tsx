@@ -419,8 +419,8 @@ export default function OpenMLGraphApp(): JSX.Element {
         />
       </div>
 
-      {/* Bottom 4-Optimizer Race Bar (Shown in ML Optimization / Dual-Space modes) */}
-      {storeState.workspaceMode === 'ml' && storeState.graph.viewMode !== 'inference' && (
+      {/* Bottom 4-Optimizer Race Bar (Shown in Optimization / Dual-Space modes) */}
+      {storeState.graph.viewMode !== 'inference' && (
         <OptimizerRaceBar storeState={storeState} />
       )}
 

@@ -341,7 +341,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
   return {
     graph: createInitialGraphState('T-00'),
-    workspaceMode: 'math',
+    workspaceMode: 'ml',
     undoStack: [],
     redoStack: [],
     sessionMode: 'local_url',
@@ -365,19 +365,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     computeDurationMs: 0,
 
     loadFullState(next, pushUndo = false) {
-      const inferredMode: WorkspaceMode =
-        isMathTemplateId(next.activeTemplateId) && next.viewMode === 'inference'
-          ? 'math'
-          : 'ml';
-      set({ workspaceMode: inferredMode });
+      set({ workspaceMode: 'ml' });
       commitGraph(next, pushUndo);
     },
 
     selectTemplate(templateId) {
       const next = createInitialGraphState(templateId);
-      const nextMode: WorkspaceMode = isMathTemplateId(templateId) ? 'math' : 'ml';
       set({
-        workspaceMode: nextMode,
+        workspaceMode: 'ml',
         whiteboardStrokes: [],
         whiteboardTool: 'cursor',
         brushActive: false,
@@ -388,7 +383,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     resetToBlankCanvas() {
       const next = createInitialGraphState('T-00');
       set({
-        workspaceMode: 'math',
+        workspaceMode: 'ml',
         whiteboardStrokes: [],
         whiteboardTool: 'cursor',
         brushActive: false,
@@ -412,9 +407,6 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     setViewMode(viewMode) {
-      if (viewMode !== 'inference' && get().workspaceMode === 'math') {
-        set({ workspaceMode: 'ml' });
-      }
       commitGraph({ ...get().graph, viewMode }, true);
     },
 
@@ -520,11 +512,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       }
 
       const viewMode: ViewMode =
-        get().workspaceMode === 'math'
-          ? 'inference'
-          : g.viewMode === 'optimization' && nextRole === 'data_var'
-            ? 'dual'
-            : g.viewMode;
+        g.viewMode === 'optimization' && nextRole === 'data_var'
+          ? 'dual'
+          : g.viewMode;
       commitGraph({ ...g, symbolOverrides, viewMode }, true);
     },
 
@@ -579,10 +569,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
       const nextLoopMode = bounds.loopMode ?? existing.loopMode;
       let nextDir: 1 | -1 = bounds.direction ?? existing.direction;
-      if (bounds.loopMode === 'wrap' && bounds.direction === undefined) {
-        nextDir = 1;
-      } else if (bounds.loopMode === 'wrap_reverse' && bounds.direction === undefined) {
+      if (bounds.loopMode === 'wrap_reverse' && bounds.direction === undefined) {
         nextDir = -1;
+      } else if (
+        bounds.loopMode === 'wrap' &&
+        existing.loopMode === 'wrap_reverse' &&
+        bounds.direction === undefined
+      ) {
+        nextDir = 1;
       }
 
       let nextValue =
@@ -593,16 +587,16 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
       // Commercial Play button auto-rewind when starting from a target boundary
       if (bounds.playing === true && !existing.playing && bounds.value === undefined) {
-        if (nextLoopMode === 'once') {
+        if (
+          nextLoopMode === 'once' ||
+          nextLoopMode === 'wrap' ||
+          nextLoopMode === 'wrap_reverse'
+        ) {
           if (nextDir === 1 && nextValue >= nextMax) {
             nextValue = nextMin;
           } else if (nextDir === -1 && nextValue <= nextMin) {
             nextValue = nextMax;
           }
-        } else if (nextLoopMode === 'wrap' && nextValue >= nextMax) {
-          nextValue = nextMin;
-        } else if (nextLoopMode === 'wrap_reverse' && nextValue <= nextMin) {
-          nextValue = nextMax;
         } else if (nextLoopMode === 'bounce') {
           if (nextValue >= nextMax) nextDir = -1;
           else if (nextValue <= nextMin) nextDir = 1;
@@ -657,21 +651,19 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         const s = g.sliders[k];
         let val = s.value;
         let dir: 1 | -1 =
-          s.loopMode === 'wrap'
-            ? 1
-            : s.loopMode === 'wrap_reverse'
+          s.loopMode === 'wrap_reverse'
+            ? -1
+            : s.direction === -1
               ? -1
-              : s.direction === -1
-                ? -1
-                : 1;
+              : 1;
         if (nextPlaying) {
-          if (s.loopMode === 'once') {
+          if (
+            s.loopMode === 'once' ||
+            s.loopMode === 'wrap' ||
+            s.loopMode === 'wrap_reverse'
+          ) {
             if (dir === 1 && val >= s.max) val = s.min;
             else if (dir === -1 && val <= s.min) val = s.max;
-          } else if (s.loopMode === 'wrap' && val >= s.max) {
-            val = s.min;
-          } else if (s.loopMode === 'wrap_reverse' && val <= s.min) {
-            val = s.max;
           } else if (s.loopMode === 'bounce') {
             if (val >= s.max) dir = -1;
             else if (val <= s.min) dir = 1;
@@ -699,13 +691,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           continue;
         }
         const dir: 1 | -1 =
-          s.loopMode === 'wrap'
-            ? 1
-            : s.loopMode === 'wrap_reverse'
+          s.loopMode === 'wrap_reverse'
+            ? -1
+            : s.direction === -1
               ? -1
-              : s.direction === -1
-                ? -1
-                : 1;
+              : 1;
         const delta = span * 0.25 * (s.speed || 1) * clampedDt * dir;
         let nextVal = s.value + delta;
         let nextDir: 1 | -1 = dir;
@@ -1014,13 +1004,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const { undoStack, redoStack, graph } = get();
       if (undoStack.length === 0) return;
       const previous = undoStack[undoStack.length - 1];
-      const workspaceMode: WorkspaceMode =
-        isMathTemplateId(previous.activeTemplateId) && previous.viewMode === 'inference'
-          ? 'math'
-          : 'ml';
       set({
         graph: previous,
-        workspaceMode,
+        workspaceMode: 'ml',
         undoStack: undoStack.slice(0, -1),
         redoStack: [graph, ...redoStack].slice(0, MAX_UNDO_STEPS),
       });
@@ -1030,13 +1016,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const { undoStack, redoStack, graph } = get();
       if (redoStack.length === 0) return;
       const next = redoStack[0];
-      const workspaceMode: WorkspaceMode =
-        isMathTemplateId(next.activeTemplateId) && next.viewMode === 'inference'
-          ? 'math'
-          : 'ml';
       set({
         graph: next,
-        workspaceMode,
+        workspaceMode: 'ml',
         undoStack: [...undoStack, graph].slice(-MAX_UNDO_STEPS),
         redoStack: redoStack.slice(1),
       });

@@ -771,13 +771,13 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(graphStore.getState().graph.sliders['a'].role).toBe('hyperparam');
   });
 
-  it('validates General Math templates (M-01..M-05) and WorkspaceMode (math vs ml) perspective transitions', () => {
+  it('validates General Math templates (M-01..M-05) with unified ML symbol role capabilities and ViewMode transitions', () => {
     expect(MATH_TEMPLATES.length).toBe(5);
     for (const tpl of MATH_TEMPLATES) {
       expect(isMathTemplateId(tpl.id)).toBe(true);
       graphStore.getState().selectTemplate(tpl.id);
       const st = graphStore.getState();
-      expect(st.workspaceMode).toBe('math');
+      expect(st.workspaceMode).toBe('ml');
       expect(st.graph.activeTemplateId).toBe(tpl.id);
       expect(st.graph.viewMode).toBe('inference');
       for (const expr of st.graph.expressions) {
@@ -785,37 +785,26 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
       }
     }
 
-    // Selecting an ML template switches perspective to 'ml'
+    // Selecting an ML template opens Dual-Space view
     graphStore.getState().selectTemplate('T-04');
     expect(graphStore.getState().workspaceMode).toBe('ml');
     expect(graphStore.getState().graph.viewMode).toBe('dual');
 
-    // Manual perspective switch to 'math' forces clean 2D inference view
-    graphStore.getState().setWorkspaceMode('math');
-    expect(graphStore.getState().workspaceMode).toBe('math');
-    expect(graphStore.getState().graph.viewMode).toBe('inference');
-
-    // Manual perspective switch back to 'ml' opens Dual-Space 2D + 3D view
-    graphStore.getState().setWorkspaceMode('ml');
-    expect(graphStore.getState().workspaceMode).toBe('ml');
-    expect(graphStore.getState().graph.viewMode).toBe('dual');
-
-    // In 'math' mode, selecting a non-'x' plot axis (e.g. 'a') must keep viewMode === 'inference' (never hide 2D graph)
+    // Selecting a non-'x' plot axis (e.g. 'a') on T-00 keeps viewMode === 'inference' while allowing full role assignments
     graphStore.getState().resetToBlankCanvas();
-    expect(graphStore.getState().workspaceMode).toBe('math');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
     graphStore.getState().setSymbolRole('a', 'data_var');
     expect(graphStore.getState().graph.symbolOverrides['a']).toBe('data_var');
     expect(graphStore.getState().graph.viewMode).toBe('inference');
-    expect(graphStore.getState().workspaceMode).toBe('math');
 
-    // Undo / Redo across template transitions keeps workspaceMode synchronized
+    // Undo / Redo across template transitions keeps unified 'ml' workspaceMode
     graphStore.getState().resetToBlankCanvas();
-    expect(graphStore.getState().workspaceMode).toBe('math');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
     graphStore.getState().selectTemplate('T-04');
     expect(graphStore.getState().workspaceMode).toBe('ml');
     graphStore.getState().undo();
     expect(graphStore.getState().graph.activeTemplateId).toBe('T-00');
-    expect(graphStore.getState().workspaceMode).toBe('math');
+    expect(graphStore.getState().workspaceMode).toBe('ml');
     graphStore.getState().redo();
     expect(graphStore.getState().graph.activeTemplateId).toBe('T-04');
     expect(graphStore.getState().workspaceMode).toBe('ml');
@@ -831,9 +820,9 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(m04Pair.w1Key).toBe('a');
     expect(m04Pair.w2Key).toBe('k');
 
-    // Drop-Ring Launch on T-00 after switching to 'ml' mode animates sliders (a, b)
+    // Drop-Ring Launch on T-00 in Dual-Space animates sliders (a, b)
     graphStore.getState().resetToBlankCanvas();
-    graphStore.getState().setWorkspaceMode('ml');
+    graphStore.getState().setViewMode('dual');
     const g0 = graphStore.getState().graph;
     const res0 = executeComputeJob({
       type: 'EVALUATE_FRAME',
@@ -884,7 +873,20 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(graphStore.getState().stepPlayingSliders(0.1)).toBe(true);
     expect(graphStore.getState().graph.sliders['a'].value).toBe(-5);
 
-    // 2. Slider 'wrap_reverse' (←↺ reverse loop) moves left and wraps from min -> max
+    // 2. Slider 'wrap' with direction = -1 (or legacy 'wrap_reverse') moves left and wraps from min -> max
+    store.updateSliderBounds('a', {
+      min: -5,
+      max: 5,
+      value: -4.95,
+      loopMode: 'wrap',
+      direction: -1,
+      playing: true,
+      speed: 2,
+    });
+    expect(graphStore.getState().graph.sliders['a'].direction).toBe(-1);
+    expect(graphStore.getState().stepPlayingSliders(0.1)).toBe(true);
+    expect(graphStore.getState().graph.sliders['a'].value).toBe(5);
+
     store.updateSliderBounds('a', {
       min: -5,
       max: 5,

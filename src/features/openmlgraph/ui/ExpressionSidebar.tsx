@@ -40,22 +40,14 @@ const ROLE_BADGE_STYLE = {
   primitive: 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400 border-neutral-500/30',
 } as const;
 
-const MATH_QUICK_PRESETS: { label: string; latex: string }[] = [
-  { label: 'a·sin(bx)+c', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
-  { label: 'x³ - 3x', latex: 'x^3 - 3 \\cdot x' },
-  { label: 'x² - 4', latex: 'x^2 - 4' },
-  { label: 'e^(-x²)', latex: 'e^{-x^2}' },
-  { label: 'ln(x)', latex: '\\ln(x)' },
-  { label: 'sinc(x)', latex: '\\frac{\\sin(x)}{x}' },
-];
-
-const ML_QUICK_PRESETS: { label: string; latex: string }[] = [
+const QUICK_PRESETS: { label: string; latex: string }[] = [
   { label: 'σ(wx+b)', latex: '\\sigma(w \\cdot x + b)' },
   { label: 'ReLU(wx+b)', latex: '\\operatorname{relu}(w \\cdot x + b)' },
   { label: 'GELU(x)', latex: '\\operatorname{gelu}(x)' },
   { label: 'tanh(wx+b)', latex: '\\tanh(w \\cdot x + b)' },
-  { label: 'Softplus', latex: '\\operatorname{softplus}(w \\cdot x + b)' },
-  { label: 'wx + b', latex: 'w \\cdot x + b' },
+  { label: 'a·sin(bx)+c', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
+  { label: 'x³ - 3x', latex: 'x^3 - 3 \\cdot x' },
+  { label: 'e^(-x²)', latex: 'e^{-x^2}' },
 ];
 
 const ROLE_OPTIONS: {
@@ -85,9 +77,8 @@ const ROLE_OPTIONS: {
 ];
 
 export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
-  const { graph, curves, workspaceMode } = storeState;
-  const isMlMode = workspaceMode === 'ml';
-  const quickPresets = isMlMode ? ML_QUICK_PRESETS : MATH_QUICK_PRESETS;
+  const { graph, curves } = storeState;
+  const quickPresets = QUICK_PRESETS;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
   const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
@@ -147,8 +138,6 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     storeState.loadFullState(
       {
         ...graph,
-        activeTemplateId: isMlMode ? graph.activeTemplateId : 'T-00',
-        viewMode: isMlMode ? graph.viewMode : 'inference',
         sliders: {},
         expressions: [
           {
@@ -233,7 +222,6 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           const isEmpty = expr.latex.trim().length === 0;
           const classified = classifyLatexExpression(expr.latex, graph.symbolOverrides);
           const curvePacket = curves.find((c) => c.exprId === expr.id);
-          const sliderSyms = classified.symbols.filter((s) => s.role !== 'data_var');
 
           return (
             <div
@@ -301,11 +289,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 onInput={(e) =>
                   storeState.updateExpressionLatex(expr.id, (e.target as HTMLInputElement).value)
                 }
-                placeholder={
-                  isMlMode
-                    ? 'Type model or activation: \\sigma(w*x+b), relu(w*x+b), gelu(x)...'
-                    : 'Type any function: sin(x), x^3 - 3x, a*sin(b*x)+c, ln(x)...'
-                }
+                placeholder="Type model or function: \sigma(w*x+b), relu(w*x+b), a*sin(b*x)+c..."
                 class={`w-full px-2.5 py-1.5 rounded border font-mono text-xs bg-neutral-50 dark:bg-neutral-950 ${
                   isEmpty || classified.valid
                     ? 'border-neutral-300 dark:border-neutral-700 focus:border-orange-500'
@@ -339,67 +323,8 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 />
               )}
 
-              {/* Standard Math Mode: Clean Axis Selector & Slider Summary (No ML Jargon) */}
-              {!isMlMode && classified.symbols.length > 1 && (
-                <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5 text-[10px]">
-                  <div class="relative inline-block">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const key = `axis:${expr.id}`;
-                        setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
-                      }}
-                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-semibold"
-                      title="Chọn biến làm trục hoành (các ký hiệu còn lại tự động thành thanh trượt)"
-                    >
-                      <span>
-                        {t('axis_var_label')}: <b class="font-mono">{classified.primaryVar}</b>
-                      </span>
-                      <span class="opacity-70 text-[9px]">▾</span>
-                    </button>
-
-                    {openRoleMenuKey === `axis:${expr.id}` && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        class="absolute left-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
-                      >
-                        {classified.symbols.map((sym) => {
-                          const active = sym.name === classified.primaryVar;
-                          return (
-                            <button
-                              key={sym.name}
-                              type="button"
-                              onClick={() => {
-                                storeState.setSymbolRole(sym.name, 'data_var');
-                                setOpenRoleMenuKey(null);
-                              }}
-                              class={`flex items-center justify-between px-2.5 py-1 text-left font-mono hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
-                              }`}
-                            >
-                              <span>{sym.name}</span>
-                              {active && <span>✓</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {sliderSyms.length > 0 && (
-                    <span class="text-neutral-500 dark:text-neutral-400">
-                      {t('sliders_summary_label')}:{' '}
-                      <b class="font-mono text-neutral-700 dark:text-neutral-200">
-                        {sliderSyms.map((s) => s.name).join(', ')}
-                      </b>
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* ML & Optimization Mode: Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}
-              {isMlMode && classified.symbols.length > 0 && (
+              {/* Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}
+              {classified.symbols.length > 0 && (
                 <div class="flex flex-wrap gap-1 pt-0.5">
                   {classified.symbols.map((sym) => {
                     const menuKey = `expr:${expr.id}:${sym.name}`;
@@ -478,7 +403,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
             >
               <span>{slidersCollapsed ? '▸' : '▾'}</span>
               <span>
-                {isMlMode ? t('sliders_title') : t('math_sliders_title')} ({sliderList.length})
+                {t('sliders_title')} ({sliderList.length})
               </span>
             </button>
             <button
@@ -502,12 +427,11 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 const loopModes: {
                   id: SliderLoopMode;
                   icon: string;
-                  descKey: string;
+                  title: string;
                 }[] = [
-                  { id: 'bounce', icon: '⇄', descKey: 'loop_bounce_desc' },
-                  { id: 'wrap', icon: '→↻', descKey: 'loop_forward_desc' },
-                  { id: 'wrap_reverse', icon: '←↺', descKey: 'loop_reverse_desc' },
-                  { id: 'once', icon: '→|', descKey: 'loop_once_desc' },
+                  { id: 'once', icon: '→|', title: 'Play once and stop at boundary' },
+                  { id: 'wrap', icon: '↻', title: 'Repeat loop continuously' },
+                  { id: 'bounce', icon: '⇄', title: 'Bounce forward and backward (min ↔ max)' },
                 ];
                 const speeds: PlaybackSpeed[] = [0.25, 0.5, 1, 2, 4];
                 const configOpen = Boolean(expandedSliderConfig[sl.name]);
@@ -600,54 +524,52 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                           ⚙️
                         </button>
 
-                        {isMlMode && (
-                          <div class="relative inline-block">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const key = `slider:${sl.name}`;
-                                setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
-                              }}
-                              class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
-                              title="Change slider role"
-                            >
-                              <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
-                              <span class="opacity-70 text-[9px]">▾</span>
-                            </button>
+                        <div class="relative inline-block">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const key = `slider:${sl.name}`;
+                              setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
+                            }}
+                            class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
+                            title="Change slider role"
+                          >
+                            <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
+                            <span class="opacity-70 text-[9px]">▾</span>
+                          </button>
 
-                            {openRoleMenuKey === `slider:${sl.name}` && (
-                              <div
-                                onClick={(e) => e.stopPropagation()}
-                                class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
-                              >
-                                {ROLE_OPTIONS.map((opt) => {
-                                  const active = sl.role === opt.role;
-                                  return (
-                                    <button
-                                      key={opt.role}
-                                      type="button"
-                                      onClick={() => {
-                                        storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
-                                        setOpenRoleMenuKey(null);
-                                      }}
-                                      class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                        active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
-                                      }`}
-                                    >
-                                      <span class="flex items-center gap-1.5">
-                                        <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
-                                        <span>{opt.shortLabel}</span>
-                                        <span class="text-[9px] text-neutral-400">({opt.desc})</span>
-                                      </span>
-                                      {active && <span>✓</span>}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          {openRoleMenuKey === `slider:${sl.name}` && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                            >
+                              {ROLE_OPTIONS.map((opt) => {
+                                const active = sl.role === opt.role;
+                                return (
+                                  <button
+                                    key={opt.role}
+                                    type="button"
+                                    onClick={() => {
+                                      storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
+                                      setOpenRoleMenuKey(null);
+                                    }}
+                                    class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                      active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                                    }`}
+                                  >
+                                    <span class="flex items-center gap-1.5">
+                                      <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
+                                      <span>{opt.shortLabel}</span>
+                                      <span class="text-[9px] text-neutral-400">({opt.desc})</span>
+                                    </span>
+                                    {active && <span>✓</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -711,37 +633,73 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         configOpen ? 'flex' : 'hidden sm:flex'
                       } flex-wrap items-center justify-between gap-1 pt-0.5 text-[10px] text-neutral-500`}
                     >
-                      {/* 4-Mode Segmented Loop & Direction Selector */}
+                      {/* Loop Mode (Once / Loop / Bounce), Direction (→ / ←) & Speed (0.25x..4x) */}
                       <div
-                        class="inline-flex items-center rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 p-0.5 gap-0.5"
+                        class="inline-flex items-center gap-0.5"
                         role="group"
                         aria-label="Animation Loop and Direction Mode"
                       >
-                        {loopModes.map((m) => {
-                          const active = sl.loopMode === m.id;
-                          return (
-                            <button
-                              key={m.id}
-                              type="button"
-                              onClick={() =>
-                                storeState.updateSliderBounds(sl.name, {
-                                  loopMode: m.id,
-                                })
-                              }
-                              class={`px-1.5 py-0.5 rounded font-mono text-[10px] leading-none transition-colors ${
-                                active
-                                  ? 'bg-orange-500 text-white font-bold'
-                                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/70 dark:hover:bg-neutral-800'
-                              }`}
-                              title={t(m.descKey)}
-                            >
-                              {m.icon}
-                            </button>
-                          );
-                        })}
+                        <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-0.5 gap-0.5">
+                          {loopModes.map((m) => {
+                            const active =
+                              m.id === 'wrap'
+                                ? sl.loopMode === 'wrap' || sl.loopMode === 'wrap_reverse'
+                                : sl.loopMode === m.id;
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() =>
+                                  storeState.updateSliderBounds(sl.name, {
+                                    loopMode: m.id,
+                                  })
+                                }
+                                class={`px-1 py-0.5 rounded font-mono text-[10px] leading-none ${
+                                  active
+                                    ? 'bg-orange-500 text-white font-bold'
+                                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                                }`}
+                                title={m.title}
+                              >
+                                {m.icon}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            storeState.updateSliderBounds(sl.name, {
+                              direction: sl.direction === -1 ? 1 : -1,
+                              ...(sl.loopMode === 'wrap_reverse' ? { loopMode: 'wrap' } : {}),
+                            })
+                          }
+                          class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 font-mono text-[10px] font-bold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
+                          title={
+                            sl.direction === -1
+                              ? 'Direction: Reverse (max → min)'
+                              : 'Direction: Forward (min → max)'
+                          }
+                        >
+                          {sl.direction === -1 ? '←' : '→'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const idx = speeds.indexOf(sl.speed);
+                            const nextSpeed = speeds[(idx + 1) % speeds.length];
+                            storeState.updateSliderBounds(sl.name, { speed: nextSpeed });
+                          }}
+                          class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 font-mono text-[10px] font-semibold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
+                          title="Playback speed (0.25x, 0.5x, 1x, 2x, 4x)"
+                        >
+                          {sl.speed}x
+                        </button>
                       </div>
 
-                      {/* Step Size (Δ) & Speed Multiplier */}
+                      {/* Step Size (Δ) */}
                       <div class="flex items-center gap-1">
                         <label
                           class="inline-flex items-center gap-0.5 text-neutral-500"
@@ -761,19 +719,6 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                             class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-neutral-700 dark:text-neutral-200 focus:border-orange-500 focus:outline-none"
                           />
                         </label>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const idx = speeds.indexOf(sl.speed);
-                            const nextSpeed = speeds[(idx + 1) % speeds.length];
-                            storeState.updateSliderBounds(sl.name, { speed: nextSpeed });
-                          }}
-                          class="px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono font-semibold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
-                          title="Cycle animation speed (0.25x, 0.5x, 1x, 2x, 4x)"
-                        >
-                          {sl.speed}x
-                        </button>
                       </div>
                     </div>
                   </div>
