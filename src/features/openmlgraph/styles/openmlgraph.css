@@ -67,3 +67,13 @@ math-field:focus-within {
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+
+/* Hide scrollbars on compact mobile toolbars while preserving touch scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

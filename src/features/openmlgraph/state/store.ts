@@ -149,11 +149,16 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     }
   }
 
-  // In General Math / Blank Graph mode (T-00, M-*), prune unused sliders when expressions change or are cleared
-  if (isMathTemplateId(state.activeTemplateId) && !hasInvalidNonEmptyExpr) {
+  // Prune unused sliders when expressions change or are cleared:
+  // - In Math / Blank Graph mode (T-00, M-*), prune any slider not present in activeSymbols.
+  // - In ML templates, also prune freeform algebraic constants (a, c, d, m, k) when removed from expressions.
+  if (!hasInvalidNonEmptyExpr) {
+    const freeformConstants = new Set(['a', 'c', 'd', 'm', 'k']);
     for (const key of Object.keys(nextSliders)) {
       if (!activeSymbols.has(key)) {
-        delete nextSliders[key];
+        if (isMathTemplateId(state.activeTemplateId) || freeformConstants.has(key)) {
+          delete nextSliders[key];
+        }
       }
     }
   }

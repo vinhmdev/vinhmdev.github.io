@@ -90,6 +90,9 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const quickPresets = isMlMode ? ML_QUICK_PRESETS : MATH_QUICK_PRESETS;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
+  const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
+  const [slidersCollapsed, setSlidersCollapsed] = useState<boolean>(false);
+  const [expandedSliderConfig, setExpandedSliderConfig] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!openRoleMenuKey || typeof window === 'undefined') return;
@@ -167,9 +170,23 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     <div class="flex flex-col gap-3 p-3 text-xs">
       {/* Section 1: Algebra & Expressions */}
       <div class="flex items-center justify-between gap-1">
-        <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
-          {t('expressions_title')}
-        </h2>
+        <div class="flex items-center gap-1.5">
+          <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
+            {t('expressions_title')}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowQuickPresets((prev) => !prev)}
+            class={`sm:hidden px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-colors ${
+              showQuickPresets
+                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40'
+                : 'border-neutral-200 dark:border-neutral-800 text-neutral-500'
+            }`}
+            title="Toggle Quick Formulas"
+          >
+            ⚡ {showQuickPresets ? '▴' : '▾'}
+          </button>
+        </div>
         <div class="flex items-center gap-1">
           <button
             type="button"
@@ -189,8 +206,12 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
         </div>
       </div>
 
-      {/* Quick Formula Presets Bar (Desmos / GeoGebra style) */}
-      <div class="flex flex-wrap items-center gap-1">
+      {/* Quick Formula Presets Bar (Collapsible on Mobile, Visible on Desktop) */}
+      <div
+        class={`${
+          showQuickPresets ? 'flex' : 'hidden sm:flex'
+        } flex-wrap items-center gap-1`}
+      >
         <span class="text-[10px] font-semibold text-neutral-400 mr-0.5">
           {t('quick_presets_label')}:
         </span>
@@ -445,13 +466,21 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
         })}
       </div>
 
-      {/* Section 2: Dynamic Parameter Sliders [FR-1.3] */}
-      <div class="pt-2 border-t border-neutral-200 dark:border-neutral-800">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
-            {isMlMode ? t('sliders_title') : t('math_sliders_title')}
-          </h2>
-          {sliderList.length > 0 && (
+      {/* Section 2: Dynamic Parameter Sliders — Only shown when parameter/constant symbols exist [FR-1.3] */}
+      {sliderList.length > 0 && (
+        <div class="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <button
+              type="button"
+              onClick={() => setSlidersCollapsed((prev) => !prev)}
+              aria-expanded={!slidersCollapsed}
+              class="flex items-center gap-1.5 font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
+            >
+              <span>{slidersCollapsed ? '▸' : '▾'}</span>
+              <span>
+                {isMlMode ? t('sliders_title') : t('math_sliders_title')} ({sliderList.length})
+              </span>
+            </button>
             <button
               type="button"
               onClick={() => storeState.toggleAllSlidersPlay()}
@@ -465,267 +494,295 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
               {anySliderPlaying ? <IconPause class="w-2.5 h-2.5" /> : <IconPlay class="w-2.5 h-2.5" />}
               <span>{anySliderPlaying ? t('pause_all_btn') : t('play_all_btn')}</span>
             </button>
-          )}
-        </div>
+          </div>
 
-        <div class="flex flex-col gap-2.5">
-          {sliderList.map((sl) => {
-            const loopModes: {
-              id: SliderLoopMode;
-              icon: string;
-              descKey: string;
-            }[] = [
-              { id: 'bounce', icon: '⇄', descKey: 'loop_bounce_desc' },
-              { id: 'wrap', icon: '→↻', descKey: 'loop_forward_desc' },
-              { id: 'wrap_reverse', icon: '←↺', descKey: 'loop_reverse_desc' },
-              { id: 'once', icon: '→|', descKey: 'loop_once_desc' },
-            ];
-            const speeds: PlaybackSpeed[] = [0.25, 0.5, 1, 2, 4];
+          {!slidersCollapsed && (
+            <div class="flex flex-col gap-2.5">
+              {sliderList.map((sl) => {
+                const loopModes: {
+                  id: SliderLoopMode;
+                  icon: string;
+                  descKey: string;
+                }[] = [
+                  { id: 'bounce', icon: '⇄', descKey: 'loop_bounce_desc' },
+                  { id: 'wrap', icon: '→↻', descKey: 'loop_forward_desc' },
+                  { id: 'wrap_reverse', icon: '←↺', descKey: 'loop_reverse_desc' },
+                  { id: 'once', icon: '→|', descKey: 'loop_once_desc' },
+                ];
+                const speeds: PlaybackSpeed[] = [0.25, 0.5, 1, 2, 4];
+                const configOpen = Boolean(expandedSliderConfig[sl.name]);
 
-            return (
-              <div
-                key={sl.name}
-                class="p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col gap-2 shadow-2xs"
-              >
-                {/* Row 1: Play/Pause, Step Nudge (◀/▶), Direct Editable Value (name = [val]), and Role Badge */}
-                <div class="flex items-center justify-between gap-1.5">
-                  <div class="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        storeState.updateSliderBounds(sl.name, { playing: !sl.playing })
-                      }
-                      class={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
-                        sl.playing
-                          ? 'bg-orange-500 text-white shadow-xs'
-                          : 'bg-orange-500/15 text-orange-600 dark:text-orange-400 hover:bg-orange-500/25'
-                      }`}
-                      title={sl.playing ? 'Pause animation' : 'Play slider animation'}
-                    >
-                      {sl.playing ? <IconPause class="w-3.5 h-3.5" /> : <IconPlay class="w-3.5 h-3.5" />}
-                    </button>
-
-                    <div class="inline-flex items-center rounded border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => storeState.stepSliderByDelta(sl.name, -1)}
-                        class="px-1 py-0.5 text-neutral-500 hover:text-orange-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        title={`Step backward (-${sl.step})`}
-                      >
-                        <IconStepBack />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => storeState.stepSliderByDelta(sl.name, 1)}
-                        class="px-1 py-0.5 text-neutral-500 hover:text-orange-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-l border-neutral-200 dark:border-neutral-800"
-                        title={`Step forward (+${sl.step})`}
-                      >
-                        <IconStepForward />
-                      </button>
-                    </div>
-
-                    <label class="inline-flex items-center gap-1 font-mono font-bold text-neutral-800 dark:text-neutral-100 ml-0.5">
-                      <span>{sl.name} =</span>
-                      <input
-                        type="number"
-                        step={sl.step}
-                        value={Number(sl.value.toFixed(4))}
-                        onChange={(e) => {
-                          const raw = Number((e.target as HTMLInputElement).value);
-                          if (!Number.isFinite(raw)) return;
-                          if (raw < sl.min || raw > sl.max) {
-                            storeState.updateSliderBounds(sl.name, {
-                              min: Math.min(sl.min, raw),
-                              max: Math.max(sl.max, raw),
-                              value: raw,
-                              playing: false,
-                            });
-                          } else {
-                            storeState.setSliderValue(sl.name, raw, true);
-                          }
-                        }}
-                        class="w-16 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono font-bold text-[11px] focus:border-orange-500 focus:outline-none"
-                        title="Type exact value (auto-expands min/max if outside bounds)"
-                      />
-                    </label>
-                  </div>
-
-                  {isMlMode && (
-                    <div class="relative inline-block">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const key = `slider:${sl.name}`;
-                          setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
-                        }}
-                        class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
-                        title="Change slider role"
-                      >
-                        <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
-                        <span class="opacity-70 text-[9px]">▾</span>
-                      </button>
-
-                      {openRoleMenuKey === `slider:${sl.name}` && (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
-                        >
-                          {ROLE_OPTIONS.map((opt) => {
-                            const active = sl.role === opt.role;
-                            return (
-                              <button
-                                key={opt.role}
-                                type="button"
-                                onClick={() => {
-                                  storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
-                                  setOpenRoleMenuKey(null);
-                                }}
-                                class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                  active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
-                                }`}
-                              >
-                                <span class="flex items-center gap-1.5">
-                                  <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
-                                  <span>{opt.shortLabel}</span>
-                                  <span class="text-[9px] text-neutral-400">({opt.desc})</span>
-                                </span>
-                                {active && <span>✓</span>}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Row 2: Desmos-style Inline [min] ───●─── [max] Slider Track */}
-                <div class="flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    step="0.1"
-                    aria-label={`${sl.name} min`}
-                    value={sl.min}
-                    onChange={(e) =>
-                      storeState.updateSliderBounds(sl.name, {
-                        min: Number((e.target as HTMLInputElement).value),
-                      })
-                    }
-                    class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-center text-neutral-600 dark:text-neutral-300 focus:border-orange-500 focus:outline-none"
-                    title="Minimum bound (min)"
-                  />
-
-                  <input
-                    type="range"
-                    min={sl.min}
-                    max={sl.max}
-                    step={sl.step}
-                    value={sl.value}
-                    onInput={(e) =>
-                      storeState.setSliderValue(
-                        sl.name,
-                        Number((e.target as HTMLInputElement).value),
-                        false
-                      )
-                    }
-                    onPointerUp={(e) =>
-                      storeState.setSliderValue(
-                        sl.name,
-                        Number((e.target as HTMLInputElement).value),
-                        true
-                      )
-                    }
-                    class="omlg-slider flex-1"
-                  />
-
-                  <input
-                    type="number"
-                    step="0.1"
-                    aria-label={`${sl.name} max`}
-                    value={sl.max}
-                    onChange={(e) =>
-                      storeState.updateSliderBounds(sl.name, {
-                        max: Number((e.target as HTMLInputElement).value),
-                      })
-                    }
-                    class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-center text-neutral-600 dark:text-neutral-300 focus:border-orange-500 focus:outline-none"
-                    title="Maximum bound (max)"
-                  />
-                </div>
-
-                {/* Row 3: Play Direction / Loop Mode Selector & Step (Δ) / Speed Setup Bar */}
-                <div class="flex flex-wrap items-center justify-between gap-1 pt-0.5 text-[10px] text-neutral-500">
-                  {/* 4-Mode Segmented Loop & Direction Selector */}
+                return (
                   <div
-                    class="inline-flex items-center rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 p-0.5 gap-0.5"
-                    role="group"
-                    aria-label="Animation Loop and Direction Mode"
+                    key={sl.name}
+                    class="p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col gap-2 shadow-2xs"
                   >
-                    {loopModes.map((m) => {
-                      const active = sl.loopMode === m.id;
-                      return (
+                    {/* Row 1: Play/Pause, Step Nudge (◀/▶), Direct Editable Value (name = [val]), Mobile Config Toggle, and Role Badge */}
+                    <div class="flex items-center justify-between gap-1.5">
+                      <div class="flex items-center gap-1">
                         <button
-                          key={m.id}
                           type="button"
                           onClick={() =>
-                            storeState.updateSliderBounds(sl.name, {
-                              loopMode: m.id,
-                            })
+                            storeState.updateSliderBounds(sl.name, { playing: !sl.playing })
                           }
-                          class={`px-1.5 py-0.5 rounded font-mono text-[10px] leading-none transition-colors ${
-                            active
-                              ? 'bg-orange-500 text-white font-bold'
-                              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/70 dark:hover:bg-neutral-800'
+                          class={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                            sl.playing
+                              ? 'bg-orange-500 text-white shadow-xs'
+                              : 'bg-orange-500/15 text-orange-600 dark:text-orange-400 hover:bg-orange-500/25'
                           }`}
-                          title={t(m.descKey)}
+                          title={sl.playing ? 'Pause animation' : 'Play slider animation'}
                         >
-                          {m.icon}
+                          {sl.playing ? <IconPause class="w-3.5 h-3.5" /> : <IconPlay class="w-3.5 h-3.5" />}
                         </button>
-                      );
-                    })}
-                  </div>
 
-                  {/* Step Size (Δ) & Speed Multiplier */}
-                  <div class="flex items-center gap-1">
-                    <label
-                      class="inline-flex items-center gap-0.5 text-neutral-500"
-                      title="Step increment Δ"
-                    >
-                      <span class="font-mono">Δ:</span>
+                        <div class="inline-flex items-center rounded border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => storeState.stepSliderByDelta(sl.name, -1)}
+                            class="px-1 py-0.5 text-neutral-500 hover:text-orange-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            title={`Step backward (-${sl.step})`}
+                          >
+                            <IconStepBack />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => storeState.stepSliderByDelta(sl.name, 1)}
+                            class="px-1 py-0.5 text-neutral-500 hover:text-orange-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-l border-neutral-200 dark:border-neutral-800"
+                            title={`Step forward (+${sl.step})`}
+                          >
+                            <IconStepForward />
+                          </button>
+                        </div>
+
+                        <label class="inline-flex items-center gap-1 font-mono font-bold text-neutral-800 dark:text-neutral-100 ml-0.5">
+                          <span>{sl.name} =</span>
+                          <input
+                            type="number"
+                            step={sl.step}
+                            value={Number(sl.value.toFixed(4))}
+                            onChange={(e) => {
+                              const raw = Number((e.target as HTMLInputElement).value);
+                              if (!Number.isFinite(raw)) return;
+                              if (raw < sl.min || raw > sl.max) {
+                                storeState.updateSliderBounds(sl.name, {
+                                  min: Math.min(sl.min, raw),
+                                  max: Math.max(sl.max, raw),
+                                  value: raw,
+                                  playing: false,
+                                });
+                              } else {
+                                storeState.setSliderValue(sl.name, raw, true);
+                              }
+                            }}
+                            class="w-16 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono font-bold text-[11px] focus:border-orange-500 focus:outline-none"
+                            title="Type exact value (auto-expands min/max if outside bounds)"
+                          />
+                        </label>
+                      </div>
+
+                      <div class="flex items-center gap-1">
+                        {/* Mobile Toggle for Row 3 (Loop Mode / Step Δ / Speed) */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedSliderConfig((prev) => ({
+                              ...prev,
+                              [sl.name]: !prev[sl.name],
+                            }))
+                          }
+                          class={`sm:hidden px-1.5 py-0.5 rounded border text-[10px] font-mono ${
+                            configOpen
+                              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40'
+                              : 'border-neutral-200 dark:border-neutral-800 text-neutral-500'
+                          }`}
+                          title={t('slider_setup_title')}
+                        >
+                          ⚙️
+                        </button>
+
+                        {isMlMode && (
+                          <div class="relative inline-block">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const key = `slider:${sl.name}`;
+                                setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
+                              }}
+                              class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
+                              title="Change slider role"
+                            >
+                              <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
+                              <span class="opacity-70 text-[9px]">▾</span>
+                            </button>
+
+                            {openRoleMenuKey === `slider:${sl.name}` && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                              >
+                                {ROLE_OPTIONS.map((opt) => {
+                                  const active = sl.role === opt.role;
+                                  return (
+                                    <button
+                                      key={opt.role}
+                                      type="button"
+                                      onClick={() => {
+                                        storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
+                                        setOpenRoleMenuKey(null);
+                                      }}
+                                      class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                        active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                                      }`}
+                                    >
+                                      <span class="flex items-center gap-1.5">
+                                        <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
+                                        <span>{opt.shortLabel}</span>
+                                        <span class="text-[9px] text-neutral-400">({opt.desc})</span>
+                                      </span>
+                                      {active && <span>✓</span>}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Row 2: Desmos-style Inline [min] ───●─── [max] Slider Track */}
+                    <div class="flex items-center gap-1.5">
                       <input
                         type="number"
-                        step="0.01"
-                        min="0.0001"
-                        value={sl.step}
+                        step="0.1"
+                        aria-label={`${sl.name} min`}
+                        value={sl.min}
                         onChange={(e) =>
                           storeState.updateSliderBounds(sl.name, {
-                            step: Math.max(1e-4, Number((e.target as HTMLInputElement).value)),
+                            min: Number((e.target as HTMLInputElement).value),
                           })
                         }
-                        class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-neutral-700 dark:text-neutral-200 focus:border-orange-500 focus:outline-none"
+                        class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-center text-neutral-600 dark:text-neutral-300 focus:border-orange-500 focus:outline-none"
+                        title="Minimum bound (min)"
                       />
-                    </label>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const idx = speeds.indexOf(sl.speed);
-                        const nextSpeed = speeds[(idx + 1) % speeds.length];
-                        storeState.updateSliderBounds(sl.name, { speed: nextSpeed });
-                      }}
-                      class="px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono font-semibold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
-                      title="Cycle animation speed (0.25x, 0.5x, 1x, 2x, 4x)"
+                      <input
+                        type="range"
+                        min={sl.min}
+                        max={sl.max}
+                        step={sl.step}
+                        value={sl.value}
+                        onInput={(e) =>
+                          storeState.setSliderValue(
+                            sl.name,
+                            Number((e.target as HTMLInputElement).value),
+                            false
+                          )
+                        }
+                        onPointerUp={(e) =>
+                          storeState.setSliderValue(
+                            sl.name,
+                            Number((e.target as HTMLInputElement).value),
+                            true
+                          )
+                        }
+                        class="omlg-slider flex-1"
+                      />
+
+                      <input
+                        type="number"
+                        step="0.1"
+                        aria-label={`${sl.name} max`}
+                        value={sl.max}
+                        onChange={(e) =>
+                          storeState.updateSliderBounds(sl.name, {
+                            max: Number((e.target as HTMLInputElement).value),
+                          })
+                        }
+                        class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-center text-neutral-600 dark:text-neutral-300 focus:border-orange-500 focus:outline-none"
+                        title="Maximum bound (max)"
+                      />
+                    </div>
+
+                    {/* Row 3: Play Direction / Loop Mode Selector & Step (Δ) / Speed Setup Bar (Collapsible on Mobile) */}
+                    <div
+                      class={`${
+                        configOpen ? 'flex' : 'hidden sm:flex'
+                      } flex-wrap items-center justify-between gap-1 pt-0.5 text-[10px] text-neutral-500`}
                     >
-                      {sl.speed}x
-                    </button>
+                      {/* 4-Mode Segmented Loop & Direction Selector */}
+                      <div
+                        class="inline-flex items-center rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 p-0.5 gap-0.5"
+                        role="group"
+                        aria-label="Animation Loop and Direction Mode"
+                      >
+                        {loopModes.map((m) => {
+                          const active = sl.loopMode === m.id;
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() =>
+                                storeState.updateSliderBounds(sl.name, {
+                                  loopMode: m.id,
+                                })
+                              }
+                              class={`px-1.5 py-0.5 rounded font-mono text-[10px] leading-none transition-colors ${
+                                active
+                                  ? 'bg-orange-500 text-white font-bold'
+                                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/70 dark:hover:bg-neutral-800'
+                              }`}
+                              title={t(m.descKey)}
+                            >
+                              {m.icon}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Step Size (Δ) & Speed Multiplier */}
+                      <div class="flex items-center gap-1">
+                        <label
+                          class="inline-flex items-center gap-0.5 text-neutral-500"
+                          title="Step increment Δ"
+                        >
+                          <span class="font-mono">Δ:</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0.0001"
+                            value={sl.step}
+                            onChange={(e) =>
+                              storeState.updateSliderBounds(sl.name, {
+                                step: Math.max(1e-4, Number((e.target as HTMLInputElement).value)),
+                              })
+                            }
+                            class="w-12 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-neutral-700 dark:text-neutral-200 focus:border-orange-500 focus:outline-none"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const idx = speeds.indexOf(sl.speed);
+                            const nextSpeed = speeds[(idx + 1) % speeds.length];
+                            storeState.updateSliderBounds(sl.name, { speed: nextSpeed });
+                          }}
+                          class="px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono font-semibold text-neutral-700 dark:text-neutral-200 hover:border-orange-500"
+                          title="Cycle animation speed (0.25x, 0.5x, 1x, 2x, 4x)"
+                        >
+                          {sl.speed}x
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

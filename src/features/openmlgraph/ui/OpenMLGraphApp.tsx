@@ -45,6 +45,7 @@ export default function OpenMLGraphApp(): JSX.Element {
   );
   const [, setLangTick] = useState(0);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState<boolean>(true);
 
   const workerRef = useRef<Worker | null>(null);
   const seqRef = useRef(0);
@@ -363,12 +364,51 @@ export default function OpenMLGraphApp(): JSX.Element {
         }
       />
 
-      {/* Main Workspace: Left Algebra Sidebar + Right Dual Viewport */}
-      <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-        <aside class="w-full md:w-80 lg:w-96 shrink-0 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 overflow-y-auto max-h-[38vh] md:max-h-none">
-          <ExpressionSidebar storeState={storeState} />
-          <DataTablePanel storeState={storeState} />
-        </aside>
+      {/* Main Workspace: Mobile puts Graph on Top + Collapsible Bottom Sheet; Desktop puts Left Sidebar + Right Dual Viewport */}
+      <div class="flex-1 flex flex-col-reverse md:flex-row min-h-0 overflow-hidden">
+        <div class="w-full md:w-80 lg:w-96 shrink-0 flex flex-col border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75">
+          {/* Mobile Bottom-Sheet Collapse / Expand Bar (< 768px) */}
+          <div class="flex md:hidden items-center justify-between px-3 py-1.5 bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200/80 dark:border-neutral-800 text-xs">
+            <button
+              type="button"
+              onClick={() => setMobileSheetOpen((prev) => !prev)}
+              aria-expanded={mobileSheetOpen}
+              class="flex items-center gap-2 font-semibold text-neutral-700 dark:text-neutral-200"
+            >
+              <span class="w-6 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              <span>
+                𝑓(x) ({storeState.graph.expressions.length})
+                {Object.keys(storeState.graph.sliders).length > 0
+                  ? ` • Sliders (${Object.keys(storeState.graph.sliders).length})`
+                  : ''}
+              </span>
+              <span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
+                {mobileSheetOpen ? '▾ Hide' : '▴ Show'}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                storeState.addExpression();
+                setMobileSheetOpen(true);
+              }}
+              class="px-2 py-0.5 rounded bg-orange-500 text-white font-semibold text-[11px]"
+            >
+              + f(x)
+            </button>
+          </div>
+
+          <aside
+            class={`w-full overflow-y-auto transition-all ${
+              mobileSheetOpen
+                ? 'max-h-[40vh] md:max-h-none block'
+                : 'hidden md:block md:max-h-none'
+            } flex-1`}
+          >
+            <ExpressionSidebar storeState={storeState} />
+            <DataTablePanel storeState={storeState} />
+          </aside>
+        </div>
 
         <DualViewportPanel
           storeState={storeState}

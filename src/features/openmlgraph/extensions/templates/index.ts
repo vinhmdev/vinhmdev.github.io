@@ -47,11 +47,8 @@ export const BLANK_CANVAS_TEMPLATE: LessonTemplate = {
         label: 'g(x)',
       },
     ],
-    sliders: {
-      a: makeSlider('a', 'a', 'param', 2.0, -5, 5, 0.05),
-      b: makeSlider('b', 'b', 'param', 1.0, -5, 5, 0.05),
-      c: makeSlider('c', 'c', 'param', 0.0, -5, 5, 0.05),
-    },
+    // Purely dynamic: sliders are never hardcoded in T-00; syncSlidersFromExpressions() derives them from AST symbols
+    sliders: {},
   }),
 };
 

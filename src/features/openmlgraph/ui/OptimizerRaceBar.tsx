@@ -3,7 +3,7 @@
  * Nesterov / Adam Bias Correction Toggles, and Divergence Guard Indicator [FR-4.2, NFR-2].
  */
 import type { JSX } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type { OptimizerId, OptimizerLoopMode, PlaybackSpeed } from '../types/state';
 import { graphStore, type GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
@@ -44,6 +44,7 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
   const speed: PlaybackSpeed = race.speed ?? 1;
   const loopMode: OptimizerLoopMode = race.loopMode ?? 'once';
   const direction: 1 | -1 = race.direction === -1 ? -1 : 1;
+  const [mobileRaceExpanded, setMobileRaceExpanded] = useState<boolean>(false);
 
   const anyDiverged = Object.values(trajectories).some((traj) =>
     traj.some((s) => s.diverged)
@@ -60,9 +61,13 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
   }, [race.playing, speed]);
 
   return (
-    <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/95 dark:bg-neutral-900/95 text-xs">
-      {/* Left: 4 Optimizer Toggles & Nesterov / Bias Correction */}
-      <div class="flex flex-wrap items-center gap-1.5">
+    <div class="flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between gap-1.5 px-2.5 sm:px-3 py-1.5 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/95 dark:bg-neutral-900/95 text-xs">
+      {/* Left: 4 Optimizer Toggles & Nesterov / Bias Correction (Collapsible on Mobile, Visible on Desktop) */}
+      <div
+        class={`${
+          mobileRaceExpanded ? 'flex' : 'hidden md:flex'
+        } flex-wrap items-center gap-1.5 pb-1 md:pb-0 border-b md:border-b-0 border-neutral-200/70 dark:border-neutral-800/70`}
+      >
         <span class="font-bold text-neutral-600 dark:text-neutral-300 mr-1">
           {t('race_title')}:
         </span>
@@ -146,7 +151,21 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
       </div>
 
       {/* Center: Commercial Timeline Transport + Scrubber + Customizable t = [currentStep] / [steps] */}
-      <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-[280px] max-w-2xl">
+      <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 max-w-2xl">
+        {/* Mobile Optimizer Settings Toggle (< 768px) */}
+        <button
+          type="button"
+          onClick={() => setMobileRaceExpanded((prev) => !prev)}
+          aria-expanded={mobileRaceExpanded}
+          class={`md:hidden px-2 py-1 rounded border font-semibold ${
+            mobileRaceExpanded
+              ? 'bg-orange-500 text-white border-orange-500'
+              : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200'
+          }`}
+          title="Toggle 4-Optimizer settings"
+        >
+          ⚙️ {mobileRaceExpanded ? '▴' : '▾'}
+        </button>
         {/* Transport Group: Reset (t=0), Step -1, Play/Pause, Step +1 */}
         <div class="inline-flex items-center gap-0.5">
           <button
