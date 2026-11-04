@@ -40,7 +40,7 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
   const base: GraphStateV2 = {
     v: 2,
     activeTemplateId: tpl.id,
-    title: partial.title ?? 'OpenMathGraph Session',
+    title: partial.title ?? 'GraphStudio Session',
     viewMode: partial.viewMode ?? 'dual',
     rightViewportMode: partial.rightViewportMode ?? 'loss_surface',
     subgradConvention: partial.subgradConvention ?? 'zero',

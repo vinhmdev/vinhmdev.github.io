@@ -1,7 +1,7 @@
 /**
  * 3-Tier URL Hash Routing State Machine (`HashSessionMode`).
  *
- * Distinguishes and coordinates the 3 URL Hash formats on `/openmlgraph/`:
+ * Distinguishes and coordinates the 3 URL Hash formats on `/graphstudio/`:
  * 1. `'local_url'`      : `#v2.dr.<deflate-base64url>` (Stateless compressed URL)
  * 2. `'cloud_e2ee'`     : `#<pasteId>.<aesKey>` (Firebase E2EE encrypted share via `@shared/paste/*`)
  * 3. `'public_gallery'` : `#g.<graphId>` (Firebase Community Gallery public snapshot)

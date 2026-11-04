@@ -1,15 +1,15 @@
 ---
 /**
- * OpenMLGraph — Interactive ML Math Sandbox, Symbolic/AutoDiff Plotter & 3D Optimizer Race.
+ * GraphStudio — Interactive 2D/3D Graphing Calculator, Symbolic/AutoDiff Plotter, Whiteboard & 3D Optimizer.
  * Vertical Slice Architecture (VSA) aligned with vinhmdev.github.io conventions.
  * Self-contained inline SVGs guarantee 100% offline operation with zero CDN dependency [AC-06].
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
-import OpenMLGraphApp from './ui/OpenMLGraphApp';
+import GraphStudioApp from './ui/GraphStudioApp';
 ---
 
 <BaseLayout
-  title="OpenMathGraph | Interactive Graphing Calculator, Calculus & 3D Optimization"
+  title="GraphStudio | Interactive 2D/3D Graphing, Calculus & Whiteboard"
   description="Interactive client-side 2D/3D math graphing calculator, symbolic/AutoDiff calculus, interactive whiteboard, and 3D optimization."
   lang="en"
   bodyClass="bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 h-[100dvh] overflow-hidden flex flex-col transition-colors duration-300"
@@ -39,7 +39,7 @@ import OpenMLGraphApp from './ui/OpenMLGraphApp';
         class="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
         data-i18n="heading"
       >
-        OpenMathGraph
+        GraphStudio
       </h1>
     </a>
 
@@ -143,7 +143,7 @@ import OpenMLGraphApp from './ui/OpenMLGraphApp';
   </header>
 
   <!-- ===== Interactive Preact Island ===== -->
-  <OpenMLGraphApp client:only="preact" />
+  <GraphStudioApp client:only="preact" />
 
   <script>
     import { initTheme } from '@shared/theme/toggle';
@@ -155,6 +155,6 @@ import OpenMLGraphApp from './ui/OpenMLGraphApp';
   </script>
 
   <style is:global>
-    @import './styles/openmlgraph.css';
+    @import './styles/graphstudio.css';
   </style>
 </BaseLayout>

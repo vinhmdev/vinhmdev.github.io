@@ -20,7 +20,7 @@ import type { GraphStoreState } from '../state/store';
 import { encodeStateToUrlHashSync } from '../state/url-codec';
 import { IconClose } from './icons';
 
-const docHistoryStore = createDocStore('openmlgraph:docs');
+const docHistoryStore = createDocStore('graphstudio:docs');
 
 interface ShareModalProps {
   storeState: GraphStoreState;
@@ -48,7 +48,7 @@ export function SharePublishModal({
   const statelessFullUrl =
     typeof location !== 'undefined'
       ? `${location.origin}${location.pathname}${statelessHash}`
-      : `/openmlgraph/${statelessHash}`;
+      : `/graphstudio/${statelessHash}`;
 
   const handleCreateE2eeLink = async (): Promise<void> => {
     if (!isFirebaseConfigured) {
@@ -255,7 +255,7 @@ export function SharePublishModal({
           {activeTab === 'gallery' && (
             <>
               <p class="text-neutral-500">
-                Share publicly with everyone in the OpenMathGraph Community Gallery (`public_graphs`).
+                Share publicly with everyone in the GraphStudio Community Gallery (`public_graphs`).
               </p>
               <div class="grid grid-cols-2 gap-2">
                 <input

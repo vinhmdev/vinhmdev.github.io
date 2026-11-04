@@ -107,7 +107,7 @@ service cloud.firestore {
         && request.resource.data.content.size() <= 900000;
     }
 
-    // Public Community Gallery for OpenMLGraph
+    // Public Community Gallery for GraphStudio
     match /public_graphs/{graphId} {
       allow get: if true;
       allow list: if request.query.limit != null && request.query.limit <= 30;

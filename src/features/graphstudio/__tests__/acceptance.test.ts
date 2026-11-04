@@ -1,6 +1,6 @@
 /**
  * Comprehensive Quantitative Acceptance Test Suite (AC-01 through AC-06)
- * for OpenMLGraph v2.0.0.
+ * for GraphStudio v2.0.0.
  */
 import { describe, expect, it } from 'vitest';
 import { classifyLatexExpression } from '../core/parser/ast-classifier';
@@ -58,7 +58,7 @@ import {
 import { executeComputeJob } from '../worker/compute.worker';
 import type { DataPoint2D } from '../types/state';
 
-describe('OpenMLGraph Core Parser & 5-Group AST Classifier [FR-1.1, FR-1.2]', () => {
+describe('GraphStudio Core Parser & 5-Group AST Classifier [FR-1.1, FR-1.2]', () => {
   it('disambiguates \\sigma(w*x+b) (Group 2 Sigmoid) vs scalar \\sigma (Group 4 Param)', () => {
     const sigFn = classifyLatexExpression('\\sigma(w \\cdot x + b)');
     expect(sigFn.valid).toBe(true);

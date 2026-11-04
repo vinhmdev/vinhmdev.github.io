@@ -1,5 +1,5 @@
 /**
- * Core Mathematical & AST Types for OpenMLGraph.
+ * Core Mathematical & AST Types for GraphStudio.
  * Zero UI dependencies — shared across Main Thread and Compute Web Worker.
  */
 

@@ -1,5 +1,5 @@
 /**
- * Application State, Viewport, Optimizer & Storage Schema Types for OpenMLGraph.
+ * Application State, Viewport, Optimizer & Storage Schema Types for GraphStudio.
  */
 import type { SymbolRole, SubgradConvention, PointOfInterest } from './math';
 export type { SubgradConvention };

@@ -609,7 +609,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                             true
                           )
                         }
-                        class="omlg-slider flex-1"
+                        class="gs-slider flex-1"
                       />
 
                       <input

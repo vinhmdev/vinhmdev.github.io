@@ -238,7 +238,7 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
               playing: false,
             })
           }
-          class="omlg-slider flex-1 min-w-[90px]"
+          class="gs-slider flex-1 min-w-[90px]"
         />
 
         {/* Customizable t = [currentStep] / [steps] */}

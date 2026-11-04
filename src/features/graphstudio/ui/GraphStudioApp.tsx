@@ -1,5 +1,5 @@
 /**
- * Root OpenMLGraph Preact Island Component.
+ * Root GraphStudio Preact Island Component.
  *
  * Bridges Astro Static Header events (`#share-btn`, `#mydocs-btn`, `themechange`, `langchange`),
  * 3-Tier URL Hash Router (`#v2.dr.*`, `#<pasteId>.<aesKey>`, `#g.<graphId>`),
@@ -36,7 +36,7 @@ import { OptimizerRaceBar } from './OptimizerRaceBar';
 import { SharePublishModal } from './SharePublishModal';
 import { ToolbarSubheader } from './ToolbarSubheader';
 
-export default function OpenMLGraphApp(): JSX.Element {
+export default function GraphStudioApp(): JSX.Element {
   const [storeState, setStoreState] = useState<GraphStoreState>(() => graphStore.getState());
   const [isDark, setIsDark] = useState<boolean>(() =>
     typeof document !== 'undefined'
@@ -87,7 +87,7 @@ export default function OpenMLGraphApp(): JSX.Element {
 
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/openmlgraph-sw.js', { updateViaCache: 'none' })
+        .register('/graphstudio-sw.js', { updateViaCache: 'none' })
         .then((reg) => {
           void reg.update();
         })

@@ -2,7 +2,7 @@
  * Community Gallery & My Saved Graphs Drawer.
  *
  * - Tab 1 ("My Saved Graphs"): Local history up to 40 docs x 12 version snapshots
- *   via `createDocStore('openmlgraph:docs')`.
+ *   via `createDocStore('graphstudio:docs')`.
  * - Tab 2 ("Community Gallery"): Lists the latest 30 published graphs from Firestore
  *   `public_graphs` with 1-click Load / Fork.
  */
@@ -19,7 +19,7 @@ import type { GraphStoreState } from '../state/store';
 import { decodeStateFromUrlHashSync, migrateSchemaToV2 } from '../state/url-codec';
 import { IconClose, IconTrash } from './icons';
 
-const docHistoryStore = createDocStore('openmlgraph:docs');
+const docHistoryStore = createDocStore('graphstudio:docs');
 
 function renderCardKaTeX(latex: string): string {
   try {

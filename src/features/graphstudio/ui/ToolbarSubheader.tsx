@@ -216,7 +216,7 @@ export function ToolbarSubheader({
             type="button"
             onClick={handleSaveLocal}
             class="flex items-center gap-1 h-7 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-orange-500 font-medium"
-            title="Save state to localStorage (openmlgraph_requirements_v1)"
+            title="Save state to localStorage (graphstudio_state_v2)"
           >
             <IconSave class="w-3.5 h-3.5 text-orange-500" />
             <span>{t('save_btn')}</span>

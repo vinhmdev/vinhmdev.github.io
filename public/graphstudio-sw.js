@@ -1,16 +1,16 @@
 /**
- * OpenMLGraph Offline-First Service Worker [NFR-3, AC-06].
+ * GraphStudio Offline-First Service Worker [NFR-3, AC-06].
  *
  * Strategy:
  * 1. Network-Only for all Firebase/Firestore endpoints (`firestore.googleapis.com`,
  *    `identitytoolkit.googleapis.com`) so real-time Cloud Share & Community Gallery
  *    are never intercepted or broken.
  * 2. Cache-First with background update for static fonts (`.woff2`), WebAssembly (`.wasm`),
- *    scripts (`.js`), styles (`.css`), and `/openmlgraph/` HTML shell so the application
+ *    scripts (`.js`), styles (`.css`), and `/graphstudio/` HTML shell so the application
  *    boots in < 1 second when completely offline.
  */
-const CACHE_NAME = 'openmlgraph-offline-v3';
-const PRECACHE_URLS = ['/openmlgraph/'];
+const CACHE_NAME = 'graphstudio-offline-v1';
+const PRECACHE_URLS = ['/graphstudio/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -28,7 +28,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith('openmlgraph-') && k !== CACHE_NAME)
+            .filter((k) => k.startsWith('graphstudio-') && k !== CACHE_NAME)
             .map((k) => caches.delete(k))
         )
       )
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   const isStaticAsset =
-    url.pathname.startsWith('/openmlgraph') ||
+    url.pathname.startsWith('/graphstudio') ||
     url.pathname.startsWith('/_astro/') ||
     /\.(woff2?|ttf|wasm|js|css|svg|png)$/i.test(url.pathname);
 
