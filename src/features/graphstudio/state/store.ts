@@ -14,6 +14,7 @@ import type {
   OptimizerId,
   OptimizerTrajectoryStep,
   RegularizationKind,
+  RightViewportMode,
   SliderState,
   ViewMode,
   Viewport2DBounds,
@@ -188,6 +189,7 @@ export interface GraphStoreState {
   whiteboardStrokes: WhiteboardStroke[];
   shareModalOpen: boolean;
   galleryDrawerOpen: boolean;
+  galleryInitialTab: 'examples' | 'my_docs' | 'community';
   customOptModalOpen: boolean;
   /** Latest computed worker output */
   curves: CurveRenderPacket[];
@@ -212,8 +214,11 @@ export interface GraphStoreState {
   resetToBlankCanvas: () => void;
   setWorkspaceMode: (mode: WorkspaceMode) => void;
   setViewMode: (mode: ViewMode) => void;
+  setRightViewportMode: (mode: RightViewportMode) => void;
   setMobileTab: (tab: MobileTabMode) => void;
   setSubgradConvention: (conv: SubgradConvention) => void;
+  setShowResiduals: (show: boolean) => void;
+  setShowVectorField: (show: boolean) => void;
   updateExpressionLatex: (id: string, latex: string) => void;
   addExpression: (customLatex?: string) => void;
   removeExpression: (id: string) => void;
@@ -250,7 +255,10 @@ export interface GraphStoreState {
     cloudMeta?: GraphStoreState['cloudMeta']
   ) => void;
   setShareModalOpen: (open: boolean) => void;
-  setGalleryDrawerOpen: (open: boolean) => void;
+  setGalleryDrawerOpen: (
+    open: boolean,
+    initialTab?: 'examples' | 'my_docs' | 'community'
+  ) => void;
   setCustomOptModalOpen: (open: boolean) => void;
   setBrushActive: (active: boolean) => void;
   setWhiteboardTool: (tool: WhiteboardTool) => void;
@@ -353,6 +361,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     whiteboardStrokes: [],
     shareModalOpen: false,
     galleryDrawerOpen: false,
+    galleryInitialTab: 'examples',
     customOptModalOpen: false,
     curves: [],
     trainLoss: 0,
@@ -410,12 +419,26 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       commitGraph({ ...get().graph, viewMode }, true);
     },
 
+    setRightViewportMode(rightViewportMode) {
+      const g = get().graph;
+      const viewMode: ViewMode = g.viewMode === 'inference' ? 'dual' : g.viewMode;
+      commitGraph({ ...g, rightViewportMode, viewMode }, true);
+    },
+
     setMobileTab(mobileTab) {
       set({ mobileTab });
     },
 
     setSubgradConvention(subgradConvention) {
       commitGraph({ ...get().graph, subgradConvention }, true);
+    },
+
+    setShowResiduals(showResiduals) {
+      commitGraph({ ...get().graph, showResiduals }, true, true);
+    },
+
+    setShowVectorField(showVectorField) {
+      commitGraph({ ...get().graph, showVectorField }, true, true);
     },
 
     updateExpressionLatex(id, latex) {
@@ -978,9 +1001,32 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     flipBayesianCoins(numFlips, trueProb = 0.65) {
       const g = get().graph;
-      const kSlider = g.sliders['k'];
-      const nSlider = g.sliders['n'];
-      if (!kSlider || !nSlider) return;
+      const kSlider = g.sliders['k'] ?? {
+        name: 'k',
+        latex: 'k',
+        role: 'hyperparam' as const,
+        value: 0,
+        min: 0,
+        max: 100,
+        step: 1,
+        playing: false,
+        speed: 1 as const,
+        loopMode: 'bounce' as const,
+        direction: 1 as const,
+      };
+      const nSlider = g.sliders['n'] ?? {
+        name: 'n',
+        latex: 'n',
+        role: 'hyperparam' as const,
+        value: 0,
+        min: 1,
+        max: 100,
+        step: 1,
+        playing: false,
+        speed: 1 as const,
+        loopMode: 'bounce' as const,
+        direction: 1 as const,
+      };
       let heads = 0;
       for (let i = 0; i < numFlips; i++) {
         if (Math.random() < trueProb) heads++;
@@ -996,6 +1042,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
             n: { ...nSlider, value: nextN },
           },
         },
+        true,
         true
       );
     },
@@ -1032,8 +1079,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       set({ shareModalOpen });
     },
 
-    setGalleryDrawerOpen(galleryDrawerOpen) {
-      set({ galleryDrawerOpen });
+    setGalleryDrawerOpen(galleryDrawerOpen, initialTab) {
+      set({
+        galleryDrawerOpen,
+        ...(initialTab ? { galleryInitialTab: initialTab } : {}),
+      });
     },
 
     setCustomOptModalOpen(customOptModalOpen) {

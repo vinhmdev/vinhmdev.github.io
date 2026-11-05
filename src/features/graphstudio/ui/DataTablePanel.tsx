@@ -1,9 +1,9 @@
 /**
- * Interactive Data Points Table, Data Brush Toggle, Bayesian Coin Flipper (T-09),
- * and CSV Paste/Import Panel [FR-4.3].
+ * Interactive Data Points Table, Data Brush Toggle, and Consolidated Data Actions Menu
+ * (CSV Paste/Import, Sample Datasets, and Bayesian Coin Flipper) [FR-4.3].
  */
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type { DataPoint2D } from '../types/state';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
@@ -17,7 +17,15 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
   const { graph, brushActive } = storeState;
   const [csvText, setCsvText] = useState('');
   const [showCsvBox, setShowCsvBox] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(() => graph.dataPoints.length > 0);
+
+  useEffect(() => {
+    if (!actionsMenuOpen || typeof window === 'undefined') return;
+    const close = (): void => setActionsMenuOpen(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [actionsMenuOpen]);
 
   const handleImportCsv = (): void => {
     const lines = csvText
@@ -42,36 +50,39 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
       storeState.setDataPoints(parsed);
       setShowCsvBox(false);
       setCsvText('');
+      setIsExpanded(true);
     }
   };
 
   return (
     <div class="flex flex-col gap-2 p-3 border-t border-neutral-200 dark:border-neutral-800 text-xs">
-      <div class="flex flex-wrap items-center justify-between gap-1.5">
+      <div class="flex items-center justify-between gap-1.5">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
           aria-expanded={isExpanded}
-          class="flex items-center gap-1.5 font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors whitespace-nowrap"
+          class="flex items-center gap-1.5 font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors truncate"
         >
           <span>{isExpanded ? '▾' : '▸'}</span>
-          <span>
+          <span class="truncate">
             {t('data_table_title')} ({graph.dataPoints.length})
           </span>
         </button>
-        <div class="flex flex-wrap items-center gap-1">
+
+        <div class="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={() => storeState.setBrushActive(!brushActive)}
-            class={`px-2 py-0.5 rounded font-semibold border transition-colors whitespace-nowrap ${
+            class={`px-2 py-0.5 rounded font-semibold border transition-colors text-[11px] ${
               brushActive
                 ? 'bg-orange-500 text-white border-orange-500'
-                : 'border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300'
+                : 'border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
             }`}
             title="Spray multiple data points by dragging on the 2D canvas"
           >
             {t('brush_mode')}
           </button>
+
           <button
             type="button"
             onClick={() => {
@@ -82,52 +93,126 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
               });
               setIsExpanded(true);
             }}
-            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold whitespace-nowrap"
+            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors text-[11px]"
           >
             {t('add_point')}
           </button>
-          {isExpanded && (
+
+          {/* Consolidated Data Actions Dropdown Menu */}
+          <div class="relative inline-block">
             <button
               type="button"
-              onClick={() => setShowCsvBox(!showCsvBox)}
-              class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 whitespace-nowrap"
+              aria-expanded={actionsMenuOpen}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionsMenuOpen((prev) => !prev);
+              }}
+              class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium transition-colors ${
+                actionsMenuOpen
+                  ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+                  : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+              }`}
+              title={t('data_actions_btn')}
             >
-              {t('paste_csv')}
+              <span>{t('data_actions_btn')}</span>
+              <span class="text-[9px] opacity-75">▾</span>
             </button>
-          )}
-          {graph.dataPoints.length > 0 && (
-            <button
-              type="button"
-              onClick={() => storeState.setDataPoints([])}
-              class="p-1 rounded text-neutral-400 hover:text-red-500"
-              title="Clear all data points"
-            >
-              <IconTrash class="w-3.5 h-3.5" />
-            </button>
-          )}
+
+            {actionsMenuOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                class="absolute right-0 top-full mt-1 z-40 w-52 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCsvBox((prev) => !prev);
+                    setIsExpanded(true);
+                    setActionsMenuOpen(false);
+                  }}
+                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span>📋 {t('paste_csv')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    storeState.setDataPoints([
+                      { id: 's1', x: -2.0, y: -1.4, split: 'train' },
+                      { id: 's2', x: -1.0, y: -0.6, split: 'train' },
+                      { id: 's3', x: 0.0, y: 0.1, split: 'train' },
+                      { id: 's4', x: 1.0, y: 0.9, split: 'train' },
+                      { id: 's5', x: 2.0, y: 1.8, split: 'train' },
+                    ]);
+                    setIsExpanded(true);
+                    setActionsMenuOpen(false);
+                  }}
+                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span>📈 Sample Linear Points (5)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    storeState.setDataPoints([
+                      { id: 'xor1', x: -1.0, y: -1.0, x2: -1.0, label: 0, split: 'train' },
+                      { id: 'xor2', x: 1.0, y: 1.0, x2: 1.0, label: 0, split: 'train' },
+                      { id: 'xor3', x: -1.0, y: 1.0, x2: 1.0, label: 1, split: 'train' },
+                      { id: 'xor4', x: 1.0, y: -1.0, x2: -1.0, label: 1, split: 'train' },
+                    ]);
+                    setIsExpanded(true);
+                    setActionsMenuOpen(false);
+                  }}
+                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span>🔀 Sample XOR Points (4)</span>
+                </button>
+
+                <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+
+                <div class="px-3 py-1 flex items-center justify-between gap-1">
+                  <span class="text-neutral-500">🪙 Bayes Coins:</span>
+                  <div class="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => storeState.flipBayesianCoins(1)}
+                      class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
+                    >
+                      +1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => storeState.flipBayesianCoins(10)}
+                      class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
+                    >
+                      +10
+                    </button>
+                  </div>
+                </div>
+
+                {graph.dataPoints.length > 0 && (
+                  <>
+                    <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        storeState.setDataPoints([]);
+                        setActionsMenuOpen(false);
+                      }}
+                      class="flex items-center gap-1.5 px-3 py-1.5 text-left text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                    >
+                      <IconTrash class="w-3.5 h-3.5" />
+                      <span>Clear All Points</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Bayesian Beta-Bernoulli Coin Flipper (T-09) */}
-      {graph.activeTemplateId === 'T-09' && (
-        <div class="flex items-center gap-2 p-2 rounded bg-orange-500/10 border border-orange-500/30">
-          <span class="font-semibold text-orange-600 dark:text-orange-400">Bernoulli Trials:</span>
-          <button
-            type="button"
-            onClick={() => storeState.flipBayesianCoins(1)}
-            class="px-2 py-0.5 rounded bg-orange-500 text-white font-semibold"
-          >
-            {t('coin_flip_1')}
-          </button>
-          <button
-            type="button"
-            onClick={() => storeState.flipBayesianCoins(10)}
-            class="px-2 py-0.5 rounded bg-orange-500 text-white font-semibold"
-          >
-            {t('coin_flip_10')}
-          </button>
-        </div>
-      )}
 
       {isExpanded && showCsvBox && (
         <div class="flex flex-col gap-1.5 p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950">

@@ -31,6 +31,7 @@ import type { GraphStoreState } from '../state/store';
 import type {
   LossKind,
   RegularizationKind,
+  RightViewportMode,
   WhiteboardStroke,
   WhiteboardTool,
 } from '../types/state';
@@ -99,6 +100,13 @@ export function DualViewportPanel({
   const [draftStroke, setDraftStroke] = useState<WhiteboardStroke | null>(null);
   const [leftToolsOpen, setLeftToolsOpen] = useState<boolean>(false);
   const [rightToolsOpen, setRightToolsOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!rightToolsOpen || typeof window === 'undefined') return;
+    const closeRightMenu = (): void => setRightToolsOpen(false);
+    window.addEventListener('click', closeRightMenu);
+    return () => window.removeEventListener('click', closeRightMenu);
+  }, [rightToolsOpen]);
 
   const glRendererRef = useRef<WebGL2SurfaceRenderer | null>(null);
   const glCanvasBoundRef = useRef<HTMLCanvasElement | null>(null);
@@ -213,6 +221,8 @@ export function DualViewportPanel({
       probeX: graph.probeX,
       hoveredDataPointId: graph.hoveredDataPointId,
       activeTemplateId: graph.activeTemplateId,
+      lossKind: graph.lossKind,
+      rightViewportMode: graph.rightViewportMode,
       paramValues,
       whiteboardStrokes: allStrokes,
     });
@@ -229,6 +239,8 @@ export function DualViewportPanel({
     graph.probeX,
     graph.hoveredDataPointId,
     graph.activeTemplateId,
+    graph.lossKind,
+    graph.rightViewportMode,
     whiteboardStrokes,
     draftStroke,
     JSON.stringify(paramValues),
@@ -643,139 +655,134 @@ export function DualViewportPanel({
               }}
             />
 
-            {/* Top-Left & Top-Right Overlay Controls: Collapsible on Mobile to Maximize Graph Area */}
-            <div class="absolute top-2 left-2 right-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-1.5 pointer-events-none text-[11px]">
-              {/* Primary Compact Pill Row */}
-              <div class="flex items-center justify-between sm:justify-start gap-1.5 w-full sm:w-auto pointer-events-auto">
-                <div class="flex items-center gap-1">
-                  <span class="hidden md:inline-block px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-semibold shadow-2xs">
-                    {graph.activeTemplateId === 'T-00' ? t('whiteboard_label') : t('tab_data')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleResetLeftViewport}
-                    class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs"
-                    title={t('reset_view_btn')}
-                  >
-                    <IconHome class="w-3 h-3" />
-                    <span class="hidden sm:inline">{t('reset_view_btn')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const aspect = Math.max(leftSize.width, 1) / Math.max(leftSize.height, 1);
-                      const yMid = (graph.leftViewport.yMin + graph.leftViewport.yMax) * 0.5;
-                      const xMid = (graph.leftViewport.xMin + graph.leftViewport.xMax) * 0.5;
-                      const halfY = (graph.leftViewport.yMax - graph.leftViewport.yMin) * 0.5;
-                      const halfX = halfY * aspect;
-                      storeState.setLeftViewport({
-                        xMin: xMid - halfX,
-                        xMax: xMid + halfX,
-                        yMin: yMid - halfY,
-                        yMax: yMid + halfY,
-                      });
-                    }}
-                    class="px-1.5 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-mono font-semibold shadow-2xs"
-                    title="Square 1:1 Aspect Ratio"
-                  >
-                    1:1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      storeState.setProbeX(graph.probeX === null ? 0.0 : null)
-                    }
-                    class={`px-2 py-0.5 rounded border font-medium shadow-2xs ${
-                      graph.probeX !== null
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700'
-                    }`}
-                  >
-                    <span class="sm:hidden">
-                      {graph.probeX !== null ? `x₀=${graph.probeX.toFixed(1)}` : 'Probe'}
-                    </span>
-                    <span class="hidden sm:inline">
-                      Tangent Probe {graph.probeX !== null ? `x₀=${graph.probeX.toFixed(2)}` : 'OFF'}
-                    </span>
-                  </button>
-                </div>
+            {/* Top-Left & Top-Right Overlay Controls: Compact & Decluttered */}
+            <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
+              {/* Left Compact Pill Row: Reset, 1:1, Tangent Probe */}
+              <div class="flex items-center gap-1 pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={handleResetLeftViewport}
+                  class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs"
+                  title={t('reset_view_btn')}
+                >
+                  <IconHome class="w-3 h-3" />
+                  <span class="hidden sm:inline">{t('reset_view_btn')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const aspect = Math.max(leftSize.width, 1) / Math.max(leftSize.height, 1);
+                    const yMid = (graph.leftViewport.yMin + graph.leftViewport.yMax) * 0.5;
+                    const xMid = (graph.leftViewport.xMin + graph.leftViewport.xMax) * 0.5;
+                    const halfY = (graph.leftViewport.yMax - graph.leftViewport.yMin) * 0.5;
+                    const halfX = halfY * aspect;
+                    storeState.setLeftViewport({
+                      xMin: xMid - halfX,
+                      xMax: xMid + halfX,
+                      yMin: yMid - halfY,
+                      yMax: yMid + halfY,
+                    });
+                  }}
+                  class="px-1.5 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-mono font-semibold shadow-2xs"
+                  title="Square 1:1 Aspect Ratio"
+                >
+                  1:1
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    storeState.setProbeX(graph.probeX === null ? 0.0 : null)
+                  }
+                  class={`px-2 py-0.5 rounded border font-medium shadow-2xs ${
+                    graph.probeX !== null
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 hover:border-orange-500'
+                  }`}
+                  title="Toggle draggable Tangent Probe on primary curve"
+                >
+                  {graph.probeX !== null ? `Probe x₀=${graph.probeX.toFixed(2)}` : 'Probe'}
+                </button>
+              </div>
 
-                {/* Mobile Whiteboard Drawer Toggle Pill (< 640px) */}
+              {/* Right: Compact Whiteboard Dropdown / Popover Toolbar */}
+              <div class="relative flex flex-col items-end gap-1 pointer-events-auto">
                 <button
                   type="button"
                   onClick={() => setLeftToolsOpen((prev) => !prev)}
-                  aria-expanded={leftToolsOpen}
-                  class={`sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs ${
+                  aria-expanded={leftToolsOpen || whiteboardTool !== 'cursor'}
+                  class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs transition-colors ${
                     leftToolsOpen || whiteboardTool !== 'cursor'
                       ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
                   }`}
                   title="Toggle Whiteboard Drawing Tools"
                 >
                   <span>✏️</span>
-                  <span>{leftToolsOpen ? '▴' : '▾'}</span>
+                  <span class="hidden sm:inline">{t('blank_mode_btn')}</span>
+                  <span>{leftToolsOpen || whiteboardTool !== 'cursor' ? '▴' : '▾'}</span>
                 </button>
-              </div>
 
-              {/* Right: Interactive Whiteboard Annotation Toolbar (Collapsible on Mobile, Visible on Desktop) */}
-              <div
-                class={`${
-                  leftToolsOpen ? 'flex' : 'hidden sm:flex'
-                } flex-wrap items-center gap-1 px-1.5 py-1 rounded-lg bg-white/92 dark:bg-neutral-900/92 border border-neutral-200 dark:border-neutral-800 shadow-xs pointer-events-auto self-end sm:self-auto`}
-              >
-                {wbTools.map((tool) => {
-                  const active = whiteboardTool === tool.id;
-                  return (
-                    <button
-                      key={tool.id}
-                      type="button"
-                      onClick={() => storeState.setWhiteboardTool(tool.id)}
-                      class={`flex items-center gap-1 px-2 py-0.5 rounded font-medium transition-colors ${
-                        active
-                          ? 'bg-orange-500 text-white'
-                          : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                      }`}
-                      title={t(tool.labelKey)}
-                    >
-                      {tool.icon}
-                      <span class="hidden md:inline">{t(tool.labelKey)}</span>
-                    </button>
-                  );
-                })}
+                {(leftToolsOpen || whiteboardTool !== 'cursor') && (
+                  <div class="flex flex-wrap items-center gap-1 px-1.5 py-1 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-800 shadow-lg">
+                    {wbTools.map((tool) => {
+                      const active = whiteboardTool === tool.id;
+                      return (
+                        <button
+                          key={tool.id}
+                          type="button"
+                          onClick={() => {
+                            storeState.setWhiteboardTool(tool.id);
+                            if (tool.id === 'cursor') {
+                              setLeftToolsOpen(false);
+                            }
+                          }}
+                          class={`flex items-center gap-1 px-1.5 py-0.5 rounded font-medium transition-colors ${
+                            active
+                              ? 'bg-orange-500 text-white'
+                              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                          }`}
+                          title={t(tool.labelKey)}
+                        >
+                          {tool.icon}
+                          <span class="hidden md:inline">{t(tool.labelKey)}</span>
+                        </button>
+                      );
+                    })}
 
-                {/* Color Swatches */}
-                <div class="flex items-center gap-1 px-1 border-l border-neutral-200 dark:border-neutral-700">
-                  {WHITEBOARD_COLORS.map((col) => (
-                    <button
-                      key={col}
-                      type="button"
-                      onClick={() => {
-                        storeState.setWhiteboardColor(col);
-                        if (whiteboardTool === 'cursor' || whiteboardTool === 'eraser') {
-                          storeState.setWhiteboardTool('pen');
-                        }
-                      }}
-                      class={`w-3.5 h-3.5 rounded-full transition-transform ${
-                        whiteboardColor === col
-                          ? 'scale-125 ring-2 ring-neutral-900 dark:ring-white'
-                          : 'opacity-75 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: col }}
-                      title={`Ink color ${col}`}
-                    />
-                  ))}
-                </div>
+                    {/* Color Swatches */}
+                    <div class="flex items-center gap-1 px-1 border-l border-neutral-200 dark:border-neutral-700">
+                      {WHITEBOARD_COLORS.map((col) => (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => {
+                            storeState.setWhiteboardColor(col);
+                            if (whiteboardTool === 'cursor' || whiteboardTool === 'eraser') {
+                              storeState.setWhiteboardTool('pen');
+                            }
+                          }}
+                          class={`w-3.5 h-3.5 rounded-full transition-transform ${
+                            whiteboardColor === col
+                              ? 'scale-125 ring-2 ring-neutral-900 dark:ring-white'
+                              : 'opacity-75 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: col }}
+                          title={`Ink color ${col}`}
+                        />
+                      ))}
+                    </div>
 
-                {whiteboardStrokes.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => storeState.clearWhiteboard()}
-                    class="flex items-center gap-1 px-1.5 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-500/10 font-medium"
-                    title={t('wb_clear')}
-                  >
-                    <IconTrash class="w-3 h-3" />
-                    <span class="hidden md:inline">{t('wb_clear')}</span>
-                  </button>
+                    {whiteboardStrokes.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => storeState.clearWhiteboard()}
+                        class="flex items-center gap-1 px-1.5 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-500/10 font-medium"
+                        title={t('wb_clear')}
+                      >
+                        <IconTrash class="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -891,118 +898,18 @@ export function DualViewportPanel({
               }}
             />
 
-            {/* Top-Left Live Train/Test Loss Badges & Landscape Controls [FR-4.1, FR-4.3] */}
-            <div class="absolute top-2 left-2 right-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-1.5 pointer-events-auto text-[11px]">
-              <div class="flex items-center justify-between sm:justify-start gap-1.5 w-full sm:w-auto">
-                <div class="flex flex-wrap items-center gap-1">
-                  <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400">
-                    Loss: {trainLoss.toFixed(4)}
+            {/* Top-Left Live Train/Test Loss Badges & Compact 3D Options Menu [FR-4.1, FR-4.3] */}
+            <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-auto text-[11px]">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
+                  Loss: {trainLoss.toFixed(4)}
+                </span>
+                {testLoss > 0 && (
+                  <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-blue-600 dark:text-blue-400 shadow-2xs">
+                    Test: {testLoss.toFixed(4)}
                   </span>
-                  {testLoss > 0 && (
-                    <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-blue-600 dark:text-blue-400">
-                      Test: {testLoss.toFixed(4)}
-                    </span>
-                  )}
-                  {graph.rightViewportMode === 'loss_surface' && (
-                    <span
-                      class="hidden md:inline-block px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono text-neutral-600 dark:text-neutral-300"
-                      title="Active 3D Surface Parameter Axes (drag on surface to adjust)"
-                    >
-                      Axes: ({w1Key}, {w2Key})
-                    </span>
-                  )}
-                  {graph.dataPoints.length === 0 &&
-                    graph.rightViewportMode === 'loss_surface' &&
-                    ['mse', 'mae', 'huber', 'bce', 'hinge'].includes(graph.lossKind) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          storeState.setDataPoints([
-                            { id: 's1', x: -2.0, y: -1.4, split: 'train' },
-                            { id: 's2', x: -1.0, y: -0.6, split: 'train' },
-                            { id: 's3', x: 0.0, y: 0.1, split: 'train' },
-                            { id: 's4', x: 1.0, y: 0.9, split: 'train' },
-                            { id: 's5', x: 2.0, y: 1.8, split: 'train' },
-                          ])
-                        }
-                        class="px-2 py-0.5 rounded bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
-                        title="Generate 5 sample training points for empirical loss surface"
-                      >
-                        + Sample Data
-                      </button>
-                    )}
-                </div>
-
-                {graph.rightViewportMode === 'loss_surface' && (
-                  <button
-                    type="button"
-                    onClick={() => setRightToolsOpen((prev) => !prev)}
-                    aria-expanded={rightToolsOpen}
-                    class={`sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs ${
-                      rightToolsOpen
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200'
-                    }`}
-                    title="Toggle 3D Surface Options"
-                  >
-                    <span>⚙️</span>
-                    <span>{rightToolsOpen ? '▴' : '▾'}</span>
-                  </button>
                 )}
-              </div>
-
-              {graph.rightViewportMode === 'loss_surface' && (
-                <div
-                  class={`${
-                    rightToolsOpen ? 'flex' : 'hidden sm:flex'
-                  } flex-wrap items-center gap-1 self-end sm:self-auto`}
-                >
-                  <select
-                    aria-label="Loss Function Type"
-                    value={graph.lossKind}
-                    onChange={(e) =>
-                      storeState.setLossKind((e.target as HTMLSelectElement).value as LossKind)
-                    }
-                    class="h-6 px-1.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 font-medium"
-                  >
-                    <option value="mse">MSE</option>
-                    <option value="mae">MAE</option>
-                    <option value="huber">Huber</option>
-                    <option value="bce">BCEWithLogits</option>
-                    <option value="hinge">Hinge (SVM)</option>
-                    <option value="gaussian_nll">Gaussian NLL</option>
-                    <option value="kl_div">Forward KL D(P||Q)</option>
-                    <option value="reverse_kl_div">Reverse KL D(Q||P)</option>
-                    <option value="rastrigin">Rastrigin Non-Convex</option>
-                  </select>
-
-                  <select
-                    aria-label="Regularization Geometry"
-                    value={graph.regularizationKind}
-                    onChange={(e) =>
-                      storeState.setRegularization(
-                        (e.target as HTMLSelectElement).value as RegularizationKind
-                      )
-                    }
-                    class="h-6 px-1.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 font-medium"
-                  >
-                    <option value="none">{t('reg_none')}</option>
-                    <option value="l1">{t('reg_l1')}</option>
-                    <option value="l2">{t('reg_l2')}</option>
-                  </select>
-
-                  <button
-                    type="button"
-                    onClick={() => storeState.setBatchNormEnabled(!graph.batchNormEnabled)}
-                    class={`h-6 px-2 rounded border font-semibold ${
-                      graph.batchNormEnabled
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700'
-                    }`}
-                  >
-                    {t('batchnorm_toggle')}
-                  </button>
-
+                {graph.rightViewportMode === 'loss_surface' && (
                   <button
                     type="button"
                     onClick={() =>
@@ -1012,13 +919,143 @@ export function DualViewportPanel({
                         graph.surface3DZScale > 0.05 ? 0.0 : 0.65
                       )
                     }
-                    class="h-6 px-2 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 font-semibold"
+                    class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-semibold shadow-2xs"
                     title="Toggle 2D Contour vs 3D Surface Projection (Shift+drag to orbit)"
                   >
                     {graph.surface3DZScale > 0.05 ? '3D Orbit' : '2D Contour'}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Consolidated Right Viewport & 3D Options Popover Menu */}
+              <div
+                onClick={(e) => e.stopPropagation()}
+                class="relative flex flex-col items-end"
+              >
+                <button
+                  type="button"
+                  onClick={() => setRightToolsOpen((prev) => !prev)}
+                  aria-expanded={rightToolsOpen}
+                  class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs transition-colors ${
+                    rightToolsOpen
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
+                  }`}
+                  title={t('view3d_options_btn')}
+                >
+                  <span>⚙️</span>
+                  <span class="hidden sm:inline">{t('view3d_options_btn')}</span>
+                  <span>{rightToolsOpen ? '▴' : '▾'}</span>
+                </button>
+
+                {rightToolsOpen && (
+                  <div class="mt-1.5 z-30 w-64 p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
+                    <label class="flex flex-col gap-1">
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                        Right Space Mode
+                      </span>
+                      <select
+                        aria-label="Right Viewport Visualizer Mode"
+                        value={graph.rightViewportMode}
+                        onChange={(e) =>
+                          storeState.setRightViewportMode(
+                            (e.target as HTMLSelectElement).value as RightViewportMode
+                          )
+                        }
+                        class="h-7 px-2 rounded bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-medium"
+                      >
+                        <option value="loss_surface">{t('right_mode_surface')}</option>
+                        <option value="softmax_simplex">{t('right_mode_simplex')}</option>
+                        <option value="roc_curve">{t('right_mode_roc')}</option>
+                        <option value="svm_feature_3d">{t('right_mode_rbf')}</option>
+                        <option value="mlp_grid_warp">{t('right_mode_mlp')}</option>
+                      </select>
+                    </label>
+
+                    {graph.rightViewportMode === 'loss_surface' && (
+                      <>
+                        <label class="flex flex-col gap-1">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                            Objective / Loss Function
+                          </span>
+                          <select
+                            aria-label="Loss Function Type"
+                            value={graph.lossKind}
+                            onChange={(e) =>
+                              storeState.setLossKind(
+                                (e.target as HTMLSelectElement).value as LossKind
+                              )
+                            }
+                            class="h-7 px-2 rounded bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-medium"
+                          >
+                            <option value="mse">MSE (Quadratic)</option>
+                            <option value="mae">MAE (L1 Absolute)</option>
+                            <option value="huber">Huber Loss</option>
+                            <option value="bce">BCEWithLogits</option>
+                            <option value="hinge">Hinge (SVM Margin)</option>
+                            <option value="gaussian_nll">Gaussian NLL</option>
+                            <option value="kl_div">Forward KL D(P||Q)</option>
+                            <option value="reverse_kl_div">Reverse KL D(Q||P)</option>
+                            <option value="rastrigin">Rastrigin Non-Convex</option>
+                          </select>
+                        </label>
+
+                        <label class="flex flex-col gap-1">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                            Regularization
+                          </span>
+                          <select
+                            aria-label="Regularization Geometry"
+                            value={graph.regularizationKind}
+                            onChange={(e) =>
+                              storeState.setRegularization(
+                                (e.target as HTMLSelectElement).value as RegularizationKind
+                              )
+                            }
+                            class="h-7 px-2 rounded bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-medium"
+                          >
+                            <option value="none">{t('reg_none')}</option>
+                            <option value="l1">{t('reg_l1')}</option>
+                            <option value="l2">{t('reg_l2')}</option>
+                          </select>
+                        </label>
+
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-neutral-200 dark:border-neutral-800">
+                          <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={graph.batchNormEnabled}
+                              onChange={(e) =>
+                                storeState.setBatchNormEnabled(
+                                  (e.target as HTMLInputElement).checked
+                                )
+                              }
+                            />
+                            <span>{t('batchnorm_toggle')}</span>
+                          </label>
+
+                          <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={graph.showResiduals}
+                              onChange={(e) =>
+                                storeState.setShowResiduals(
+                                  (e.target as HTMLInputElement).checked
+                                )
+                              }
+                            />
+                            <span>Residuals r²</span>
+                          </label>
+                        </div>
+
+                        <div class="text-[10px] font-mono text-neutral-500">
+                          Active Parameter Axes: ({w1Key}, {w2Key})
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

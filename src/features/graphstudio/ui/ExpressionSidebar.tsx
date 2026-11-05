@@ -7,6 +7,7 @@ import katex from 'katex';
 import type { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { classifyLatexExpression } from '../core/parser/ast-classifier';
+import { QUICK_FORMULA_GROUPS } from '../extensions/templates';
 import { graphStore, type GraphStoreState } from '../state/store';
 import type { SymbolRole } from '../types/math';
 import type { PlaybackSpeed, SliderLoopMode } from '../types/state';
@@ -40,16 +41,6 @@ const ROLE_BADGE_STYLE = {
   primitive: 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400 border-neutral-500/30',
 } as const;
 
-const QUICK_PRESETS: { label: string; latex: string }[] = [
-  { label: 'σ(wx+b)', latex: '\\sigma(w \\cdot x + b)' },
-  { label: 'ReLU(wx+b)', latex: '\\operatorname{relu}(w \\cdot x + b)' },
-  { label: 'GELU(x)', latex: '\\operatorname{gelu}(x)' },
-  { label: 'tanh(wx+b)', latex: '\\tanh(w \\cdot x + b)' },
-  { label: 'a·sin(bx)+c', latex: 'a \\cdot \\sin(b \\cdot x) + c' },
-  { label: 'x³ - 3x', latex: 'x^3 - 3 \\cdot x' },
-  { label: 'e^(-x²)', latex: 'e^{-x^2}' },
-];
-
 const ROLE_OPTIONS: {
   role: 'data_var' | 'param' | 'hyperparam';
   shortLabel: string;
@@ -78,7 +69,6 @@ const ROLE_OPTIONS: {
 
 export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const { graph, curves } = storeState;
-  const quickPresets = QUICK_PRESETS;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
   const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
@@ -86,11 +76,14 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const [expandedSliderConfig, setExpandedSliderConfig] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!openRoleMenuKey || typeof window === 'undefined') return;
-    const closeMenu = (): void => setOpenRoleMenuKey(null);
+    if ((!openRoleMenuKey && !showQuickPresets) || typeof window === 'undefined') return;
+    const closeMenu = (): void => {
+      setOpenRoleMenuKey(null);
+      setShowQuickPresets(false);
+    };
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
-  }, [openRoleMenuKey]);
+  }, [openRoleMenuKey, showQuickPresets]);
 
   // Configure MathLive custom element offline (disable external audio requests) [FR-1.1]
   useEffect(() => {
@@ -157,30 +150,72 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
 
   return (
     <div class="flex flex-col gap-3 p-3 text-xs">
-      {/* Section 1: Algebra & Expressions */}
+      {/* Section 1: Algebra & Expressions Header with Quick Formulas Dropdown Menu */}
       <div class="flex items-center justify-between gap-1">
-        <div class="flex items-center gap-1.5">
-          <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px]">
-            {t('expressions_title')}
-          </h2>
-          <button
-            type="button"
-            onClick={() => setShowQuickPresets((prev) => !prev)}
-            class={`sm:hidden px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-colors ${
-              showQuickPresets
-                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40'
-                : 'border-neutral-200 dark:border-neutral-800 text-neutral-500'
-            }`}
-            title="Toggle Quick Formulas"
-          >
-            ⚡ {showQuickPresets ? '▴' : '▾'}
-          </button>
-        </div>
-        <div class="flex items-center gap-1">
+        <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] truncate">
+          {t('expressions_title')}
+        </h2>
+
+        <div class="flex items-center gap-1 shrink-0">
+          {/* Categorized Quick Formulas Dropdown Button */}
+          <div class="relative inline-block">
+            <button
+              type="button"
+              aria-expanded={showQuickPresets}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowQuickPresets((prev) => !prev);
+              }}
+              class={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-medium transition-colors ${
+                showQuickPresets
+                  ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+                  : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
+              }`}
+              title={t('quick_presets_label')}
+            >
+              <span>⚡</span>
+              <span>{t('quick_presets_label')}</span>
+              <span class="text-[9px] opacity-75">▾</span>
+            </button>
+
+            {showQuickPresets && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                class="absolute right-0 top-full mt-1.5 z-40 w-72 max-h-80 overflow-y-auto p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col gap-2 text-xs"
+              >
+                {QUICK_FORMULA_GROUPS.map((grp) => (
+                  <div key={grp.groupKey} class="flex flex-col gap-0.5">
+                    <div class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                      {t(grp.groupKey)}
+                    </div>
+                    {grp.items.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => {
+                          handleInsertPreset(item.latex);
+                          setShowQuickPresets(false);
+                        }}
+                        class="flex items-center justify-between gap-2 px-2 py-1 rounded text-left hover:bg-orange-500/10 dark:hover:bg-neutral-800 transition-colors"
+                      >
+                        <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-100 text-[11px]">
+                          {item.label}
+                        </span>
+                        <span class="text-[10px] text-neutral-400 truncate">
+                          {item.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleClearAllExpressions}
-            class="px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px]"
             title="Clear all expressions to a blank input"
           >
             {t('clear_expr_btn')}
@@ -188,33 +223,11 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           <button
             type="button"
             onClick={() => storeState.addExpression()}
-            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors"
+            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors text-[11px]"
           >
             {t('add_expression')}
           </button>
         </div>
-      </div>
-
-      {/* Quick Formula Presets Bar (Collapsible on Mobile, Visible on Desktop) */}
-      <div
-        class={`${
-          showQuickPresets ? 'flex' : 'hidden sm:flex'
-        } flex-wrap items-center gap-1`}
-      >
-        <span class="text-[10px] font-semibold text-neutral-400 mr-0.5">
-          {t('quick_presets_label')}:
-        </span>
-        {quickPresets.map((p) => (
-          <button
-            key={p.label}
-            type="button"
-            onClick={() => handleInsertPreset(p.latex)}
-            class="px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-orange-500 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 transition-colors"
-            title={`Insert ${p.latex}`}
-          >
-            {p.label}
-          </button>
-        ))}
       </div>
 
       <div class="flex flex-col gap-2.5">
@@ -505,7 +518,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       </div>
 
                       <div class="flex items-center gap-1">
-                        {/* Mobile Toggle for Row 3 (Loop Mode / Step Δ / Speed) */}
+                        {/* Toggle for Row 3 (Loop Mode / Step Δ / Speed) on both Desktop & Mobile */}
                         <button
                           type="button"
                           onClick={() =>
@@ -514,10 +527,10 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                               [sl.name]: !prev[sl.name],
                             }))
                           }
-                          class={`sm:hidden px-1.5 py-0.5 rounded border text-[10px] font-mono ${
+                          class={`px-1.5 py-0.5 rounded border text-[10px] font-mono transition-colors ${
                             configOpen
                               ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40'
-                              : 'border-neutral-200 dark:border-neutral-800 text-neutral-500'
+                              : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:border-orange-500'
                           }`}
                           title={t('slider_setup_title')}
                         >
@@ -627,11 +640,11 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       />
                     </div>
 
-                    {/* Row 3: Play Direction / Loop Mode Selector & Step (Δ) / Speed Setup Bar (Collapsible on Mobile) */}
+                    {/* Row 3: Play Direction / Loop Mode Selector & Step (Δ) / Speed Setup Bar (Collapsed by default until ⚙️ is clicked) */}
                     <div
                       class={`${
-                        configOpen ? 'flex' : 'hidden sm:flex'
-                      } flex-wrap items-center justify-between gap-1 pt-0.5 text-[10px] text-neutral-500`}
+                        configOpen ? 'flex' : 'hidden'
+                      } flex-wrap items-center justify-between gap-1 pt-1 border-t border-neutral-100 dark:border-neutral-800/80 text-[10px] text-neutral-500`}
                     >
                       {/* Loop Mode (Once / Loop / Bounce), Direction (→ / ←) & Speed (0.25x..4x) */}
                       <div

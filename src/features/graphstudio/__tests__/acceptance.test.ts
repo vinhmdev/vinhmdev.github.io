@@ -38,9 +38,11 @@ import {
 } from '../core/simulation/special-kernels';
 import { getRegisteredMathFunction } from '../extensions/contracts';
 import {
+  ALL_EXPLORE_TEMPLATES,
   ALL_ML_TEMPLATES,
   isMathTemplateId,
   MATH_TEMPLATES,
+  QUICK_FORMULA_GROUPS,
 } from '../extensions/templates';
 import {
   getDefaultCustomOptimizerCode,
@@ -771,8 +773,17 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(graphStore.getState().graph.sliders['a'].role).toBe('hyperparam');
   });
 
-  it('validates General Math templates (M-01..M-05) with unified ML symbol role capabilities and ViewMode transitions', () => {
-    expect(MATH_TEMPLATES.length).toBe(5);
+  it('validates General Math templates (M-01..M-08), Explore Gallery, and Quick Formula Groups with unified ML symbol role capabilities', () => {
+    expect(MATH_TEMPLATES.length).toBe(8);
+    expect(ALL_EXPLORE_TEMPLATES.length).toBe(23);
+    expect(QUICK_FORMULA_GROUPS.length).toBe(5);
+    for (const grp of QUICK_FORMULA_GROUPS) {
+      expect(grp.items.length).toBeGreaterThanOrEqual(5);
+      for (const item of grp.items) {
+        expect(classifyLatexExpression(item.latex).valid).toBe(true);
+      }
+    }
+
     for (const tpl of MATH_TEMPLATES) {
       expect(isMathTemplateId(tpl.id)).toBe(true);
       graphStore.getState().selectTemplate(tpl.id);
@@ -1069,6 +1080,23 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(decodedGraph!.optimizerRace.loopMode).toBe('bounce');
     expect(decodedGraph!.optimizerRace.speed).toBe(2);
     expect(decodedGraph!.optimizerRace.direction).toBe(-1);
+
+    // 11. Unlocked studio actions: setRightViewportMode, setShowResiduals, setShowVectorField, setGalleryDrawerOpen(true, 'examples'), and flipBayesianCoins on Blank Canvas
+    store.resetToBlankCanvas();
+    store.setRightViewportMode('roc_curve');
+    expect(graphStore.getState().graph.rightViewportMode).toBe('roc_curve');
+    expect(graphStore.getState().graph.viewMode).toBe('dual');
+    store.setShowResiduals(true);
+    expect(graphStore.getState().graph.showResiduals).toBe(true);
+    store.setShowVectorField(false);
+    expect(graphStore.getState().graph.showVectorField).toBe(false);
+    store.setGalleryDrawerOpen(true, 'examples');
+    expect(graphStore.getState().galleryDrawerOpen).toBe(true);
+    expect(graphStore.getState().galleryInitialTab).toBe('examples');
+    store.setGalleryDrawerOpen(false);
+    store.flipBayesianCoins(10, 1.0);
+    expect(graphStore.getState().graph.sliders['n'].value).toBe(10);
+    expect(graphStore.getState().graph.sliders['k'].value).toBe(10);
   });
 });
 

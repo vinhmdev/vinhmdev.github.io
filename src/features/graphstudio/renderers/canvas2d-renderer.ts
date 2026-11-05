@@ -9,6 +9,8 @@
 import type {
   CurveRenderPacket,
   DataPoint2D,
+  LossKind,
+  RightViewportMode,
   Viewport2DBounds,
   WhiteboardStroke,
 } from '../types/state';
@@ -26,6 +28,8 @@ export interface Canvas2DRenderParams {
   probeX: number | null;
   hoveredDataPointId: string | null;
   activeTemplateId: string;
+  lossKind?: LossKind;
+  rightViewportMode?: RightViewportMode;
   paramValues?: Record<string, number>;
   whiteboardStrokes?: WhiteboardStroke[];
 }
@@ -43,6 +47,8 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     probeX,
     hoveredDataPointId,
     activeTemplateId,
+    lossKind,
+    rightViewportMode,
     paramValues = {},
     whiteboardStrokes = [],
   } = p;
@@ -172,7 +178,7 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
       const pData = worldToScreen(pt.x, pt.y, viewport, width, height);
       const pPred = worldToScreen(pt.x, evalRes.y, viewport, width, height);
 
-      if (activeTemplateId === 'T-07') {
+      if (activeTemplateId === 'T-07' || lossKind === 'gaussian_nll') {
         // Gaussian MLE dashed density drop-line from axis to PDF curve
         ctx.strokeStyle = 'rgba(249, 115, 22, 0.65)';
         ctx.setLineDash([4, 3]);
@@ -330,8 +336,8 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     ctx.restore();
   }
 
-  // 8. Specialized 2D Decision Boundaries for T-13 (Logistic Line) & T-14 (RBF Circle)
-  if (activeTemplateId === 'T-13') {
+  // 8. Specialized 2D Decision Boundaries for Logistic Line (ROC) & RBF Circle (3D Kernel)
+  if (activeTemplateId === 'T-13' || rightViewportMode === 'roc_curve') {
     const w1 = paramValues['w_1'] ?? paramValues['w'] ?? 1.4;
     const w2 = paramValues['w_2'] ?? 1.1;
     const b = paramValues['b'] ?? -0.2;
@@ -352,7 +358,7 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
       ctx.stroke();
       ctx.restore();
     }
-  } else if (activeTemplateId === 'T-14') {
+  } else if (activeTemplateId === 'T-14' || rightViewportMode === 'svm_feature_3d') {
     const gamma = Math.max(paramValues['gamma'] ?? 0.6, 0.05);
     const tau = Math.min(Math.max(paramValues['tau'] ?? 0.45, 0.02), 0.98);
     const rSq = -Math.log(tau) / gamma;

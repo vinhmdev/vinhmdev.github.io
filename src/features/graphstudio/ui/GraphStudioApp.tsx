@@ -227,7 +227,7 @@ export default function GraphStudioApp(): JSX.Element {
   // Wire Header buttons (#share-btn, #mydocs-btn), Theme & Lang events, and Initial / Dynamic URL Hash
   useEffect(() => {
     const onShareClick = (): void => graphStore.getState().setShareModalOpen(true);
-    const onDocsClick = (): void => graphStore.getState().setGalleryDrawerOpen(true);
+    const onDocsClick = (): void => graphStore.getState().setGalleryDrawerOpen(true, 'my_docs');
     const onThemeChange = (e: Event): void => {
       const custom = e as CustomEvent<{ theme: 'dark' | 'light' }>;
       setIsDark(custom.detail?.theme === 'dark');
