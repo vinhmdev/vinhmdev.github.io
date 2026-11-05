@@ -1,7 +1,8 @@
 ---
 /**
  * Footer — Shared site footer with copyright text and optional Privacy Policy link.
- * Positioned fixed at the bottom of the viewport.
+ * Sticky footer in normal document flow: stays at the bottom of the viewport when
+ * content is short, and scrolls naturally below content when content is tall.
  */
 interface Props {
   text: string;
@@ -13,7 +14,9 @@ interface Props {
 const { text, privacyLabel, privacyUrl, sourceLabel, sourceUrl } = Astro.props;
 ---
 
-<footer class="fixed bottom-6 z-1 text-neutral-500 text-xs opacity-60 flex items-center gap-3">
+<footer
+  class="w-full max-w-[640px] mx-auto py-6 px-4 sm:px-6 md:px-8 mt-auto flex-shrink-0 relative z-10 text-neutral-500 dark:text-neutral-400 text-xs opacity-75 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center"
+>
   <span>{text}</span>
   {
     privacyUrl && privacyLabel && (
@@ -22,7 +25,7 @@ const { text, privacyLabel, privacyUrl, sourceLabel, sourceUrl } = Astro.props;
         <a
           href={privacyUrl}
           target="_blank"
-          class="hover:opacity-100 hover:text-neutral-300 transition-colors underline-offset-2 hover:underline"
+          class="hover:opacity-100 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors underline-offset-2 hover:underline"
         >
           {privacyLabel}
         </a>
@@ -37,7 +40,7 @@ const { text, privacyLabel, privacyUrl, sourceLabel, sourceUrl } = Astro.props;
           href={sourceUrl}
           target="_blank"
           rel="noopener"
-          class="hover:opacity-100 hover:text-neutral-300 transition-colors underline-offset-2 hover:underline"
+          class="hover:opacity-100 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors underline-offset-2 hover:underline"
         >
           {sourceLabel}
         </a>

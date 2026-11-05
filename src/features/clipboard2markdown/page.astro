@@ -52,20 +52,23 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   <div id="c2md-shell" class="flex flex-col h-[100dvh] overflow-hidden">
     <!-- ===== Header ===== -->
     <header
-      class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-2 flex-shrink-0 z-10 relative"
+      class="sticky top-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-2.5 backdrop-blur bg-neutral-100/85 dark:bg-neutral-800/85 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0"
     >
       <a
         href="/"
-        class="flex items-center gap-3 no-underline text-inherit hover:opacity-80 transition-opacity ml-2 mt-1"
+        class="flex items-center gap-2 no-underline text-inherit hover:opacity-80 transition-opacity"
       >
         <div>
           <h1
-            class="text-2xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
+            class="text-lg font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
             data-i18n="heading"
           >
             Paste to Markdown
           </h1>
-          <p class="text-neutral-400 text-sm hidden sm:block" data-i18n="subtitle">
+          <p
+            class="text-neutral-500 dark:text-neutral-400 text-xs hidden sm:block"
+            data-i18n="subtitle"
+          >
             Convert copied text (from Word, Web, etc.) to Markdown instantly ⚡
           </p>
         </div>
@@ -190,7 +193,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 
     <!-- ===== Main Editor ===== -->
     <main
-      class="overflow-hidden flex-1 min-h-0 border-t border-neutral-300 dark:border-neutral-700"
+      class="overflow-hidden flex-1 min-h-0 border-t lg:border-t-0 border-neutral-300 dark:border-neutral-700"
     >
       <div class="editor-container">
         <!-- ===== Editor Pane ===== -->
