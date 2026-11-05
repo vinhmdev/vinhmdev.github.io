@@ -34,6 +34,7 @@ interface CachedExpressionEntry {
   latex: string;
   valid: boolean;
   errorMessage?: string;
+  primaryVar?: string;
   kernel?: CompiledJet2Kernel;
   firstDerivLatex?: string;
   secondDerivLatex?: string;
@@ -74,6 +75,7 @@ function getOrCompileExpression(
   const entry: CachedExpressionEntry = {
     latex,
     valid: true,
+    primaryVar: classified.primaryVar,
     kernel,
     firstDerivLatex: mathJsonToLatex(d1Ast),
     secondDerivLatex: mathJsonToLatex(d2Ast),
@@ -96,11 +98,14 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
 
   const curves: CurveRenderPacket[] = [];
 
-  for (const item of req.expressions) {
+  for (let idx = 0; idx < req.expressions.length; idx++) {
+    const item = req.expressions[idx];
     const compiled = getOrCompileExpression(item.latex, req.symbolOverrides);
+    const resolvedLabel = item.label?.trim() || `f_${idx + 1}(x)`;
     if (!compiled.valid || !compiled.kernel) {
       curves.push({
         exprId: item.id,
+        label: resolvedLabel,
         color: item.color,
         visible: item.visible,
         primaryPoints: new Float64Array(0),
@@ -110,9 +115,13 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
       continue;
     }
 
+    const displayLabel =
+      item.label?.trim() || `f_${idx + 1}(${compiled.primaryVar ?? 'x'})`;
+
     if (!item.visible) {
       curves.push({
         exprId: item.id,
+        label: displayLabel,
         color: item.color,
         visible: false,
         primaryPoints: new Float64Array(0),
@@ -160,6 +169,7 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
 
     curves.push({
       exprId: item.id,
+      label: displayLabel,
       color: item.color,
       visible: true,
       primaryPoints,

@@ -132,6 +132,21 @@ interface Token {
 }
 
 /**
+ * Extracts a leading function/variable assignment label such as `g(x) = ...`, `h_1(t) = ...`,
+ * or `\hat{y} = ...` if present, returning the trimmed left-hand side label (or null if none).
+ */
+export function extractLeadingFunctionLabel(raw: string): string | null {
+  const s = raw.trim();
+  if (!s) return null;
+  const match =
+    /^((?:\\hat\{[a-zA-Z]+\}|\\mathcal\{[A-Z]\}|[a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\([^=]*\))?)\s*=\s*(.+)$/.exec(
+      s
+    );
+  if (!match || !match[2].trim()) return null;
+  return match[1].trim();
+}
+
+/**
  * Pre-normalizes LaTeX macros (\frac, \sqrt, \left|, \text{...}, Greek letters)
  * into clean mathematical notation before tokenization.
  */

@@ -239,6 +239,46 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     }
   }
 
+  // 4b. Render Curve Name Labels along visible primary curves
+  const placedLabels: { x: number; y: number }[] = [];
+  for (let cIdx = 0; cIdx < curves.length; cIdx++) {
+    const c = curves[cIdx];
+    if (!c.visible || !c.label || c.primaryPoints.length < 4) continue;
+    const pts = c.primaryPoints;
+    const targetFrac = Math.min(0.76, Math.max(0.24, 0.72 - cIdx * 0.14));
+    const startIdx = Math.floor((pts.length / 2) * targetFrac) * 2;
+    let anchor: { sx: number; sy: number } | null = null;
+
+    for (let offset = 0; offset < pts.length; offset += 4) {
+      const idx = (startIdx + offset) % pts.length;
+      const wx = pts[idx];
+      const wy = pts[idx + 1];
+      if (!Number.isFinite(wx) || !Number.isFinite(wy)) continue;
+      const { sx, sy } = worldToScreen(wx, wy, viewport, width, height);
+      if (sx >= 36 && sx <= width - 80 && sy >= 44 && sy <= height - 24) {
+        const overlaps = placedLabels.some((p) => Math.hypot(p.x - sx, p.y - sy) < 28);
+        if (!overlaps) {
+          anchor = { sx, sy };
+          break;
+        }
+      }
+    }
+
+    if (anchor) {
+      placedLabels.push({ x: anchor.sx, y: anchor.sy });
+      ctx.save();
+      ctx.font = '600 11px Inter, system-ui, sans-serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = isDark ? 'rgba(23, 23, 23, 0.88)' : 'rgba(250, 250, 250, 0.92)';
+      ctx.fillStyle = c.color;
+      const lx = anchor.sx + 6;
+      const ly = anchor.sy - 8;
+      ctx.strokeText(c.label, lx, ly);
+      ctx.fillText(c.label, lx, ly);
+      ctx.restore();
+    }
+  }
+
   // 5. Render Points of Interest (POIs) & Subdifferential Fan at Piecewise Kinks [FR-2.2, FR-3.3]
   for (const c of curves) {
     if (!c.visible) continue;

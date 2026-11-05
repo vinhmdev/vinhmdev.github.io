@@ -1081,11 +1081,17 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(decodedGraph!.optimizerRace.speed).toBe(2);
     expect(decodedGraph!.optimizerRace.direction).toBe(-1);
 
-    // 11. Unlocked studio actions: setRightViewportMode, setShowResiduals, setShowVectorField, setGalleryDrawerOpen(true, 'examples'), and flipBayesianCoins on Blank Canvas
+    // 11. Unlocked studio actions: setRightViewportMode, setShowResiduals (true by default across Blank & Math templates), setShowVectorField, setGalleryDrawerOpen(true, 'examples'), and flipBayesianCoins on Blank Canvas
     store.resetToBlankCanvas();
+    expect(graphStore.getState().graph.showResiduals).toBe(true);
+    for (const tpl of MATH_TEMPLATES) {
+      expect(createInitialGraphState(tpl.id).showResiduals).toBe(true);
+    }
     store.setRightViewportMode('roc_curve');
     expect(graphStore.getState().graph.rightViewportMode).toBe('roc_curve');
     expect(graphStore.getState().graph.viewMode).toBe('dual');
+    store.setShowResiduals(false);
+    expect(graphStore.getState().graph.showResiduals).toBe(false);
     store.setShowResiduals(true);
     expect(graphStore.getState().graph.showResiduals).toBe(true);
     store.setShowVectorField(false);
@@ -1097,6 +1103,56 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     store.flipBayesianCoins(10, 1.0);
     expect(graphStore.getState().graph.sliders['n'].value).toBe(10);
     expect(graphStore.getState().graph.sliders['k'].value).toBe(10);
+
+    // 12. Custom function naming / renaming (updateExpressionLabel, addExpression with label, leading lhs extraction, Worker curve label & URL round-trip)
+    store.resetToBlankCanvas();
+    const firstExprId = graphStore.getState().graph.expressions[0].id;
+    store.updateExpressionLabel(firstExprId, 'Hàm doanh thu R(x)');
+    expect(graphStore.getState().graph.expressions[0].label).toBe('Hàm doanh thu R(x)');
+
+    // Typing `v(x) = 2*x + 1` in formula box auto-updates expression label to `v(x)`
+    const secondExprId = graphStore.getState().graph.expressions[1].id;
+    store.updateExpressionLatex(secondExprId, 'v(x) = 2 \\cdot x + 1');
+    expect(graphStore.getState().graph.expressions[1].label).toBe('v(x)');
+
+    // Adding an expression with custom label
+    store.addExpression('\\cos(x)', 'h(x)');
+    expect(graphStore.getState().graph.expressions[2].label).toBe('h(x)');
+
+    // Clearing a label resets it to undefined so default f_i(x) fallback applies in Worker & UI
+    store.updateExpressionLabel(secondExprId, '   ');
+    expect(graphStore.getState().graph.expressions[1].label).toBeUndefined();
+
+    const gNamed = graphStore.getState().graph;
+    const namedJob = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 20,
+      expressions: gNamed.expressions,
+      paramValues: { a: 1, b: 1, c: 0 },
+      symbolOverrides: gNamed.symbolOverrides,
+      subgradConvention: gNamed.subgradConvention,
+      leftViewport: gNamed.leftViewport,
+      rightViewport: gNamed.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: [],
+      lossKind: gNamed.lossKind,
+      regularizationKind: gNamed.regularizationKind,
+      regularizationRadius: gNamed.regularizationRadius,
+      batchNormEnabled: gNamed.batchNormEnabled,
+      optimizerRace: gNamed.optimizerRace,
+      hoveredDataPointId: null,
+    });
+    expect(namedJob.curves[0].label).toBe('Hàm doanh thu R(x)');
+    expect(namedJob.curves[1].label).toBe('f_2(x)');
+    expect(namedJob.curves[2].label).toBe('h(x)');
+
+    // URL hash round-trip preserves custom function labels
+    const namedHash = encodeStateToUrlHashSync(gNamed);
+    const namedRestored = decodeStateFromUrlHashSync(namedHash, createInitialGraphState());
+    expect(namedRestored?.expressions[0].label).toBe('Hàm doanh thu R(x)');
+    expect(namedRestored?.expressions[1].label).toBeUndefined();
+    expect(namedRestored?.expressions[2].label).toBe('h(x)');
   });
 });
 

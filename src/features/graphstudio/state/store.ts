@@ -26,6 +26,7 @@ import {
   classifyLatexExpression,
   classifySymbolRole,
 } from '../core/parser/ast-classifier';
+import { extractLeadingFunctionLabel } from '../core/parser/cortex-setup';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { getTemplateById, isMathTemplateId } from '../extensions/templates';
 import { scheduleAutoSave } from './local-persistence';
@@ -220,7 +221,8 @@ export interface GraphStoreState {
   setShowResiduals: (show: boolean) => void;
   setShowVectorField: (show: boolean) => void;
   updateExpressionLatex: (id: string, latex: string) => void;
-  addExpression: (customLatex?: string) => void;
+  updateExpressionLabel: (id: string, label: string) => void;
+  addExpression: (customLatex?: string, customLabel?: string) => void;
   removeExpression: (id: string) => void;
   toggleExpressionProp: (
     id: string,
@@ -443,15 +445,33 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     updateExpressionLatex(id, latex) {
       const g = get().graph;
-      const expressions = g.expressions.map((e) => (e.id === id ? { ...e, latex } : e));
+      const inferredLabel = extractLeadingFunctionLabel(latex);
+      const expressions = g.expressions.map((e) =>
+        e.id === id
+          ? {
+              ...e,
+              latex,
+              ...(inferredLabel ? { label: inferredLabel } : {}),
+            }
+          : e
+      );
       commitGraph({ ...g, expressions }, true);
     },
 
-    addExpression(customLatex) {
+    updateExpressionLabel(id, label) {
+      const g = get().graph;
+      const expressions = g.expressions.map((e) =>
+        e.id === id ? { ...e, label: label.trim().length > 0 ? label : undefined } : e
+      );
+      commitGraph({ ...g, expressions }, true, true);
+    },
+
+    addExpression(customLatex, customLabel) {
       const g = get().graph;
       const idx = g.expressions.length;
       const defaultExpr =
         customLatex ?? (isMathTemplateId(g.activeTemplateId) ? '\\sin(x)' : 'w \\cdot x + b');
+      const inferredLabel = customLabel ?? extractLeadingFunctionLabel(defaultExpr) ?? undefined;
       const newExpr: ExpressionItem = {
         id: `expr-${Date.now()}-${idx}`,
         latex: defaultExpr,
@@ -459,6 +479,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         visible: true,
         showFirstDerivative: false,
         showSecondDerivative: false,
+        ...(inferredLabel ? { label: inferredLabel } : {}),
       };
       commitGraph({ ...g, expressions: [...g.expressions, newExpr] }, true);
     },

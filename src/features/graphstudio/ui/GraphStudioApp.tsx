@@ -46,6 +46,7 @@ export default function GraphStudioApp(): JSX.Element {
   const [, setLangTick] = useState(0);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState<boolean>(true);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(true);
 
   const workerRef = useRef<Worker | null>(null);
   const seqRef = useRef(0);
@@ -351,6 +352,8 @@ export default function GraphStudioApp(): JSX.Element {
     >
       <ToolbarSubheader
         storeState={storeState}
+        sidebarOpen={desktopSidebarOpen}
+        onToggleSidebar={() => setDesktopSidebarOpen((prev) => !prev)}
         onToast={showToast}
         onExportPng={() =>
           exportDualViewportPng({
@@ -366,7 +369,11 @@ export default function GraphStudioApp(): JSX.Element {
 
       {/* Main Workspace: Mobile puts Graph on Top + Collapsible Bottom Sheet; Desktop puts Left Sidebar + Right Dual Viewport */}
       <div class="flex-1 flex flex-col-reverse md:flex-row min-h-0 overflow-hidden">
-        <div class="w-full md:w-80 lg:w-96 shrink-0 flex flex-col border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75">
+        <div
+          class={`w-full ${
+            desktopSidebarOpen ? 'md:w-80 lg:w-96 md:flex' : 'md:hidden'
+          } shrink-0 flex flex-col border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75`}
+        >
           {/* Mobile Bottom-Sheet Collapse / Expand Bar (< 768px) */}
           <div class="flex md:hidden items-center justify-between px-3 py-1.5 bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200/80 dark:border-neutral-800 text-xs">
             <button
@@ -405,7 +412,10 @@ export default function GraphStudioApp(): JSX.Element {
                 : 'hidden md:block md:max-h-none'
             } flex-1`}
           >
-            <ExpressionSidebar storeState={storeState} />
+            <ExpressionSidebar
+              storeState={storeState}
+              onCollapseSidebar={() => setDesktopSidebarOpen(false)}
+            />
             <DataTablePanel storeState={storeState} />
           </aside>
         </div>

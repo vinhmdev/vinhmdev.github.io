@@ -106,5 +106,9 @@
   "race_pause": "Tạm dừng",
   "race_step_back": "Lùi 1 bước",
   "race_step_fwd": "Tiến 1 bước",
-  "race_total_steps": "Tổng số bước T (1–1000)"
+  "race_total_steps": "Tổng số bước T (1–1000)",
+  "expr_name_placeholder": "Tên hàm (vd: f(x), g(x), Doanh thu...)",
+  "expr_name_tooltip": "Nhấn để đặt hoặc đổi tên hàm hiển thị trên đồ thị",
+  "toggle_sidebar_btn": "Đóng/mở bảng bên trái",
+  "residuals_btn": "Ô vuông sai số r²"
 }

@@ -106,5 +106,9 @@
   "race_pause": "Pause",
   "race_step_back": "Step -1",
   "race_step_fwd": "Step +1",
-  "race_total_steps": "Total steps T (1–1000)"
+  "race_total_steps": "Total steps T (1–1000)",
+  "expr_name_placeholder": "Function name (e.g., f(x), g(x), Revenue...)",
+  "expr_name_tooltip": "Click to name or rename this function on the graph",
+  "toggle_sidebar_btn": "Toggle left sidebar",
+  "residuals_btn": "Residual squares r²"
 }

@@ -29,8 +29,21 @@ function renderLatexPreview(latex: string): string {
   }
 }
 
+/**
+ * Extracts a short mathematical function symbol (e.g. `g` from `g(x)` or `V` from `V(x)`)
+ * for derivative notation (`g'(x)`, `g''(x)`), falling back to `f` when a descriptive phrase is used.
+ */
+function resolveDerivSymbol(label: string | undefined): string {
+  if (!label) return 'f';
+  const match = /^([a-zA-Z](?:_[a-zA-Z0-9]+|[0-9])*)\s*(?:\(\s*[a-zA-Z0-9_]+\s*\))?$/.exec(
+    label.trim()
+  );
+  return match ? match[1] : 'f';
+}
+
 interface SidebarProps {
   storeState: GraphStoreState;
+  onCollapseSidebar?: () => void;
 }
 
 const ROLE_BADGE_STYLE = {
@@ -67,7 +80,7 @@ const ROLE_OPTIONS: {
   },
 ];
 
-export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
+export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProps): JSX.Element {
   const { graph, curves } = storeState;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
@@ -118,12 +131,15 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     return () => cancelAnimationFrame(rafId);
   }, [anySliderPlaying]);
 
-  const handleInsertPreset = (latex: string): void => {
+  const handleInsertPreset = (latex: string, presetLabel?: string): void => {
     const emptyExpr = graph.expressions.find((e) => e.latex.trim().length === 0);
     if (emptyExpr) {
       storeState.updateExpressionLatex(emptyExpr.id, latex);
+      if (presetLabel && !emptyExpr.label) {
+        storeState.updateExpressionLabel(emptyExpr.id, presetLabel);
+      }
     } else {
-      storeState.addExpression(latex);
+      storeState.addExpression(latex, presetLabel);
     }
   };
 
@@ -151,66 +167,43 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   return (
     <div class="flex flex-col gap-3 p-3 text-xs">
       {/* Section 1: Algebra & Expressions Header with Quick Formulas Dropdown Menu */}
-      <div class="flex items-center justify-between gap-1">
-        <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] truncate">
-          {t('expressions_title')}
-        </h2>
+      <div class="relative flex items-center justify-between gap-1">
+        <div class="flex items-center gap-1 min-w-0">
+          {onCollapseSidebar && (
+            <button
+              type="button"
+              onClick={onCollapseSidebar}
+              class="hidden md:inline-flex items-center justify-center w-5 h-5 rounded border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-orange-500 hover:border-orange-500 transition-colors shrink-0"
+              title={t('toggle_sidebar_btn')}
+            >
+              <IconStepBack class="w-3 h-3" />
+            </button>
+          )}
+          <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] truncate">
+            {t('expressions_title')}
+          </h2>
+        </div>
 
         <div class="flex items-center gap-1 shrink-0">
           {/* Categorized Quick Formulas Dropdown Button */}
-          <div class="relative inline-block">
-            <button
-              type="button"
-              aria-expanded={showQuickPresets}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowQuickPresets((prev) => !prev);
-              }}
-              class={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-medium transition-colors ${
-                showQuickPresets
-                  ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
-                  : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
-              }`}
-              title={t('quick_presets_label')}
-            >
-              <span>⚡</span>
-              <span>{t('quick_presets_label')}</span>
-              <span class="text-[9px] opacity-75">▾</span>
-            </button>
-
-            {showQuickPresets && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                class="absolute right-0 top-full mt-1.5 z-40 w-72 max-h-80 overflow-y-auto p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col gap-2 text-xs"
-              >
-                {QUICK_FORMULA_GROUPS.map((grp) => (
-                  <div key={grp.groupKey} class="flex flex-col gap-0.5">
-                    <div class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                      {t(grp.groupKey)}
-                    </div>
-                    {grp.items.map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => {
-                          handleInsertPreset(item.latex);
-                          setShowQuickPresets(false);
-                        }}
-                        class="flex items-center justify-between gap-2 px-2 py-1 rounded text-left hover:bg-orange-500/10 dark:hover:bg-neutral-800 transition-colors"
-                      >
-                        <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-100 text-[11px]">
-                          {item.label}
-                        </span>
-                        <span class="text-[10px] text-neutral-400 truncate">
-                          {item.desc}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            aria-expanded={showQuickPresets}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowQuickPresets((prev) => !prev);
+            }}
+            class={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-medium transition-colors ${
+              showQuickPresets
+                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
+            }`}
+            title={t('quick_presets_label')}
+          >
+            <span>⚡</span>
+            <span>{t('quick_presets_label')}</span>
+            <span class="text-[9px] opacity-75">▾</span>
+          </button>
 
           <button
             type="button"
@@ -228,6 +221,39 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
             {t('add_expression')}
           </button>
         </div>
+
+        {showQuickPresets && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            class="absolute left-0 right-0 top-full mt-1.5 z-40 w-full max-h-80 overflow-y-auto p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col gap-2 text-xs"
+          >
+            {QUICK_FORMULA_GROUPS.map((grp) => (
+              <div key={grp.groupKey} class="flex flex-col gap-0.5">
+                <div class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                  {t(grp.groupKey)}
+                </div>
+                {grp.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      handleInsertPreset(item.latex, item.label);
+                      setShowQuickPresets(false);
+                    }}
+                    class="flex items-center justify-between gap-2 px-2 py-1 rounded text-left hover:bg-orange-500/10 dark:hover:bg-neutral-800 transition-colors min-w-0"
+                  >
+                    <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-100 text-[11px] shrink-0">
+                      {item.label}
+                    </span>
+                    <span class="text-[10px] text-neutral-400 truncate">
+                      {item.desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div class="flex flex-col gap-2.5">
@@ -235,6 +261,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           const isEmpty = expr.latex.trim().length === 0;
           const classified = classifyLatexExpression(expr.latex, graph.symbolOverrides);
           const curvePacket = curves.find((c) => c.exprId === expr.id);
+          const derivSymbol = resolveDerivSymbol(expr.label);
 
           return (
             <div
@@ -242,16 +269,27 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
               class="p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs flex flex-col gap-2"
             >
               <div class="flex items-center justify-between gap-1.5">
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 min-w-0 flex-1">
                   <span
                     class="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: expr.color }}
                   />
-                  <span class="font-semibold text-neutral-700 dark:text-neutral-200 truncate">
-                    {expr.label || `f_${idx + 1}(${classified.primaryVar})`}
-                  </span>
+                  <input
+                    type="text"
+                    value={expr.label ?? ''}
+                    placeholder={`f_${idx + 1}(${classified.primaryVar})`}
+                    aria-label={t('expr_name_placeholder')}
+                    title={t('expr_name_tooltip')}
+                    onInput={(e) =>
+                      storeState.updateExpressionLabel(
+                        expr.id,
+                        (e.target as HTMLInputElement).value
+                      )
+                    }
+                    class="min-w-0 flex-1 max-w-[160px] px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
+                  />
                 </div>
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showFirstDerivative')}
@@ -260,9 +298,9 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
                     }`}
-                    title="Toggle 1st Derivative f'(x) (dashed)"
+                    title={`Toggle 1st Derivative ${derivSymbol}'(${classified.primaryVar}) (dashed)`}
                   >
-                    f&apos;({classified.primaryVar})
+                    {derivSymbol}&apos;({classified.primaryVar})
                   </button>
                   <button
                     type="button"
@@ -272,9 +310,9 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
                     }`}
-                    title="Toggle 2nd Derivative f''(x) (dash-dot, Dirac mollifier)"
+                    title={`Toggle 2nd Derivative ${derivSymbol}''(${classified.primaryVar}) (dash-dot, Dirac mollifier)`}
                   >
-                    f&apos;&apos;({classified.primaryVar})
+                    {derivSymbol}&apos;&apos;({classified.primaryVar})
                   </button>
                   <button
                     type="button"
@@ -320,7 +358,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
                   dangerouslySetInnerHTML={{
                     __html: renderLatexPreview(
-                      `f'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
+                      `${derivSymbol}'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
                     ),
                   }}
                 />
@@ -330,7 +368,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
                   dangerouslySetInnerHTML={{
                     __html: renderLatexPreview(
-                      `f''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
+                      `${derivSymbol}''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
                     ),
                   }}
                 />

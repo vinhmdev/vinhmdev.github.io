@@ -702,6 +702,18 @@ export function DualViewportPanel({
                 >
                   {graph.probeX !== null ? `Probe x₀=${graph.probeX.toFixed(2)}` : 'Probe'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => storeState.setShowResiduals(!graph.showResiduals)}
+                  class={`px-1.5 py-0.5 rounded border font-mono font-semibold shadow-2xs transition-colors ${
+                    graph.showResiduals
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+                  }`}
+                  title={t('residuals_btn')}
+                >
+                  r²
+                </button>
               </div>
 
               {/* Right: Compact Whiteboard Dropdown / Popover Toolbar */}

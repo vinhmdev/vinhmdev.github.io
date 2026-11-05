@@ -7,16 +7,20 @@ import { useEffect, useState } from 'preact/hooks';
 import { downloadStateJsonFile, saveStateToLocalStorage } from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
-import { IconBoard, IconDownload, IconRedo, IconSave, IconUndo } from './icons';
+import { IconBoard, IconDownload, IconRedo, IconSave, IconSidebarToggle, IconUndo } from './icons';
 
 interface ToolbarProps {
   storeState: GraphStoreState;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
   onExportPng: () => void;
   onToast: (msg: string) => void;
 }
 
 export function ToolbarSubheader({
   storeState,
+  sidebarOpen = true,
+  onToggleSidebar,
   onExportPng,
   onToast,
 }: ToolbarProps): JSX.Element {
@@ -38,8 +42,25 @@ export function ToolbarSubheader({
 
   return (
     <div class="flex items-center justify-between gap-1.5 px-2.5 sm:px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
-      {/* Left Group: Blank Reset, View Modes, and Explore Examples Trigger */}
+      {/* Left Group: Sidebar Toggle, Blank Reset, View Modes, and Explore Examples Trigger */}
       <div class="flex items-center gap-1.5 min-w-0">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            aria-expanded={sidebarOpen}
+            aria-label={t('toggle_sidebar_btn')}
+            onClick={onToggleSidebar}
+            class={`hidden md:flex items-center justify-center shrink-0 w-7 h-7 rounded-md border transition-colors ${
+              sidebarOpen
+                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+            }`}
+            title={t('toggle_sidebar_btn')}
+          >
+            <IconSidebarToggle class="w-3.5 h-3.5" />
+          </button>
+        )}
+
         <button
           id="blank-graph-btn"
           type="button"

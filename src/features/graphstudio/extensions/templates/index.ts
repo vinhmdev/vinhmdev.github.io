@@ -24,7 +24,7 @@ export const BLANK_CANVAS_TEMPLATE: LessonTemplate = {
     viewMode: 'inference',
     rightViewportMode: 'loss_surface',
     probeX: null,
-    showResiduals: false,
+    showResiduals: true,
     dataPoints: [],
     leftViewport: { xMin: -10, xMax: 10, yMin: -6, yMax: 6 },
     expressions: [
@@ -67,7 +67,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: 0.5,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
       expressions: [
@@ -103,7 +103,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -8, xMax: 8, yMin: -4.5, yMax: 4.5 },
       expressions: [
@@ -147,7 +147,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
       expressions: [
@@ -190,7 +190,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -5, xMax: 6, yMin: -4, yMax: 6 },
       expressions: [
@@ -233,7 +233,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -5, xMax: 5, yMin: -2.5, yMax: 2.5 },
       expressions: [
@@ -276,7 +276,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -6.5, xMax: 6.5, yMin: -3.5, yMax: 3.5 },
       expressions: [
@@ -318,7 +318,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: 0.0,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -4.5, xMax: 4.5, yMin: -3.5, yMax: 4.5 },
       expressions: [
@@ -352,7 +352,7 @@ export const MATH_TEMPLATES: LessonTemplate[] = [
       viewMode: 'inference',
       rightViewportMode: 'loss_surface',
       probeX: null,
-      showResiduals: false,
+      showResiduals: true,
       dataPoints: [],
       leftViewport: { xMin: -5, xMax: 5, yMin: -4, yMax: 6 },
       expressions: [

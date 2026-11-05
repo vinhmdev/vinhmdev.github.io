@@ -168,6 +168,7 @@ export interface GraphStateV2 {
 /** Computed geometry packet returned from Worker to Main Thread */
 export interface CurveRenderPacket {
   exprId: string;
+  label?: string;
   color: string;
   visible: boolean;
   /** Interleaved [x0, y0, x1, y1, ...] with NaN, NaN breaks */

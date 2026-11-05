@@ -56,7 +56,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
 
   return (
     <div class="flex flex-col gap-2 p-3 border-t border-neutral-200 dark:border-neutral-800 text-xs">
-      <div class="flex items-center justify-between gap-1.5">
+      <div class="relative flex items-center justify-between gap-1.5">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
@@ -121,8 +121,29 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             {actionsMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                class="absolute right-0 top-full mt-1 z-40 w-52 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]"
+                class="absolute right-0 top-full mt-1 z-40 w-56 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]"
               >
+                <button
+                  type="button"
+                  onClick={() => {
+                    storeState.setShowResiduals(!graph.showResiduals);
+                  }}
+                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span>🟧 {t('residuals_btn')}</span>
+                  <span
+                    class={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold ${
+                      graph.showResiduals
+                        ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400'
+                        : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'
+                    }`}
+                  >
+                    {graph.showResiduals ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+
+                <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+
                 <button
                   type="button"
                   onClick={() => {
@@ -168,6 +189,27 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
                   class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <span>🔀 Sample XOR Points (4)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    storeState.setDataPoints([
+                      { id: 'r1', x: 0.4, y: 0.3, x2: 0.3, label: 1, split: 'train' },
+                      { id: 'r2', x: -0.5, y: 0.4, x2: 0.4, label: 1, split: 'train' },
+                      { id: 'r3', x: 0.3, y: -0.5, x2: -0.5, label: 1, split: 'train' },
+                      { id: 'r4', x: -0.4, y: -0.4, x2: -0.4, label: 1, split: 'train' },
+                      { id: 'r5', x: 2.1, y: 0.8, x2: 0.8, label: 0, split: 'train' },
+                      { id: 'r6', x: -2.0, y: 1.1, x2: 1.1, label: 0, split: 'train' },
+                      { id: 'r7', x: 1.1, y: -2.1, x2: -2.1, label: 0, split: 'train' },
+                      { id: 'r8', x: -1.5, y: -1.8, x2: -1.8, label: 0, split: 'train' },
+                    ]);
+                    setIsExpanded(true);
+                    setActionsMenuOpen(false);
+                  }}
+                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span>⭕ Sample Ring Points (8)</span>
                 </button>
 
                 <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
@@ -277,7 +319,28 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
                 />
                 <span class="text-neutral-400">)</span>
               </div>
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextLabel =
+                      pt.label === undefined ? 1 : pt.label > 0 ? 0 : undefined;
+                    const updated = graph.dataPoints.map((d) =>
+                      d.id === pt.id ? { ...d, label: nextLabel, x2: d.y } : d
+                    );
+                    storeState.setDataPoints(updated);
+                  }}
+                  class={`px-1 rounded text-[10px] font-bold border ${
+                    pt.label === undefined
+                      ? 'border-neutral-200 dark:border-neutral-700 text-neutral-400'
+                      : pt.label > 0
+                        ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30'
+                        : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                  }`}
+                  title="Cycle point class label (None → Class 1 [Orange] → Class 0 [Blue]) for ROC / RBF / MLP"
+                >
+                  {pt.label === undefined ? '•' : `c${pt.label}`}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
