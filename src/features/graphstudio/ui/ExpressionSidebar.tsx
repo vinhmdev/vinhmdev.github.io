@@ -6,20 +6,35 @@
 import katex from 'katex';
 import type { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { classifyLatexExpression } from '../core/parser/ast-classifier';
+import {
+  buildUserFunctionRegistry,
+  classifyLatexExpression,
+} from '../core/parser/ast-classifier';
+import {
+  DEFAULT_FUNCTION_LIBRARY,
+  formatExpressionForKatex,
+  resolveDerivSymbol,
+} from '../core/parser/cortex-setup';
 import { QUICK_FORMULA_GROUPS } from '../extensions/templates';
 import { graphStore, type GraphStoreState } from '../state/store';
 import type { SymbolRole } from '../types/math';
 import type { PlaybackSpeed, SliderLoopMode } from '../types/state';
 import { t } from '../scripts/i18n-client';
 import {
+  IconChevronDown,
+  IconChevronRight,
   IconEye,
+  IconEyeOff,
+  IconFunction,
   IconPause,
   IconPlay,
   IconStepBack,
   IconStepForward,
+  IconTarget,
   IconTrash,
 } from './icons';
+
+export { resolveDerivSymbol };
 
 function renderLatexPreview(latex: string): string {
   try {
@@ -29,21 +44,8 @@ function renderLatexPreview(latex: string): string {
   }
 }
 
-/**
- * Extracts a short mathematical function symbol (e.g. `g` from `g(x)` or `V` from `V(x)`)
- * for derivative notation (`g'(x)`, `g''(x)`), falling back to `f` when a descriptive phrase is used.
- */
-function resolveDerivSymbol(label: string | undefined): string {
-  if (!label) return 'f';
-  const match = /^([a-zA-Z](?:_[a-zA-Z0-9]+|[0-9])*)\s*(?:\(\s*[a-zA-Z0-9_]+\s*\))?$/.exec(
-    label.trim()
-  );
-  return match ? match[1] : 'f';
-}
-
 interface SidebarProps {
   storeState: GraphStoreState;
-  onCollapseSidebar?: () => void;
 }
 
 const ROLE_BADGE_STYLE = {
@@ -80,13 +82,25 @@ const ROLE_OPTIONS: {
   },
 ];
 
-export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProps): JSX.Element {
+export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const { graph, curves } = storeState;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
   const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
   const [slidersCollapsed, setSlidersCollapsed] = useState<boolean>(false);
   const [expandedSliderConfig, setExpandedSliderConfig] = useState<Record<string, boolean>>({});
+  const [editingExprId, setEditingExprId] = useState<string | null>(null);
+
+  const userFunctions = buildUserFunctionRegistry(
+    graph.expressions,
+    graph.functionLibrary
+  );
+  const activeLibCount = (graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY).filter(
+    (f) => f.enabled
+  ).length;
+  const anyExprVisible = graph.expressions.some((e) => e.visible);
+  const activeFitExprId =
+    graph.expressions.find((e) => e.fitLoss)?.id ?? graph.expressions[0]?.id;
 
   useEffect(() => {
     if ((!openRoleMenuKey && !showQuickPresets) || typeof window === 'undefined') return;
@@ -156,6 +170,7 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
             visible: true,
             showFirstDerivative: false,
             showSecondDerivative: false,
+            fitLoss: true,
             label: 'f(x)',
           },
         ],
@@ -166,25 +181,9 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
 
   return (
     <div class="flex flex-col gap-3 p-3 text-xs">
-      {/* Section 1: Algebra & Expressions Header with Quick Formulas Dropdown Menu */}
-      <div class="relative flex items-center justify-between gap-1">
-        <div class="flex items-center gap-1 min-w-0">
-          {onCollapseSidebar && (
-            <button
-              type="button"
-              onClick={onCollapseSidebar}
-              class="hidden md:inline-flex items-center justify-center w-5 h-5 rounded border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-orange-500 hover:border-orange-500 transition-colors shrink-0"
-              title={t('toggle_sidebar_btn')}
-            >
-              <IconStepBack class="w-3 h-3" />
-            </button>
-          )}
-          <h2 class="font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] truncate">
-            {t('expressions_title')}
-          </h2>
-        </div>
-
-        <div class="flex items-center gap-1 shrink-0">
+      {/* Section 1: Algebra & Expressions Action Bar with Quick Formulas & Function Library */}
+      <div class="relative flex items-center justify-between gap-1 flex-wrap">
+        <div class="flex items-center gap-1">
           {/* Categorized Quick Formulas Dropdown Button */}
           <button
             type="button"
@@ -205,6 +204,30 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
             <span class="text-[9px] opacity-75">▾</span>
           </button>
 
+          {/* Pure Mathematical Function Library Drawer Button */}
+          <button
+            type="button"
+            onClick={() => storeState.setFunctionLibraryDrawerOpen(true)}
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px] font-medium"
+            title={t('fn_lib_btn_tooltip') || 'Open Pure Math & ML Function Library (Toggle ON/OFF)'}
+          >
+            <IconFunction class="w-3 h-3 text-orange-500" />
+            <span>{t('fn_lib_btn') || 'fx Lib'}</span>
+            <span class="text-[9px] px-1 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-mono">
+              {activeLibCount}
+            </span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => storeState.toggleAllExpressionsVisible()}
+            class="p-1 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            title={anyExprVisible ? 'Hide all curves' : 'Show all curves'}
+          >
+            {anyExprVisible ? <IconEye class="w-3.5 h-3.5" /> : <IconEyeOff class="w-3.5 h-3.5" />}
+          </button>
           <button
             type="button"
             onClick={handleClearAllExpressions}
@@ -259,17 +282,40 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
       <div class="flex flex-col gap-2.5">
         {graph.expressions.map((expr, idx) => {
           const isEmpty = expr.latex.trim().length === 0;
-          const classified = classifyLatexExpression(expr.latex, graph.symbolOverrides);
+          const classified = classifyLatexExpression(
+            expr.latex,
+            graph.symbolOverrides,
+            userFunctions
+          );
           const curvePacket = curves.find((c) => c.exprId === expr.id);
-          const derivSymbol = resolveDerivSymbol(expr.label);
+          const derivSymbol = resolveDerivSymbol(
+            classified.signature?.rawHeader ?? expr.label
+          );
+          const isFitTarget = expr.id === activeFitExprId;
 
           return (
             <div
               key={expr.id}
-              class="p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs flex flex-col gap-2"
+              class={`p-2.5 rounded-lg border bg-white dark:bg-neutral-900 shadow-2xs flex flex-col gap-2 transition-opacity ${
+                expr.visible
+                  ? 'border-neutral-200 dark:border-neutral-800'
+                  : 'border-neutral-200/60 dark:border-neutral-800/60 opacity-75'
+              }`}
             >
-              <div class="flex items-center justify-between gap-1.5">
-                <div class="flex items-center gap-1.5 min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-1">
+                <div class="flex items-center gap-1 min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => storeState.toggleExpressionProp(expr.id, 'collapsed')}
+                    class="p-0.5 rounded text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 shrink-0"
+                    title={expr.collapsed ? 'Expand expression card' : 'Collapse expression card'}
+                  >
+                    {expr.collapsed ? (
+                      <IconChevronRight class="w-3 h-3" />
+                    ) : (
+                      <IconChevronDown class="w-3 h-3" />
+                    )}
+                  </button>
                   <span
                     class="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: expr.color }}
@@ -286,10 +332,24 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
                         (e.target as HTMLInputElement).value
                       )
                     }
-                    class="min-w-0 flex-1 max-w-[160px] px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
+                    class="min-w-0 flex-1 max-w-[140px] px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
                   />
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
+                  {/* Loss Fitting Target Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => storeState.setExpressionFitLoss(expr.id)}
+                    class={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-colors ${
+                      isFitTarget
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/50'
+                        : 'border-neutral-300 dark:border-neutral-700 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'
+                    }`}
+                    title="Use this function for empirical loss & 3D surface optimization"
+                  >
+                    <IconTarget class="w-2.5 h-2.5" />
+                    <span>Fit</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showFirstDerivative')}
@@ -318,9 +378,9 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'visible')}
                     class={`p-1 rounded ${expr.visible ? 'text-orange-500' : 'text-neutral-400'}`}
-                    title="Toggle curve visibility"
+                    title={expr.visible ? 'Hide curve' : 'Show curve'}
                   >
-                    <IconEye />
+                    {expr.visible ? <IconEye /> : <IconEyeOff />}
                   </button>
                   <button
                     type="button"
@@ -333,109 +393,175 @@ export function ExpressionSidebar({ storeState, onCollapseSidebar }: SidebarProp
                 </div>
               </div>
 
-              {/* Bi-directional LaTeX / ASCII Formula Input [FR-1.1] */}
-              <input
-                type="text"
-                value={expr.latex}
-                onInput={(e) =>
-                  storeState.updateExpressionLatex(expr.id, (e.target as HTMLInputElement).value)
-                }
-                placeholder="Type model or function: \sigma(w*x+b), relu(w*x+b), a*sin(b*x)+c..."
-                class={`w-full px-2.5 py-1.5 rounded border font-mono text-xs bg-neutral-50 dark:bg-neutral-950 ${
-                  isEmpty || classified.valid
-                    ? 'border-neutral-300 dark:border-neutral-700 focus:border-orange-500'
-                    : 'border-red-500 text-red-600 dark:text-red-400'
-                } focus:outline-none`}
-              />
+              {!expr.collapsed && (
+                <>
+                  {/* Bi-directional LaTeX / ASCII Formula Input with KaTeX Display on Blur [FR-1.1] */}
+                  {editingExprId === expr.id || isEmpty || !classified.valid ? (
+                    <input
+                      type="text"
+                      value={expr.latex}
+                      autoFocus={editingExprId === expr.id}
+                      onFocus={() => setEditingExprId(expr.id)}
+                      onBlur={() =>
+                        setEditingExprId((prev) => (prev === expr.id ? null : prev))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === 'Escape') {
+                          setEditingExprId(null);
+                          (e.target as HTMLInputElement).blur();
+                        }
+                      }}
+                      onInput={(e) =>
+                        storeState.updateExpressionLatex(
+                          expr.id,
+                          (e.target as HTMLInputElement).value
+                        )
+                      }
+                      placeholder="Type function: f(t)=sin(t), x^2 {x<3, x>5}, {x<0: -x, x>=0: x^2}..."
+                      class={`w-full px-2.5 py-1.5 rounded border font-mono text-xs bg-neutral-50 dark:bg-neutral-950 ${
+                        isEmpty || classified.valid
+                          ? 'border-orange-500 ring-1 ring-orange-500/30'
+                          : 'border-red-500 text-red-600 dark:text-red-400'
+                      } focus:outline-none`}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditingExprId(expr.id)}
+                      title="Click to edit raw LaTeX / mathematical formula"
+                      class="group w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/60 bg-neutral-50/70 dark:bg-neutral-950/70 text-left overflow-x-auto transition-colors cursor-text"
+                    >
+                      <span
+                        class="text-xs text-neutral-900 dark:text-neutral-100 py-0.5 overflow-x-auto"
+                        dangerouslySetInnerHTML={{
+                          __html: renderLatexPreview(formatExpressionForKatex(expr.latex)),
+                        }}
+                      />
+                      <span class="shrink-0 text-[10px] font-mono text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        ✎ LaTeX
+                      </span>
+                    </button>
+                  )}
 
-              {!isEmpty && !classified.valid && (
-                <p class="text-[11px] text-red-500 font-medium">{classified.errorMessage}</p>
-              )}
-
-              {/* Symbolic Derivative Readouts with KaTeX rendering [FR-2.1] */}
-              {classified.valid && expr.showFirstDerivative && curvePacket?.firstDerivFormulaLatex && (
-                <div
-                  class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
-                  dangerouslySetInnerHTML={{
-                    __html: renderLatexPreview(
-                      `${derivSymbol}'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
-                    ),
-                  }}
-                />
-              )}
-              {classified.valid && expr.showSecondDerivative && curvePacket?.secondDerivFormulaLatex && (
-                <div
-                  class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
-                  dangerouslySetInnerHTML={{
-                    __html: renderLatexPreview(
-                      `${derivSymbol}''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
-                    ),
-                  }}
-                />
-              )}
-
-              {/* Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}
-              {classified.symbols.length > 0 && (
-                <div class="flex flex-wrap gap-1 pt-0.5">
-                  {classified.symbols.map((sym) => {
-                    const menuKey = `expr:${expr.id}:${sym.name}`;
-                    const isOpen = openRoleMenuKey === menuKey;
-                    const roleLabel =
-                      sym.role === 'data_var' ? 'Data' : sym.role === 'param' ? 'Param' : 'Hyper';
-
-                    return (
-                      <div key={sym.name} class="relative inline-block">
+                  {/* Reusable Function Signature Pill when defining fn(p1, p2, ...) = ... */}
+                  {classified.valid &&
+                    classified.signature &&
+                    classified.signature.formalParams.length > 0 && (
+                      <div class="flex items-center justify-between gap-2 px-2 py-1 rounded bg-sky-500/10 border border-sky-500/30 text-[10px]">
+                        <span class="font-mono text-sky-700 dark:text-sky-300 truncate">
+                          Defined reusable function:{' '}
+                          <strong>
+                            {classified.signature.name}(
+                            {classified.signature.formalParams.join(', ')})
+                          </strong>
+                        </span>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenRoleMenuKey(isOpen ? null : menuKey);
+                          onClick={() => {
+                            const sig = classified.signature!;
+                            const callArgs = ['x', ...sig.formalParams.slice(1)].join(', ');
+                            storeState.addExpression(
+                              `${sig.name}(${callArgs})`,
+                              `${sig.name}(x)`
+                            );
                           }}
-                          class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-transform active:scale-95 ${
-                            ROLE_BADGE_STYLE[sym.role]
-                          }`}
-                          title="Choose symbol role: Data (Axis), Param, or Hyper"
+                          class="shrink-0 px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-700 dark:text-sky-200 font-semibold hover:bg-sky-500/30"
                         >
-                          <span>
-                            {roleLabel}: {sym.name}
-                          </span>
-                          <span class="opacity-70 text-[9px]">▾</span>
+                          + Reuse
                         </button>
-
-                        {isOpen && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            class="absolute left-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
-                          >
-                            {ROLE_OPTIONS.map((opt) => {
-                              const active = sym.role === opt.role;
-                              return (
-                                <button
-                                  key={opt.role}
-                                  type="button"
-                                  onClick={() => {
-                                    storeState.setSymbolRole(sym.name, opt.role as SymbolRole);
-                                    setOpenRoleMenuKey(null);
-                                  }}
-                                  class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                    active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
-                                  }`}
-                                >
-                                  <span class="flex items-center gap-1.5">
-                                    <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
-                                    <span>{opt.shortLabel}</span>
-                                    <span class="text-[9px] text-neutral-400">({opt.desc})</span>
-                                  </span>
-                                  {active && <span>✓</span>}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+
+                  {!isEmpty && !classified.valid && (
+                    <p class="text-[11px] text-red-500 font-medium">{classified.errorMessage}</p>
+                  )}
+
+                  {/* Symbolic Derivative Readouts with KaTeX rendering [FR-2.1] */}
+                  {classified.valid && expr.showFirstDerivative && curvePacket?.firstDerivFormulaLatex && (
+                    <div
+                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
+                      dangerouslySetInnerHTML={{
+                        __html: renderLatexPreview(
+                          `${derivSymbol}'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
+                        ),
+                      }}
+                    />
+                  )}
+                  {classified.valid && expr.showSecondDerivative && curvePacket?.secondDerivFormulaLatex && (
+                    <div
+                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
+                      dangerouslySetInnerHTML={{
+                        __html: renderLatexPreview(
+                          `${derivSymbol}''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
+                        ),
+                      }}
+                    />
+                  )}
+
+                  {/* Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}
+                  {classified.symbols.length > 0 && (
+                    <div class="flex flex-wrap gap-1 pt-0.5">
+                      {classified.symbols.map((sym) => {
+                        const menuKey = `expr:${expr.id}:${sym.name}`;
+                        const isOpen = openRoleMenuKey === menuKey;
+                        const roleLabel =
+                          sym.role === 'data_var' ? 'Data' : sym.role === 'param' ? 'Param' : 'Hyper';
+
+                        return (
+                          <div key={sym.name} class="relative inline-block">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenRoleMenuKey(isOpen ? null : menuKey);
+                              }}
+                              class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold transition-transform active:scale-95 ${
+                                ROLE_BADGE_STYLE[sym.role]
+                              }`}
+                              title="Choose symbol role: Data (Axis), Param, or Hyper"
+                            >
+                              <span>
+                                {roleLabel}: {sym.name}
+                              </span>
+                              <span class="opacity-70 text-[9px]">▾</span>
+                            </button>
+
+                            {isOpen && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                class="absolute left-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
+                              >
+                                {ROLE_OPTIONS.map((opt) => {
+                                  const active = sym.role === opt.role;
+                                  return (
+                                    <button
+                                      key={opt.role}
+                                      type="button"
+                                      onClick={() => {
+                                        storeState.setSymbolRole(sym.name, opt.role as SymbolRole);
+                                        setOpenRoleMenuKey(null);
+                                      }}
+                                      class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                                        active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
+                                      }`}
+                                    >
+                                      <span class="flex items-center gap-1.5">
+                                        <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
+                                        <span>{opt.shortLabel}</span>
+                                        <span class="text-[9px] text-neutral-400">({opt.desc})</span>
+                                      </span>
+                                      {active && <span>✓</span>}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );

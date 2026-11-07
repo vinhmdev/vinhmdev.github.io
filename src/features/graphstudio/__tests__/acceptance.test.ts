@@ -3,8 +3,16 @@
  * for GraphStudio v2.0.0.
  */
 import { describe, expect, it } from 'vitest';
-import { classifyLatexExpression } from '../core/parser/ast-classifier';
-import { parseLatexToMathJson } from '../core/parser/cortex-setup';
+import {
+  buildUserFunctionRegistry,
+  classifyLatexExpression,
+} from '../core/parser/ast-classifier';
+import {
+  DEFAULT_FUNCTION_LIBRARY,
+  formatExpressionForKatex,
+  parseLatexToMathJson,
+  resolveDerivSymbol,
+} from '../core/parser/cortex-setup';
 import { applyStabilityPass } from '../core/parser/stability-pass';
 import {
   bceWithLogits,
@@ -1154,5 +1162,502 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(namedRestored?.expressions[1].label).toBeUndefined();
     expect(namedRestored?.expressions[2].label).toBe('h(x)');
   });
+
+  it('supports formal function signatures, Transformer LaTeX normalization, cross-expression AST Beta-Reduction composition, and multi-letter derivative labels', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+
+    // 1. Formal parameter binding: f(t) = \sin(t) binds primaryVar = 't' (no slider for t)
+    const ft = classifyLatexExpression('f(t) = \\sin(t)');
+    expect(ft.valid).toBe(true);
+    expect(ft.primaryVar).toBe('t');
+    expect(ft.signature?.name).toBe('f');
+    expect(ft.signature?.formalParams).toEqual(['t']);
+
+    // 2. Multi-variable expression x + y binds primaryVar = 'x' and demotes 'y' to 'param' so a slider is created for y
+    const xy = classifyLatexExpression('x + y');
+    expect(xy.valid).toBe(true);
+    expect(xy.primaryVar).toBe('x');
+    expect(xy.symbols.find((s) => s.name === 'x')?.role).toBe('data_var');
+    expect(xy.symbols.find((s) => s.name === 'y')?.role).toBe('param');
+
+    // 3. Transformer Scaled Dot-Product Attention signature & LaTeX normalization (^T, d_k, QK^T)
+    const attnLatex =
+      '\\operatorname{Attention}(Q, K, V) = \\operatorname{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V';
+    const attnClassified = classifyLatexExpression(attnLatex);
+    expect(attnClassified.valid).toBe(true);
+    expect(attnClassified.primaryVar).toBe('Q');
+    expect(attnClassified.signature?.name).toBe('Attention');
+    expect(attnClassified.signature?.formalParams).toEqual(['Q', 'K', 'V']);
+    expect(attnClassified.symbols.find((s) => s.name === 'Q')?.role).toBe('data_var');
+    expect(attnClassified.symbols.find((s) => s.name === 'K')?.role).toBe('param');
+    expect(attnClassified.symbols.find((s) => s.name === 'V')?.role).toBe('param');
+    expect(attnClassified.symbols.find((s) => s.name === 'd_k')?.role).toBe('param');
+
+    // 4. Multi-letter derivative symbol extraction: Attention(Q, K, V) -> 'Attention', SwiGLU(x, w_1, w_2) -> 'SwiGLU'
+    expect(resolveDerivSymbol('Attention(Q, K, V)', attnLatex, 0)).toBe('Attention');
+    expect(resolveDerivSymbol(undefined, '\\operatorname{SwiGLU}(x, w_1, w_2) = x', 1)).toBe('SwiGLU');
+
+    // 5. Cross-expression Function Composition via AST Beta-Reduction:
+    // Expression 1 defines Attention(Q, K, V) = softmax(Q*K^T / sqrt(d_k)) * V
+    // Expression 2 reuses Attention(x, K, V) and 2 * Attention(x, 1, 3)
+    const e1Id = store.graph.expressions[0].id;
+    const e2Id = store.graph.expressions[1].id;
+    store.updateExpressionLatex(e1Id, attnLatex);
+    store.updateExpressionLatex(e2Id, '2 \\cdot \\operatorname{Attention}(x, 1, 3) + b');
+
+    const gAfter = graphStore.getState().graph;
+    // Sliders should be created for K, V, d_k, b (and NOT for Q or x)
+    expect(gAfter.sliders['K']).toBeDefined();
+    expect(gAfter.sliders['V']).toBeDefined();
+    expect(gAfter.sliders['d_k']).toBeDefined();
+    expect(gAfter.sliders['b']).toBeDefined();
+    expect(gAfter.sliders['Q']).toBeUndefined();
+    expect(gAfter.sliders['x']).toBeUndefined();
+
+    // Evaluate both expressions in Worker and verify exact mathematical values and derivatives
+    const jobRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 301,
+      expressions: [
+        { ...gAfter.expressions[0], showFirstDerivative: true },
+        { ...gAfter.expressions[1], showFirstDerivative: true },
+      ],
+      paramValues: { K: 2.0, V: 4.0, d_k: 4.0, b: 1.0 },
+      symbolOverrides: gAfter.symbolOverrides,
+      subgradConvention: gAfter.subgradConvention,
+      leftViewport: gAfter.leftViewport,
+      rightViewport: gAfter.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: [],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      batchNormEnabled: false,
+      optimizerRace: gAfter.optimizerRace,
+      hoveredDataPointId: null,
+      functionLibrary: gAfter.functionLibrary,
+    });
+
+    expect(jobRes.curves[0].primaryPoints.length).toBeGreaterThan(20);
+    expect(jobRes.curves[0].firstDerivPoints?.length).toBeGreaterThan(20);
+    expect(jobRes.curves[1].primaryPoints.length).toBeGreaterThan(20);
+    expect(jobRes.curves[1].firstDerivPoints?.length).toBeGreaterThan(20);
+
+    // Also verify user-defined arbitrary function composition: g(u, v) = u^2 + v reused as g(x, 5)
+    const userReg = buildUserFunctionRegistry([
+      { latex: 'g(u, v) = u^2 + v' },
+    ]);
+    const composed = classifyLatexExpression('g(x, 5)', {}, userReg);
+    expect(composed.valid).toBe(true);
+    const composedKernel = compileJet2Kernel(composed.stabilizedExpr, 'x');
+    // At x = 3: g(3, 5) = 3^2 + 5 = 14, d/dx = 2*3 = 6
+    expect(composedKernel.evalJet2(3.0, {}).v).toBeCloseTo(14.0, 8);
+    expect(composedKernel.evalJet2(3.0, {}).d1).toBeCloseTo(6.0, 8);
+  });
+
+  it('supports the Pure Mathematical Function Library Drawer (toggle ON/OFF, custom function CRUD, and URL round-trip)', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+
+    // 1. Default library has 6 pure mathematical functions enabled by default
+    expect(DEFAULT_FUNCTION_LIBRARY.length).toBe(6);
+    const lib0 = graphStore.getState().graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+    expect(lib0.every((f) => f.enabled)).toBe(true);
+
+    // 2. With Attention enabled in library, standalone \operatorname{Attention}(x, K, V) is valid even without an expression card defining it
+    const firstId = graphStore.getState().graph.expressions[0].id;
+    const secondId = graphStore.getState().graph.expressions[1].id;
+    store.removeExpression(secondId);
+    store.updateExpressionLatex(firstId, '\\operatorname{Attention}(x, K, V)');
+    expect(graphStore.getState().graph.sliders['K']).toBeDefined();
+    expect(graphStore.getState().graph.sliders['V']).toBeDefined();
+
+    // 3. Toggling Attention OFF in the Function Library disables Attention when not defined on the canvas
+    store.toggleLibraryFunction('lib-attention', false);
+    const disabledReg = buildUserFunctionRegistry(
+      [],
+      graphStore.getState().graph.functionLibrary
+    );
+    expect(
+      classifyLatexExpression('\\operatorname{Attention}(x, K, V)', {}, disabledReg).valid
+    ).toBe(false);
+
+    // Toggling Attention back ON restores validity
+    store.toggleLibraryFunction('lib-attention', true);
+    const enabledReg = buildUserFunctionRegistry(
+      [],
+      graphStore.getState().graph.functionLibrary
+    );
+    expect(
+      classifyLatexExpression('\\operatorname{Attention}(x, K, V)', {}, enabledReg).valid
+    ).toBe(true);
+
+    // 4. Adding a custom pure mathematical function to the library makes it callable across expressions
+    store.upsertLibraryFunction({
+      name: 'PolyGate',
+      signature: 'PolyGate(u, a, b)',
+      definitionLatex: 'PolyGate(u, a, b) = a \\cdot u^3 + b \\cdot u',
+      exampleCallLatex: 'PolyGate(x, a, b)',
+      description: 'Cubic gated polynomial',
+      category: 'custom',
+      enabled: true,
+    });
+    const customLib = graphStore.getState().graph.functionLibrary!;
+    const addedFn = customLib.find((f) => f.name === 'PolyGate');
+    expect(addedFn).toBeDefined();
+
+    const customReg = buildUserFunctionRegistry([], customLib);
+    const callPoly = classifyLatexExpression('PolyGate(x, 2, 3)', {}, customReg);
+    expect(callPoly.valid).toBe(true);
+    const polyKernel = compileJet2Kernel(callPoly.stabilizedExpr, 'x');
+    // At x = 2: 2*(2^3) + 3*2 = 16 + 6 = 22, d/dx = 3*2*(2^2) + 3 = 27
+    expect(polyKernel.evalJet2(2.0, {}).v).toBeCloseTo(22.0, 8);
+    expect(polyKernel.evalJet2(2.0, {}).d1).toBeCloseTo(27.0, 8);
+
+    // 5. URL hash round-trip preserves custom & toggled Function Library entries
+    store.toggleLibraryFunction('lib-rope', false);
+    const hashWithLib = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const restoredWithLib = decodeStateFromUrlHashSync(
+      hashWithLib,
+      createInitialGraphState('T-00')
+    );
+    expect(restoredWithLib?.functionLibrary).toBeDefined();
+    expect(
+      restoredWithLib?.functionLibrary?.find((f) => f.id === 'lib-rope')?.enabled
+    ).toBe(false);
+    expect(
+      restoredWithLib?.functionLibrary?.find((f) => f.name === 'PolyGate')?.definitionLatex
+    ).toContain('PolyGate');
+
+    // 6. Removing custom function and resetting library
+    store.removeLibraryFunction(addedFn!.id);
+    expect(
+      graphStore.getState().graph.functionLibrary?.find((f) => f.name === 'PolyGate')
+    ).toBeUndefined();
+    store.resetFunctionLibrary();
+    expect(
+      (graphStore.getState().graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY).every(
+        (f) => f.enabled
+      )
+    ).toBe(true);
+  });
+
+  it('evaluates dynamic loss & analytical gradients on nonlinear multi-parameter expressions, optimizes all parameters simultaneously, and supports fitLoss target & 3D surface axis selection', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+    store.setViewMode('dual');
+
+    // 1. Set up a 3-parameter nonlinear quadratic expression: f(x) = a*x^2 + b*x + c
+    // and a second expression g(x) = m*x + d
+    const freshExprs = graphStore.getState().graph.expressions;
+    const e1Id = freshExprs[0].id;
+    const e2Id = freshExprs[1].id;
+    store.updateExpressionLatex(e1Id, 'a \\cdot x^2 + b \\cdot x + c');
+    store.updateExpressionLatex(e2Id, 'm \\cdot x + d');
+
+    // Add quadratic training points matching y = 1.5*x^2 - 0.5*x + 0.5
+    store.addDataPoint({ x: -2, y: 1.5 * 4 - 0.5 * -2 + 0.5, split: 'train' });
+    store.addDataPoint({ x: -1, y: 1.5 * 1 - 0.5 * -1 + 0.5, split: 'train' });
+    store.addDataPoint({ x: 0, y: 0.5, split: 'train' });
+    store.addDataPoint({ x: 1, y: 1.5 * 1 - 0.5 * 1 + 0.5, split: 'train' });
+    store.addDataPoint({ x: 2, y: 1.5 * 4 - 0.5 * 2 + 0.5, split: 'train' });
+
+    // Start parameters away from ground truth: a = 0.2, b = 0.8, c = -0.5
+    store.setSliderValue('a', 0.2);
+    store.setSliderValue('b', 0.8);
+    store.setSliderValue('c', -0.5);
+
+    // 2. Select custom 3D Loss Surface axes ('a', 'c') instead of default ('a', 'b')
+    store.setSurfaceParamAxes('a', 'c');
+    const gQuad = graphStore.getState().graph;
+    expect(gQuad.surfaceParamW1).toBe('a');
+    expect(gQuad.surfaceParamW2).toBe('c');
+
+    const resolvedAxes = resolveSurfaceParamPair(
+      gQuad.sliders,
+      gQuad.surfaceParamW1,
+      gQuad.surfaceParamW2
+    );
+    expect(resolvedAxes.w1Key).toBe('a');
+    expect(resolvedAxes.w2Key).toBe('c');
+
+    // 3. Execute Compute Worker job — verify dynamic nonlinear loss & simultaneous 3-parameter optimization (a, b, c)
+    const paramValues: Record<string, number> = {};
+    for (const [k, s] of Object.entries(gQuad.sliders)) {
+      paramValues[k] = s.value;
+    }
+    const resQuad = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 401,
+      expressions: gQuad.expressions,
+      paramValues,
+      symbolOverrides: gQuad.symbolOverrides,
+      subgradConvention: gQuad.subgradConvention,
+      leftViewport: gQuad.leftViewport,
+      rightViewport: gQuad.rightViewport,
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: gQuad.dataPoints,
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      batchNormEnabled: false,
+      optimizerRace: {
+        ...gQuad.optimizerRace,
+        startW1: 0.2,
+        startW2: -0.5,
+        steps: 40,
+        currentStep: 0,
+      },
+      hoveredDataPointId: null,
+      surfaceParamW1: gQuad.surfaceParamW1,
+      surfaceParamW2: gQuad.surfaceParamW2,
+    });
+
+    const adamTraj = resQuad.trajectories.adam;
+    expect(adamTraj.length).toBe(41);
+    // Loss must decrease significantly over the 40 Adam steps on the quadratic model
+    expect(adamTraj[40].loss).toBeLessThan(adamTraj[0].loss * 0.25);
+    // All 3 parameters (a, b, c) must be updated in trajectory step params
+    expect(adamTraj[40].params).toBeDefined();
+    expect(adamTraj[40].params!['a']).not.toBeCloseTo(0.2, 2);
+    expect(adamTraj[40].params!['b']).not.toBeCloseTo(0.8, 2);
+    expect(adamTraj[40].params!['c']).not.toBeCloseTo(-0.5, 2);
+
+    // Stepping Optimizer Race syncs all 3 parameter sliders (a, b, c), not just 2!
+    store.applyWorkerResult(resQuad);
+    store.updateOptimizerRace({ currentStep: 40, playing: false });
+    expect(graphStore.getState().graph.sliders['a'].value).toBeCloseTo(
+      adamTraj[40].params!['a'],
+      4
+    );
+    expect(graphStore.getState().graph.sliders['b'].value).toBeCloseTo(
+      adamTraj[40].params!['b'],
+      4
+    );
+    expect(graphStore.getState().graph.sliders['c'].value).toBeCloseTo(
+      adamTraj[40].params!['c'],
+      4
+    );
+
+    // 4. Opting the second expression (m*x + d) into loss fitting via setExpressionFitLoss switches the active loss target
+    store.setExpressionFitLoss(e2Id);
+    expect(graphStore.getState().graph.expressions[0].fitLoss).toBe(false);
+    expect(graphStore.getState().graph.expressions[1].fitLoss).toBe(true);
+
+    // 5. Show/Hide All expressions and Collapse/Expand expression card state
+    store.toggleAllExpressionsVisible();
+    expect(graphStore.getState().graph.expressions.every((e) => !e.visible)).toBe(true);
+    store.toggleAllExpressionsVisible();
+    expect(graphStore.getState().graph.expressions.every((e) => e.visible)).toBe(true);
+
+    store.toggleExpressionProp(e1Id, 'collapsed');
+    expect(graphStore.getState().graph.expressions[0].collapsed).toBe(true);
+
+    // URL hash round-trip preserves fitLoss, collapsed, surfaceParamW1, surfaceParamW2
+    const hashFit = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const restoredFit = decodeStateFromUrlHashSync(
+      hashFit,
+      createInitialGraphState('T-00')
+    );
+    expect(restoredFit?.expressions[0].collapsed).toBe(true);
+    expect(restoredFit?.expressions[1].fitLoss).toBe(true);
+    expect(restoredFit?.surfaceParamW1).toBe('a');
+    expect(restoredFit?.surfaceParamW2).toBe('c');
+  });
+
+  it('supports Piecewise & Conditional mathematical syntax ({x < 3, x > 5}, {x < 0: -x, x >= 0: x^2}, \\begin{cases}), symbolic derivatives, clean domain breaks, and KaTeX formatting', () => {
+    // 1. Disjoint domain restriction: x^2 {x < 3, x > 5} and comma-separated x^2, {x < 3, x > 5}
+    for (const domainLatex of ['x^2 \\{x < 3, x > 5\\}', 'x^2, {x < 3, x > 5}']) {
+      const cls = classifyLatexExpression(domainLatex);
+      expect(cls.valid).toBe(true);
+      const d1 = symbolicDiff(cls.expr, 'x');
+      const d2 = symbolicSecondDiff(cls.expr, 'x');
+      expect(mathJsonToLatex(d1)).toContain('2');
+      expect(mathJsonToLatex(d2)).toBeDefined();
+
+      const kernel = compileJet2Kernel(cls.expr, 'x');
+
+      // Inside x < 3 (x = 2): f(2) = 4, f'(2) = 4, f''(2) = 2
+      const at2 = kernel.evalJet2(2, {}, 'zero');
+      expect(at2.v).toBeCloseTo(4, 6);
+      expect(at2.d1).toBeCloseTo(4, 6);
+      expect(at2.d2).toBeCloseTo(2, 6);
+
+      // Inside gap 3 <= x <= 5 (x = 4): f(4) = NaN, f'(4) = NaN
+      const at4 = kernel.evalJet2(4, {}, 'zero');
+      expect(Number.isNaN(at4.v)).toBe(true);
+      expect(Number.isNaN(at4.d1)).toBe(true);
+
+      // Inside x > 5 (x = 6): f(6) = 36, f'(6) = 12
+      const at6 = kernel.evalJet2(6, {}, 'zero');
+      expect(at6.v).toBeCloseTo(36, 6);
+      expect(at6.d1).toBeCloseTo(12, 6);
+
+      // Adaptive curve sampler inserts NaN breaks across the [3, 5] excluded interval
+      const curve = sampleAdaptiveCurve(kernel, {}, {
+        viewport: { xMin: 0, xMax: 8, yMin: -2, yMax: 60 },
+      });
+      let nanCount = 0;
+      for (let i = 1; i < curve.length; i += 2) {
+        if (Number.isNaN(curve[i])) nanCount++;
+      }
+      expect(nanCount).toBeGreaterThanOrEqual(1);
+    }
+
+    // 2. Chained inequality domain restriction: \sin(x) {-2 <= x <= 2}
+    const chainedCls = classifyLatexExpression('\\sin(x) \\{-2 \\le x \\le 2\\}');
+    expect(chainedCls.valid).toBe(true);
+    const chainedKernel = compileJet2Kernel(chainedCls.expr, 'x');
+    expect(chainedKernel.evalJet2(0, {}, 'zero').v).toBeCloseTo(0, 6);
+    expect(chainedKernel.evalJet2(1, {}, 'zero').v).toBeCloseTo(Math.sin(1), 6);
+    expect(chainedKernel.evalJet2(1, {}, 'zero').d1).toBeCloseTo(Math.cos(1), 6);
+    expect(Number.isNaN(chainedKernel.evalJet2(3, {}, 'zero').v)).toBe(true);
+    expect(Number.isNaN(chainedKernel.evalJet2(-3, {}, 'zero').v)).toBe(true);
+
+    // 3. Multi-branch continuous piecewise function: {x < 0: -x, x >= 0: x^2} and \begin{cases}
+    for (const pwLatex of [
+      '{x < 0: -x, x >= 0: x^2}',
+      '\\begin{cases} -x & x < 0 \\\\ x^2 & x \\ge 0 \\end{cases}',
+    ]) {
+      const pwCls = classifyLatexExpression(pwLatex);
+      expect(pwCls.valid).toBe(true);
+      const pwKernel = compileJet2Kernel(pwCls.expr, 'x');
+
+      expect(pwKernel.evalJet2(-2, {}, 'zero').v).toBeCloseTo(2, 6);
+      expect(pwKernel.evalJet2(-2, {}, 'zero').d1).toBeCloseTo(-1, 6);
+      expect(pwKernel.evalJet2(3, {}, 'zero').v).toBeCloseTo(9, 6);
+      expect(pwKernel.evalJet2(3, {}, 'zero').d1).toBeCloseTo(6, 6);
+
+      // Continuous piecewise kink at x = 0 is detected and pinned by adaptive sampler & POI finder
+      const pois = extractPointsOfInterest(
+        pwKernel,
+        {},
+        { xMin: -4, xMax: 4, yMin: -2, yMax: 10 },
+        'zero'
+      );
+      const kinkAtZero = pois.find((p) => p.kind === 'kink' && Math.abs(p.x) < 1e-3);
+      expect(kinkAtZero).toBeDefined();
+      expect(kinkAtZero!.subdiffInterval?.[0]).toBeCloseTo(-1, 2);
+      expect(kinkAtZero!.subdiffInterval?.[1]).toBeCloseTo(0, 2);
+    }
+
+    // 4. Multi-branch piecewise with fallback/default branch: {x < 3: 2*x, x > 5: x^2, 0}
+    const fallbackCls = classifyLatexExpression('{x < 3: 2*x, x > 5: x^2, 0}');
+    expect(fallbackCls.valid).toBe(true);
+    const fbD1 = symbolicDiff(fallbackCls.expr, 'x');
+    const fbKernel = compileJet2Kernel(fallbackCls.expr, 'x');
+    expect(fbKernel.evalJet2(2, {}, 'zero').v).toBeCloseTo(4, 6);
+    expect(fbKernel.evalJet2(4, {}, 'zero').v).toBeCloseTo(0, 6);
+    expect(fbKernel.evalJet2(6, {}, 'zero').v).toBeCloseTo(36, 6);
+
+    // Jump discontinuity at x = 3 and x = 5 inserts NaN breaks instead of false vertical segments
+    const sampledJump = sampleAdaptiveCurve(fbKernel, {}, {
+      viewport: { xMin: 0, xMax: 8, yMin: -5, yMax: 50 },
+    });
+    let jumpNanBreaks = 0;
+    for (let i = 1; i < sampledJump.length; i += 2) {
+      if (Number.isNaN(sampledJump[i])) jumpNanBreaks++;
+    }
+    expect(jumpNanBreaks).toBeGreaterThanOrEqual(2);
+
+    // 5. KaTeX display formatter converts raw ASCII braces and inequalities to clean LaTeX
+    const formattedKatex = formatExpressionForKatex('x^2 {x <= 3, x >= 5}');
+    expect(formattedKatex).toContain('\\left\\{');
+    expect(formattedKatex).toContain('\\le');
+    expect(formattedKatex).toContain('\\ge');
+    expect(formattedKatex).toContain('\\right\\}');
+
+    const d1Latex = mathJsonToLatex(fbD1);
+    expect(d1Latex).toContain('\\left\\{');
+    expect(d1Latex).toContain('2');
+
+    // 6. Nested piecewise user-defined function composition (`clip`), forward references, case-insensitive calls, and mutual recursion rejection
+    const nestedReg = buildUserFunctionRegistry([
+      { id: 'e1', latex: 'f(x) = g(x) + 1' }, // forward reference to g defined below!
+      { id: 'e2', latex: 'g(x) = 2 * x' },
+      { id: 'e3', latex: 'clip(x, a, b) = {x < a: a, x > b: b, x}' },
+    ]);
+    const fwdCall = classifyLatexExpression('f(x) * 3', {}, nestedReg);
+    expect(fwdCall.valid).toBe(true);
+    expect(compileJet2Kernel(fwdCall.stabilizedExpr, 'x').evalJet2(4, {}).v).toBeCloseTo(27, 8);
+
+    const clipCall = classifyLatexExpression('clip(w * x + c, -1, 1)', {}, nestedReg);
+    expect(clipCall.valid).toBe(true);
+    const clipKernel = compileJet2Kernel(clipCall.stabilizedExpr, 'x');
+    expect(clipKernel.evalJet2(-2, { w: 2, c: 0 }).v).toBeCloseTo(-1, 8);
+    expect(clipKernel.evalJet2(0.25, { w: 2, c: 0 }).v).toBeCloseTo(0.5, 8);
+    expect(clipKernel.evalJet2(0.25, { w: 2, c: 0 }).d1).toBeCloseTo(2, 8);
+
+    // Case-insensitive library calls (e.g. lowercase swiglu, attention)
+    expect(classifyLatexExpression('swiglu(x, w_1, w_2)').valid).toBe(true);
+    expect(classifyLatexExpression('attention(x, K, V)').valid).toBe(true);
+
+    // Mutual recursion f(x) = g(x) and g(x) = f(x) is rejected cleanly
+    const cyclicReg = buildUserFunctionRegistry([
+      { id: 'c1', latex: 'f(x) = g(x)' },
+      { id: 'c2', latex: 'g(x) = f(x)' },
+    ]);
+    expect(classifyLatexExpression('f(x) = g(x)', {}, cyclicReg).valid).toBe(false);
+
+    // 7. Arbitrary formal variable interval constraint f(u) = u {u > 2, u < 5} and zero-derivative domain guard 5 {x < 3}
+    const uDomain = classifyLatexExpression('f(u) = u {u > 2, u < 5}');
+    expect(uDomain.valid).toBe(true);
+    const uKernel = compileJet2Kernel(uDomain.stabilizedExpr, 'u');
+    expect(Number.isNaN(uKernel.evalJet2(1, {}).v)).toBe(true);
+    expect(uKernel.evalJet2(3, {}).v).toBeCloseTo(3, 8);
+
+    const constDomainD1 = symbolicDiff(classifyLatexExpression('5 {x < 3}').expr, 'x');
+    const constDomainKernel = compileJet2Kernel(constDomainD1, 'x');
+    expect(constDomainKernel.evalJet2(1, {}).v).toBeCloseTo(0, 8);
+    expect(Number.isNaN(constDomainKernel.evalJet2(5, {}).v)).toBe(true);
+
+    // 8. CSE-shared kinked expression relu(x) + 2*relu(x) preserves branchMask kink at (0, 0)
+    const cseKink = compileJet2Kernel(classifyLatexExpression('relu(x) + 2 * relu(x)').stabilizedExpr, 'x');
+    const csePois = extractPointsOfInterest(cseKink, {}, { xMin: -3, xMax: 3, yMin: -2, yMax: 6 }, 'zero');
+    const kink0 = csePois.find((p) => p.kind === 'kink' && Math.abs(p.x) < 1e-6);
+    expect(kink0).toBeDefined();
+    expect(kink0!.subdiffInterval?.[0]).toBeCloseTo(0, 4);
+    expect(kink0!.subdiffInterval?.[1]).toBeCloseTo(3, 4);
+
+    // 9. Piecewise predictor in executeComputeJob skips NaN out-of-domain training samples instead of coercing NaN -> 0
+    const pwLossRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 505,
+      expressions: [
+        {
+          id: 'pw-fit',
+          latex: 'w * x + b {x > 0}',
+          color: '#f97316',
+          visible: true,
+          showFirstDerivative: false,
+          showSecondDerivative: false,
+          fitLoss: true,
+        },
+      ],
+      paramValues: { w: 2.0, b: 0.0 },
+      symbolOverrides: {},
+      subgradConvention: 'zero',
+      leftViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      rightViewport: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: [
+        { id: 'out-of-domain', x: -2.0, y: -3.0, split: 'train' },
+        { id: 'in-domain', x: 1.0, y: 2.0, split: 'train' },
+      ],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      batchNormEnabled: false,
+      optimizerRace: createInitialGraphState('T-00').optimizerRace,
+      hoveredDataPointId: null,
+    });
+    expect(pwLossRes.trainLoss).toBeCloseTo(0.0, 8);
+  });
 });
+
+
 

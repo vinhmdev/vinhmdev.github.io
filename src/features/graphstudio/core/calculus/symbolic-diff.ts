@@ -39,6 +39,13 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
 
     case 'Multiply': {
       const [u, w] = args;
+      // Domain restriction guard: d/dv (u * {cond}) = {cond : u'} (preserves NaN outside domain even when u' = 0)
+      if (Array.isArray(w) && w[0] === 'Piecewise' && w.length === 3 && w[2] === 1) {
+        return ['Piecewise', w[1], diffNode(u, v)];
+      }
+      if (Array.isArray(u) && u[0] === 'Piecewise' && u.length === 3 && u[2] === 1) {
+        return ['Piecewise', u[1], diffNode(w, v)];
+      }
       const du = diffNode(u, v);
       const dw = diffNode(w, v);
       return ['Add', ['Multiply', du, w], ['Multiply', u, dw]];
@@ -279,6 +286,28 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
       return ['Multiply', ['Subtract', ['SafeSigmoid', z], y], dz];
     }
 
+    case 'Softmax':
+    case 'SafeSoftmax': {
+      const zi = args[0];
+      const dzi = diffNode(zi, v);
+      if (args.length === 1) {
+        const s: MathJsonExpr = ['SafeSigmoid', zi];
+        return ['Multiply', ['Multiply', s, ['Subtract', 1, s]], dzi];
+      }
+      const sm: MathJsonExpr = ['SafeSoftmax', ...args];
+      if (args.length === 2) {
+        const dz1 = diffNode(args[1], v);
+        return [
+          'Multiply',
+          ['Multiply', sm, ['Subtract', 1, sm]],
+          ['Subtract', dzi, dz1],
+        ];
+      }
+      const tau = args[4];
+      const baseDeriv: MathJsonExpr = ['Multiply', ['Multiply', sm, ['Subtract', 1, sm]], dzi];
+      return tau !== undefined ? ['Divide', baseDeriv, tau] : baseDeriv;
+    }
+
     case 'SafeXLogY': {
       const [xArg, yArg] = args;
       const dx = diffNode(xArg, v);
@@ -324,7 +353,27 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
 
     case 'Floor':
     case 'Ceil':
+    case 'Less':
+    case 'LessEqual':
+    case 'Greater':
+    case 'GreaterEqual':
+    case 'Equal':
+    case 'NotEqual':
+    case 'And':
+    case 'Or':
       return 0;
+
+    case 'Piecewise': {
+      const outArgs: MathJsonExpr[] = [];
+      const numPairs = Math.floor(args.length / 2);
+      for (let k = 0; k < numPairs; k++) {
+        outArgs.push(args[2 * k], diffNode(args[2 * k + 1], v));
+      }
+      if (args.length % 2 === 1) {
+        outArgs.push(diffNode(args[args.length - 1], v));
+      }
+      return ['Piecewise', ...outArgs];
+    }
 
     default: {
       const u = args[0];
@@ -400,7 +449,7 @@ export function simplifyAst(expr: MathJsonExpr): MathJsonExpr {
   return [head, ...args];
 }
 
-/** Converts a MathJSON AST back to clean display LaTeX (including H(x) and \delta(x)) */
+/** Converts a MathJSON AST back to clean display LaTeX (including H(x), \delta(x), and \{...\}) */
 export function mathJsonToLatex(expr: MathJsonExpr): string {
   if (typeof expr === 'number') {
     return Number.isInteger(expr) ? String(expr) : Number(expr.toFixed(4)).toString();
@@ -408,7 +457,19 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
   if (typeof expr === 'string') {
     if (expr === 'ExponentialE') return 'e';
     if (expr === 'Pi') return '\\pi';
-    const greek = ['sigma', 'theta', 'mu', 'eta', 'alpha', 'beta', 'lambda', 'gamma', 'delta', 'tau'];
+    const greek = [
+      'sigma',
+      'theta',
+      'mu',
+      'eta',
+      'alpha',
+      'beta',
+      'lambda',
+      'gamma',
+      'delta',
+      'tau',
+      'epsilon',
+    ];
     if (greek.includes(expr)) return `\\${expr}`;
     return expr;
   }
@@ -455,10 +516,13 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
     case 'Cot':
       return `\\cot(${s[0]})`;
     case 'Arcsin':
+    case 'Asin':
       return `\\arcsin(${s[0]})`;
     case 'Arccos':
+    case 'Acos':
       return `\\arccos(${s[0]})`;
     case 'Arctan':
+    case 'Atan':
       return `\\arctan(${s[0]})`;
     case 'Sinc':
       return `\\operatorname{sinc}(${s[0]})`;
@@ -470,6 +534,8 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
     case 'SafeSoftplus':
     case 'Softplus':
       return `\\operatorname{softplus}(${s[0]})`;
+    case 'SafeSoftmax':
+      return `\\operatorname{softmax}(${s.join(', ')})`;
     case 'ReLU':
       return `\\operatorname{ReLU}(${s[0]})`;
     case 'Heaviside':
@@ -484,6 +550,35 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       return `\\operatorname{GELU}'(${s[0]})`;
     case 'GELUDeriv2':
       return `\\operatorname{GELU}''(${s[0]})`;
+    case 'Less':
+      return `${s[0]} < ${s[1]}`;
+    case 'LessEqual':
+      return `${s[0]} \\le ${s[1]}`;
+    case 'Greater':
+      return `${s[0]} > ${s[1]}`;
+    case 'GreaterEqual':
+      return `${s[0]} \\ge ${s[1]}`;
+    case 'Equal':
+      return `${s[0]} = ${s[1]}`;
+    case 'NotEqual':
+      return `${s[0]} \\ne ${s[1]}`;
+    case 'And':
+    case 'Or':
+      return s.join(', ');
+    case 'Piecewise': {
+      if (args.length === 2 && args[1] === 1) {
+        return `\\left\\{${s[0]}\\right\\}`;
+      }
+      const parts: string[] = [];
+      const numPairs = Math.floor(s.length / 2);
+      for (let k = 0; k < numPairs; k++) {
+        parts.push(`${s[2 * k]}: ${s[2 * k + 1]}`);
+      }
+      if (s.length % 2 === 1) {
+        parts.push(s[s.length - 1]);
+      }
+      return `\\left\\{${parts.join(', ')}\\right\\}`;
+    }
     default:
       return `\\operatorname{${head}}(${s.join(', ')})`;
   }

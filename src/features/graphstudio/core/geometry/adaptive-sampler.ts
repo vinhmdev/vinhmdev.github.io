@@ -156,11 +156,12 @@ export function sampleAdaptiveCurve(
       return;
     }
 
-    // 2. Piecewise Kink Exact Vertex Pinning (branchMask changed)
+    // 2. Piecewise Kink Exact Vertex Pinning or Jump Discontinuity Break (branchMask changed)
     if (s0.bm !== s1.bm) {
       let loX = x0;
       let loS = s0;
       let hiX = x1;
+      let hiS = s1;
       for (let it = 0; it < KINK_REFINE_ITERS; it++) {
         const midX = 0.5 * (loX + hiX);
         if (midX === loX || midX === hiX) break;
@@ -170,7 +171,19 @@ export function sampleAdaptiveCurve(
           loS = midS;
         } else {
           hiX = midX;
+          hiS = midS;
         }
+      }
+      // If left and right limits at the 2^-42 refined boundary disagree, it is a jump discontinuity!
+      if (
+        !Number.isFinite(loS.y) ||
+        !Number.isFinite(hiS.y) ||
+        Math.abs(hiS.y - loS.y) > 1e-3 * Math.max(1.0, Math.abs(loS.y), Math.abs(hiS.y))
+      ) {
+        if (Number.isFinite(loS.y)) pushPoint(loX, loS.y);
+        pushBreak();
+        if (Number.isFinite(hiS.y)) pushPoint(hiX, hiS.y);
+        return;
       }
       const kinkX = 0.5 * (loX + hiX);
       const kinkS = evalAt(kinkX);

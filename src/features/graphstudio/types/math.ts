@@ -31,6 +31,45 @@ export interface ClassifiedSymbol {
   defaultValue: number;
 }
 
+export interface FunctionSignature {
+  /** Canonical function name (e.g. 'f', 'Attention', 'SwiGLU') */
+  name: string;
+  /** Ordered formal parameter names (e.g. ['Q', 'K', 'V'] or ['t']) */
+  formalParams: string[];
+  /** Raw left-hand side label (e.g. 'Attention(Q, K, V)') */
+  rawHeader: string;
+}
+
+export interface UserFunctionDef {
+  signature: FunctionSignature;
+  /** Stabilized or raw MathJSON AST body of the function */
+  bodyExpr: MathJsonExpr;
+  /** Default AST values for optional trailing formal parameters when omitted at call site */
+  defaultArgs?: Record<string, MathJsonExpr>;
+  /** Source expression item id or 'library' */
+  sourceExprId: string;
+  /** Original LaTeX string */
+  rawLatex: string;
+}
+
+export type UserFunctionRegistry = Record<string, UserFunctionDef>;
+
+export interface LibraryFunctionEntry {
+  id: string;
+  name: string;
+  signature: string;
+  /** Pure mathematical formula definition `Name(p1, p2, ...) = ...` */
+  definitionLatex: string;
+  /** Example expression to insert onto the canvas */
+  exampleCallLatex: string;
+  /** Default AST expressions for omitted trailing arguments */
+  defaultArgs?: Record<string, MathJsonExpr>;
+  category: 'transformer' | 'activation' | 'normalization' | 'custom';
+  description: string;
+  enabled: boolean;
+  isBuiltin?: boolean;
+}
+
 export interface ClassifiedAST {
   rawLatex: string;
   valid: boolean;
@@ -41,6 +80,8 @@ export interface ClassifiedAST {
   symbols: ClassifiedSymbol[];
   primaryVar: string;
   isImplicitRelation: boolean;
+  /** Extracted formal function signature if defined as `fn(p1, p2, ...) = ...` */
+  signature?: FunctionSignature;
 }
 
 /**
@@ -92,3 +133,4 @@ export interface PointOfInterest {
   /** For kinks, the subdifferential slope interval [leftSlope, rightSlope] [FR-2.2] */
   subdiffInterval?: [number, number];
 }
+

@@ -2,7 +2,11 @@
  * Zustand Reactive State Store with 50-Step Undo/Redo & AST Auto-Slider Sync [FR-1.3, FR-1.4].
  */
 import { createStore } from 'zustand/vanilla';
-import type { SymbolRole, SubgradConvention } from '../types/math';
+import type {
+  LibraryFunctionEntry,
+  SubgradConvention,
+  SymbolRole,
+} from '../types/math';
 import type {
   CurveRenderPacket,
   DataPoint2D,
@@ -23,10 +27,14 @@ import type {
   WorkspaceMode,
 } from '../types/state';
 import {
+  buildUserFunctionRegistry,
   classifyLatexExpression,
   classifySymbolRole,
 } from '../core/parser/ast-classifier';
-import { extractLeadingFunctionLabel } from '../core/parser/cortex-setup';
+import {
+  DEFAULT_FUNCTION_LIBRARY,
+  extractLeadingFunctionLabel,
+} from '../core/parser/cortex-setup';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { getTemplateById, isMathTemplateId } from '../extensions/templates';
 import { scheduleAutoSave } from './local-persistence';
@@ -39,6 +47,22 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
   const tpl = getTemplateById(templateId);
   const partial = tpl.buildInitialState();
 
+  const rawExpressions = partial.expressions ?? [
+    {
+      id: 'expr-1',
+      latex: tpl.defaultLatex,
+      color: '#f97316',
+      visible: true,
+      showFirstDerivative: true,
+      showSecondDerivative: false,
+      fitLoss: true,
+    },
+  ];
+  const hasFitLoss = rawExpressions.some((e) => e.fitLoss);
+  const expressions = hasFitLoss
+    ? rawExpressions
+    : rawExpressions.map((e, idx) => (idx === 0 ? { ...e, fitLoss: true } : e));
+
   const base: GraphStateV2 = {
     v: 2,
     activeTemplateId: tpl.id,
@@ -46,16 +70,7 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
     viewMode: partial.viewMode ?? 'dual',
     rightViewportMode: partial.rightViewportMode ?? 'loss_surface',
     subgradConvention: partial.subgradConvention ?? 'zero',
-    expressions: partial.expressions ?? [
-      {
-        id: 'expr-1',
-        latex: tpl.defaultLatex,
-        color: '#f97316',
-        visible: true,
-        showFirstDerivative: true,
-        showSecondDerivative: false,
-      },
-    ],
+    expressions,
     symbolOverrides: partial.symbolOverrides ?? {},
     sliders: partial.sliders ?? {},
     dataPoints: partial.dataPoints ?? [
@@ -99,6 +114,11 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
     },
     probeX: partial.probeX ?? null,
     hoveredDataPointId: null,
+    surfaceParamW1: partial.surfaceParamW1,
+    surfaceParamW2: partial.surfaceParamW2,
+    functionLibrary:
+      partial.functionLibrary ??
+      DEFAULT_FUNCTION_LIBRARY.map((entry) => ({ ...entry })),
   };
 
   return syncSlidersFromExpressions(base);
@@ -113,10 +133,19 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const activeSymbols = new Set<string>();
   let hasInvalidNonEmptyExpr = false;
 
+  const userFunctions = buildUserFunctionRegistry(
+    state.expressions,
+    state.functionLibrary
+  );
+
   for (const expr of state.expressions) {
     const trimmed = expr.latex.trim();
     if (!trimmed) continue;
-    const classified = classifyLatexExpression(trimmed, state.symbolOverrides);
+    const classified = classifyLatexExpression(
+      trimmed,
+      state.symbolOverrides,
+      userFunctions
+    );
     if (!classified.valid) {
       hasInvalidNonEmptyExpr = true;
       continue;
@@ -153,9 +182,23 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
 
   // Prune unused sliders when expressions change or are cleared:
   // - In Math / Blank Graph mode (T-00, M-*), prune any slider not present in activeSymbols.
-  // - In ML templates, also prune freeform algebraic constants (a, c, d, m, k) when removed from expressions.
+  // - In ML templates, also prune freeform algebraic or Transformer constants when removed from expressions.
   if (!hasInvalidNonEmptyExpr) {
-    const freeformConstants = new Set(['a', 'c', 'd', 'm', 'k']);
+    const freeformConstants = new Set([
+      'a',
+      'c',
+      'd',
+      'm',
+      'k',
+      'Q',
+      'K',
+      'V',
+      'W',
+      'd_k',
+      'd_v',
+      'd_model',
+      'epsilon',
+    ]);
     for (const key of Object.keys(nextSliders)) {
       if (!activeSymbols.has(key)) {
         if (isMathTemplateId(state.activeTemplateId) || freeformConstants.has(key)) {
@@ -192,6 +235,7 @@ export interface GraphStoreState {
   galleryDrawerOpen: boolean;
   galleryInitialTab: 'examples' | 'my_docs' | 'community';
   customOptModalOpen: boolean;
+  functionLibraryDrawerOpen: boolean;
   /** Latest computed worker output */
   curves: CurveRenderPacket[];
   trainLoss: number;
@@ -226,8 +270,24 @@ export interface GraphStoreState {
   removeExpression: (id: string) => void;
   toggleExpressionProp: (
     id: string,
-    prop: 'visible' | 'showFirstDerivative' | 'showSecondDerivative'
+    prop:
+      | 'visible'
+      | 'showFirstDerivative'
+      | 'showSecondDerivative'
+      | 'collapsed'
+      | 'fitLoss'
   ) => void;
+  setExpressionFitLoss: (id: string) => void;
+  toggleAllExpressionsVisible: () => void;
+  setSurfaceParamAxes: (w1Key: string, w2Key: string) => void;
+  setFunctionLibraryDrawerOpen: (open: boolean) => void;
+  toggleLibraryFunction: (id: string, enabled?: boolean) => void;
+  toggleAllLibraryFunctions: (enabled: boolean) => void;
+  upsertLibraryFunction: (
+    entry: Omit<LibraryFunctionEntry, 'id'> & { id?: string }
+  ) => void;
+  removeLibraryFunction: (id: string) => void;
+  resetFunctionLibrary: () => void;
   setSymbolRole: (symbolName: string, nextRole: SymbolRole) => void;
   cycleSymbolRole: (symbolName: string) => void;
   setSliderValue: (name: string, value: number, commitUndo?: boolean) => void;
@@ -284,11 +344,27 @@ export interface GraphStoreState {
 
 const EXPRESSION_COLORS = ['#f97316', '#3b82f6', '#10b981', '#a855f7', '#ec4899'];
 
+function applySyncedSliderVal(
+  slider: SliderState,
+  rawVal: number
+): SliderState {
+  const val = Math.round((slider.name === 'sigma' ? Math.max(0.1, rawVal) : rawVal) * 1e6) / 1e6;
+  return {
+    ...slider,
+    min: Math.min(slider.min, Math.floor(val * 10) / 10),
+    max: Math.max(slider.max, Math.ceil(val * 10) / 10),
+    value: val,
+    playing: false,
+  };
+}
+
 function syncSlidersToRaceStep(
   sliders: Record<string, SliderState>,
   race: GraphStateV2['optimizerRace'],
   trajectories: Record<OptimizerId, OptimizerTrajectoryStep[]>,
-  step: number
+  step: number,
+  preferredW1?: string,
+  preferredW2?: string
 ): Record<string, SliderState> {
   const priorityOrder: OptimizerId[] = ['adam', 'momentum', 'rmsprop', 'sgd', 'custom_js'];
   const leadOpt = priorityOrder.find(
@@ -301,28 +377,24 @@ function syncSlidersToRaceStep(
   if (!pt || !Number.isFinite(pt.w1) || !Number.isFinite(pt.w2)) return sliders;
 
   const nextSliders: Record<string, SliderState> = { ...sliders };
-  const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
+  const { w1Key, w2Key } = resolveSurfaceParamPair(
+    nextSliders,
+    preferredW1,
+    preferredW2
+  );
   if (nextSliders[w1Key]) {
-    const s1 = nextSliders[w1Key];
-    const w1Val = Math.round(pt.w1 * 1e6) / 1e6;
-    nextSliders[w1Key] = {
-      ...s1,
-      min: Math.min(s1.min, Math.floor(w1Val * 10) / 10),
-      max: Math.max(s1.max, Math.ceil(w1Val * 10) / 10),
-      value: w1Val,
-      playing: false,
-    };
+    nextSliders[w1Key] = applySyncedSliderVal(nextSliders[w1Key], pt.w1);
   }
   if (nextSliders[w2Key] && w2Key !== w1Key) {
-    const s2 = nextSliders[w2Key];
-    const rawW2 = Math.round((w2Key === 'sigma' ? Math.max(0.1, pt.w2) : pt.w2) * 1e6) / 1e6;
-    nextSliders[w2Key] = {
-      ...s2,
-      min: Math.min(s2.min, Math.floor(rawW2 * 10) / 10),
-      max: Math.max(s2.max, Math.ceil(rawW2 * 10) / 10),
-      value: rawW2,
-      playing: false,
-    };
+    nextSliders[w2Key] = applySyncedSliderVal(nextSliders[w2Key], pt.w2);
+  }
+  if (pt.params) {
+    for (const [pKey, pVal] of Object.entries(pt.params)) {
+      if (pKey === w1Key || pKey === w2Key) continue;
+      if (nextSliders[pKey] && Number.isFinite(pVal)) {
+        nextSliders[pKey] = applySyncedSliderVal(nextSliders[pKey], pVal);
+      }
+    }
   }
   return nextSliders;
 }
@@ -365,6 +437,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     galleryDrawerOpen: false,
     galleryInitialTab: 'examples',
     customOptModalOpen: false,
+    functionLibraryDrawerOpen: false,
     curves: [],
     trainLoss: 0,
     testLoss: 0,
@@ -490,24 +563,130 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         commitGraph(
           {
             ...g,
-            expressions: g.expressions.map((e) => (e.id === id ? { ...e, latex: '' } : e)),
+            expressions: g.expressions.map((e) =>
+              e.id === id ? { ...e, latex: '', fitLoss: true } : e
+            ),
           },
           true
         );
         return;
       }
-      commitGraph(
-        { ...g, expressions: g.expressions.filter((e) => e.id !== id) },
-        true
-      );
+      const filtered = g.expressions.filter((e) => e.id !== id);
+      const hasFit = filtered.some((e) => e.fitLoss);
+      const nextExpressions = hasFit
+        ? filtered
+        : filtered.map((e, i) => (i === 0 ? { ...e, fitLoss: true } : e));
+      commitGraph({ ...g, expressions: nextExpressions }, true);
     },
 
     toggleExpressionProp(id, prop) {
+      if (prop === 'fitLoss') {
+        get().setExpressionFitLoss(id);
+        return;
+      }
       const g = get().graph;
       const expressions = g.expressions.map((e) =>
         e.id === id ? { ...e, [prop]: !e[prop] } : e
       );
-      commitGraph({ ...g, expressions }, true);
+      commitGraph({ ...g, expressions }, true, prop === 'collapsed');
+    },
+
+    setExpressionFitLoss(id) {
+      const g = get().graph;
+      const expressions = g.expressions.map((e) => ({
+        ...e,
+        fitLoss: e.id === id,
+      }));
+      commitGraph({ ...g, expressions }, true, true);
+    },
+
+    toggleAllExpressionsVisible() {
+      const g = get().graph;
+      const anyVisible = g.expressions.some((e) => e.visible);
+      const nextVisible = !anyVisible;
+      const expressions = g.expressions.map((e) => ({
+        ...e,
+        visible: nextVisible,
+      }));
+      commitGraph({ ...g, expressions }, true, true);
+    },
+
+    setSurfaceParamAxes(w1Key, w2Key) {
+      const g = get().graph;
+      const nextW1 = w1Key.trim() || undefined;
+      const nextW2 =
+        w2Key.trim() && w2Key.trim() !== nextW1 ? w2Key.trim() : undefined;
+      commitGraph(
+        {
+          ...g,
+          surfaceParamW1: nextW1,
+          surfaceParamW2: nextW2,
+        },
+        true,
+        true
+      );
+    },
+
+    setFunctionLibraryDrawerOpen(functionLibraryDrawerOpen) {
+      set({ functionLibraryDrawerOpen });
+    },
+
+    toggleLibraryFunction(id, enabled) {
+      const g = get().graph;
+      const currentLib =
+        g.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f }));
+      const nextLib = currentLib.map((entry) =>
+        entry.id === id
+          ? { ...entry, enabled: enabled !== undefined ? enabled : !entry.enabled }
+          : entry
+      );
+      commitGraph({ ...g, functionLibrary: nextLib }, true);
+    },
+
+    toggleAllLibraryFunctions(enabled) {
+      const g = get().graph;
+      const currentLib =
+        g.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f }));
+      const nextLib = currentLib.map((entry) => ({ ...entry, enabled }));
+      commitGraph({ ...g, functionLibrary: nextLib }, true);
+    },
+
+    upsertLibraryFunction(entry) {
+      const g = get().graph;
+      const currentLib =
+        g.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f }));
+      const id = entry.id ?? `fn-custom-${Date.now()}`;
+      const existingIdx = currentLib.findIndex(
+        (item) => item.id === id || item.name === entry.name
+      );
+      let nextLib: LibraryFunctionEntry[];
+      if (existingIdx >= 0) {
+        nextLib = currentLib.map((item, idx) =>
+          idx === existingIdx ? { ...item, ...entry, id: item.id } : item
+        );
+      } else {
+        nextLib = [...currentLib, { ...entry, id }];
+      }
+      commitGraph({ ...g, functionLibrary: nextLib }, true);
+    },
+
+    removeLibraryFunction(id) {
+      const g = get().graph;
+      const currentLib =
+        g.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f }));
+      const nextLib = currentLib.filter((item) => item.id !== id);
+      commitGraph({ ...g, functionLibrary: nextLib }, true);
+    },
+
+    resetFunctionLibrary() {
+      const g = get().graph;
+      commitGraph(
+        {
+          ...g,
+          functionLibrary: DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f })),
+        },
+        true
+      );
     },
 
     setSymbolRole(symbolName, nextRole) {
@@ -520,10 +699,18 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         [symbolName]: nextRole,
       };
 
+      const userFunctions = buildUserFunctionRegistry(
+        g.expressions,
+        g.functionLibrary
+      );
       // Collect all symbols in active expressions to coordinate axis role swaps [FR-1.4]
       const allSyms = new Map<string, SymbolRole>();
       for (const expr of g.expressions) {
-        const cls = classifyLatexExpression(expr.latex, g.symbolOverrides);
+        const cls = classifyLatexExpression(
+          expr.latex,
+          g.symbolOverrides,
+          userFunctions
+        );
         for (const s of cls.symbols) {
           allSyms.set(s.name, s.role);
         }
@@ -908,7 +1095,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
       let nextSliders = g.sliders;
       if (nextRace.playing) {
-        const { w1Key, w2Key } = resolveSurfaceParamPair(nextSliders);
+        const { w1Key, w2Key } = resolveSurfaceParamPair(
+          nextSliders,
+          g.surfaceParamW1,
+          g.surfaceParamW2
+        );
         if (nextSliders[w1Key]?.playing || nextSliders[w2Key]?.playing) {
           nextSliders = { ...nextSliders };
           if (nextSliders[w1Key]?.playing) {
@@ -931,7 +1122,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           nextSliders,
           nextRace,
           trajectories,
-          nextCurrentStep
+          nextCurrentStep,
+          g.surfaceParamW1,
+          g.surfaceParamW2
         );
       }
 
@@ -1001,7 +1194,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         }
       }
 
-      const nextSliders = syncSlidersToRaceStep(g.sliders, cur, trajectories, nextStep);
+      const nextSliders = syncSlidersToRaceStep(
+        g.sliders,
+        cur,
+        trajectories,
+        nextStep,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
 
       commitGraph(
         {

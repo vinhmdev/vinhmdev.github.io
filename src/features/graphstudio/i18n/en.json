@@ -110,5 +110,9 @@
   "expr_name_placeholder": "Function name (e.g., f(x), g(x), Revenue...)",
   "expr_name_tooltip": "Click to name or rename this function on the graph",
   "toggle_sidebar_btn": "Toggle left sidebar",
-  "residuals_btn": "Residual squares r²"
+  "residuals_btn": "Residual squares r²",
+  "fn_lib_btn": "fx Lib",
+  "fn_lib_btn_tooltip": "Open Mathematical Function Library (toggle/edit reusable functions)",
+  "fn_lib_title": "Mathematical Function Library (fx)",
+  "fn_lib_subtitle": "Pure mathematical function definitions — toggle ON/OFF, inspect formulas, or define your own reusable functions"
 }

@@ -17,7 +17,11 @@ import type {
   RegularizationKind,
   SubgradConvention,
 } from '../../types/state';
-import { evaluateEmpiricalLossAndGrad, type PackedDataset } from './loss-evaluator';
+import {
+  evaluateEmpiricalLossAndGrad,
+  type PackedDataset,
+  type PredictorModel,
+} from './loss-evaluator';
 
 const DIVERGENCE_NORM_LIMIT = 1e6;
 
@@ -56,7 +60,8 @@ export function runOptimizerRace(
   hyper: OptimizerHyperparams,
   lossKind: LossKind,
   regKind: RegularizationKind,
-  convention: SubgradConvention = 'zero'
+  convention: SubgradConvention = 'zero',
+  predictor?: PredictorModel
 ): Record<OptimizerId, OptimizerTrajectoryStep[]> {
   const result: Record<OptimizerId, OptimizerTrajectoryStep[]> = {
     sgd: [],
@@ -67,6 +72,12 @@ export function runOptimizerRace(
   };
 
   const optIds: OptimizerId[] = ['sgd', 'momentum', 'rmsprop', 'adam'];
+  const extraKeys = predictor
+    ? predictor.paramNames.filter(
+        (k) => k !== predictor.w1Key && k !== predictor.w2Key
+      )
+    : [];
+  const hasMultiParams = extraKeys.length > 0;
 
   for (const optId of optIds) {
     if (!config.enabledOptimizers[optId]) continue;
@@ -80,6 +91,17 @@ export function runOptimizerRace(
     let v2 = 0.0;
     let diverged = false;
 
+    const extraVals: Record<string, number> = {};
+    const extraM: Record<string, number> = {};
+    const extraV: Record<string, number> = {};
+    if (hasMultiParams && predictor) {
+      for (const k of extraKeys) {
+        extraVals[k] = predictor.baseParams[k] ?? 0.0;
+        extraM[k] = 0.0;
+        extraV[k] = 0.0;
+      }
+    }
+
     for (let t = 0; t <= config.steps; t++) {
       const currentEval = evaluateEmpiricalLossAndGrad(
         w1,
@@ -90,7 +112,10 @@ export function runOptimizerRace(
         hyper.delta,
         regKind,
         hyper.lambda,
-        convention
+        convention,
+        predictor,
+        hasMultiParams ? extraVals : undefined,
+        hasMultiParams
       );
 
       let nagLookW1: number | undefined;
@@ -99,6 +124,14 @@ export function runOptimizerRace(
         nagLookW1 = w1 + hyper.beta1 * m1;
         nagLookW2 = w2 + hyper.beta1 * m2;
       }
+
+      const stepParams: Record<string, number> | undefined = predictor
+        ? {
+            ...extraVals,
+            [predictor.w1Key]: w1,
+            [predictor.w2Key]: w2,
+          }
+        : undefined;
 
       traj.push({
         step: t,
@@ -114,6 +147,7 @@ export function runOptimizerRace(
         nagLookaheadW1: nagLookW1,
         nagLookaheadW2: nagLookW2,
         diverged,
+        params: stepParams,
       });
 
       if (diverged || t === config.steps) break;
@@ -121,12 +155,26 @@ export function runOptimizerRace(
       const eta = getScheduledLearningRate(hyper.eta, t, config.lrSchedule);
       let g1 = currentEval.gradW1;
       let g2 = currentEval.gradW2;
+      let gMap = currentEval.gradParams;
 
       if (optId === 'sgd') {
         w1 -= eta * g1;
         w2 -= eta * g2;
+        if (hasMultiParams && gMap) {
+          for (const k of extraKeys) {
+            extraVals[k] -= eta * (gMap[k] ?? 0.0);
+          }
+        }
       } else if (optId === 'momentum') {
         if (config.useNesterov && nagLookW1 !== undefined && nagLookW2 !== undefined) {
+          const nagExtra: Record<string, number> | undefined = hasMultiParams
+            ? {}
+            : undefined;
+          if (hasMultiParams && nagExtra) {
+            for (const k of extraKeys) {
+              nagExtra[k] = extraVals[k] + hyper.beta1 * extraM[k];
+            }
+          }
           const lookEval = evaluateEmpiricalLossAndGrad(
             nagLookW1,
             nagLookW2,
@@ -136,20 +184,38 @@ export function runOptimizerRace(
             hyper.delta,
             regKind,
             hyper.lambda,
-            convention
+            convention,
+            predictor,
+            nagExtra,
+            hasMultiParams
           );
           g1 = lookEval.gradW1;
           g2 = lookEval.gradW2;
+          gMap = lookEval.gradParams;
         }
         m1 = hyper.beta1 * m1 - eta * g1;
         m2 = hyper.beta1 * m2 - eta * g2;
         w1 += m1;
         w2 += m2;
+        if (hasMultiParams && gMap) {
+          for (const k of extraKeys) {
+            const gk = gMap[k] ?? 0.0;
+            extraM[k] = hyper.beta1 * extraM[k] - eta * gk;
+            extraVals[k] += extraM[k];
+          }
+        }
       } else if (optId === 'rmsprop') {
         v1 = hyper.beta2 * v1 + (1.0 - hyper.beta2) * g1 * g1;
         v2 = hyper.beta2 * v2 + (1.0 - hyper.beta2) * g2 * g2;
         w1 -= (eta * g1) / Math.sqrt(v1 + hyper.epsilon);
         w2 -= (eta * g2) / Math.sqrt(v2 + hyper.epsilon);
+        if (hasMultiParams && gMap) {
+          for (const k of extraKeys) {
+            const gk = gMap[k] ?? 0.0;
+            extraV[k] = hyper.beta2 * extraV[k] + (1.0 - hyper.beta2) * gk * gk;
+            extraVals[k] -= (eta * gk) / Math.sqrt(extraV[k] + hyper.epsilon);
+          }
+        }
       } else if (optId === 'adam') {
         const stepIdx = t + 1;
         m1 = hyper.beta1 * m1 + (1.0 - hyper.beta1) * g1;
@@ -172,6 +238,20 @@ export function runOptimizerRace(
 
         w1 -= (eta * mHat1) / (Math.sqrt(vHat1) + hyper.epsilon);
         w2 -= (eta * mHat2) / (Math.sqrt(vHat2) + hyper.epsilon);
+        if (hasMultiParams && gMap) {
+          for (const k of extraKeys) {
+            const gk = gMap[k] ?? 0.0;
+            extraM[k] = hyper.beta1 * extraM[k] + (1.0 - hyper.beta1) * gk;
+            extraV[k] = hyper.beta2 * extraV[k] + (1.0 - hyper.beta2) * gk * gk;
+            const mHatK = config.adamBiasCorrection
+              ? extraM[k] / (1.0 - Math.pow(hyper.beta1, stepIdx))
+              : extraM[k];
+            const vHatK = config.adamBiasCorrection
+              ? extraV[k] / (1.0 - Math.pow(hyper.beta2, stepIdx))
+              : extraV[k];
+            extraVals[k] -= (eta * mHatK) / (Math.sqrt(vHatK) + hyper.epsilon);
+          }
+        }
       }
 
       // Divergence Guard [NFR-2]: check norm > 10^6 or non-finite coordinates
@@ -190,3 +270,4 @@ export function runOptimizerRace(
 
   return result;
 }
+

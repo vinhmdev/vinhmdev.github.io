@@ -418,6 +418,8 @@ export const QUICK_FORMULA_GROUPS: QuickFormulaGroup[] = [
       { label: 'e^(-a·x²)', desc: 'Gaussian bell curve', latex: 'e^{-a \\cdot x^2}' },
       { label: '1 / (1 + a·x²)', desc: 'Witch of Agnesi / Cauchy', latex: '\\frac{1}{1 + a \\cdot x^2}' },
       { label: 'floor(x) & sign(x)', desc: 'Step discontinuity', latex: '\\operatorname{floor}(x)' },
+      { label: 'x² {x < 3, x > 5}', desc: 'Domain restriction (breaks on [3, 5])', latex: 'x^2 \\{x < 3, x > 5\\}' },
+      { label: '{x < 0: -x, x >= 0: x²}', desc: 'Piecewise conditional branches', latex: '\\{x < 0: -x, x \\ge 0: x^2\\}' },
     ],
   },
   {
@@ -431,6 +433,9 @@ export const QUICK_FORMULA_GROUPS: QuickFormulaGroup[] = [
       { label: 'Swish(x, β)', desc: 'SiLU / Swish x·σ(βx)', latex: '\\operatorname{swish}(x, \\beta)' },
       { label: 'Mish(x)', desc: 'x·tanh(softplus(x))', latex: '\\operatorname{mish}(x)' },
       { label: 'Softplus(x)', desc: 'Smooth ReLU ln(1 + e^x)', latex: '\\operatorname{softplus}(x)' },
+      { label: 'Attention(Q, K, V)', desc: 'Scaled dot-product softmax(QK^T/√d_k)V', latex: '\\operatorname{Attention}(Q, K, V) = \\operatorname{softmax}\\left(\\frac{Q \\cdot K^T}{\\sqrt{d_k}}\\right) \\cdot V' },
+      { label: 'SwiGLU(x, w₁, w₂)', desc: 'Swish Gated Linear Unit', latex: '\\operatorname{SwiGLU}(x, w_1, w_2)' },
+      { label: 'RMSNorm(x, γ, ε)', desc: 'Root Mean Square Normalization', latex: '\\operatorname{RMSNorm}(x, \\gamma, \\epsilon)' },
     ],
   },
   {

@@ -1,8 +1,10 @@
-/**
- * Application State, Viewport, Optimizer & Storage Schema Types for GraphStudio.
- */
-import type { SymbolRole, SubgradConvention, PointOfInterest } from './math';
-export type { SubgradConvention };
+import type {
+  SymbolRole,
+  SubgradConvention,
+  PointOfInterest,
+  LibraryFunctionEntry,
+} from './math';
+export type { SubgradConvention, LibraryFunctionEntry };
 
 /** Three primary view modes in [FR-1.4] */
 export type ViewMode = 'inference' | 'optimization' | 'dual';
@@ -63,6 +65,10 @@ export interface ExpressionItem {
   showSecondDerivative: boolean;
   /** Optional human-readable label for template curves */
   label?: string;
+  /** Whether this expression is the active predictor / objective for Loss & 3D Optimization */
+  fitLoss?: boolean;
+  /** Whether the expression card details are collapsed in the sidebar */
+  collapsed?: boolean;
 }
 
 export type PlaybackSpeed = 0.25 | 0.5 | 1 | 2 | 4;
@@ -119,6 +125,8 @@ export interface OptimizerTrajectoryStep {
   /** Lookahead probe coordinate for Nesterov Accelerated Gradient */
   nagLookaheadW1?: number;
   nagLookaheadW2?: number;
+  /** Full multi-parameter snapshot across all optimized Param symbols at this step */
+  params?: Record<string, number>;
   diverged: boolean;
 }
 
@@ -158,6 +166,12 @@ export interface GraphStateV2 {
   surface3DOrbitPitch: number;
   surface3DOrbitYaw: number;
   surface3DZScale: number;
+  /** Optional explicit parameter symbol mapped to 3D Loss Surface horizontal axis w1 */
+  surfaceParamW1?: string;
+  /** Optional explicit parameter symbol mapped to 3D Loss Surface vertical axis w2 */
+  surfaceParamW2?: string;
+  /** User-configurable library of pure mathematical & ML function definitions (toggleable ON/OFF) */
+  functionLibrary?: LibraryFunctionEntry[];
   leftViewport: Viewport2DBounds;
   rightViewport: Viewport2DBounds;
   optimizerRace: OptimizerRaceConfig;

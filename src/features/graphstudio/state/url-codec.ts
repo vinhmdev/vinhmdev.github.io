@@ -12,7 +12,12 @@
  * to ~900-1,420 characters (strictly <= 2,000 chars per [AC-05]).
  */
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-import type { SymbolRole, SubgradConvention } from '../types/math';
+import type {
+  LibraryFunctionEntry,
+  SubgradConvention,
+  SymbolRole,
+} from '../types/math';
+import { DEFAULT_FUNCTION_LIBRARY } from '../core/parser/cortex-setup';
 import type {
   DataPoint2D,
   ExpressionItem,
@@ -91,7 +96,7 @@ interface CompactPayloadV2 {
     number,
     number,
   ];
-  /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2), label?] */
+  /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2|fitLoss<<3|collapsed<<4), label?] */
   e: CompactExprTuple[];
   /** Sliders: [name, latex, role, value, min, max, step, loopMode?, speed?, direction?] */
   s: CompactSliderTuple[];
@@ -103,6 +108,10 @@ interface CompactPayloadV2 {
   vp: [number, number, number, number, number, number, number, number];
   /** Symbol overrides */
   o?: Record<string, SymbolRole>;
+  /** Custom 3D surface parameter axes [surfaceParamW1, surfaceParamW2] */
+  sp?: [string | undefined, string | undefined];
+  /** Non-default Function Library entries */
+  fl?: LibraryFunctionEntry[];
   /** Optimizer race config: [startW1, startW2, steps, currentStep, flags, lrSchedule, customJsCode?, loopMode?, speed?, direction?] */
   r?: [
     number,
@@ -118,12 +127,32 @@ interface CompactPayloadV2 {
   ];
 }
 
+function isDefaultFunctionLibrary(lib?: LibraryFunctionEntry[]): boolean {
+  if (!lib) return true;
+  if (lib.length !== DEFAULT_FUNCTION_LIBRARY.length) return false;
+  for (let i = 0; i < lib.length; i++) {
+    const a = lib[i];
+    const b = DEFAULT_FUNCTION_LIBRARY[i];
+    if (
+      a.id !== b.id ||
+      a.name !== b.name ||
+      a.enabled !== b.enabled ||
+      a.definitionLatex !== b.definitionLatex
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
   const e: CompactExprTuple[] = state.expressions.map((item) => {
     const flags =
       (item.visible ? 1 : 0) |
       (item.showFirstDerivative ? 2 : 0) |
-      (item.showSecondDerivative ? 4 : 0);
+      (item.showSecondDerivative ? 4 : 0) |
+      (item.fitLoss ? 8 : 0) |
+      (item.collapsed ? 16 : 0);
     return item.label
       ? [item.id, item.latex, item.color, flags, item.label]
       : [item.id, item.latex, item.color, flags];
@@ -250,6 +279,13 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
       num4(state.rightViewport.yMax),
     ],
     o: Object.keys(state.symbolOverrides).length > 0 ? state.symbolOverrides : undefined,
+    sp:
+      state.surfaceParamW1 || state.surfaceParamW2
+        ? [state.surfaceParamW1, state.surfaceParamW2]
+        : undefined,
+    fl: !isDefaultFunctionLibrary(state.functionLibrary)
+      ? state.functionLibrary
+      : undefined,
     r: rTuple,
   };
 }
@@ -279,6 +315,8 @@ export function unpackCompactV2ToState(
     visible: (flags & 1) !== 0,
     showFirstDerivative: (flags & 2) !== 0,
     showSecondDerivative: (flags & 4) !== 0,
+    fitLoss: (flags & 8) !== 0,
+    collapsed: (flags & 16) !== 0,
     label,
   }));
 
@@ -380,6 +418,12 @@ export function unpackCompactV2ToState(
     leftViewport,
     rightViewport,
     symbolOverrides: compact.o ?? {},
+    surfaceParamW1: compact.sp?.[0],
+    surfaceParamW2: compact.sp?.[1],
+    functionLibrary:
+      compact.fl ??
+      fallbackBase.functionLibrary ??
+      DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f })),
     optimizerRace: r
       ? {
           enabledOptimizers: {

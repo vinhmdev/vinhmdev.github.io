@@ -32,6 +32,7 @@ export interface Canvas2DRenderParams {
   rightViewportMode?: RightViewportMode;
   paramValues?: Record<string, number>;
   whiteboardStrokes?: WhiteboardStroke[];
+  fitLossExprId?: string;
 }
 
 export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
@@ -51,6 +52,7 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     rightViewportMode,
     paramValues = {},
     whiteboardStrokes = [],
+    fitLossExprId,
   } = p;
 
   const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
@@ -144,8 +146,13 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   }
   ctx.restore();
 
-  // Helper to evaluate interpolated y on primary curve at world x
-  const primaryCurve = curves.find((c) => c.visible && c.primaryPoints.length >= 4);
+  // Helper to evaluate interpolated y on active fitLoss or primary curve at world x
+  const primaryCurve =
+    (fitLossExprId
+      ? curves.find((c) => c.exprId === fitLossExprId && c.primaryPoints.length >= 4)
+      : undefined) ??
+    curves.find((c) => c.visible && c.primaryPoints.length >= 4) ??
+    curves.find((c) => c.primaryPoints.length >= 4);
   const evalCurveAtX = (wx: number): { y: number; slope: number } | null => {
     if (!primaryCurve) return null;
     const pts = primaryCurve.primaryPoints;

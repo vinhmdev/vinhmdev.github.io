@@ -110,5 +110,9 @@
   "expr_name_placeholder": "Tên hàm (vd: f(x), g(x), Doanh thu...)",
   "expr_name_tooltip": "Nhấn để đặt hoặc đổi tên hàm hiển thị trên đồ thị",
   "toggle_sidebar_btn": "Đóng/mở bảng bên trái",
-  "residuals_btn": "Ô vuông sai số r²"
+  "residuals_btn": "Ô vuông sai số r²",
+  "fn_lib_btn": "Thư viện fx",
+  "fn_lib_btn_tooltip": "Mở Thư viện Hàm Toán Học (bật/tắt, chỉnh sửa hoặc thêm hàm định nghĩa sẵn)",
+  "fn_lib_title": "Thư Viện Hàm Toán Học (fx)",
+  "fn_lib_subtitle": "Các hàm toán học thuần túy — bật/tắt sử dụng, xem công thức gốc hoặc tự định nghĩa hàm tái sử dụng"
 }

@@ -5,7 +5,11 @@
  * zero-copy `Transferable` ArrayBuffers (or `SharedArrayBuffer` when crossOriginIsolated).
  * Compiled `new Function()` closures NEVER cross `postMessage`.
  */
-import type { SubgradConvention, SymbolRole } from '../types/math';
+import type {
+  LibraryFunctionEntry,
+  SubgradConvention,
+  SymbolRole,
+} from '../types/math';
 import type {
   CurveRenderPacket,
   DataPoint2D,
@@ -36,6 +40,9 @@ export interface ComputeJobRequest {
   batchNormEnabled: boolean;
   optimizerRace: OptimizerRaceConfig;
   hoveredDataPointId: string | null;
+  surfaceParamW1?: string;
+  surfaceParamW2?: string;
+  functionLibrary?: LibraryFunctionEntry[];
 }
 
 export interface ComputeJobResponse {

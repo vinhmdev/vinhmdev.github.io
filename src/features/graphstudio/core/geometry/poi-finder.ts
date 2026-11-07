@@ -194,23 +194,32 @@ export function extractPointsOfInterest(
       kernel.evalInto(kinkX, params, out, convention, diracTau);
       const kinkY = out[0];
 
-      // Measure left and right analytical slopes for the Subdifferential Fan [FR-2.2]
+      // Measure left and right analytical values & slopes for the Subdifferential Fan [FR-2.2]
       const eps = 1e-7;
       kernel.evalInto(kinkX - eps, params, out, convention, diracTau);
+      const leftY = out[0];
       const leftSlope = out[1];
       kernel.evalInto(kinkX + eps, params, out, convention, diracTau);
+      const rightY = out[0];
       const rightSlope = out[1];
 
-      addUniquePoi({
-        kind: 'kink',
-        x: kinkX,
-        y: kinkY,
-        label: `Kink (${formatCoord(kinkX)}, ${formatCoord(kinkY)})`,
-        subdiffInterval: [Math.min(leftSlope, rightSlope), Math.max(leftSlope, rightSlope)],
-      });
+      const isContinuousJoin =
+        Number.isFinite(leftY) &&
+        Number.isFinite(rightY) &&
+        Math.abs(rightY - leftY) <= 1e-3 * Math.max(1.0, Math.abs(leftY), Math.abs(rightY));
+
+      if (isContinuousJoin && Math.abs(rightSlope - leftSlope) > 1e-6) {
+        addUniquePoi({
+          kind: 'kink',
+          x: kinkX,
+          y: kinkY,
+          label: `Kink (${formatCoord(kinkX)}, ${formatCoord(kinkY)})`,
+          subdiffInterval: [Math.min(leftSlope, rightSlope), Math.max(leftSlope, rightSlope)],
+        });
+      }
 
       // If kink is also a root (e.g., ReLU(0)=0 or |x-2| at x=2), record root as well
-      if (Math.abs(kinkY) < 1e-9) {
+      if (isContinuousJoin && Math.abs(kinkY) < 1e-9) {
         addUniquePoi({
           kind: 'root',
           x: kinkX,

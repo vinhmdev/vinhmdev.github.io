@@ -65,12 +65,26 @@ export function bceWithLogitsDerivZ(y: number, z: number): number {
  */
 export function safeSoftmax(
   zi: number,
-  z1: number,
-  z2: number,
-  z3: number,
-  tau: number
+  z1 = 0.0,
+  z2?: number,
+  z3?: number,
+  tau?: number
 ): number {
-  const t = Math.max(Math.abs(tau), 1e-9);
+  if (z2 === undefined) {
+    // 2-arg call: softmax(zi, z1) -> exp(zi) / (exp(zi) + exp(z1))
+    const maxS = Math.max(zi, z1);
+    const num = Math.exp(zi - maxS);
+    const den = num + Math.exp(z1 - maxS);
+    return den > 0 ? num / den : 0.0;
+  }
+  if (z3 === undefined) {
+    // 3-arg call: softmax(zi, z1, z2)
+    const maxS = Math.max(zi, z1, z2);
+    const num = Math.exp(zi - maxS);
+    const den = num + Math.exp(z1 - maxS) + Math.exp(z2 - maxS);
+    return den > 0 ? num / den : 0.0;
+  }
+  const t = Math.max(Math.abs(tau ?? 1.0), 1e-9);
   const s0 = zi / t;
   const s1 = z1 / t;
   const s2 = z2 / t;

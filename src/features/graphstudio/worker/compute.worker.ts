@@ -5,7 +5,10 @@
  * execute flat Float64Array loops (0 AST parsing or JIT recompilation during drag).
  * Exports `executeComputeJob` for both Web Worker `onmessage` and direct Vitest benchmarks.
  */
-import { classifyLatexExpression } from '../core/parser/ast-classifier';
+import {
+  buildUserFunctionRegistry,
+  classifyLatexExpression,
+} from '../core/parser/ast-classifier';
 import {
   compileJet2Kernel,
   type CompiledJet2Kernel,
@@ -22,10 +25,11 @@ import {
   evaluateEmpiricalLossAndGrad,
   evaluateSingleSamplePull,
   packDataset,
+  type PredictorModel,
   resolveSurfaceParamPair,
 } from '../core/simulation/loss-evaluator';
 import { runOptimizerRace } from '../core/simulation/optimizers';
-import type { SymbolRole } from '../types/math';
+import type { MathJsonExpr, SymbolRole, UserFunctionRegistry } from '../types/math';
 import type { CurveRenderPacket } from '../types/state';
 import { createDoubleBufferPool } from './double-buffer';
 import type { ComputeJobRequest, ComputeJobResponse } from './protocol';
@@ -38,26 +42,62 @@ interface CachedExpressionEntry {
   kernel?: CompiledJet2Kernel;
   firstDerivLatex?: string;
   secondDerivLatex?: string;
+  paramNames?: string[];
+  paramGradKernels?: Record<string, (x: number, params: Record<string, number>) => number>;
+  isCustomPredictor?: boolean;
 }
 
 const kernelCache = new Map<string, CachedExpressionEntry>();
 
+const LOSS_TEMPLATE_HEADS = new Set([
+  'BCEWithLogits',
+  'BCE',
+  'Hinge',
+  'Huber',
+  'BetaPdf',
+  'SafeXLogY',
+]);
+
+function isCanonicalLinearAst(expr: MathJsonExpr, primaryVar: string): boolean {
+  if (!Array.isArray(expr)) return false;
+  if (LOSS_TEMPLATE_HEADS.has(expr[0])) return true;
+  // Unwrap SafeSigmoid(w * x + b) for canonical logistic templates (T-01, T-13)
+  const target = expr[0] === 'SafeSigmoid' && Array.isArray(expr[1]) ? expr[1] : expr;
+  if (!Array.isArray(target)) return false;
+  if (target[0] === 'Add' && target.length === 3) {
+    const [, left, right] = target;
+    if (
+      Array.isArray(left) &&
+      left[0] === 'Multiply' &&
+      typeof left[1] === 'string' &&
+      left[2] === primaryVar &&
+      typeof right === 'string'
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getOrCompileExpression(
   latex: string,
-  symbolOverrides: Record<string, SymbolRole> = {}
+  symbolOverrides: Record<string, SymbolRole> = {},
+  userFunctions?: UserFunctionRegistry,
+  fnCacheTag = ''
 ): CachedExpressionEntry {
   const overrideKeys = Object.keys(symbolOverrides);
-  const cacheKey =
+  const baseKey =
     overrideKeys.length === 0
       ? latex
       : `${latex}::${overrideKeys
           .sort()
           .map((k) => `${k}=${symbolOverrides[k]}`)
           .join(',')}`;
+  const cacheKey = fnCacheTag ? `${baseKey}@@${fnCacheTag}` : baseKey;
   const existing = kernelCache.get(cacheKey);
   if (existing) return existing;
 
-  const classified = classifyLatexExpression(latex, symbolOverrides);
+  const classified = classifyLatexExpression(latex, symbolOverrides, userFunctions);
   if (!classified.valid) {
     const invalidEntry: CachedExpressionEntry = {
       latex,
@@ -72,6 +112,22 @@ function getOrCompileExpression(
   const d1Ast = symbolicDiff(classified.stabilizedExpr, classified.primaryVar);
   const d2Ast = symbolicSecondDiff(classified.stabilizedExpr, classified.primaryVar);
 
+  const paramNames = classified.symbols
+    .filter((s) => s.role === 'param')
+    .map((s) => s.name);
+  const isCustomPredictor =
+    paramNames.length > 2 ||
+    !isCanonicalLinearAst(classified.stabilizedExpr, classified.primaryVar);
+
+  const paramGradKernels: Record<string, (x: number, params: Record<string, number>) => number> = {};
+  if (isCustomPredictor && paramNames.length > 0) {
+    for (const pName of paramNames) {
+      const dParamAst = symbolicDiff(classified.stabilizedExpr, pName);
+      const pKernel = compileJet2Kernel(dParamAst, classified.primaryVar);
+      paramGradKernels[pName] = pKernel.evalScalar;
+    }
+  }
+
   const entry: CachedExpressionEntry = {
     latex,
     valid: true,
@@ -79,6 +135,9 @@ function getOrCompileExpression(
     kernel,
     firstDerivLatex: mathJsonToLatex(d1Ast),
     secondDerivLatex: mathJsonToLatex(d2Ast),
+    paramNames,
+    paramGradKernels,
+    isCustomPredictor,
   };
 
   if (kernelCache.size > 128) {
@@ -96,11 +155,31 @@ function getOrCompileExpression(
 export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
   const t0 = performance.now();
 
+  const hasCustomFnContext =
+    Boolean(req.functionLibrary) ||
+    req.expressions.some((e) => e.latex.includes('='));
+  const userFunctions = hasCustomFnContext
+    ? buildUserFunctionRegistry(req.expressions, req.functionLibrary)
+    : undefined;
+  const fnCacheTag = userFunctions
+    ? Object.keys(userFunctions)
+        .sort()
+        .map((k) => `${k}:${userFunctions[k].rawLatex}`)
+        .join('|')
+    : '';
+
   const curves: CurveRenderPacket[] = [];
+  const compiledByExprId = new Map<string, CachedExpressionEntry>();
 
   for (let idx = 0; idx < req.expressions.length; idx++) {
     const item = req.expressions[idx];
-    const compiled = getOrCompileExpression(item.latex, req.symbolOverrides);
+    const compiled = getOrCompileExpression(
+      item.latex,
+      req.symbolOverrides,
+      userFunctions,
+      fnCacheTag
+    );
+    compiledByExprId.set(item.id, compiled);
     const resolvedLabel = item.label?.trim() || `f_${idx + 1}(x)`;
     if (!compiled.valid || !compiled.kernel) {
       curves.push({
@@ -183,11 +262,41 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
 
   // Evaluate Dual-Space Empirical Loss, 128x128 Landscape, 50x50 Vector Field & 4-Optimizer Race
   const packed = packDataset(req.dataPoints, req.batchNormEnabled);
-  const { w1, w2 } = resolveSurfaceParamPair(req.paramValues);
+  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(
+    req.paramValues,
+    req.surfaceParamW1,
+    req.surfaceParamW2
+  );
   const delta = req.paramValues['delta'] ?? 1.0;
   const lambda = req.paramValues['lambda'] ?? 0.1;
   const eta = req.paramValues['eta'] ?? 0.08;
   const beta1 = req.paramValues['beta'] ?? 0.9;
+
+  // Resolve target expression for loss fitting (explicit fitLoss -> first visible -> first)
+  const targetExpr =
+    req.expressions.find((e) => e.fitLoss && e.latex.trim()) ??
+    req.expressions.find((e) => e.visible && e.latex.trim()) ??
+    req.expressions[0];
+  const targetCompiled = targetExpr ? compiledByExprId.get(targetExpr.id) : undefined;
+
+  let predictor: PredictorModel | undefined;
+  if (
+    targetCompiled &&
+    targetCompiled.valid &&
+    targetCompiled.kernel &&
+    targetCompiled.isCustomPredictor &&
+    (targetCompiled.paramNames?.length ?? 0) > 0
+  ) {
+    predictor = {
+      evalScalar: targetCompiled.kernel.evalScalar,
+      paramGradKernels: targetCompiled.paramGradKernels ?? {},
+      paramNames: targetCompiled.paramNames ?? [],
+      baseParams: req.paramValues,
+      w1Key,
+      w2Key,
+      isCustomPredictor: true,
+    };
+  }
 
   const trainEval = evaluateEmpiricalLossAndGrad(
     w1,
@@ -198,7 +307,8 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     delta,
     req.regularizationKind,
     lambda,
-    req.subgradConvention
+    req.subgradConvention,
+    predictor
   );
 
   const testEval =
@@ -212,7 +322,8 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
           delta,
           'none',
           0.0,
-          req.subgradConvention
+          req.subgradConvention,
+          predictor
         )
       : { loss: 0, gradW1: 0, gradW2: 0 };
 
@@ -224,7 +335,8 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     req.regularizationKind,
     lambda,
     128,
-    50
+    50,
+    predictor
   );
 
   const trajectories = runOptimizerRace(
@@ -240,14 +352,22 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     },
     req.lossKind,
     req.regularizationKind,
-    req.subgradConvention
+    req.subgradConvention,
+    predictor
   );
 
   let linkedBrushPull: ComputeJobResponse['linkedBrushPull'];
   if (req.hoveredDataPointId) {
     const hoveredPt = req.dataPoints.find((p) => p.id === req.hoveredDataPointId);
     if (hoveredPt) {
-      const pull = evaluateSingleSamplePull(w1, w2, hoveredPt, req.lossKind, delta);
+      const pull = evaluateSingleSamplePull(
+        w1,
+        w2,
+        hoveredPt,
+        req.lossKind,
+        delta,
+        predictor
+      );
       linkedBrushPull = {
         pointId: hoveredPt.id,
         ...pull,

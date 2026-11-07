@@ -24,6 +24,23 @@ export interface LossAndGrad {
   loss: number;
   gradW1: number;
   gradW2: number;
+  gradParams?: Record<string, number>;
+}
+
+export interface PredictorModel {
+  /** Evaluates the predictor f(x; params) at x */
+  evalScalar: (x: number, params: Record<string, number>) => number;
+  /** Pre-compiled symbolic partial derivative df/d(param) for each tunable parameter */
+  paramGradKernels: Record<string, (x: number, params: Record<string, number>) => number>;
+  /** All tunable parameter names of this predictor (e.g. ['a', 'b', 'c'] or ['w', 'b']) */
+  paramNames: string[];
+  /** Current base parameter values from sliders */
+  baseParams: Record<string, number>;
+  /** Surface axis parameter keys */
+  w1Key: string;
+  w2Key: string;
+  /** True when the expression is a custom non-linear or multi-parameter predictor */
+  isCustomPredictor: boolean;
 }
 
 export interface PackedDataset {
@@ -35,7 +52,19 @@ export interface PackedDataset {
   stdX: number;
 }
 
-const HYPERPARAM_KEYS = new Set(['delta', 'lambda', 'eta', 'beta', 'gamma', 'alpha']);
+const HYPERPARAM_KEYS = new Set([
+  'delta',
+  'lambda',
+  'eta',
+  'beta',
+  'gamma',
+  'alpha',
+  'tau',
+  'epsilon',
+  'd_k',
+  'd_v',
+  'd_model',
+]);
 
 const CANONICAL_PARAM_PAIRS: [string, string][] = [
   ['w', 'b'],
@@ -47,15 +76,19 @@ const CANONICAL_PARAM_PAIRS: [string, string][] = [
   ['m', 'b'],
   ['m', 'c'],
   ['m', 'd'],
+  ['K', 'V'],
+  ['Q', 'K'],
 ];
 
 /**
  * Resolves which two parameter symbols map to the 3D Loss Surface axes (w1, w2).
- * Supports canonical ML pairs (w/b, w_1/w_2, mu/sigma) as well as General Math
- * sliders (a/b, a/k, a/c, m/d, or any custom user parameter pair).
+ * Supports explicit user preferences (preferredW1, preferredW2), canonical ML pairs
+ * (w/b, w_1/w_2, mu/sigma), and General Math sliders (a/b, a/k, a/c, m/d, etc.).
  */
 export function resolveSurfaceParamPair(
-  slidersOrValues: Record<string, unknown>
+  slidersOrValues: Record<string, unknown>,
+  preferredW1?: string,
+  preferredW2?: string
 ): { w1Key: string; w2Key: string; w1: number; w2: number } {
   const keys = Object.keys(slidersOrValues);
   const getNum = (k: string, fallback: number): number => {
@@ -68,14 +101,28 @@ export function resolveSurfaceParamPair(
     return fallback;
   };
 
-  for (const [k1, k2] of CANONICAL_PARAM_PAIRS) {
-    if (k1 in slidersOrValues && k2 in slidersOrValues) {
-      return {
-        w1Key: k1,
-        w2Key: k2,
-        w1: getNum(k1, 1.0),
-        w2: getNum(k2, 0.0),
-      };
+  const hasW1Pref = Boolean(preferredW1 && preferredW1 in slidersOrValues);
+  const hasW2Pref = Boolean(preferredW2 && preferredW2 in slidersOrValues);
+
+  if (hasW1Pref && hasW2Pref && preferredW1 !== preferredW2) {
+    return {
+      w1Key: preferredW1!,
+      w2Key: preferredW2!,
+      w1: getNum(preferredW1!, 1.0),
+      w2: getNum(preferredW2!, 0.0),
+    };
+  }
+
+  if (!hasW1Pref && !hasW2Pref) {
+    for (const [k1, k2] of CANONICAL_PARAM_PAIRS) {
+      if (k1 in slidersOrValues && k2 in slidersOrValues) {
+        return {
+          w1Key: k1,
+          w2Key: k2,
+          w1: getNum(k1, 1.0),
+          w2: getNum(k2, 0.0),
+        };
+      }
     }
   }
 
@@ -88,15 +135,17 @@ export function resolveSurfaceParamPair(
   });
 
   const w1Key =
+    (hasW1Pref ? preferredW1! : '') ||
     ('w' in slidersOrValues ? 'w' : '') ||
     ('w_1' in slidersOrValues ? 'w_1' : '') ||
     ('mu' in slidersOrValues ? 'mu' : '') ||
     ('a' in slidersOrValues ? 'a' : '') ||
-    paramCandidates[0] ||
-    keys[0] ||
+    paramCandidates.find((k) => k !== preferredW2) ||
+    keys.find((k) => k !== preferredW2) ||
     'w';
 
   const w2Key =
+    (hasW2Pref && preferredW2 !== w1Key ? preferredW2! : '') ||
     ('b' in slidersOrValues && w1Key !== 'b' ? 'b' : '') ||
     ('w_2' in slidersOrValues && w1Key !== 'w_2' ? 'w_2' : '') ||
     ('sigma' in slidersOrValues && w1Key !== 'sigma' ? 'sigma' : '') ||
@@ -154,7 +203,8 @@ export function packDataset(
 }
 
 /**
- * Evaluates loss and analytical gradient wrt (w1, w2) at a single point in parameter space.
+ * Evaluates loss and analytical gradient wrt (w1, w2) (and optionally all parameters)
+ * at a single point in parameter space.
  */
 export function evaluateEmpiricalLossAndGrad(
   w1: number,
@@ -165,7 +215,10 @@ export function evaluateEmpiricalLossAndGrad(
   delta = 1.0,
   regKind: RegularizationKind = 'none',
   lambda = 0.0,
-  convention: SubgradConvention = 'zero'
+  convention: SubgradConvention = 'zero',
+  predictor?: PredictorModel,
+  extraParams?: Record<string, number>,
+  computeAllParamGrads = false
 ): LossAndGrad {
   const n = xs.length;
 
@@ -222,8 +275,23 @@ export function evaluateEmpiricalLossAndGrad(
   // Synthetic quadratic fallback if dataset is empty (e.g., T-10 spectral curvature landscape)
   if (n === 0) {
     const lam = Math.max(lambda, 1e-4);
-    const loss = 0.5 * lam * w1 * w1 + 0.5 * w2 * w2;
-    return { loss, gradW1: lam * w1, gradW2: w2 };
+    let loss = 0.5 * lam * w1 * w1 + 0.5 * w2 * w2;
+    const gradW1 = lam * w1;
+    const gradW2 = w2;
+    let gradParams: Record<string, number> | undefined;
+    if (computeAllParamGrads && predictor) {
+      gradParams = {
+        [predictor.w1Key]: gradW1,
+        [predictor.w2Key]: gradW2,
+      };
+      for (const pName of predictor.paramNames) {
+        if (pName === predictor.w1Key || pName === predictor.w2Key) continue;
+        const pVal = extraParams?.[pName] ?? predictor.baseParams[pName] ?? 0.0;
+        loss += 0.5 * pVal * pVal;
+        gradParams[pName] = pVal;
+      }
+    }
+    return { loss, gradW1, gradW2, gradParams };
   }
 
   let sumLoss = 0.0;
@@ -231,6 +299,128 @@ export function evaluateEmpiricalLossAndGrad(
   let sumG2 = 0.0;
   const invN = 1.0 / n;
   const d = Math.max(Math.abs(delta), 1e-6);
+
+  // Universal custom predictor path: evaluates the user's compiled AST expression & symbolic parameter gradients
+  if (predictor && predictor.isCustomPredictor) {
+    const evalParams: Record<string, number> = {
+      ...predictor.baseParams,
+      ...(extraParams ?? {}),
+      [predictor.w1Key]: w1,
+      [predictor.w2Key]: w2,
+    };
+    const gradW1Fn = predictor.paramGradKernels[predictor.w1Key];
+    const gradW2Fn = predictor.paramGradKernels[predictor.w2Key];
+    const otherParamNames = computeAllParamGrads
+      ? predictor.paramNames.filter(
+          (p) => p !== predictor.w1Key && p !== predictor.w2Key
+        )
+      : [];
+    const otherGradSums = new Float64Array(otherParamNames.length);
+
+    let validCount = 0;
+
+    for (let i = 0; i < n; i++) {
+      const x = xs[i];
+      const y = ys[i];
+      const z = predictor.evalScalar(x, evalParams);
+      if (!Number.isFinite(z)) continue;
+      validCount++;
+      let dlDz = 0.0;
+
+      switch (lossKind) {
+        case 'mse': {
+          const r = z - y;
+          sumLoss += 0.5 * r * r;
+          dlDz = r;
+          break;
+        }
+        case 'mae': {
+          const r = z - y;
+          sumLoss += Math.abs(r);
+          dlDz = r > 0 ? 1.0 : r < 0 ? -1.0 : 0.0;
+          break;
+        }
+        case 'huber': {
+          const r = z - y;
+          sumLoss += huber(r, d);
+          dlDz = Math.abs(r) <= d ? r : r > 0 ? d : -d;
+          break;
+        }
+        case 'bce': {
+          sumLoss += bceWithLogits(y, z);
+          dlDz = safeSigmoid(z) - y;
+          break;
+        }
+        case 'hinge': {
+          const yy = y > 0 ? 1.0 : -1.0;
+          const margin = 1.0 - yy * z;
+          if (margin > 0) {
+            sumLoss += margin;
+            dlDz = -yy;
+          } else if (margin === 0 && convention === 'symmetric') {
+            dlDz = -0.5 * yy;
+          }
+          break;
+        }
+      }
+
+      if (dlDz !== 0.0) {
+        if (gradW1Fn) {
+          const dz1 = gradW1Fn(x, evalParams);
+          if (Number.isFinite(dz1)) sumG1 += dlDz * dz1;
+        }
+        if (gradW2Fn) {
+          const dz2 = gradW2Fn(x, evalParams);
+          if (Number.isFinite(dz2)) sumG2 += dlDz * dz2;
+        }
+        for (let pIdx = 0; pIdx < otherParamNames.length; pIdx++) {
+          const pFn = predictor.paramGradKernels[otherParamNames[pIdx]];
+          if (pFn) {
+            const dzp = pFn(x, evalParams);
+            if (Number.isFinite(dzp)) otherGradSums[pIdx] += dlDz * dzp;
+          }
+        }
+      }
+    }
+
+    const invValid = validCount > 0 ? 1.0 / validCount : 0.0;
+    let totalLoss = sumLoss * invValid;
+    let gradW1 = sumG1 * invValid;
+    let gradW2 = sumG2 * invValid;
+
+    if (regKind === 'l1' && lambda > 0) {
+      totalLoss += lambda * (Math.abs(w1) + Math.abs(w2));
+      gradW1 += lambda * (w1 > 0 ? 1.0 : w1 < 0 ? -1.0 : 0.0);
+      gradW2 += lambda * (w2 > 0 ? 1.0 : w2 < 0 ? -1.0 : 0.0);
+    } else if (regKind === 'l2' && lambda > 0) {
+      totalLoss += 0.5 * lambda * (w1 * w1 + w2 * w2);
+      gradW1 += lambda * w1;
+      gradW2 += lambda * w2;
+    }
+
+    let gradParams: Record<string, number> | undefined;
+    if (computeAllParamGrads) {
+      gradParams = {
+        [predictor.w1Key]: gradW1,
+        [predictor.w2Key]: gradW2,
+      };
+      for (let pIdx = 0; pIdx < otherParamNames.length; pIdx++) {
+        const pName = otherParamNames[pIdx];
+        const pVal = evalParams[pName] ?? 0.0;
+        let gP = otherGradSums[pIdx] * invValid;
+        if (regKind === 'l1' && lambda > 0) {
+          totalLoss += lambda * Math.abs(pVal);
+          gP += lambda * (pVal > 0 ? 1.0 : pVal < 0 ? -1.0 : 0.0);
+        } else if (regKind === 'l2' && lambda > 0) {
+          totalLoss += 0.5 * lambda * pVal * pVal;
+          gP += lambda * pVal;
+        }
+        gradParams[pName] = gP;
+      }
+    }
+
+    return { loss: totalLoss, gradW1, gradW2, gradParams };
+  }
 
   for (let i = 0; i < n; i++) {
     const x = xs[i];
@@ -299,7 +489,15 @@ export function evaluateEmpiricalLossAndGrad(
     gradW2 += lambda * w2;
   }
 
-  return { loss: totalLoss, gradW1, gradW2 };
+  let gradParams: Record<string, number> | undefined;
+  if (computeAllParamGrads && predictor) {
+    gradParams = {
+      [predictor.w1Key]: gradW1,
+      [predictor.w2Key]: gradW2,
+    };
+  }
+
+  return { loss: totalLoss, gradW1, gradW2, gradParams };
 }
 
 /**
@@ -311,11 +509,23 @@ export function evaluateSingleSamplePull(
   w2: number,
   point: DataPoint2D,
   lossKind: LossKind,
-  delta = 1.0
+  delta = 1.0,
+  predictor?: PredictorModel
 ): { sampleLoss: number; pullW1: number; pullW2: number } {
   const xs = new Float64Array([point.x]);
   const ys = new Float64Array([point.y]);
-  const res = evaluateEmpiricalLossAndGrad(w1, w2, xs, ys, lossKind, delta);
+  const res = evaluateEmpiricalLossAndGrad(
+    w1,
+    w2,
+    xs,
+    ys,
+    lossKind,
+    delta,
+    'none',
+    0.0,
+    'zero',
+    predictor
+  );
   return {
     sampleLoss: res.loss,
     pullW1: -res.gradW1,
@@ -334,7 +544,8 @@ export function computeLossSurfaceAndVectorField(
   regKind: RegularizationKind,
   lambda: number,
   gridSize = 128,
-  vectorGridSize = 50
+  vectorGridSize = 50,
+  predictor?: PredictorModel
 ): {
   lossGrid: Float32Array;
   minLoss: number;
@@ -371,7 +582,9 @@ export function computeLossSurfaceAndVectorField(
         lossKind,
         delta,
         regKind,
-        lambda
+        lambda,
+        'zero',
+        predictor
       );
       const safeL = Number.isFinite(ev.loss) ? ev.loss : 100.0;
       coarseLoss[rOff + c] = safeL;

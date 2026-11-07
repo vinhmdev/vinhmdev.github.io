@@ -134,7 +134,17 @@ export function DualViewportPanel({
   for (const [k, s] of Object.entries(graph.sliders)) {
     paramValues[k] = s.value;
   }
-  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(graph.sliders);
+  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(
+    graph.sliders,
+    graph.surfaceParamW1,
+    graph.surfaceParamW2
+  );
+  const paramSliderKeys = Object.values(graph.sliders)
+    .filter((s) => s.role === 'param')
+    .map((s) => s.name);
+  const fitLossExprId = (
+    graph.expressions.find((e) => e.fitLoss) ?? graph.expressions[0]
+  )?.id;
 
   // Observe Left & Right viewport container dimensions + devicePixelRatio changes
   useEffect(() => {
@@ -225,6 +235,7 @@ export function DualViewportPanel({
       rightViewportMode: graph.rightViewportMode,
       paramValues,
       whiteboardStrokes: allStrokes,
+      fitLossExprId,
     });
   }, [
     showLeft,
@@ -243,6 +254,7 @@ export function DualViewportPanel({
     graph.rightViewportMode,
     whiteboardStrokes,
     draftStroke,
+    fitLossExprId,
     JSON.stringify(paramValues),
   ]);
 
@@ -1060,8 +1072,52 @@ export function DualViewportPanel({
                           </label>
                         </div>
 
-                        <div class="text-[10px] font-mono text-neutral-500">
-                          Active Parameter Axes: ({w1Key}, {w2Key})
+                        <div class="flex flex-col gap-1 pt-1 border-t border-neutral-200 dark:border-neutral-800">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                            3D Surface Parameter Axes ({w1Key}, {w2Key})
+                          </span>
+                          {paramSliderKeys.length >= 2 && (
+                            <div class="grid grid-cols-2 gap-1.5">
+                              <select
+                                aria-label="Surface Axis 1 Parameter"
+                                value={w1Key}
+                                onChange={(e) => {
+                                  const nextW1 = (e.target as HTMLSelectElement).value;
+                                  const nextW2 =
+                                    nextW1 === w2Key
+                                      ? (paramSliderKeys.find((k) => k !== nextW1) ?? w2Key)
+                                      : w2Key;
+                                  storeState.setSurfaceParamAxes(nextW1, nextW2);
+                                }}
+                                class="h-6 px-1.5 rounded bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-[11px]"
+                              >
+                                {paramSliderKeys.map((k) => (
+                                  <option key={k} value={k}>
+                                    X: {k}
+                                  </option>
+                                ))}
+                              </select>
+                              <select
+                                aria-label="Surface Axis 2 Parameter"
+                                value={w2Key}
+                                onChange={(e) => {
+                                  const nextW2 = (e.target as HTMLSelectElement).value;
+                                  const nextW1 =
+                                    nextW2 === w1Key
+                                      ? (paramSliderKeys.find((k) => k !== nextW2) ?? w1Key)
+                                      : w1Key;
+                                  storeState.setSurfaceParamAxes(nextW1, nextW2);
+                                }}
+                                class="h-6 px-1.5 rounded bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-[11px]"
+                              >
+                                {paramSliderKeys.map((k) => (
+                                  <option key={k} value={k}>
+                                    Y: {k}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                         </div>
                       </>
                     )}

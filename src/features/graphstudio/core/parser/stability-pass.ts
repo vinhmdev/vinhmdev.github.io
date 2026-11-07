@@ -37,8 +37,11 @@ export function applyStabilityPass(expr: MathJsonExpr): MathJsonExpr {
     return ['SafeSoftplus', args[0]];
   }
 
-  // Rule 3: Explicit Softmax -> SafeSoftmax
+  // Rule 3: Explicit Softmax -> SafeSigmoid (when unary 1D attention gate) or SafeSoftmax (multi-arg simplex)
   if (head === 'Softmax') {
+    if (args.length === 1) {
+      return ['SafeSigmoid', args[0]];
+    }
     return ['SafeSoftmax', ...args];
   }
 

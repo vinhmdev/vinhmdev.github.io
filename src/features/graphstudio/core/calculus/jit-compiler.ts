@@ -87,7 +87,7 @@ export function compileJet2Kernel(
 
     const [head, ...args] = node;
     const childIds = args.map(emitNode);
-    const bit = 1 << ((bitCounter++) & 28);
+    const nextBit = (): number => 1 << (bitCounter++ % 29);
 
     switch (head) {
       case 'Negate': {
@@ -102,7 +102,7 @@ export function compileJet2Kernel(
       case 'Add': {
         const [a, b] = childIds;
         statements.push(
-          `const v${id} = v${a} + v${b}, d1_${id} = d1_${a} + d1_${b}, d2_${id} = d2_${a} + d2_${b}, bm${id} = bm${a} ^ bm${b}, dm${id} = dm${a} ^ dm${b};`
+          `const v${id} = v${a} + v${b}, d1_${id} = d1_${a} + d1_${b}, d2_${id} = d2_${a} + d2_${b}, bm${id} = bm${a} | bm${b}, dm${id} = dm${a} | dm${b};`
         );
         scalarStatements.push(`const v${id} = v${a} + v${b};`);
         break;
@@ -111,7 +111,7 @@ export function compileJet2Kernel(
       case 'Subtract': {
         const [a, b] = childIds;
         statements.push(
-          `const v${id} = v${a} - v${b}, d1_${id} = d1_${a} - d1_${b}, d2_${id} = d2_${a} - d2_${b}, bm${id} = bm${a} ^ bm${b}, dm${id} = dm${a} ^ dm${b};`
+          `const v${id} = v${a} - v${b}, d1_${id} = d1_${a} - d1_${b}, d2_${id} = d2_${a} - d2_${b}, bm${id} = bm${a} | bm${b}, dm${id} = dm${a} | dm${b};`
         );
         scalarStatements.push(`const v${id} = v${a} - v${b};`);
         break;
@@ -123,7 +123,7 @@ export function compileJet2Kernel(
           `const v${id} = v${a} * v${b}, ` +
             `d1_${id} = d1_${a} * v${b} + v${a} * d1_${b}, ` +
             `d2_${id} = d2_${a} * v${b} + 2.0 * d1_${a} * d1_${b} + v${a} * d2_${b}, ` +
-            `bm${id} = bm${a} ^ bm${b}, dm${id} = dm${a} ^ dm${b};`
+            `bm${id} = bm${a} | bm${b}, dm${id} = dm${a} | dm${b};`
         );
         scalarStatements.push(`const v${id} = v${a} * v${b};`);
         break;
@@ -131,14 +131,15 @@ export function compileJet2Kernel(
 
       case 'Divide': {
         const [a, b] = childIds;
+        const bit = nextBit();
         // Mark pole discontinuity bit when denominator v_b changes sign!
         statements.push(
           `const inv_${id} = v${b} === 0.0 ? NaN : 1.0 / v${b}; ` +
             `const v${id} = v${a} * inv_${id}; ` +
             `const d1_${id} = (d1_${a} - v${id} * d1_${b}) * inv_${id}; ` +
             `const d2_${id} = (d2_${a} - 2.0 * d1_${id} * d1_${b} - v${id} * d2_${b}) * inv_${id}; ` +
-            `const bm${id} = bm${a} ^ bm${b}; ` +
-            `const dm${id} = dm${a} ^ dm${b} ^ (v${b} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a} | bm${b}; ` +
+            `const dm${id} = dm${a} | dm${b} | (v${b} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${b} === 0.0 ? NaN : v${a} / v${b};`);
         break;
@@ -147,7 +148,7 @@ export function compileJet2Kernel(
       case 'Power': {
         const [a, b] = childIds;
         statements.push(
-          `let v${id}, d1_${id}, d2_${id}, bm${id} = bm${a} ^ bm${b}, dm${id} = dm${a} ^ dm${b}; ` +
+          `let v${id}, d1_${id}, d2_${id}, bm${id} = bm${a} | bm${b}, dm${id} = dm${a} | dm${b}; ` +
             `if (d1_${b} === 0.0 && d2_${b} === 0.0) { ` +
             `  v${id} = Math.pow(v${a}, v${b}); ` +
             `  const p1 = v${b} === 0.0 ? 0.0 : v${b} * Math.pow(v${a}, v${b} - 1.0); ` +
@@ -188,10 +189,11 @@ export function compileJet2Kernel(
 
       case 'Tan': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const c_${id} = Math.cos(v${a}), v${id} = Math.tan(v${a}), sec2_${id} = 1.0 / (c_${id} * c_${id}); ` +
             `const d1_${id} = sec2_${id} * d1_${a}, d2_${id} = sec2_${id} * d2_${a} + 2.0 * sec2_${id} * v${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (c_${id} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (c_${id} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.tan(v${a});`);
         break;
@@ -199,10 +201,11 @@ export function compileJet2Kernel(
 
       case 'Cot': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const s_${id} = Math.sin(v${a}), c_${id} = Math.cos(v${a}), v${id} = s_${id} === 0.0 ? NaN : c_${id} / s_${id}, csc2_${id} = 1.0 / (s_${id} * s_${id}); ` +
             `const d1_${id} = -csc2_${id} * d1_${a}, d2_${id} = -csc2_${id} * d2_${a} + 2.0 * csc2_${id} * v${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (s_${id} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (s_${id} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.sin(v${a}) === 0.0 ? NaN : Math.cos(v${a}) / Math.sin(v${a});`);
         break;
@@ -210,11 +213,12 @@ export function compileJet2Kernel(
 
       case 'Sec': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const c_${id} = Math.cos(v${a}), v${id} = c_${id} === 0.0 ? NaN : 1.0 / c_${id}, t_${id} = Math.tan(v${a}); ` +
             `const fp_${id} = v${id} * t_${id}, fpp_${id} = v${id} * (t_${id} * t_${id} + v${id} * v${id}); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (c_${id} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (c_${id} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.cos(v${a}) === 0.0 ? NaN : 1.0 / Math.cos(v${a});`);
         break;
@@ -222,11 +226,12 @@ export function compileJet2Kernel(
 
       case 'Csc': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const s_${id} = Math.sin(v${a}), v${id} = s_${id} === 0.0 ? NaN : 1.0 / s_${id}, cot_${id} = Math.cos(v${a}) / s_${id}; ` +
             `const fp_${id} = -v${id} * cot_${id}, fpp_${id} = v${id} * (cot_${id} * cot_${id} + v${id} * v${id}); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (s_${id} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (s_${id} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.sin(v${a}) === 0.0 ? NaN : 1.0 / Math.sin(v${a});`);
         break;
@@ -234,12 +239,13 @@ export function compileJet2Kernel(
 
       case 'Asin': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = Math.abs(v${a}) <= 1.0 ? Math.asin(v${a}) : NaN; ` +
             `const q_${id} = 1.0 - v${a} * v${a}, fp_${id} = q_${id} > 1e-15 ? 1.0 / Math.sqrt(q_${id}) : NaN; ` +
             `const fpp_${id} = q_${id} > 1e-15 ? v${a} / (q_${id} * Math.sqrt(q_${id})) : NaN; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.abs(v${a}) <= 1.0 ? Math.asin(v${a}) : NaN;`);
         break;
@@ -247,12 +253,13 @@ export function compileJet2Kernel(
 
       case 'Acos': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = Math.abs(v${a}) <= 1.0 ? Math.acos(v${a}) : NaN; ` +
             `const q_${id} = 1.0 - v${a} * v${a}, fp_${id} = q_${id} > 1e-15 ? -1.0 / Math.sqrt(q_${id}) : NaN; ` +
             `const fpp_${id} = q_${id} > 1e-15 ? -v${a} / (q_${id} * Math.sqrt(q_${id})) : NaN; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (Math.abs(v${a}) <= 1.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.abs(v${a}) <= 1.0 ? Math.acos(v${a}) : NaN;`);
         break;
@@ -309,11 +316,12 @@ export function compileJet2Kernel(
 
       case 'Ln': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = v${a} > 0.0 ? Math.log(v${a}) : NaN; ` +
             `const inv_${id} = v${a} > 0.0 ? 1.0 / v${a} : NaN; ` +
             `const d1_${id} = inv_${id} * d1_${a}, d2_${id} = inv_${id} * d2_${a} - inv_${id} * inv_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? Math.log(v${a}) : NaN;`);
         break;
@@ -321,13 +329,14 @@ export function compileJet2Kernel(
 
       case 'Log10': {
         const a = childIds[0];
+        const bit = nextBit();
         const invLn10 = 1.0 / Math.LN10;
         statements.push(
           `const v${id} = v${a} > 0.0 ? Math.log10(v${a}) : NaN; ` +
             `const fp_${id} = v${a} > 0.0 ? ${invLn10} / v${a} : NaN; ` +
             `const fpp_${id} = v${a} > 0.0 ? -${invLn10} / (v${a} * v${a}) : NaN; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? Math.log10(v${a}) : NaN;`);
         break;
@@ -335,13 +344,14 @@ export function compileJet2Kernel(
 
       case 'Log2': {
         const a = childIds[0];
+        const bit = nextBit();
         const invLn2 = 1.0 / Math.LN2;
         statements.push(
           `const v${id} = v${a} > 0.0 ? Math.log2(v${a}) : NaN; ` +
             `const fp_${id} = v${a} > 0.0 ? ${invLn2} / v${a} : NaN; ` +
             `const fpp_${id} = v${a} > 0.0 ? -${invLn2} / (v${a} * v${a}) : NaN; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? Math.log2(v${a}) : NaN;`);
         break;
@@ -349,12 +359,13 @@ export function compileJet2Kernel(
 
       case 'Sqrt': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = v${a} >= 0.0 ? Math.sqrt(v${a}) : NaN; ` +
             `const fp_${id} = v${id} > 1e-15 ? 0.5 / v${id} : 0.0; ` +
             `const fpp_${id} = v${id} > 1e-15 ? -0.25 / (v${a} * v${id}) : 0.0; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = v${a} >= 0.0 ? Math.sqrt(v${a}) : NaN;`);
         break;
@@ -407,12 +418,13 @@ export function compileJet2Kernel(
 
       case 'ReLU': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = v${a} > 0.0 ? v${a} : 0.0; ` +
             `const fp_${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? 0.0 : h0); ` +
             `const fpp_${id} = rt.diracMollifier(v${a}, diracTau); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? v${a} : 0.0;`);
         break;
@@ -421,6 +433,7 @@ export function compileJet2Kernel(
       case 'LeakyReLU': {
         const a = childIds[0];
         const alphaId = childIds[1];
+        const bit = nextBit();
         const alphaExpr = alphaId !== undefined ? `v${alphaId}` : '(params["alpha"] ?? 0.1)';
         statements.push(
           `const al_${id} = ${alphaExpr}; ` +
@@ -428,7 +441,7 @@ export function compileJet2Kernel(
             `const fp_${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? al_${id} : al_${id} + (1.0 - al_${id}) * h0); ` +
             `const fpp_${id} = (1.0 - al_${id}) * rt.diracMollifier(v${a}, diracTau); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = v${a} >= 0.0 ? v${a} : (${alphaExpr}) * v${a};`);
         break;
@@ -437,6 +450,7 @@ export function compileJet2Kernel(
       case 'ELU': {
         const a = childIds[0];
         const alphaId = childIds[1];
+        const bit = nextBit();
         const alphaExpr = alphaId !== undefined ? `v${alphaId}` : '(params["alpha"] ?? 1.0)';
         statements.push(
           `const al_${id} = ${alphaExpr}; ` +
@@ -444,7 +458,7 @@ export function compileJet2Kernel(
             `const fp_${id} = v${a} >= 0.0 ? 1.0 : al_${id} * Math.exp(v${a}); ` +
             `const fpp_${id} = v${a} >= 0.0 ? 0.0 : al_${id} * Math.exp(v${a}); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = rt.elu(v${a}, ${alphaExpr});`);
         break;
@@ -478,12 +492,13 @@ export function compileJet2Kernel(
 
       case 'Abs': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = Math.abs(v${a}); ` +
             `const fp_${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? -1.0 : 0.0); ` +
             `const fpp_${id} = 2.0 * rt.diracMollifier(v${a}, diracTau); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = Math.abs(v${a});`);
         break;
@@ -491,11 +506,12 @@ export function compileJet2Kernel(
 
       case 'Heaviside': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? 0.0 : h0); ` +
             `const fp_${id} = rt.diracMollifier(v${a}, diracTau); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = 0.0; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? 0.0 : 0.0);`);
         break;
@@ -503,11 +519,12 @@ export function compileJet2Kernel(
 
       case 'Sign': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? -1.0 : 0.0); ` +
             `const fp_${id} = 2.0 * rt.diracMollifier(v${a}, diracTau); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = 0.0; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} >= 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} >= 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = v${a} > 0.0 ? 1.0 : (v${a} < 0.0 ? -1.0 : 0.0);`);
         break;
@@ -529,14 +546,15 @@ export function compileJet2Kernel(
         const a = childIds[0];
         const dId = childIds[1];
         const dExpr = dId !== undefined ? `Math.max(Math.abs(v${dId}), 1e-6)` : 'Math.max(Math.abs(params["delta"] ?? 1.0), 1e-6)';
-        const bit2 = 1 << ((bitCounter++) & 28);
+        const bit = nextBit();
+        const bit2 = nextBit();
         statements.push(
           `const dl_${id} = ${dExpr}, v${id} = rt.huber(v${a}, dl_${id}); ` +
             `const inQuad_${id} = Math.abs(v${a}) <= dl_${id}; ` +
             `const fp_${id} = inQuad_${id} ? v${a} : (v${a} > 0.0 ? dl_${id} : -dl_${id}); ` +
             `const fpp_${id} = inQuad_${id} ? 1.0 : 0.0; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a} ^ (v${a} >= -dl_${id} ? ${bit} : 0) ^ (v${a} >= dl_${id} ? ${bit2} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (v${a} >= -dl_${id} ? ${bit} : 0) | (v${a} >= dl_${id} ? ${bit2} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = rt.huber(v${a}, ${dExpr});`);
         break;
@@ -545,13 +563,14 @@ export function compileJet2Kernel(
       case 'Hinge': {
         const a = childIds[0];
         const yId = childIds[1];
+        const bit = nextBit();
         const yExpr = yId !== undefined ? `v${yId}` : '(params["y"] ?? 1.0)';
         statements.push(
           `const yy_${id} = ${yExpr}, m_${id} = 1.0 - yy_${id} * v${a}; ` +
             `const v${id} = m_${id} > 0.0 ? m_${id} : 0.0; ` +
             `const fp_${id} = m_${id} > 0.0 ? -yy_${id} : (m_${id} < 0.0 ? 0.0 : -yy_${id} * h0); ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a}; ` +
-            `const bm${id} = bm${a} ^ (m_${id} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
+            `const bm${id} = bm${a} | (m_${id} >= 0.0 ? ${bit} : 0), dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = Math.max(0.0, 1.0 - (${yExpr}) * v${a});`);
         break;
@@ -565,7 +584,7 @@ export function compileJet2Kernel(
             `const fpp_${id} = rt.safeSigmoidDeriv1(v${zId}); ` +
             `const d1_${id} = fp_${id} * d1_${zId} - v${zId} * d1_${yId}; ` +
             `const d2_${id} = fp_${id} * d2_${zId} + fpp_${id} * d1_${zId} * d1_${zId}; ` +
-            `const bm${id} = bm${yId} ^ bm${zId}, dm${id} = dm${yId} ^ dm${zId};`
+            `const bm${id} = bm${yId} | bm${zId}, dm${id} = dm${yId} | dm${zId};`
         );
         scalarStatements.push(`const v${id} = rt.bceWithLogits(v${yId}, v${zId});`);
         break;
@@ -573,22 +592,45 @@ export function compileJet2Kernel(
 
       case 'SafeSoftmax': {
         const zi = childIds[0];
-        const z1 = childIds[1] ?? zi;
-        const z2 = childIds[2] ?? zi;
-        const z3 = childIds[3] ?? zi;
-        const tauId = childIds[4];
-        const tauExpr = tauId !== undefined ? `v${tauId}` : '(params["tau"] ?? 0.5)';
-        statements.push(
-          `const t_${id} = Math.max(Math.abs(${tauExpr}), 1e-9); ` +
-            `const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2}, v${z3}, t_${id}); ` +
-            `const fp_${id} = (v${id} * (1.0 - v${id})) / t_${id}; ` +
-            `const fpp_${id} = (fp_${id} * (1.0 - 2.0 * v${id})) / t_${id}; ` +
-            `const d1_${id} = fp_${id} * d1_${zi}, d2_${id} = fp_${id} * d2_${zi} + fpp_${id} * d1_${zi} * d1_${zi}; ` +
-            `const bm${id} = bm${zi}, dm${id} = dm${zi};`
-        );
-        scalarStatements.push(
-          `const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2}, v${z3}, ${tauExpr});`
-        );
+        if (childIds.length === 2) {
+          const z1 = childIds[1];
+          statements.push(
+            `const v${id} = rt.safeSoftmax(v${zi}, v${z1}); ` +
+              `const fp_${id} = v${id} * (1.0 - v${id}); ` +
+              `const fpp_${id} = fp_${id} * (1.0 - 2.0 * v${id}); ` +
+              `const d1_${id} = fp_${id} * (d1_${zi} - d1_${z1}), d2_${id} = fp_${id} * (d2_${zi} - d2_${z1}) + fpp_${id} * (d1_${zi} - d1_${z1}) * (d1_${zi} - d1_${z1}); ` +
+              `const bm${id} = bm${zi} | bm${z1}, dm${id} = dm${zi} | dm${z1};`
+          );
+          scalarStatements.push(`const v${id} = rt.safeSoftmax(v${zi}, v${z1});`);
+        } else if (childIds.length === 3) {
+          const z1 = childIds[1];
+          const z2 = childIds[2];
+          statements.push(
+            `const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2}); ` +
+              `const fp_${id} = v${id} * (1.0 - v${id}); ` +
+              `const fpp_${id} = fp_${id} * (1.0 - 2.0 * v${id}); ` +
+              `const d1_${id} = fp_${id} * d1_${zi}, d2_${id} = fp_${id} * d2_${zi} + fpp_${id} * d1_${zi} * d1_${zi}; ` +
+              `const bm${id} = bm${zi}, dm${id} = dm${zi};`
+          );
+          scalarStatements.push(`const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2});`);
+        } else {
+          const z1 = childIds[1] ?? zi;
+          const z2 = childIds[2] ?? zi;
+          const z3 = childIds[3] ?? zi;
+          const tauId = childIds[4];
+          const tauExpr = tauId !== undefined ? `v${tauId}` : '(params["tau"] ?? 0.5)';
+          statements.push(
+            `const t_${id} = Math.max(Math.abs(${tauExpr}), 1e-9); ` +
+              `const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2}, v${z3}, t_${id}); ` +
+              `const fp_${id} = (v${id} * (1.0 - v${id})) / t_${id}; ` +
+              `const fpp_${id} = (fp_${id} * (1.0 - 2.0 * v${id})) / t_${id}; ` +
+              `const d1_${id} = fp_${id} * d1_${zi}, d2_${id} = fp_${id} * d2_${zi} + fpp_${id} * d1_${zi} * d1_${zi}; ` +
+              `const bm${id} = bm${zi}, dm${id} = dm${zi};`
+          );
+          scalarStatements.push(
+            `const v${id} = rt.safeSoftmax(v${zi}, v${z1}, v${z2}, v${z3}, ${tauExpr});`
+          );
+        }
         break;
       }
 
@@ -598,7 +640,7 @@ export function compileJet2Kernel(
           `const v${id} = rt.safeXLogY(v${xId}, v${yId}); ` +
             `const sy_${id} = Math.max(v${yId}, 1e-15); ` +
             `const d1_${id} = (v${xId} === 0.0 && d1_${xId} === 0.0) ? 0.0 : (d1_${xId} * Math.log(sy_${id}) + (v${xId} / sy_${id}) * d1_${yId}); ` +
-            `const d2_${id} = 0.0, bm${id} = bm${xId} ^ bm${yId}, dm${id} = dm${xId} ^ dm${yId};`
+            `const d2_${id} = 0.0, bm${id} = bm${xId} | bm${yId}, dm${id} = dm${xId} | dm${yId};`
         );
         scalarStatements.push(`const v${id} = rt.safeXLogY(v${xId}, v${yId});`);
         break;
@@ -621,12 +663,13 @@ export function compileJet2Kernel(
 
       case 'Max': {
         const [a, b] = childIds;
+        const bit = nextBit();
         statements.push(
           `const aGtB_${id} = v${a} >= v${b}; ` +
             `const v${id} = aGtB_${id} ? v${a} : v${b}; ` +
             `const d1_${id} = v${a} > v${b} ? d1_${a} : (v${a} < v${b} ? d1_${b} : h0 * d1_${a} + (1.0 - h0) * d1_${b}); ` +
             `const d2_${id} = (aGtB_${id} ? d2_${a} : d2_${b}) + Math.abs(d1_${a} - d1_${b}) * rt.diracMollifier(v${a} - v${b}, diracTau); ` +
-            `const bm${id} = bm${a} ^ bm${b} ^ (aGtB_${id} ? ${bit} : 0), dm${id} = dm${a} ^ dm${b};`
+            `const bm${id} = bm${a} | bm${b} | (aGtB_${id} ? ${bit} : 0), dm${id} = dm${a} | dm${b};`
         );
         scalarStatements.push(`const v${id} = v${a} >= v${b} ? v${a} : v${b};`);
         break;
@@ -634,12 +677,13 @@ export function compileJet2Kernel(
 
       case 'Min': {
         const [a, b] = childIds;
+        const bit = nextBit();
         statements.push(
           `const aLtB_${id} = v${a} <= v${b}; ` +
             `const v${id} = aLtB_${id} ? v${a} : v${b}; ` +
             `const d1_${id} = v${a} < v${b} ? d1_${a} : (v${a} > v${b} ? d1_${b} : h0 * d1_${a} + (1.0 - h0) * d1_${b}); ` +
             `const d2_${id} = (aLtB_${id} ? d2_${a} : d2_${b}) - Math.abs(d1_${a} - d1_${b}) * rt.diracMollifier(v${a} - v${b}, diracTau); ` +
-            `const bm${id} = bm${a} ^ bm${b} ^ (aLtB_${id} ? ${bit} : 0), dm${id} = dm${a} ^ dm${b};`
+            `const bm${id} = bm${a} | bm${b} | (aLtB_${id} ? ${bit} : 0), dm${id} = dm${a} | dm${b};`
         );
         scalarStatements.push(`const v${id} = v${a} <= v${b} ? v${a} : v${b};`);
         break;
@@ -659,8 +703,9 @@ export function compileJet2Kernel(
 
       case 'Floor': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
-          `const v${id} = Math.floor(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a} ^ ((Math.floor(v${a}) & 1) !== 0 ? ${bit} : 0);`
+          `const v${id} = Math.floor(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a} | ((Math.floor(v${a}) & 1) !== 0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.floor(v${a});`);
         break;
@@ -668,8 +713,9 @@ export function compileJet2Kernel(
 
       case 'Ceil': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
-          `const v${id} = Math.ceil(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a} ^ ((Math.ceil(v${a}) & 1) !== 0 ? ${bit} : 0);`
+          `const v${id} = Math.ceil(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a} | ((Math.ceil(v${a}) & 1) !== 0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = Math.ceil(v${a});`);
         break;
@@ -677,12 +723,13 @@ export function compileJet2Kernel(
 
       case 'Lgamma': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = rt.lgamma(v${a}); ` +
             `const fp_${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-5) - rt.lgamma(v${a} - 1e-5)) / 2e-5 : NaN; ` +
             `const fpp_${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-4) - 2.0 * v${id} + rt.lgamma(v${a} - 1e-4)) / 1e-8 : NaN; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = rt.lgamma(v${a});`);
         break;
@@ -690,12 +737,13 @@ export function compileJet2Kernel(
 
       case 'Gamma': {
         const a = childIds[0];
+        const bit = nextBit();
         statements.push(
           `const v${id} = rt.gamma(v${a}); ` +
             `const psi_${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-5) - rt.lgamma(v${a} - 1e-5)) / 2e-5 : NaN; ` +
             `const fp_${id} = v${id} * psi_${id}; ` +
             `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a}; ` +
-            `const bm${id} = bm${a}, dm${id} = dm${a} ^ (v${a} > 0.0 ? ${bit} : 0);`
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
         );
         scalarStatements.push(`const v${id} = rt.gamma(v${a});`);
         break;
@@ -710,7 +758,7 @@ export function compileJet2Kernel(
             `const fpp_${id} = v${yId} / (cp_${id} * cp_${id}) + (1.0 - v${yId}) / ((1.0 - cp_${id}) * (1.0 - cp_${id})); ` +
             `const d1_${id} = fp_${id} * d1_${pId}; ` +
             `const d2_${id} = fp_${id} * d2_${pId} + fpp_${id} * d1_${pId} * d1_${pId}; ` +
-            `const bm${id} = bm${yId} ^ bm${pId}, dm${id} = dm${yId} ^ dm${pId};`
+            `const bm${id} = bm${yId} | bm${pId}, dm${id} = dm${yId} | dm${pId};`
         );
         scalarStatements.push(`const v${id} = rt.bce(v${yId}, v${pId});`);
         break;
@@ -732,6 +780,90 @@ export function compileJet2Kernel(
           `const v${id} = rt.geluDeriv2(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = rt.geluDeriv2(v${a});`);
+        break;
+      }
+
+      case 'Less':
+      case 'LessEqual':
+      case 'Greater':
+      case 'GreaterEqual':
+      case 'Equal':
+      case 'NotEqual': {
+        const [a, b] = childIds;
+        const bit = nextBit();
+        const cmpExpr =
+          head === 'Less'
+            ? `(v${a} < v${b})`
+            : head === 'LessEqual'
+              ? `(v${a} <= v${b})`
+              : head === 'Greater'
+                ? `(v${a} > v${b})`
+                : head === 'GreaterEqual'
+                  ? `(v${a} >= v${b})`
+                  : head === 'Equal'
+                    ? `(Math.abs(v${a} - v${b}) <= 1e-9)`
+                    : `(Math.abs(v${a} - v${b}) > 1e-9)`;
+        statements.push(
+          `const v${id} = ${cmpExpr} ? 1.0 : 0.0, d1_${id} = 0.0, d2_${id} = 0.0, ` +
+            `bm${id} = bm${a} | bm${b} | (v${id} > 0.5 ? ${bit} : 0), dm${id} = dm${a} | dm${b};`
+        );
+        scalarStatements.push(`const v${id} = ${cmpExpr} ? 1.0 : 0.0;`);
+        break;
+      }
+
+      case 'And':
+      case 'Or': {
+        const bit = nextBit();
+        const joinOp = head === 'And' ? ' && ' : ' || ';
+        const boolExpr =
+          childIds.length > 0
+            ? childIds.map((c) => `(v${c} > 0.5)`).join(joinOp)
+            : 'false';
+        const bmOr = childIds.length > 0 ? childIds.map((c) => `bm${c}`).join(' | ') : '0';
+        const dmOr = childIds.length > 0 ? childIds.map((c) => `dm${c}`).join(' | ') : '0';
+        statements.push(
+          `const v${id} = (${boolExpr}) ? 1.0 : 0.0, d1_${id} = 0.0, d2_${id} = 0.0, ` +
+            `bm${id} = ${bmOr} | (v${id} > 0.5 ? ${bit} : 0), dm${id} = ${dmOr};`
+        );
+        scalarStatements.push(`const v${id} = (${boolExpr}) ? 1.0 : 0.0;`);
+        break;
+      }
+
+      case 'Piecewise': {
+        const numPairs = Math.floor(childIds.length / 2);
+        const hasDefault = childIds.length % 2 === 1;
+        const defaultId = hasDefault ? childIds[childIds.length - 1] : -1;
+        const allCondBm =
+          numPairs > 0
+            ? Array.from({ length: numPairs }, (_, k) => `bm${childIds[2 * k]}`).join(' | ')
+            : '0';
+
+        let jetCode = `let v${id} = NaN, d1_${id} = NaN, d2_${id} = NaN, bm${id} = ${allCondBm}, dm${id} = 0; `;
+        let scalarCode = `let v${id} = NaN; `;
+
+        for (let k = 0; k < numPairs; k++) {
+          const cId = childIds[2 * k];
+          const valId = childIds[2 * k + 1];
+          const brBit = nextBit();
+          const prefix = k === 0 ? 'if' : 'else if';
+          jetCode +=
+            `${prefix} (v${cId} > 0.5) { ` +
+            `v${id} = v${valId}; d1_${id} = d1_${valId}; d2_${id} = d2_${valId}; ` +
+            `bm${id} = (${allCondBm}) | bm${valId} | ${brBit}; dm${id} = dm${cId} | dm${valId}; } `;
+          scalarCode += `${prefix} (v${cId} > 0.5) { v${id} = v${valId}; } `;
+        }
+
+        if (hasDefault && defaultId >= 0) {
+          const defBit = nextBit();
+          const prefix = numPairs > 0 ? 'else' : '';
+          jetCode +=
+            `${prefix} { v${id} = v${defaultId}; d1_${id} = d1_${defaultId}; d2_${id} = d2_${defaultId}; ` +
+            `bm${id} = (${allCondBm}) | bm${defaultId} | ${defBit}; dm${id} = dm${defaultId}; }`;
+          scalarCode += `${prefix} { v${id} = v${defaultId}; }`;
+        }
+
+        statements.push(jetCode);
+        scalarStatements.push(scalarCode);
         break;
       }
 

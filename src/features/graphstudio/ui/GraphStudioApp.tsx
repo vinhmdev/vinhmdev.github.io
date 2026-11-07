@@ -32,6 +32,7 @@ import { CustomOptimizerModal } from './CustomOptimizerModal';
 import { DataTablePanel } from './DataTablePanel';
 import { DualViewportPanel } from './DualViewportPanel';
 import { ExpressionSidebar } from './ExpressionSidebar';
+import { FunctionLibraryDrawer } from './FunctionLibraryDrawer';
 import { OptimizerRaceBar } from './OptimizerRaceBar';
 import { SharePublishModal } from './SharePublishModal';
 import { ToolbarSubheader } from './ToolbarSubheader';
@@ -139,6 +140,9 @@ export default function GraphStudioApp(): JSX.Element {
       batchNormEnabled: g.batchNormEnabled,
       optimizerRace: g.optimizerRace,
       hoveredDataPointId: g.hoveredDataPointId,
+      surfaceParamW1: g.surfaceParamW1,
+      surfaceParamW2: g.surfaceParamW2,
+      functionLibrary: g.functionLibrary,
     };
 
     if (workerRef.current) {
@@ -412,10 +416,7 @@ export default function GraphStudioApp(): JSX.Element {
                 : 'hidden md:block md:max-h-none'
             } flex-1`}
           >
-            <ExpressionSidebar
-              storeState={storeState}
-              onCollapseSidebar={() => setDesktopSidebarOpen(false)}
-            />
+            <ExpressionSidebar storeState={storeState} />
             <DataTablePanel storeState={storeState} />
           </aside>
         </div>
@@ -469,6 +470,7 @@ export default function GraphStudioApp(): JSX.Element {
       <CustomOptimizerModal storeState={storeState} onToast={showToast} />
       <SharePublishModal storeState={storeState} onToast={showToast} />
       <CommunityGalleryDrawer storeState={storeState} onToast={showToast} />
+      <FunctionLibraryDrawer storeState={storeState} onToast={showToast} />
 
       {/* Toast Notification */}
       {toastMsg && (
