@@ -18,6 +18,7 @@ import {
 import { downloadStateJsonFile } from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
 import { encodeStateToUrlHashSync } from '../state/url-codec';
+import { getPlottableExpressions } from '../state/expression-kind';
 import { IconClose } from './icons';
 
 const docHistoryStore = createDocStore('graphstudio:docs');
@@ -109,7 +110,7 @@ export function SharePublishModal({
         author,
         category,
         description,
-        primaryLatex: graph.expressions[0]?.latex ?? 'f(x)',
+        primaryLatex: getPlottableExpressions(graph.expressions)[0]?.latex ?? 'f(x)',
         payload: statelessHash,
         ttlDays: 365,
       });

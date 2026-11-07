@@ -11,6 +11,7 @@ import type {
   CurveRenderPacket,
   DataPoint2D,
   ExpressionItem,
+  ExpressionKind,
   GraphStateV2,
   HashSessionMode,
   LossKind,
@@ -37,11 +38,18 @@ import {
 } from '../core/parser/cortex-setup';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { getTemplateById, isMathTemplateId } from '../extensions/templates';
+import { ensureFitTarget, getPlottableExpressions, isNoteExpression } from './expression-kind';
 import { scheduleAutoSave } from './local-persistence';
 import { scheduleStatelessUrlUpdate } from './hash-router';
 import { encodeStateToUrlHashSync } from './url-codec';
 
 const MAX_UNDO_STEPS = 50;
+
+export interface ExpressionBatchItem {
+  latex: string;
+  kind: ExpressionKind;
+  label?: string;
+}
 
 export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
   const tpl = getTemplateById(templateId);
@@ -132,13 +140,11 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const nextSliders: Record<string, SliderState> = { ...state.sliders };
   const activeSymbols = new Set<string>();
   let hasInvalidNonEmptyExpr = false;
+  const plottable = getPlottableExpressions(state.expressions);
 
-  const userFunctions = buildUserFunctionRegistry(
-    state.expressions,
-    state.functionLibrary
-  );
+  const userFunctions = buildUserFunctionRegistry(plottable, state.functionLibrary);
 
-  for (const expr of state.expressions) {
+  for (const expr of plottable) {
     const trimmed = expr.latex.trim();
     if (!trimmed) continue;
     const classified = classifyLatexExpression(
@@ -267,6 +273,12 @@ export interface GraphStoreState {
   updateExpressionLatex: (id: string, latex: string) => void;
   updateExpressionLabel: (id: string, label: string) => void;
   addExpression: (customLatex?: string, customLabel?: string) => void;
+  /**
+   * Inserts several rows in a single commit (one undo step). When `replaceId` names an existing row,
+   * the first item overwrites that row in place and the rest are inserted right after it.
+   */
+  addExpressionsBatch: (items: ExpressionBatchItem[], replaceId?: string) => void;
+  setExpressionKind: (id: string, kind: ExpressionKind) => void;
   removeExpression: (id: string) => void;
   toggleExpressionProp: (
     id: string,
@@ -557,6 +569,58 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       commitGraph({ ...g, expressions: [...g.expressions, newExpr] }, true);
     },
 
+    addExpressionsBatch(items, replaceId) {
+      if (items.length === 0) return;
+      const g = get().graph;
+      const replaceIdx = replaceId ? g.expressions.findIndex((e) => e.id === replaceId) : -1;
+      const stamp = Date.now();
+      const created: ExpressionItem[] = items.map((item, i) => {
+        const colorIdx = g.expressions.length + i;
+        const label = item.label ?? extractLeadingFunctionLabel(item.latex) ?? undefined;
+        const base: ExpressionItem =
+          i === 0 && replaceIdx >= 0
+            ? { ...g.expressions[replaceIdx], latex: item.latex, fitLoss: false }
+            : {
+                id: `expr-${stamp}-${colorIdx}`,
+                latex: item.latex,
+                color: EXPRESSION_COLORS[colorIdx % EXPRESSION_COLORS.length],
+                visible: true,
+                showFirstDerivative: false,
+                showSecondDerivative: false,
+              };
+        const { kind: _prevKind, label: _prevLabel, ...rest } = base;
+        return {
+          ...rest,
+          ...(item.kind === 'note' ? { kind: 'note' as const } : {}),
+          ...(label ? { label } : {}),
+        };
+      });
+
+      const expressions =
+        replaceIdx >= 0
+          ? [
+              ...g.expressions.slice(0, replaceIdx),
+              ...created,
+              ...g.expressions.slice(replaceIdx + 1),
+            ]
+          : [...g.expressions, ...created];
+      const previousFitId = g.expressions.find((e) => e.fitLoss)?.id;
+      const withFit = expressions.map((e) =>
+        e.id === previousFitId && !isNoteExpression(e) ? { ...e, fitLoss: true } : e
+      );
+      commitGraph({ ...g, expressions: ensureFitTarget(withFit) }, true);
+    },
+
+    setExpressionKind(id, kind) {
+      const g = get().graph;
+      const expressions = g.expressions.map((e) => {
+        if (e.id !== id) return e;
+        const { kind: _prevKind, ...rest } = e;
+        return kind === 'note' ? { ...rest, kind: 'note' as const, fitLoss: false } : rest;
+      });
+      commitGraph({ ...g, expressions: ensureFitTarget(expressions) }, true);
+    },
+
     removeExpression(id) {
       const g = get().graph;
       if (g.expressions.length <= 1) {
@@ -572,11 +636,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         return;
       }
       const filtered = g.expressions.filter((e) => e.id !== id);
-      const hasFit = filtered.some((e) => e.fitLoss);
-      const nextExpressions = hasFit
-        ? filtered
-        : filtered.map((e, i) => (i === 0 ? { ...e, fitLoss: true } : e));
-      commitGraph({ ...g, expressions: nextExpressions }, true);
+      commitGraph({ ...g, expressions: ensureFitTarget(filtered) }, true);
     },
 
     toggleExpressionProp(id, prop) {
@@ -593,6 +653,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     setExpressionFitLoss(id) {
       const g = get().graph;
+      const target = g.expressions.find((e) => e.id === id);
+      if (!target || isNoteExpression(target)) return;
       const expressions = g.expressions.map((e) => ({
         ...e,
         fitLoss: e.id === id,
@@ -699,13 +761,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         [symbolName]: nextRole,
       };
 
-      const userFunctions = buildUserFunctionRegistry(
-        g.expressions,
-        g.functionLibrary
-      );
+      const plottable = getPlottableExpressions(g.expressions);
+      const userFunctions = buildUserFunctionRegistry(plottable, g.functionLibrary);
       // Collect all symbols in active expressions to coordinate axis role swaps [FR-1.4]
       const allSyms = new Map<string, SymbolRole>();
-      for (const expr of g.expressions) {
+      for (const expr of plottable) {
         const cls = classifyLatexExpression(
           expr.latex,
           g.symbolOverrides,

@@ -28,6 +28,7 @@ import {
   WebGL2SurfaceRenderer,
 } from '../renderers/webgl2-surface';
 import type { GraphStoreState } from '../state/store';
+import { getPlottableExpressions } from '../state/expression-kind';
 import type {
   LossKind,
   RegularizationKind,
@@ -142,9 +143,8 @@ export function DualViewportPanel({
   const paramSliderKeys = Object.values(graph.sliders)
     .filter((s) => s.role === 'param')
     .map((s) => s.name);
-  const fitLossExprId = (
-    graph.expressions.find((e) => e.fitLoss) ?? graph.expressions[0]
-  )?.id;
+  const plottableExprs = getPlottableExpressions(graph.expressions);
+  const fitLossExprId = (plottableExprs.find((e) => e.fitLoss) ?? plottableExprs[0])?.id;
 
   // Observe Left & Right viewport container dimensions + devicePixelRatio changes
   useEffect(() => {

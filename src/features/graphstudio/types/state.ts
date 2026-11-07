@@ -69,7 +69,15 @@ export interface ExpressionItem {
   fitLoss?: boolean;
   /** Whether the expression card details are collapsed in the sidebar */
   collapsed?: boolean;
+  /**
+   * Row kind. `'note'` rows are display-only KaTeX (e.g. constraints or tensor notation pasted from
+   * papers) and are never parsed into sliders, sent to the compute worker, or used as fit targets.
+   * Absent means `'plot'` so persisted states from older versions keep their meaning.
+   */
+  kind?: ExpressionKind;
 }
+
+export type ExpressionKind = 'plot' | 'note';
 
 export type PlaybackSpeed = 0.25 | 0.5 | 1 | 2 | 4;
 

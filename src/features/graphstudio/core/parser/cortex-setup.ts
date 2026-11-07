@@ -10,6 +10,11 @@
  */
 import { ComputeEngine } from '@cortex-js/compute-engine';
 import { getRegisteredMathFunction } from '../../extensions/contracts';
+import {
+  expandBigOperatorCall,
+  isBigOperatorHead,
+  rewriteBigOperators,
+} from './big-operators';
 import type {
   FunctionSignature,
   LibraryFunctionEntry,
@@ -94,6 +99,10 @@ export const ML_FUNCTION_HEADS: Record<string, string> = {
   safesoftplus: 'SafeSoftplus',
   safesoftmax: 'SafeSoftmax',
   safexlogy: 'SafeXLogY',
+  // Finite big operators: unrolled at parse time by expandBigOperatorCall (never reach the JIT).
+  sum: 'Sum',
+  prod: 'Product',
+  product: 'Product',
 };
 
 /**
@@ -414,6 +423,9 @@ export function normalizeLatexToAscii(raw: string): string {
     s = replaceFrac(s);
     s = replaceCmd1(s, '\\sqrt', 'sqrt');
   }
+
+  // \sum_{j=a}^{b} body / \prod_{j=a}^{b} body -> Sum((body), j, a, b) / Product(...)
+  s = rewriteBigOperators(s);
 
   // Normalize LaTeX relational & logical operators
   const relMap: [RegExp, string][] = [
@@ -1176,6 +1188,11 @@ export function parseLatexToMathJson(
             throw new Error(`Missing closing ')' for function '${name}'`);
           }
           consume(); // ')'
+
+          // 0. Finite big operators are unrolled into plain Add / Multiply trees.
+          if (isBigOperatorHead(name)) {
+            return expandBigOperatorCall(name, args);
+          }
 
           // 1. User-defined or Library function takes highest precedence (pure mathematical beta-reduction)
           const userDef = resolveUserFunction(name, options?.userFunctions);

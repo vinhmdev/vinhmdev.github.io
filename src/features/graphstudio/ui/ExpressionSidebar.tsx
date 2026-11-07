@@ -5,7 +5,7 @@
  */
 import katex from 'katex';
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
   buildUserFunctionRegistry,
   classifyLatexExpression,
@@ -17,6 +17,10 @@ import {
 } from '../core/parser/cortex-setup';
 import { QUICK_FORMULA_GROUPS } from '../extensions/templates';
 import { graphStore, type GraphStoreState } from '../state/store';
+import { getPlottableExpressions, isNoteExpression } from '../state/expression-kind';
+import { NoteExpressionCard } from './NoteExpressionCard';
+import { LatexImportModal, type LatexImportDraft } from './LatexImportModal';
+import { shouldInterceptPaste } from '../core/parser/latex-importer';
 import type { SymbolRole } from '../types/math';
 import type { PlaybackSpeed, SliderLoopMode } from '../types/state';
 import { t } from '../scripts/i18n-client';
@@ -90,17 +94,28 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const [slidersCollapsed, setSlidersCollapsed] = useState<boolean>(false);
   const [expandedSliderConfig, setExpandedSliderConfig] = useState<Record<string, boolean>>({});
   const [editingExprId, setEditingExprId] = useState<string | null>(null);
+  const editInputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+  const [importDraft, setImportDraft] = useState<LatexImportDraft | null>(null);
 
-  const userFunctions = buildUserFunctionRegistry(
-    graph.expressions,
-    graph.functionLibrary
-  );
+  // Focus the raw LaTeX input on the same click that swaps it in. The `autoFocus` attribute is not
+  // honored by browsers for dynamically inserted elements, so focus must be applied imperatively.
+  useLayoutEffect(() => {
+    if (!editingExprId) return;
+    const input = editInputRefs.current.get(editingExprId);
+    if (!input || document.activeElement === input) return;
+    input.focus();
+    const caret = input.value.length;
+    input.setSelectionRange(caret, caret);
+  }, [editingExprId]);
+
+  const plottableExprs = getPlottableExpressions(graph.expressions);
+  const userFunctions = buildUserFunctionRegistry(plottableExprs, graph.functionLibrary);
   const activeLibCount = (graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY).filter(
     (f) => f.enabled
   ).length;
   const anyExprVisible = graph.expressions.some((e) => e.visible);
   const activeFitExprId =
-    graph.expressions.find((e) => e.fitLoss)?.id ?? graph.expressions[0]?.id;
+    plottableExprs.find((e) => e.fitLoss)?.id ?? plottableExprs[0]?.id;
 
   useEffect(() => {
     if ((!openRoleMenuKey && !showQuickPresets) || typeof window === 'undefined') return;
@@ -217,6 +232,16 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
               {activeLibCount}
             </span>
           </button>
+
+          {/* Paper LaTeX importer: split, auto-fix, and keep non-plottable parts as notes */}
+          <button
+            type="button"
+            onClick={() => setImportDraft({ text: '' })}
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px] font-medium"
+            title={t('latex_import_btn_tooltip')}
+          >
+            {t('latex_import_btn')}
+          </button>
         </div>
 
         <div class="flex items-center gap-1 shrink-0">
@@ -281,6 +306,16 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
 
       <div class="flex flex-col gap-2.5">
         {graph.expressions.map((expr, idx) => {
+          if (isNoteExpression(expr)) {
+            return (
+              <NoteExpressionCard
+                key={expr.id}
+                expr={expr}
+                storeState={storeState}
+                canDelete={graph.expressions.length > 1}
+              />
+            );
+          }
           const isEmpty = expr.latex.trim().length === 0;
           const classified = classifyLatexExpression(
             expr.latex,
@@ -400,8 +435,22 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     <input
                       type="text"
                       value={expr.latex}
-                      autoFocus={editingExprId === expr.id}
+                      ref={(el) => {
+                        if (el) editInputRefs.current.set(expr.id, el);
+                        else editInputRefs.current.delete(expr.id);
+                      }}
                       onFocus={() => setEditingExprId(expr.id)}
+                      onPaste={(e) => {
+                        const text = e.clipboardData?.getData('text/plain') ?? '';
+                        const intercept = shouldInterceptPaste(text, isEmpty, {
+                          symbolOverrides: graph.symbolOverrides,
+                          existingExpressions: plottableExprs,
+                          functionLibrary: graph.functionLibrary,
+                        });
+                        if (!intercept) return;
+                        e.preventDefault();
+                        setImportDraft({ text, replaceId: isEmpty ? expr.id : undefined });
+                      }}
                       onBlur={() =>
                         setEditingExprId((prev) => (prev === expr.id ? null : prev))
                       }
@@ -904,6 +953,14 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
             </div>
           )}
         </div>
+      )}
+
+      {importDraft && (
+        <LatexImportModal
+          draft={importDraft}
+          storeState={storeState}
+          onClose={() => setImportDraft(null)}
+        />
       )}
     </div>
   );

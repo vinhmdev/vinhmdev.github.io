@@ -36,6 +36,7 @@ import { FunctionLibraryDrawer } from './FunctionLibraryDrawer';
 import { OptimizerRaceBar } from './OptimizerRaceBar';
 import { SharePublishModal } from './SharePublishModal';
 import { ToolbarSubheader } from './ToolbarSubheader';
+import { getPlottableExpressions } from '../state/expression-kind';
 
 export default function GraphStudioApp(): JSX.Element {
   const [storeState, setStoreState] = useState<GraphStoreState>(() => graphStore.getState());
@@ -125,7 +126,7 @@ export default function GraphStudioApp(): JSX.Element {
     const req: ComputeJobRequest = {
       type: 'EVALUATE_FRAME',
       seq: ++seqRef.current,
-      expressions: g.expressions,
+      expressions: getPlottableExpressions(g.expressions),
       paramValues,
       symbolOverrides: g.symbolOverrides,
       subgradConvention: g.subgradConvention,
@@ -365,7 +366,8 @@ export default function GraphStudioApp(): JSX.Element {
             rightGlCanvas: rightGlCanvasRef.current,
             rightOverlayCanvas: rightOverlayCanvasRef.current,
             title: storeState.graph.title,
-            primaryLatex: storeState.graph.expressions[0]?.latex ?? 'f(x)',
+            primaryLatex:
+              getPlottableExpressions(storeState.graph.expressions)[0]?.latex ?? 'f(x)',
             isDark,
           })
         }

@@ -16,6 +16,7 @@ import { t } from '../scripts/i18n-client';
 import { graphStore, type GraphStoreState } from '../state/store';
 import type { LibraryFunctionEntry } from '../types/math';
 import { IconClose, IconFunction, IconTrash } from './icons';
+import { getPlottableExpressions } from '../state/expression-kind';
 
 interface FunctionLibraryDrawerProps {
   storeState: GraphStoreState;
@@ -39,7 +40,7 @@ export function FunctionLibraryDrawer({
   const defaultIds = new Set(DEFAULT_FUNCTION_LIBRARY.map((f) => f.id));
 
   // Detect any formal function definitions currently written in expression cards
-  const cardDefinedFunctions = storeState.graph.expressions
+  const cardDefinedFunctions = getPlottableExpressions(storeState.graph.expressions)
     .map((expr) => {
       const sig = extractFunctionSignature(expr.latex);
       if (!sig || sig.formalParams.length === 0) return null;

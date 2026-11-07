@@ -96,7 +96,7 @@ interface CompactPayloadV2 {
     number,
     number,
   ];
-  /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2|fitLoss<<3|collapsed<<4), label?] */
+  /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2|fitLoss<<3|collapsed<<4|note<<5), label?] */
   e: CompactExprTuple[];
   /** Sliders: [name, latex, role, value, min, max, step, loopMode?, speed?, direction?] */
   s: CompactSliderTuple[];
@@ -152,7 +152,8 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
       (item.showFirstDerivative ? 2 : 0) |
       (item.showSecondDerivative ? 4 : 0) |
       (item.fitLoss ? 8 : 0) |
-      (item.collapsed ? 16 : 0);
+      (item.collapsed ? 16 : 0) |
+      (item.kind === 'note' ? 32 : 0);
     return item.label
       ? [item.id, item.latex, item.color, flags, item.label]
       : [item.id, item.latex, item.color, flags];
@@ -317,6 +318,7 @@ export function unpackCompactV2ToState(
     showSecondDerivative: (flags & 4) !== 0,
     fitLoss: (flags & 8) !== 0,
     collapsed: (flags & 16) !== 0,
+    ...((flags & 32) !== 0 ? { kind: 'note' as const } : {}),
     label,
   }));
 
