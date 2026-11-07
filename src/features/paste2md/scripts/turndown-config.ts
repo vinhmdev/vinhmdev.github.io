@@ -268,7 +268,7 @@ function preprocessHTML(html: string): string {
  * Singleton — created once and reused.
  *
  * TurndownService and turndownPluginGfm are loaded via CDN UMD bundles
- * (see clipboard2markdown/page.astro) and typed in src/shared/globals.d.ts.
+ * (see paste2md/page.astro) and typed in src/shared/globals.d.ts.
  */
 function createInstance(): TurndownServiceInstance {
   const service = new TurndownService({

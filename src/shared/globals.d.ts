@@ -2,7 +2,7 @@
  * Type declarations for libraries loaded via CDN (UMD bundles).
  *
  * These libraries are intentionally not installed via npm to keep the
- * production bundle small — see clipboard2markdown/page.astro for the
+ * production bundle small — see paste2md/page.astro for the
  * per-library rationale (no ESM build, too large to bundle, etc.).
  *
  * The minimal interfaces below cover only the surface actually used in

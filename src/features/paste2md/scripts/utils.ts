@@ -1,9 +1,9 @@
 /**
- * Shared UI utilities for clipboard2markdown.
+ * Shared UI utilities for Paste to Markdown (paste2md).
  * Toast notifications, clipboard, and file download helpers.
  */
 
-// Lucide is loaded via CDN — see clipboard2markdown/page.astro.
+// Lucide is loaded via CDN — see paste2md/page.astro.
 // Typed via src/shared/globals.d.ts (Window.lucide).
 
 // --- Toast notification ---

@@ -1,9 +1,23 @@
 ---
 /**
- * Clipboard2Markdown route — thin wrapper.
- * All logic lives in features/clipboard2markdown/page.astro.
+ * Legacy route redirect: /clipboard2markdown/ -> /paste2md/
+ * Client-side script ensures URL search params and #hash (encrypted paste data)
+ * are seamlessly preserved and forwarded to the new canonical URL.
  */
-import Clipboard2MarkdownPage from '@features/clipboard2markdown/page.astro';
 ---
-
-<Clipboard2MarkdownPage />
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting to Paste to Markdown...</title>
+    <link rel="canonical" href="https://tools.vinhmdev.com/paste2md/" />
+    <meta http-equiv="refresh" content="0; url=/paste2md/" />
+    <script is:inline>
+      const target = '/paste2md/' + window.location.search + window.location.hash;
+      window.location.replace(target);
+    </script>
+  </head>
+  <body style="font-family: system-ui, -apple-system, sans-serif; padding: 2rem; text-align: center;">
+    <p>Redirecting to <a href="/paste2md/">Paste to Markdown</a>...</p>
+  </body>
+</html>

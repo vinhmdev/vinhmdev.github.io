@@ -1,5 +1,5 @@
 /* ===== Encrypted Paste — tool styles =====
-   Full-bleed layout (like clipboard2markdown): no max-width, no card chrome.
+   Full-bleed layout (like paste2md): no max-width, no card chrome.
    The editor spans the viewport, auto-grows (JS), and the PAGE scrolls.
    Wrapped in @layer components so Tailwind utilities can override.
 

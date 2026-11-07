@@ -6,7 +6,7 @@ Crypto API + Firebase Firestore so they run on a static GitHub Pages site
 with no server of our own:
 
 - **Encrypted Paste** (`/paste/`) — quick immutable (read-only) notes.
-- **Paste-to-Markdown share** (`/clipboard2markdown/`) — save the markdown
+- **Paste-to-Markdown share** (`/paste2md/`) — save the markdown
   you're editing to a link and, if you choose the **editable** mode, let
   anyone with the link open it and save changes back to the _same_ link.
   Read-only shares stay frozen; editing one forks a new link. "My shared

@@ -1,7 +1,7 @@
 /**
  * settings.ts — App toggle states backed by localStorage.
  *
- * Encapsulates all boolean settings for clipboard2markdown.
+ * Encapsulates all boolean settings for Paste to Markdown (paste2md).
  * Each setting is wired to a checkbox toggle in the UI.
  */
 

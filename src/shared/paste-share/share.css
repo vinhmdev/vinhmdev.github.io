@@ -4,7 +4,7 @@
    page.astro because JS-created elements don't carry Astro's scoping
    attribute, so plain (unscoped) selectors are required.
 
-   Shared by clipboard2markdown and encrypted-paste — the class names keep
+   Shared by paste2md and encrypted-paste — the class names keep
    the `md-` prefix as a stable namespace for this widget.
 
    NOTE: reserving bottom space for the fixed status bar is tool-specific

@@ -16,7 +16,7 @@ Qua kiểm tra trực tiếp [`package.json`](file:///Users/vinh/Desktop/mdev/vi
   - `dompurify: ^3.4.2` (Vệ sinh chuỗi HTML/LaTeX an toàn).
   - `typescript: ^5.7.3` (Strict type-checking).
 - **Kiến trúc hiện tại:** **Vertical Slice Architecture (VSA)** — Mỗi công cụ nằm gọn trong một thư mục độc lập dưới `src/features/<ten-module>/` và được gắn route tại `src/pages/<ten-route>/index.astro`:
-  - `src/features/clipboard2markdown/` $\rightarrow$ `src/pages/clipboard2markdown/index.astro`
+  - `src/features/paste2md/` $\rightarrow$ `src/pages/paste2md/index.astro`
   - `src/features/encrypted-paste/` $\rightarrow$ `src/pages/paste/index.astro`
   - `src/features/llm-hardware-profiler/` $\rightarrow$ `src/pages/llm-hardware-profiler/index.astro`
 
@@ -42,7 +42,7 @@ Chúng ta đặt lên bàn cân 3 phương án kiến trúc để xây dựng **
   - Giữ nguyên kho mã nguồn `vinhmdev.github.io` (Astro 6 + Vite).
   - Tạo route mới tại `src/pages/openmlgraph/index.astro` (hoặc `/math-sandbox/`) sử dụng chung `BaseLayout.astro`, Header, Theme Dark/Light, i18n và hạ tầng Firebase sẵn có.
   - Cài bổ sung **`preact` (`~3.5 KB` gzipped) + `@astrojs/preact` + `zustand` (`~1.2 KB` gzipped)** — đúng 100% theo quy định tại [Mục 2 của SRS v2.0.0](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/docs/math-project-resaerch/t_i_li_u_c_t_y_u_c_u_ph_n_m_m_openmlgraph_srs_v2_0_0.md#L26).
-  - Chỉ mount component `<OpenMLGraphApp client:only="preact" />` bên trong trang `/openmlgraph/`, hoàn toàn **không làm tăng dù chỉ 1 byte JS** cho các công cụ hiện có (`clipboard2markdown`, `paste`, `llm-hardware-profiler`).
+  - Chỉ mount component `<OpenMLGraphApp client:only="preact" />` bên trong trang `/openmlgraph/`, hoàn toàn **không làm tăng dù chỉ 1 byte JS** cho các công cụ hiện có (`paste2md`, `paste`, `llm-hardware-profiler`).
   - Tách bạch rõ 2 tầng:
     1. **Tầng UI Phản ứng (Preact + Zustand — chạy ở 60Hz khi state cấu trúc đổi):** Quản lý Sidebar biểu thức, Sliders, Role Badges, Template Picker, Modal Share Firebase, My Saved Graphs Drawer.
     2. **Tầng Engine Toán & Đồ họa (Pure TypeScript + Web Worker + Canvas 2D + WebGL2 — chạy ở 60–120 FPS):** Hoàn toàn độc lập với Preact. Khi người dùng kéo thanh trượt hoặc kéo điểm dữ liệu trên Canvas, sự kiện đi thẳng vào vòng lặp `requestAnimationFrame` và bộ nhớ `Float64Array` để đạt ngân sách $< 4.0\text{ ms}$ mà không kích hoạt Preact re-render toàn cây DOM.
@@ -55,7 +55,7 @@ Chúng ta đặt lên bàn cân 3 phương án kiến trúc để xây dựng **
 - **Tại sao KHÔNG NÊN chọn Phương án C?**
   1. **Bản thân Astro 6 ĐÃ LÀ Vite ở bên dưới:** Mọi tính năng mà một ứng dụng Vite SPA có — bao gồm Web Workers (`new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })`), `import.meta.glob` cho hệ thống Plugin (`[FR-5.3]`), hỗ trợ gói `.wasm`, cấu hình Vite plugin trong `astro.config.mjs` — đều hoạt động y hệt 100% trong Astro 6!
   2. **Lãng phí hạ tầng dùng chung sẵn có:** Tách sang framework khác đồng nghĩa với việc phải viết lại từ đầu hệ thống Firebase Singleton (`src/shared/firebase/`), mã hóa AES-256-GCM (`src/shared/paste/`), giao diện Share/Drawer (`src/shared/paste-share/`), Theme Dark/Light, Cookie Consent, SEO Head và quy trình CI/CD GitHub Pages.
-  3. **Phá vỡ tính thống nhất của hệ sinh thái `tools.vinhmdev.com`:** Giữ chung trong một repo giúp người dùng chuyển đổi liền mạch giữa _LLM Hardware Estimator_, _Clipboard2Markdown_, _Encrypted Paste_ và _OpenMLGraph_.
+  3. **Phá vỡ tính thống nhất của hệ sinh thái `tools.vinhmdev.com`:** Giữ chung trong một repo giúp người dùng chuyển đổi liền mạch giữa _LLM Hardware Estimator_, _Paste to Markdown_, _Encrypted Paste_ và _OpenMLGraph_.
 
 ---
 

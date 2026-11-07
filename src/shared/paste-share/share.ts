@@ -47,7 +47,7 @@ export interface ShareDeps {
   setTitle?: (s: string) => void;
   showToast: (icon: string, msg: string) => void;
   t: (key: string) => string;
-  /** URL path prefix for share links, e.g. '/clipboard2markdown/' or '/paste/'. */
+  /** URL path prefix for share links, e.g. '/paste2md/' or '/paste/'. */
   linkBase: string;
   /** localStorage key for this tool's "my docs" history. */
   storageKey: string;

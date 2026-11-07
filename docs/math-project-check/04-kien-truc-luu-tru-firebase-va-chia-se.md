@@ -23,7 +23,7 @@ Trong [SRS v2.0.0 (Mục 3.5)](file:///Users/vinh/Desktop/mdev/vinhmdev.github.i
 
 ## 2. Đánh Giá Hạ Tầng Firebase Sẵn Có Trong Kho Mã Nguồn (`src/shared/`)
 
-Kho mã nguồn `vinhmdev.github.io` hiện đã triển khai một hệ thống chia sẻ qua Firebase Firestore cực kỳ bài bản cho 2 công cụ _Encrypted Paste_ và _Clipboard2Markdown_:
+Kho mã nguồn `vinhmdev.github.io` hiện đã triển khai một hệ thống chia sẻ qua Firebase Firestore cực kỳ bài bản cho 2 công cụ _Encrypted Paste_ và _Paste to Markdown_:
 
 1. **[`src/shared/firebase/app.ts`](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/src/shared/firebase/app.ts) & [`config.ts`](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/src/shared/firebase/config.ts):**
    - Quản lý Singleton `getFirebaseApp()` và biến kiểm tra an toàn `isFirebaseConfigured` từ các biến môi trường `PUBLIC_FIREBASE_*`.
@@ -79,7 +79,7 @@ Khi người dùng mở một đường dẫn `/openmlgraph/#...`, bộ phân t�
      - Ngăn kéo **"My Saved Graphs"** lưu toàn bộ danh sách đồ thị đã tạo/mở kèm lịch sử phiên bản (`storageKey: 'openmlgraph_docs'`).
    - > ⚠️ **Cảnh báo Xung đột Hash thực tế trong Codebase (`parseHash()` tại [`src/shared/paste-share/share.ts:102-107`](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/src/shared/paste-share/share.ts#L102-L107)):**
      > Hàm `parseHash()` hiện tại chỉ kiểm tra `raw.indexOf('.')` để tách `{ id, key }`, và `initShare()` gắn listener `window.addEventListener('hashchange', ...)` ở dòng 599. Nếu gọi `initShare()` trực tiếp trên trang OpenMLGraph mà không sửa `parseHash()`, khi người dùng mở link nén `#v2.dr.<payload>` hoặc link cộng đồng `#g.<graphId>`, `parseHash()` sẽ nhận nhầm `id = "v2"` (hoặc `id = "g"`) vì đều chứa dấu chấm `.` và gọi `fetchPaste("v2")` gây lỗi _"Paste not found or expired"_!
-     > **Giải pháp bắt buộc khi code:** Siết chặt biểu thức chính quy trong [`parseHash()`](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/src/shared/paste-share/share.ts#L102-L107) (chỉ khớp khi `!/^(v\d+\.(dr|fl)|g)\./.test(raw)` hoặc khớp đúng độ dài khóa AES-256 `key.length === 43`), giúp `initShare()` bỏ qua an toàn các hash `#v2.dr.*` và `#g.*` mà không ảnh hưởng tới `/paste/` và `/clipboard2markdown/`.
+     > **Giải pháp bắt buộc khi code:** Siết chặt biểu thức chính quy trong [`parseHash()`](file:///Users/vinh/Desktop/mdev/vinhmdev.github.io/src/shared/paste-share/share.ts#L102-L107) (chỉ khớp khi `!/^(v\d+\.(dr|fl)|g)\./.test(raw)` hoặc khớp đúng độ dài khóa AES-256 `key.length === 43`), giúp `initShare()` bỏ qua an toàn các hash `#v2.dr.*` và `#g.*` mà không ảnh hưởng tới `/paste/` và `/paste2md/`.
 3. **Định dạng 3 — Firebase Public Community Share (`#g.<graphId>`):**
    - Nhận diện bởi tiền tố `#g.<graphId>`.
    - Tải đồ thị công khai từ collection `public_graphs` trên Firestore để phục vụ tính năng **"Khám phá & Chia sẻ với mọi người" (Community Gallery)**.

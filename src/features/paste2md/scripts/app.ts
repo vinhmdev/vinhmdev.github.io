@@ -1,5 +1,5 @@
 /**
- * app.ts — Entry point for clipboard2markdown.
+ * app.ts — Entry point for Paste to Markdown (paste2md).
  *
  * Wires up all modules:
  *   - CodeMirror editor (codemirror-editor.ts)
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setValue: setProgrammaticValue,
     showToast,
     t,
-    linkBase: '/clipboard2markdown/',
+    linkBase: '/paste2md/',
     storageKey: 'md:docs',
     cloudCollection: 'md_docs',
     setReadOnly: handleSetReadOnly,

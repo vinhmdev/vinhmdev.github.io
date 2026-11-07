@@ -1,5 +1,5 @@
 /**
- * CodeMirror 6 wrapper for Clipboard2Markdown editor.
+ * CodeMirror 6 wrapper for Paste to Markdown (paste2md) editor.
  * Provides a clean API for the main app to interact with.
  */
 import {

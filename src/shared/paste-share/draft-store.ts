@@ -1,11 +1,11 @@
 /**
- * Dual Independent Working Draft Store for `clipboard2markdown` ('c2md')
+ * Dual Independent Working Draft Store for `paste2md` ('c2md')
  * and `encrypted-paste` ('paste').
  *
  * Strictly isolates working drafts between two independent workspaces:
  *   1. Logged-Out Workspace (`uid === null` -> `localStorage`):
- *      - `c2md`  : `localStorage['clipboard2markdown_content']` (raw string for
- *                  100% backward compatibility).
+ *      - `c2md`  : `localStorage['paste2md_content']` (with legacy fallback to
+ *                  `localStorage['clipboard2markdown_content']` for 100% backward compatibility).
  *      - `paste` : `localStorage['paste:draft']` (JSON `{ title, content, updatedAt }`).
  *   2. Logged-In Workspace (`uid !== null` -> Firestore `/users/{uid}/drafts/{toolId}`):
  *      - Debounces writes by 1500ms while typing and flushes immediately when
@@ -35,7 +35,8 @@ export interface DualDraftStore {
 
 const CLOUD_DEBOUNCE_MS = 1500;
 const MAX_CLOUD_DRAFT_CHARS = 900_000;
-const C2MD_LOCAL_KEY = 'clipboard2markdown_content';
+const C2MD_LOCAL_KEY = 'paste2md_content';
+const C2MD_LEGACY_LOCAL_KEY = 'clipboard2markdown_content';
 const PASTE_LOCAL_KEY = 'paste:draft';
 
 let dbInstance: Firestore | null = null;
@@ -61,7 +62,7 @@ export function createDualDraftStore(toolId: DraftToolId): DualDraftStore {
   function readLocal(): DraftData {
     try {
       if (toolId === 'c2md') {
-        const raw = localStorage.getItem(C2MD_LOCAL_KEY) ?? '';
+        const raw = localStorage.getItem(C2MD_LOCAL_KEY) ?? localStorage.getItem(C2MD_LEGACY_LOCAL_KEY) ?? '';
         return { title: '', content: raw, updatedAt: raw ? Date.now() : 0 };
       }
       const raw = localStorage.getItem(PASTE_LOCAL_KEY);
@@ -107,6 +108,9 @@ export function createDualDraftStore(toolId: DraftToolId): DualDraftStore {
   function clearLocal(): void {
     try {
       localStorage.removeItem(toolId === 'c2md' ? C2MD_LOCAL_KEY : PASTE_LOCAL_KEY);
+      if (toolId === 'c2md') {
+        localStorage.removeItem(C2MD_LEGACY_LOCAL_KEY);
+      }
     } catch {
       /* ignore */
     }

@@ -1,5 +1,5 @@
 /**
- * Client-side i18n for clipboard2markdown — thin wrapper over the shared
+ * Client-side i18n for Paste to Markdown (paste2md) — thin wrapper over the shared
  * runtime (@shared/i18n/runtime) with this tool's own string packs. The one
  * tool-specific bit is syncing the cookie banner's privacy-policy link to the
  * active language.

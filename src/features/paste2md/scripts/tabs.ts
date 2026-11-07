@@ -1,5 +1,5 @@
 /**
- * Mobile tab switching for clipboard2markdown editor.
+ * Mobile tab switching for Paste to Markdown (paste2md) editor.
  * Handles editor/preview tab toggling and responsive resize.
  *
  * Uses inline styles for show/hide to override Astro's scoped CSS

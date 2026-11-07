@@ -10,10 +10,10 @@
  *
  * The share model (dialog to pick editable / read-only, in-place save,
  * fork, bottom status bar, and the "My pastes" drawer with local version
- * history) is the shared layer used by clipboard2markdown — same logic in
+ * history) is the shared layer used by paste2md — same logic in
  * both tools.
  *
- * Layout is full-bleed (like clipboard2markdown): no max-width, no card
+ * Layout is full-bleed (like paste2md): no max-width, no card
  * chrome — the editor spans the viewport and the PAGE scrolls as it grows.
  */
 import BaseLayout from '@layouts/BaseLayout.astro';
@@ -39,7 +39,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 
   <!-- ===== Header (full-bleed) ===== -->
   <header
-    class="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 backdrop-blur bg-neutral-100/85 dark:bg-neutral-950/85 border-b border-neutral-200 dark:border-neutral-800"
+    class="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-2.5 backdrop-blur bg-neutral-100/85 dark:bg-neutral-950/85 border-b border-neutral-200 dark:border-neutral-800"
   >
     <a
       href="/"
@@ -54,7 +54,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       </h1>
     </a>
 
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2 max-w-full">
       <!-- Document actions: Clear + My pastes + Share -->
       <button
         id="clear-btn"

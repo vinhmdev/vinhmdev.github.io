@@ -9,6 +9,8 @@
   "nav_source": "Source code",
   "nav_source_url": "https://github.com/vinhmdev/vinhmdev.github.io",
   "home_tools_section": "Tools",
+  "tool_paste2md": "Paste to Markdown",
+  "tool_paste2md_desc": "Instantly convert copied text into Markdown format.",
   "tool_clipboard2md": "Paste to Markdown",
   "tool_clipboard2md_desc": "Instantly convert copied text into Markdown format.",
   "footer_copyright": "© 2026 VinhMDev",
