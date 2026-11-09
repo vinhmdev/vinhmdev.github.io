@@ -46,6 +46,8 @@ import {
   IconEraser,
   IconHighlighter,
   IconHome,
+  IconMaximize,
+  IconMinimize,
   IconPen,
   IconTarget,
   IconTrash,
@@ -470,6 +472,29 @@ export function DualViewportPanel({
     storeState.setLeftViewport(nextVp);
   };
 
+  // Split mode: each pane can be maximized in place (replaces the old duplicate pane tab row)
+  const renderPaneMaximizeBtn = (pane: 'data' | 'loss'): JSX.Element | null => {
+    if (graph.viewMode !== 'dual') return null;
+    const isMaximized = mobileTab === pane;
+    const label = isMaximized ? t('pane_restore') : t('pane_maximize');
+    return (
+      <button
+        type="button"
+        onClick={() => storeState.setMobileTab(isMaximized ? 'split' : pane)}
+        aria-pressed={isMaximized}
+        aria-label={label}
+        title={label}
+        class={`flex items-center justify-center w-6 h-6 rounded border shadow-2xs transition-colors ${
+          isMaximized
+            ? 'bg-orange-500 text-white border-orange-500'
+            : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+        }`}
+      >
+        {isMaximized ? <IconMinimize class="w-3 h-3" /> : <IconMaximize class="w-3 h-3" />}
+      </button>
+    );
+  };
+
   const wbTools: { id: WhiteboardTool; labelKey: string; icon: JSX.Element }[] = [
     { id: 'cursor', labelKey: 'wb_cursor', icon: <IconCursor /> },
     { id: 'pen', labelKey: 'wb_pen', icon: <IconPen /> },
@@ -479,28 +504,6 @@ export function DualViewportPanel({
 
   return (
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-      {/* Mobile / Compact Responsive Tab Bar (< 1024px) */}
-      {graph.viewMode === 'dual' && (
-        <div class="flex lg:hidden items-center justify-center gap-2 py-1 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900 text-xs">
-          {(['data', 'loss', 'split'] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => storeState.setMobileTab(tab)}
-              class={`px-3 py-0.5 rounded font-semibold ${
-                mobileTab === tab ? 'bg-orange-500 text-white' : 'text-neutral-500'
-              }`}
-            >
-              {tab === 'data'
-                ? t('tab_data')
-                : tab === 'loss'
-                  ? t('tab_loss')
-                  : t('tab_split')}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main Split Viewports */}
       <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
         {/* LEFT PANE: 2D Data / Function Space + Interactive Whiteboard */}
@@ -740,6 +743,7 @@ export function DualViewportPanel({
             <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
               {/* Left Compact Pill Row: Reset, 1:1, Tangent Probe */}
               <div class="flex items-center gap-1 pointer-events-auto">
+                {renderPaneMaximizeBtn('data')}
                 <button
                   type="button"
                   onClick={handleResetLeftViewport}
@@ -839,9 +843,10 @@ export function DualViewportPanel({
                       : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
                   }`}
                   title="Toggle Whiteboard Drawing Tools"
+                  aria-label={t('wb_menu_btn')}
                 >
-                  <span>✏️</span>
-                  <span class="hidden sm:inline">{t('blank_mode_btn')}</span>
+                  <span aria-hidden="true">✏️</span>
+                  <span class="hidden sm:inline">{t('wb_menu_btn')}</span>
                   <span>{leftToolsOpen || whiteboardTool !== 'cursor' ? '▴' : '▾'}</span>
                 </button>
 
@@ -1024,6 +1029,7 @@ export function DualViewportPanel({
             {/* Top-Left Live Train/Test Loss Badges & Compact 3D Options Menu [FR-4.1, FR-4.3] */}
             <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-auto text-[11px]">
               <div class="flex flex-wrap items-center gap-1">
+                {renderPaneMaximizeBtn('loss')}
                 <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
                   Loss: {trainLoss.toFixed(4)}
                 </span>
