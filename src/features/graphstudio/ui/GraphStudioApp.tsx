@@ -33,9 +33,11 @@ import { DataTablePanel } from './DataTablePanel';
 import { DualViewportPanel } from './DualViewportPanel';
 import { ExpressionSidebar } from './ExpressionSidebar';
 import { FunctionLibraryDrawer } from './FunctionLibraryDrawer';
+import { MobileSheetHandle } from './MobileSheetHandle';
 import { OptimizerRaceBar } from './OptimizerRaceBar';
 import { SharePublishModal } from './SharePublishModal';
 import { ToolbarSubheader } from './ToolbarSubheader';
+import { t } from '../scripts/i18n-client';
 import { getPlottableExpressions } from '../state/expression-kind';
 
 export default function GraphStudioApp(): JSX.Element {
@@ -373,49 +375,29 @@ export default function GraphStudioApp(): JSX.Element {
         }
       />
 
-      {/* Main Workspace: Mobile puts Graph on Top + Collapsible Bottom Sheet; Desktop puts Left Sidebar + Right Dual Viewport */}
-      <div class="flex-1 flex flex-col-reverse md:flex-row min-h-0 overflow-hidden">
+      {/* Main Workspace: below lg the graph sits on top with a collapsible bottom sheet; from lg a left sidebar + dual viewport */}
+      <div class="flex-1 flex flex-col-reverse lg:flex-row min-h-0 overflow-hidden">
         <div
           class={`w-full ${
-            desktopSidebarOpen ? 'md:w-80 lg:w-96 md:flex' : 'md:hidden'
-          } shrink-0 flex flex-col border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75`}
+            desktopSidebarOpen ? 'lg:w-80 xl:w-96 lg:flex' : 'lg:hidden'
+          } shrink-0 flex flex-col border-t lg:border-t-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75`}
         >
-          {/* Mobile Bottom-Sheet Collapse / Expand Bar (< 768px) */}
-          <div class="flex md:hidden items-center justify-between px-3 py-1.5 bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200/80 dark:border-neutral-800 text-xs">
-            <button
-              type="button"
-              onClick={() => setMobileSheetOpen((prev) => !prev)}
-              aria-expanded={mobileSheetOpen}
-              class="flex items-center gap-2 font-semibold text-neutral-700 dark:text-neutral-200"
-            >
-              <span class="w-6 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              <span>
-                𝑓(x) ({storeState.graph.expressions.length})
-                {Object.keys(storeState.graph.sliders).length > 0
-                  ? ` • Sliders (${Object.keys(storeState.graph.sliders).length})`
-                  : ''}
-              </span>
-              <span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 text-[10px] font-bold">
-                {mobileSheetOpen ? '▾ Hide' : '▴ Show'}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                storeState.addExpression();
-                setMobileSheetOpen(true);
-              }}
-              class="px-2 py-0.5 rounded bg-orange-500 text-white font-semibold text-[11px]"
-            >
-              + f(x)
-            </button>
+          {/* Bottom-sheet handle + peek summary (< 1024px) */}
+          <div class="lg:hidden bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200/80 dark:border-neutral-800">
+            <MobileSheetHandle
+              isOpen={mobileSheetOpen}
+              onOpenChange={setMobileSheetOpen}
+              summary={`𝑓(x) ${storeState.graph.expressions.length}${
+                Object.keys(storeState.graph.sliders).length > 0
+                  ? ` · ${t('sliders_title')} ${Object.keys(storeState.graph.sliders).length}`
+                  : ''
+              }`}
+            />
           </div>
 
           <aside
-            class={`w-full overflow-y-auto transition-all ${
-              mobileSheetOpen
-                ? 'max-h-[40vh] md:max-h-none block'
-                : 'hidden md:block md:max-h-none'
+            class={`w-full overflow-y-auto overscroll-contain ${
+              mobileSheetOpen ? 'max-h-[50vh] lg:max-h-none block' : 'hidden lg:block lg:max-h-none'
             } flex-1`}
           >
             <ExpressionSidebar storeState={storeState} />
