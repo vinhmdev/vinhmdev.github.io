@@ -110,8 +110,10 @@ export default function GraphStudioApp(): JSX.Element {
   useEffect(() => {
     const g = storeState.graph;
     const paramValues: Record<string, number> = {};
+    const paramBounds: Record<string, { min: number; max: number }> = {};
     for (const [k, sl] of Object.entries(g.sliders)) {
       paramValues[k] = sl.value;
+      paramBounds[k] = { min: sl.min, max: sl.max };
     }
 
     const dpr =
@@ -130,6 +132,7 @@ export default function GraphStudioApp(): JSX.Element {
       seq: ++seqRef.current,
       expressions: getPlottableExpressions(g.expressions),
       paramValues,
+      paramBounds,
       symbolOverrides: g.symbolOverrides,
       subgradConvention: g.subgradConvention,
       leftViewport: g.leftViewport,

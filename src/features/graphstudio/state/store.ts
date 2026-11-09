@@ -360,18 +360,26 @@ export interface GraphStoreState {
 
 const EXPRESSION_COLORS = ['#f97316', '#3b82f6', '#10b981', '#a855f7', '#ec4899'];
 
-function applySyncedSliderVal(
-  slider: SliderState,
-  rawVal: number
-): SliderState {
-  const isStrictlyPositive =
+export function isStrictlyPositiveParam(slider: SliderState): boolean {
+  return (
+    slider.min > 0 ||
     slider.name === 'sigma' ||
     slider.name === 'd_k' ||
     slider.name === 'd_v' ||
     slider.name === 'd_model' ||
     slider.name === 'tau' ||
-    slider.name === 'epsilon';
-  const floorLimit = slider.min > 0 ? slider.min : 0.05;
+    slider.name === 'epsilon' ||
+    slider.name === 'delta' ||
+    slider.name === 'gamma'
+  );
+}
+
+function applySyncedSliderVal(
+  slider: SliderState,
+  rawVal: number
+): SliderState {
+  const isStrictlyPositive = isStrictlyPositiveParam(slider);
+  const floorLimit = slider.min > 0 ? slider.min : 0.01;
   const guardedVal = isStrictlyPositive ? Math.max(floorLimit, rawVal) : rawVal;
   const val = Math.round(guardedVal * 1e6) / 1e6;
   const nextMin = isStrictlyPositive
@@ -866,11 +874,20 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           ? Math.max(1e-4, bounds.step)
           : existing.step;
 
+      const isPositive = isStrictlyPositiveParam(existing);
+      if (isPositive && nextMin <= 0) {
+        nextMin = existing.min > 0 ? existing.min : 0.01;
+      }
+
       if (nextMin > nextMax) {
         if (bounds.min !== undefined && bounds.max === undefined) {
           nextMax = nextMin + Math.max(nextStep, 1);
         } else {
           nextMin = nextMax - Math.max(nextStep, 1);
+          if (isPositive && nextMin <= 0) {
+            nextMin = 0.01;
+            nextMax = Math.max(nextMax, nextMin + Math.max(nextStep, 1));
+          }
         }
       }
 

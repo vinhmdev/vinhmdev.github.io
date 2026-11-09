@@ -294,6 +294,7 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
       paramGradKernels: targetCompiled.paramGradKernels ?? {},
       paramNames: targetCompiled.paramNames ?? [],
       baseParams: req.paramValues,
+      paramBounds: req.paramBounds,
       w1Key,
       w2Key,
       isCustomPredictor: true,
@@ -355,7 +356,8 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     req.lossKind,
     req.regularizationKind,
     req.subgradConvention,
-    predictor
+    predictor,
+    req.paramBounds
   );
 
   let linkedBrushPull: ComputeJobResponse['linkedBrushPull'];

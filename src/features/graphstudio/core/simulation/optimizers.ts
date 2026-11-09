@@ -35,9 +35,21 @@ const POSITIVE_DOMAIN_BOUNDS: Record<string, number> = {
   delta: 0.01,
 };
 
-function clampParamDomain(name: string, val: number): number {
-  const bound = POSITIVE_DOMAIN_BOUNDS[name];
-  return bound !== undefined && Number.isFinite(val) ? Math.max(bound, val) : val;
+export function projectParam(
+  name: string,
+  val: number,
+  bounds?: { min: number; max: number }
+): number {
+  if (!Number.isFinite(val)) return val;
+  let clamped = val;
+  const fallbackMin = POSITIVE_DOMAIN_BOUNDS[name];
+  if (fallbackMin !== undefined) {
+    const minBound = bounds?.min !== undefined ? Math.max(fallbackMin, bounds.min) : fallbackMin;
+    clamped = Math.max(minBound, clamped);
+  } else if (bounds?.min !== undefined && bounds.min >= 0) {
+    clamped = Math.max(bounds.min, clamped);
+  }
+  return clamped;
 }
 
 export interface OptimizerHyperparams {
@@ -76,7 +88,8 @@ export function runOptimizerRace(
   lossKind: LossKind,
   regKind: RegularizationKind,
   convention: SubgradConvention = 'zero',
-  predictor?: PredictorModel
+  predictor?: PredictorModel,
+  paramBounds?: Record<string, { min: number; max: number }>
 ): Record<OptimizerId, OptimizerTrajectoryStep[]> {
   const result: Record<OptimizerId, OptimizerTrajectoryStep[]> = {
     sgd: [],
@@ -269,13 +282,14 @@ export function runOptimizerRace(
         }
       }
 
-      if (predictor) {
-        w1 = clampParamDomain(predictor.w1Key, w1);
-        w2 = clampParamDomain(predictor.w2Key, w2);
-        if (hasMultiParams) {
-          for (const k of extraKeys) {
-            extraVals[k] = clampParamDomain(k, extraVals[k]);
-          }
+      const effectiveBounds = predictor?.paramBounds ?? paramBounds;
+      const w1Name = predictor?.w1Key ?? 'w';
+      const w2Name = predictor?.w2Key ?? 'b';
+      w1 = projectParam(w1Name, w1, effectiveBounds?.[w1Name]);
+      w2 = projectParam(w2Name, w2, effectiveBounds?.[w2Name]);
+      if (hasMultiParams) {
+        for (const k of extraKeys) {
+          extraVals[k] = projectParam(k, extraVals[k], effectiveBounds?.[k]);
         }
       }
 

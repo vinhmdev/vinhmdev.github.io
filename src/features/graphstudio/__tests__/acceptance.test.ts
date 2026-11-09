@@ -37,8 +37,9 @@ import {
   evaluateEmpiricalLossAndGrad,
   packDataset,
   resolveSurfaceParamPair,
+  type PredictorModel,
 } from '../core/simulation/loss-evaluator';
-import { runOptimizerRace } from '../core/simulation/optimizers';
+import { projectParam, runOptimizerRace } from '../core/simulation/optimizers';
 import {
   computeRocAndConfusionMatrix,
   computeSoftmaxSimplexPoint,
@@ -2016,5 +2017,95 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
     expect(aSym).toBeDefined();
     expect(aSym?.defaultMin).toBeGreaterThanOrEqual(0.01);
     expect(aSym?.defaultValue).toBeGreaterThan(0);
+  });
+
+  it('implements Generic Projected Gradient Descent (PGD) respecting parameter bounds', () => {
+    // 1. projectParam unit behavior
+    expect(projectParam('c', -1.5, { min: 0.1, max: 10.0 })).toBe(0.1);
+    expect(projectParam('c', 2.5, { min: 0.1, max: 10.0 })).toBe(2.5);
+    expect(projectParam('sigma', -0.5)).toBe(0.05); // Fallback positive bound
+    expect(projectParam('w', -3.5, { min: -5.0, max: 5.0 })).toBe(-3.5); // Standard unconstrained weight
+
+    // 2. Projected Gradient Descent in 4-optimizer race with arbitrary positive param
+    const pts: DataPoint2D[] = [
+      { id: '1', x: 1, y: 2, split: 'train' },
+      { id: '2', x: 2, y: 4, split: 'train' },
+    ];
+    const packed = packDataset(pts, false);
+    const mockPredictor: PredictorModel = {
+      evalScalar: (x: number, params: Record<string, number>) => x / (params.c ?? 1.0),
+      paramGradKernels: {
+        c: (x: number, params: Record<string, number>) => -x / Math.pow(params.c ?? 1.0, 2),
+      },
+      paramNames: ['c', 'b'],
+      baseParams: { c: 0.5, b: 0.0 },
+      paramBounds: { c: { min: 0.1, max: 10.0 }, b: { min: -5.0, max: 5.0 } },
+      w1Key: 'c',
+      w2Key: 'b',
+      isCustomPredictor: true,
+    };
+
+    const race = runOptimizerRace(
+      packed,
+      {
+        enabledOptimizers: { sgd: true, momentum: true, rmsprop: true, adam: true, custom_js: false },
+        startW1: 0.2,
+        startW2: 0.0,
+        steps: 30,
+        currentStep: 0,
+        playing: false,
+        useNesterov: false,
+        adamBiasCorrection: true,
+        lrSchedule: 'constant',
+      },
+      { eta: 1.0, beta1: 0.9, beta2: 0.99, epsilon: 1e-8, delta: 1.0, lambda: 0.0 },
+      'mse',
+      'none',
+      'zero',
+      mockPredictor
+    );
+
+    for (const opt of ['sgd', 'momentum', 'rmsprop', 'adam'] as const) {
+      const traj = race[opt];
+      expect(traj.length).toBeGreaterThan(0);
+      for (const step of traj) {
+        // w1 corresponds to parameter 'c' which must never violate min: 0.1
+        expect(step.w1).toBeGreaterThanOrEqual(0.1);
+        expect(Number.isFinite(step.loss)).toBe(true);
+      }
+    }
+  });
+
+  it('guarantees double-defense stability pass and prevents NaN when d_k is negative in AST or URL', () => {
+    // 1. Stability pass rewrites Sqrt(d_k) to Sqrt(Max(d_k, 0.0001))
+    const rawAst = ['Sqrt', 'd_k'] as const;
+    const stabilized = applyStabilityPass(rawAst as any);
+    expect(stabilized).toEqual(['Sqrt', ['Max', 'd_k', 0.0001]]);
+
+    // 2. JIT compiler evaluation at d_k = -5.0 remains finite and never NaN
+    const kernel = compileJet2Kernel(stabilized, 'x');
+    const resNegative = kernel.evalJet2(1.0, { d_k: -5.0 });
+    expect(Number.isFinite(resNegative.v)).toBe(true);
+    expect(resNegative.v).toBeCloseTo(Math.sqrt(0.0001), 6);
+
+    const resZero = kernel.evalJet2(1.0, { d_k: 0.0 });
+    expect(Number.isFinite(resZero.v)).toBe(true);
+    expect(resZero.v).toBeCloseTo(Math.sqrt(0.0001), 6);
+  });
+
+  it('enforces slider bounds integrity in store for strictly positive parameters', () => {
+    graphStore.getState().selectTemplate('T-07'); // T-07 has sigma slider
+    expect(graphStore.getState().graph.sliders.sigma).toBeDefined();
+
+    // Attempt to set min to negative value
+    graphStore.getState().updateSliderBounds('sigma', { min: -10 });
+    expect(graphStore.getState().graph.sliders.sigma.min).toBeGreaterThanOrEqual(0.01);
+
+    // Dynamic arcsin parameter domain scanner
+    const arcsinExpr = classifyLatexExpression('f(x) = \\arcsin(k \\cdot x)');
+    const kSym = arcsinExpr.symbols.find((s) => s.name === 'k');
+    expect(kSym).toBeDefined();
+    expect(kSym?.defaultMin).toBe(-1.0);
+    expect(kSym?.defaultMax).toBe(1.0);
   });
 });

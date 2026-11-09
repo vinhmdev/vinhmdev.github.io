@@ -89,6 +89,14 @@ export function applyStabilityPass(expr: MathJsonExpr): MathJsonExpr {
     }
   }
 
+  // Rule 6: Free parameter in Sqrt guard for architectural dimensions (d_k, d_v, d_model)
+  if (head === 'Sqrt' && args.length === 1) {
+    const inner = args[0];
+    if (typeof inner === 'string' && (inner === 'd_k' || inner === 'd_v' || inner === 'd_model')) {
+      return ['Sqrt', ['Max', inner, 0.0001]];
+    }
+  }
+
   return [head, ...args];
 }
 

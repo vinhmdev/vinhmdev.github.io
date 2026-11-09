@@ -99,7 +99,7 @@ const SYMBOL_LATEX_MAP: Record<string, string> = {
 export function getDefaultSliderBounds(
   name: string,
   role: SymbolRole,
-  isDenominator = false
+  restrictedBounds?: { min: number; max: number; step: number; defaultValue: number } | boolean
 ): { min: number; max: number; step: number; defaultValue: number } {
   if (name === 'sigma') {
     return { min: 0.1, max: 5.0, step: 0.05, defaultValue: 1.0 };
@@ -131,7 +131,10 @@ export function getDefaultSliderBounds(
   if (name === 'TSS' || name.includes('ref') || name.includes('train') || name.includes('global')) {
     return { min: 0.1, max: 50.0, step: 0.1, defaultValue: 1.0 };
   }
-  if (isDenominator) {
+  if (typeof restrictedBounds === 'object' && restrictedBounds !== null) {
+    return restrictedBounds;
+  }
+  if (restrictedBounds === true) {
     return { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 };
   }
   if (role === 'hyperparam') {
@@ -387,27 +390,67 @@ export function classifyLatexExpression(
   const formalParams = parsed.signature?.formalParams ?? [];
   const leadingFormalParam = formalParams[0];
 
-  const denominatorSymbols = new Set<string>();
-  function findDenominators(node: MathJsonExpr): void {
+  const domainRestrictedSymbols = new Map<
+    string,
+    { min: number; max: number; step: number; defaultValue: number }
+  >();
+
+  function scanDomainRestrictions(node: MathJsonExpr): void {
     if (typeof node === 'number' || typeof node === 'string') return;
     if (Array.isArray(node)) {
       const head = node[0];
       if (head === 'Divide' && node.length >= 3) {
-        collectLeafSymbols(node[2], denominatorSymbols);
+        const denLeaves = new Set<string>();
+        collectLeafSymbols(node[2], denLeaves);
+        for (const s of denLeaves) {
+          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+        }
       } else if (
         (head === 'Sqrt' ||
+          head === 'Root' ||
           head === 'Ln' ||
           head === 'Log' ||
           head === 'Log2' ||
           head === 'Log10') &&
         node.length >= 2
       ) {
-        collectLeafSymbols(node[1], denominatorSymbols);
+        const argLeaves = new Set<string>();
+        collectLeafSymbols(node[1], argLeaves);
+        for (const s of argLeaves) {
+          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+        }
       } else if (head === 'SafeXLogY' && node.length >= 3) {
-        collectLeafSymbols(node[2], denominatorSymbols);
+        const argLeaves = new Set<string>();
+        collectLeafSymbols(node[2], argLeaves);
+        for (const s of argLeaves) {
+          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+        }
+      } else if (head === 'Power' && node.length >= 3) {
+        const exponent = node[2];
+        const isNonIntegerExp =
+          (typeof exponent === 'number' && !Number.isInteger(exponent)) ||
+          (Array.isArray(exponent) && exponent[0] === 'Divide');
+        if (isNonIntegerExp) {
+          const baseLeaves = new Set<string>();
+          collectLeafSymbols(node[1], baseLeaves);
+          for (const s of baseLeaves) {
+            domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+          }
+        }
+      } else if (
+        (head === 'Arcsin' || head === 'Arccos' || head === 'Asin' || head === 'Acos') &&
+        node.length >= 2
+      ) {
+        const argLeaves = new Set<string>();
+        collectLeafSymbols(node[1], argLeaves);
+        for (const s of argLeaves) {
+          if (!DATA_VARS.has(s) && s !== leadingFormalParam && s !== 'x' && s !== 'y') {
+            domainRestrictedSymbols.set(s, { min: -1.0, max: 1.0, step: 0.01, defaultValue: 0.0 });
+          }
+        }
       }
       for (let i = 1; i < node.length; i++) {
-        findDenominators(node[i]);
+        scanDomainRestrictions(node[i]);
       }
     }
   }
@@ -422,7 +465,7 @@ export function classifyLatexExpression(
       }
     }
   }
-  findDenominators(stabilizedExpr);
+  scanDomainRestrictions(stabilizedExpr);
 
   function walk(node: MathJsonExpr): void {
     if (typeof node === 'number') return;
@@ -437,7 +480,7 @@ export function classifyLatexExpression(
         const bounds = getDefaultSliderBounds(
           node,
           role,
-          denominatorSymbols.has(node)
+          domainRestrictedSymbols.get(node)
         );
         const latexDisplay =
           parsed.tokenToLatexMap?.[node] ?? SYMBOL_LATEX_MAP[node] ?? node;
@@ -486,7 +529,11 @@ export function classifyLatexExpression(
       overrides[sym.name] !== 'data_var'
     ) {
       sym.role = 'param';
-      const bounds = getDefaultSliderBounds(sym.name, 'param');
+      const bounds = getDefaultSliderBounds(
+        sym.name,
+        'param',
+        domainRestrictedSymbols.get(sym.name)
+      );
       sym.defaultMin = bounds.min;
       sym.defaultMax = bounds.max;
       sym.defaultStep = bounds.step;

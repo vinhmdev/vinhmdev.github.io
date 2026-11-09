@@ -36,6 +36,8 @@ export interface PredictorModel {
   paramNames: string[];
   /** Current base parameter values from sliders */
   baseParams: Record<string, number>;
+  /** Bounds for parameters (min, max from sliders) for projected gradient */
+  paramBounds?: Record<string, { min: number; max: number }>;
   /** Surface axis parameter keys */
   w1Key: string;
   w2Key: string;

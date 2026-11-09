@@ -27,6 +27,7 @@ export interface ComputeJobRequest {
   seq: number;
   expressions: ExpressionItem[];
   paramValues: Record<string, number>;
+  paramBounds?: Record<string, { min: number; max: number }>;
   symbolOverrides?: Record<string, SymbolRole>;
   subgradConvention: SubgradConvention;
   leftViewport: Viewport2DBounds;
