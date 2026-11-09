@@ -32,6 +32,7 @@ import {
   IconFunction,
   IconPause,
   IconPlay,
+  IconPlus,
   IconStepBack,
   IconStepForward,
   IconTarget,
@@ -91,6 +92,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
   const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
+  const [addMenuOpen, setAddMenuOpen] = useState<boolean>(false);
   const [slidersCollapsed, setSlidersCollapsed] = useState<boolean>(false);
   const [expandedSliderConfig, setExpandedSliderConfig] = useState<Record<string, boolean>>({});
   const [editingExprId, setEditingExprId] = useState<string | null>(null);
@@ -118,14 +120,16 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     plottableExprs.find((e) => e.fitLoss)?.id ?? plottableExprs[0]?.id;
 
   useEffect(() => {
-    if ((!openRoleMenuKey && !showQuickPresets) || typeof window === 'undefined') return;
+    if ((!openRoleMenuKey && !showQuickPresets && !addMenuOpen) || typeof window === 'undefined')
+      return;
     const closeMenu = (): void => {
       setOpenRoleMenuKey(null);
       setShowQuickPresets(false);
+      setAddMenuOpen(false);
     };
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
-  }, [openRoleMenuKey, showQuickPresets]);
+  }, [openRoleMenuKey, showQuickPresets, addMenuOpen]);
 
   // Configure MathLive custom element offline (disable external audio requests) [FR-1.1]
   useEffect(() => {
@@ -196,77 +200,103 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
 
   return (
     <div class="flex flex-col gap-3 p-3 text-xs">
-      {/* Section 1: Algebra & Expressions Action Bar with Quick Formulas & Function Library */}
-      <div class="relative flex items-center justify-between gap-1 flex-wrap">
-        <div class="flex items-center gap-1">
-          {/* Categorized Quick Formulas Dropdown Button */}
+      {/* Section 1: one "Add function" split button (primary adds a blank function; the caret
+          holds Quick formulas, Function library and Paste LaTeX) + Show/Hide all + Clear all */}
+      <div class="relative flex items-center justify-between gap-2">
+        <div class="relative inline-flex rounded-md shadow-2xs">
           <button
             type="button"
-            aria-expanded={showQuickPresets}
+            onClick={() => storeState.addExpression()}
+            class="inline-flex items-center gap-1 h-7 pl-2 pr-2.5 rounded-l-md bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+          >
+            <IconPlus class="w-3 h-3" />
+            <span>{t('add_function_short')}</span>
+          </button>
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={addMenuOpen}
+            aria-label={t('add_menu_more')}
+            title={t('add_menu_more')}
             onClick={(e) => {
               e.stopPropagation();
-              setShowQuickPresets((prev) => !prev);
+              setShowQuickPresets(false);
+              setAddMenuOpen((prev) => !prev);
             }}
-            class={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-medium transition-colors ${
-              showQuickPresets
-                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
-                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
-            }`}
-            title={t('quick_presets_label')}
+            class="inline-flex items-center justify-center h-7 w-7 rounded-r-md border-l border-orange-600/60 bg-orange-500 text-white hover:bg-orange-600 transition-colors"
           >
-            <span>⚡</span>
-            <span>{t('quick_presets_label')}</span>
-            <span class="text-[9px] opacity-75">▾</span>
+            <IconChevronDown class="w-3 h-3" />
           </button>
 
-          {/* Pure Mathematical Function Library Drawer Button */}
-          <button
-            type="button"
-            onClick={() => storeState.setFunctionLibraryDrawerOpen(true)}
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px] font-medium"
-            title={t('fn_lib_btn_tooltip') || 'Open Pure Math & ML Function Library (Toggle ON/OFF)'}
-          >
-            <IconFunction class="w-3 h-3 text-orange-500" />
-            <span>{t('fn_lib_btn') || 'fx Lib'}</span>
-            <span class="text-[9px] px-1 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-mono">
-              {activeLibCount}
-            </span>
-          </button>
-
-          {/* Paper LaTeX importer: split, auto-fix, and keep non-plottable parts as notes */}
-          <button
-            type="button"
-            onClick={() => setImportDraft({ text: '' })}
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px] font-medium"
-            title={t('latex_import_btn_tooltip')}
-          >
-            {t('latex_import_btn')}
-          </button>
+          {addMenuOpen && (
+            <div
+              role="menu"
+              onClick={(e) => e.stopPropagation()}
+              class="absolute left-0 top-full mt-1.5 z-40 w-60 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-xs"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setShowQuickPresets(true);
+                }}
+                class="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                title={t('quick_presets_label')}
+              >
+                <span class="w-3.5 text-center">⚡</span>
+                <span>{t('quick_presets_label')}…</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  storeState.setFunctionLibraryDrawerOpen(true);
+                }}
+                class="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                title={t('fn_lib_btn_tooltip') || 'Open Pure Math & ML Function Library (Toggle ON/OFF)'}
+              >
+                <IconFunction class="w-3.5 h-3.5 text-orange-500" />
+                <span class="flex-1">{t('fn_lib_btn') || 'fx Lib'}</span>
+                <span class="text-[10px] px-1.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-mono">
+                  {activeLibCount}
+                </span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setImportDraft({ text: '' });
+                }}
+                class="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                title={t('latex_import_btn_tooltip')}
+              >
+                <span>{t('latex_import_btn')}…</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div class="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={() => storeState.toggleAllExpressionsVisible()}
-            class="p-1 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            class="flex items-center justify-center w-7 h-7 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
             title={anyExprVisible ? 'Hide all curves' : 'Show all curves'}
+            aria-label={anyExprVisible ? 'Hide all curves' : 'Show all curves'}
           >
             {anyExprVisible ? <IconEye class="w-3.5 h-3.5" /> : <IconEyeOff class="w-3.5 h-3.5" />}
           </button>
           <button
             type="button"
             onClick={handleClearAllExpressions}
-            class="px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors text-[11px]"
+            class="flex items-center gap-1 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-red-500 hover:text-red-500 transition-colors text-[11px]"
             title="Clear all expressions to a blank input"
           >
-            {t('clear_expr_btn')}
-          </button>
-          <button
-            type="button"
-            onClick={() => storeState.addExpression()}
-            class="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25 transition-colors text-[11px]"
-          >
-            {t('add_expression')}
+            <IconTrash class="w-3.5 h-3.5" />
+            <span>{t('clear_expr_btn')}</span>
           </button>
         </div>
 
@@ -808,52 +838,13 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                           ⚙️
                         </button>
 
-                        <div class="relative inline-block">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const key = `slider:${sl.name}`;
-                              setOpenRoleMenuKey(openRoleMenuKey === key ? null : key);
-                            }}
-                            class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
-                            title="Change slider role"
-                          >
-                            <span>{sl.role === 'param' ? 'Param' : 'Hyper'}</span>
-                            <span class="opacity-70 text-[9px]">▾</span>
-                          </button>
-
-                          {openRoleMenuKey === `slider:${sl.name}` && (
-                            <div
-                              onClick={(e) => e.stopPropagation()}
-                              class="absolute right-0 top-full mt-1 z-30 w-36 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg flex flex-col text-[11px]"
-                            >
-                              {ROLE_OPTIONS.map((opt) => {
-                                const active = sl.role === opt.role;
-                                return (
-                                  <button
-                                    key={opt.role}
-                                    type="button"
-                                    onClick={() => {
-                                      storeState.setSymbolRole(sl.name, opt.role as SymbolRole);
-                                      setOpenRoleMenuKey(null);
-                                    }}
-                                    class={`flex items-center justify-between px-2.5 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                      active ? 'font-bold text-orange-600 dark:text-orange-400' : ''
-                                    }`}
-                                  >
-                                    <span class="flex items-center gap-1.5">
-                                      <span class={`w-2 h-2 rounded-full ${opt.dotClass}`} />
-                                      <span>{opt.shortLabel}</span>
-                                      <span class="text-[9px] text-neutral-400">({opt.desc})</span>
-                                    </span>
-                                    {active && <span>✓</span>}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
+                        {/* Read-only role tag: roles are edited only from the chips on the function card */}
+                        <span
+                          class={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${ROLE_BADGE_STYLE[sl.role]}`}
+                          title={t('role_edit_hint')}
+                        >
+                          {sl.role === 'param' ? 'Param' : 'Hyper'}
+                        </span>
                       </div>
                     </div>
 
