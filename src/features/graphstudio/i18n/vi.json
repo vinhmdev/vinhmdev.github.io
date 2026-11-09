@@ -65,6 +65,7 @@
   "qf_group_ml_loss": "🎯 Hàm Loss & Phân phối Xác suất",
   "explore_examples_btn": "Khám phá mẫu",
   "data_actions_btn": "Thao tác",
+  "data_table_empty": "Chưa có điểm nào. Thêm hoặc phun điểm bằng các nút phía trên, hoặc nạp dữ liệu mẫu trong Thao tác.",
   "view3d_options_btn": "Tùy chọn 3D",
   "right_mode_surface": "Bề mặt Loss 3D",
   "right_mode_simplex": "Tam giác Softmax 2-Simplex",

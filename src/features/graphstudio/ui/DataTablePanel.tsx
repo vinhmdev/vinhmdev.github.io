@@ -18,7 +18,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
   const [csvText, setCsvText] = useState('');
   const [showCsvBox, setShowCsvBox] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(() => graph.dataPoints.length > 0);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   useEffect(() => {
     if (!actionsMenuOpen || typeof window === 'undefined') return;
@@ -252,6 +252,10 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             Import Rows
           </button>
         </div>
+      )}
+
+      {isExpanded && graph.dataPoints.length === 0 && !showCsvBox && (
+        <p class="px-1.5 text-[11px] leading-snug text-neutral-500 dark:text-neutral-400">{t('data_table_empty')}</p>
       )}
 
       {isExpanded && graph.dataPoints.length > 0 && (

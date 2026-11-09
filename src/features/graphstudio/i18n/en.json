@@ -65,6 +65,7 @@
   "qf_group_ml_loss": "🎯 Loss Functions & Probability PDFs",
   "explore_examples_btn": "Examples",
   "data_actions_btn": "Actions",
+  "data_table_empty": "No points yet. Add or spray points with the buttons above, or load a sample from Actions.",
   "view3d_options_btn": "3D Options",
   "right_mode_surface": "3D Loss Surface",
   "right_mode_simplex": "Softmax 2-Simplex",
