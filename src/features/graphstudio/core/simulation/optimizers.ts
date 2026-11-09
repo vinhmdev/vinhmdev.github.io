@@ -25,6 +25,21 @@ import {
 
 const DIVERGENCE_NORM_LIMIT = 1e6;
 
+const POSITIVE_DOMAIN_BOUNDS: Record<string, number> = {
+  sigma: 0.05,
+  d_k: 0.5,
+  d_v: 0.5,
+  d_model: 0.5,
+  tau: 0.001,
+  epsilon: 0.0001,
+  delta: 0.01,
+};
+
+function clampParamDomain(name: string, val: number): number {
+  const bound = POSITIVE_DOMAIN_BOUNDS[name];
+  return bound !== undefined && Number.isFinite(val) ? Math.max(bound, val) : val;
+}
+
 export interface OptimizerHyperparams {
   eta: number;
   beta1: number;
@@ -250,6 +265,16 @@ export function runOptimizerRace(
               ? extraV[k] / (1.0 - Math.pow(hyper.beta2, stepIdx))
               : extraV[k];
             extraVals[k] -= (eta * mHatK) / (Math.sqrt(vHatK) + hyper.epsilon);
+          }
+        }
+      }
+
+      if (predictor) {
+        w1 = clampParamDomain(predictor.w1Key, w1);
+        w2 = clampParamDomain(predictor.w2Key, w2);
+        if (hasMultiParams) {
+          for (const k of extraKeys) {
+            extraVals[k] = clampParamDomain(k, extraVals[k]);
           }
         }
       }

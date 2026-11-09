@@ -364,10 +364,22 @@ function applySyncedSliderVal(
   slider: SliderState,
   rawVal: number
 ): SliderState {
-  const val = Math.round((slider.name === 'sigma' ? Math.max(0.1, rawVal) : rawVal) * 1e6) / 1e6;
+  const isStrictlyPositive =
+    slider.name === 'sigma' ||
+    slider.name === 'd_k' ||
+    slider.name === 'd_v' ||
+    slider.name === 'd_model' ||
+    slider.name === 'tau' ||
+    slider.name === 'epsilon';
+  const floorLimit = slider.min > 0 ? slider.min : 0.05;
+  const guardedVal = isStrictlyPositive ? Math.max(floorLimit, rawVal) : rawVal;
+  const val = Math.round(guardedVal * 1e6) / 1e6;
+  const nextMin = isStrictlyPositive
+    ? Math.max(floorLimit, Math.min(slider.min, Math.floor(val * 10) / 10))
+    : Math.min(slider.min, Math.floor(val * 10) / 10);
   return {
     ...slider,
-    min: Math.min(slider.min, Math.floor(val * 10) / 10),
+    min: nextMin,
     max: Math.max(slider.max, Math.ceil(val * 10) / 10),
     value: val,
     playing: false,

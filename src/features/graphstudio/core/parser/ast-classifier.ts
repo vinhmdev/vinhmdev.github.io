@@ -49,9 +49,6 @@ const MODEL_PARAMS = new Set([
   'K',
   'V',
   'W',
-  'd_k',
-  'd_v',
-  'd_model',
 ]);
 
 const HYPERPARAMS = new Set([
@@ -63,6 +60,9 @@ const HYPERPARAMS = new Set([
   'delta',
   'tau',
   'epsilon',
+  'd_k',
+  'd_v',
+  'd_model',
   'L',
   'k',
   'n',

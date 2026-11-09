@@ -1209,7 +1209,7 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(attnClassified.symbols.find((s) => s.name === 'Q')?.role).toBe('data_var');
     expect(attnClassified.symbols.find((s) => s.name === 'K')?.role).toBe('param');
     expect(attnClassified.symbols.find((s) => s.name === 'V')?.role).toBe('param');
-    expect(attnClassified.symbols.find((s) => s.name === 'd_k')?.role).toBe('param');
+    expect(attnClassified.symbols.find((s) => s.name === 'd_k')?.role).toBe('hyperparam');
 
     // 4. Multi-letter derivative symbol extraction: Attention(Q, K, V) -> 'Attention', SwiGLU(x, w_1, w_2) -> 'SwiGLU'
     expect(resolveDerivSymbol('Attention(Q, K, V)', attnLatex, 0)).toBe('Attention');
@@ -1948,5 +1948,59 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
     expect(vp.xMax).toBeCloseTo(squareVp.xMax, 9);
     expect(vp.yMin).toBeCloseTo(squareVp.yMin, 9);
     expect(vp.yMax).toBeCloseTo(squareVp.yMax, 9);
+  });
+
+  it('treats Transformer d_k as hyperparam so optimizer tunes weights K, V without driving d_k negative', () => {
+    const store = graphStore.getState();
+    store.resetToBlankCanvas();
+
+    // Expression Attention(x, K, V, d_k)
+    const attnExpr = '\\operatorname{Attention}(x, K, V, d_k)';
+    const eId = store.graph.expressions[0].id;
+    store.updateExpressionLatex(eId, attnExpr);
+    store.toggleExpressionProp(eId, 'fitLoss');
+
+    const gState = graphStore.getState().graph;
+    expect(gState.sliders['d_k']).toBeDefined();
+    expect(gState.sliders['d_k'].role).toBe('hyperparam');
+    expect(gState.sliders['d_k'].min).toBe(0.5);
+
+    // Simulate compute job with sample data
+    const jobRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 701,
+      expressions: gState.expressions,
+      paramValues: { K: 2.0, V: 1.0, d_k: 4.0 },
+      symbolOverrides: {},
+      subgradConvention: 'zero',
+      leftViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      rightViewport: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: [
+        { id: 'p1', x: -1.0, y: -0.5, split: 'train' },
+        { id: 'p2', x: 1.0, y: 0.5, split: 'train' },
+      ],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.0,
+      batchNormEnabled: false,
+      optimizerRace: {
+        ...createInitialGraphState('T-00').optimizerRace,
+        startW1: 2.0,
+        startW2: 1.0,
+        steps: 50,
+      },
+      hoveredDataPointId: null,
+    });
+
+    const adamTraj = jobRes.trajectories.adam;
+    expect(adamTraj.length).toBeGreaterThan(0);
+    // d_k must not be in params being modified by gradient descent
+    for (const step of adamTraj) {
+      if (step.params && 'd_k' in step.params) {
+        expect(step.params.d_k).toBeGreaterThanOrEqual(0.5);
+      }
+    }
   });
 });
