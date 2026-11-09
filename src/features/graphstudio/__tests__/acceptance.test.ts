@@ -61,6 +61,10 @@ import { classifyUrlHash } from '../state/hash-router';
 import { createInitialGraphState, graphStore } from '../state/store';
 import {
   computeChartFocusViewport,
+  computeNiceTicks,
+  computeUniformTickStep,
+  squareViewport,
+  viewportAspectError,
 } from '../renderers/viewport-controller';
 import {
   decodeStateFromUrlHashAsync,
@@ -1886,6 +1890,54 @@ describe('GraphStudio LaTeX Enhancements & Safe Constants [Item 1..5]', () => {
   });
 });
 
+describe('1:1 aspect lock: square grid cells & shared tick step', () => {
+  // Wide canvas, already square in px-per-unit: 1600px / 400u = 400px / 100u = 4 px/u
+  const W = 1600;
+  const H = 400;
+  const squareVp = { xMin: -200, xMax: 200, yMin: -50, yMax: 50 };
 
+  it('reproduces the bug: independent per-axis ticks diverge (50 vs 20) on a square viewport', () => {
+    expect(viewportAspectError(squareVp, W, H)).toBeCloseTo(0, 9);
+    const xTicks = computeNiceTicks(squareVp.xMin, squareVp.xMax, 8);
+    const yTicks = computeNiceTicks(squareVp.yMin, squareVp.yMax, 6);
+    expect(xTicks[1] - xTicks[0]).toBe(50);
+    expect(yTicks[1] - yTicks[0]).toBe(20);
+  });
 
+  it('shares one nice step across both axes when locked', () => {
+    const step = computeUniformTickStep(squareVp, W, H);
+    const xTicks = computeNiceTicks(squareVp.xMin, squareVp.xMax, 8, step);
+    const yTicks = computeNiceTicks(squareVp.yMin, squareVp.yMax, 6, step);
+    const dx = xTicks[1] - xTicks[0];
+    const dy = yTicks[1] - yTicks[0];
+    expect(dx).toBe(dy);
+    // Same world step + same px/unit => square cells on screen
+    expect((dx / (squareVp.xMax - squareVp.xMin)) * W).toBeCloseTo(
+      (dy / (squareVp.yMax - squareVp.yMin)) * H,
+      9
+    );
+    expect(xTicks).toContain(0);
+    expect(yTicks).toContain(0);
+  });
 
+  it('squares a distorted template viewport without hiding any of the original region', () => {
+    const distorted = { xMin: 0, xMax: 1, yMin: -0.2, yMax: 5.5 }; // T-07 style
+    const vp = squareViewport(distorted, W, H);
+    expect(viewportAspectError(vp, W, H)).toBeLessThan(1e-9);
+    expect((vp.xMax - vp.xMin) / W).toBeCloseTo((vp.yMax - vp.yMin) / H, 12);
+    expect(vp.xMin).toBeLessThanOrEqual(distorted.xMin);
+    expect(vp.xMax).toBeGreaterThanOrEqual(distorted.xMax);
+    expect(vp.yMin).toBeLessThanOrEqual(distorted.yMin);
+    expect(vp.yMax).toBeGreaterThanOrEqual(distorted.yMax);
+    expect((vp.xMin + vp.xMax) / 2).toBeCloseTo(0.5, 12);
+    expect((vp.yMin + vp.yMax) / 2).toBeCloseTo(2.65, 12);
+  });
+
+  it('is idempotent on an already-square viewport', () => {
+    const vp = squareViewport(squareVp, W, H);
+    expect(vp.xMin).toBeCloseTo(squareVp.xMin, 9);
+    expect(vp.xMax).toBeCloseTo(squareVp.xMax, 9);
+    expect(vp.yMin).toBeCloseTo(squareVp.yMin, 9);
+    expect(vp.yMax).toBeCloseTo(squareVp.yMax, 9);
+  });
+});

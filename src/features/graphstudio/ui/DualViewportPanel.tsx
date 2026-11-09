@@ -22,6 +22,8 @@ import {
   hitTestDataPoint,
   panViewport,
   screenToWorld,
+  squareViewport,
+  viewportAspectError,
   zoomViewportAt,
 } from '../renderers/viewport-controller';
 import {
@@ -232,6 +234,17 @@ export function DualViewportPanel({
     };
   }, [showLeft, showRight, graph.viewMode, mobileTab]);
 
+  // 1:1 invariant: any viewport replacement (template switch, shared-link load, undo/redo,
+  // examples) that leaves scaleX !== scaleY while locked is re-squared around its center.
+  useEffect(() => {
+    if (!showLeft || graph.lock1to1 === false || !prevLeftSizeRef.current) return;
+    const { width, height } = leftSize;
+    if (width < 40 || height < 40) return;
+    if (viewportAspectError(graph.leftViewport, width, height) > 0.005) {
+      storeState.setLeftViewport(squareViewport(graph.leftViewport, width, height));
+    }
+  }, [showLeft, graph.lock1to1, graph.leftViewport, leftSize.width, leftSize.height]);
+
   // Initialize or re-bind WebGL2 renderer whenever rightGlCanvas mounts
   useEffect(() => {
     const glCanvas = rightGlCanvasRef.current;
@@ -278,6 +291,7 @@ export function DualViewportPanel({
       paramValues,
       whiteboardStrokes: allStrokes,
       fitLossExprId,
+      lock1to1: graph.lock1to1 !== false,
     });
   }, [
     showLeft,
@@ -297,6 +311,7 @@ export function DualViewportPanel({
     whiteboardStrokes,
     draftStroke,
     fitLossExprId,
+    graph.lock1to1,
     JSON.stringify(paramValues),
   ]);
 
@@ -740,17 +755,9 @@ export function DualViewportPanel({
                     const nextLock = !(graph.lock1to1 ?? true);
                     storeState.setLock1to1(nextLock);
                     if (nextLock) {
-                      const aspect = Math.max(leftSize.width, 1) / Math.max(leftSize.height, 1);
-                      const yMid = (graph.leftViewport.yMin + graph.leftViewport.yMax) * 0.5;
-                      const xMid = (graph.leftViewport.xMin + graph.leftViewport.xMax) * 0.5;
-                      const halfY = (graph.leftViewport.yMax - graph.leftViewport.yMin) * 0.5;
-                      const halfX = halfY * aspect;
-                      storeState.setLeftViewport({
-                        xMin: xMid - halfX,
-                        xMax: xMid + halfX,
-                        yMin: yMid - halfY,
-                        yMax: yMid + halfY,
-                      });
+                      storeState.setLeftViewport(
+                        squareViewport(graph.leftViewport, leftSize.width, leftSize.height)
+                      );
                     }
                   }}
                   class={`px-1.5 py-0.5 rounded font-mono font-semibold shadow-2xs transition-colors border ${

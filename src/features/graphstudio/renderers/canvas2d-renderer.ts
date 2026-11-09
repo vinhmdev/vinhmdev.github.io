@@ -14,7 +14,7 @@ import type {
   Viewport2DBounds,
   WhiteboardStroke,
 } from '../types/state';
-import { computeNiceTicks, worldToScreen } from './viewport-controller';
+import { computeNiceTicks, computeUniformTickStep, worldToScreen } from './viewport-controller';
 
 export interface Canvas2DRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -33,6 +33,8 @@ export interface Canvas2DRenderParams {
   paramValues?: Record<string, number>;
   whiteboardStrokes?: WhiteboardStroke[];
   fitLossExprId?: string;
+  /** 1:1 aspect lock: both axes share one tick step so grid cells are squares */
+  lock1to1?: boolean;
 }
 
 export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
@@ -53,6 +55,7 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     paramValues = {},
     whiteboardStrokes = [],
     fitLossExprId,
+    lock1to1 = false,
   } = p;
 
   const scaleX = ctx.canvas ? ctx.canvas.width / Math.max(width, 1) : 1;
@@ -65,8 +68,9 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
   ctx.fillRect(0, 0, width, height);
 
   // 2. Adaptive Coordinate Grid (opacity 0.15 [NFR-4])
-  const xTicks = computeNiceTicks(viewport.xMin, viewport.xMax, 8);
-  const yTicks = computeNiceTicks(viewport.yMin, viewport.yMax, 6);
+  const sharedStep = lock1to1 ? computeUniformTickStep(viewport, width, height) : undefined;
+  const xTicks = computeNiceTicks(viewport.xMin, viewport.xMax, 8, sharedStep);
+  const yTicks = computeNiceTicks(viewport.yMin, viewport.yMax, 6, sharedStep);
 
   ctx.save();
   // Minor subdivisions (Desmos/GeoGebra style 5-subdivision grid)

@@ -27,21 +27,86 @@ export function screenToWorld(
   return { wx, wy };
 }
 
-/** Computes human-friendly decimal grid ticks (1, 2, 5 * 10^k) */
-export function computeNiceTicks(min: number, max: number, targetCount = 8): number[] {
-  const span = max - min;
-  if (!Number.isFinite(span) || span <= 1e-12) return [min];
-  const rawStep = span / targetCount;
+/** Rounds a raw step up to the nearest human-friendly 1, 2, 5 * 10^k value */
+export function niceStep(rawStep: number): number {
+  if (!Number.isFinite(rawStep) || rawStep <= 0) return 1;
   const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
   const residual = rawStep / mag;
-  const step = residual > 5 ? 10 * mag : residual > 2 ? 5 * mag : residual > 1 ? 2 * mag : mag;
+  return residual > 5 ? 10 * mag : residual > 2 ? 5 * mag : residual > 1 ? 2 * mag : mag;
+}
+
+/**
+ * Computes human-friendly decimal grid ticks (1, 2, 5 * 10^k).
+ * Pass `fixedStep` to force a shared step (e.g. both axes under a 1:1 aspect lock).
+ */
+export function computeNiceTicks(
+  min: number,
+  max: number,
+  targetCount = 8,
+  fixedStep?: number
+): number[] {
+  const span = max - min;
+  if (!Number.isFinite(span) || span <= 1e-12) return [min];
+  const step =
+    fixedStep !== undefined && Number.isFinite(fixedStep) && fixedStep > 0
+      ? fixedStep
+      : niceStep(span / targetCount);
 
   const first = Math.ceil(min / step) * step;
   const ticks: number[] = [];
-  for (let v = first; v <= max + 1e-9 * step && ticks.length < 32; v += step) {
+  for (let v = first; v <= max + 1e-9 * step && ticks.length < 64; v += step) {
     ticks.push(Math.abs(v) < 1e-12 ? 0 : Number(v.toPrecision(10)));
   }
   return ticks;
+}
+
+/**
+ * Single tick step shared by both axes when 1:1 is locked, targeting roughly
+ * `targetPx` screen pixels per major grid cell so cells render as true squares.
+ */
+export function computeUniformTickStep(
+  vp: Viewport2DBounds,
+  width: number,
+  height: number,
+  targetPx = 90
+): number {
+  const unitsPerPxX = (vp.xMax - vp.xMin) / Math.max(width, 1);
+  const unitsPerPxY = (vp.yMax - vp.yMin) / Math.max(height, 1);
+  return niceStep(Math.max(unitsPerPxX, unitsPerPxY) * targetPx);
+}
+
+/** Relative mismatch between the X and Y pixel scales (0 = perfectly square grid) */
+export function viewportAspectError(vp: Viewport2DBounds, width: number, height: number): number {
+  const pxPerUnitX = Math.max(width, 1) / Math.max(vp.xMax - vp.xMin, 1e-12);
+  const pxPerUnitY = Math.max(height, 1) / Math.max(vp.yMax - vp.yMin, 1e-12);
+  return Math.abs(pxPerUnitX - pxPerUnitY) / Math.max(pxPerUnitX, pxPerUnitY);
+}
+
+/**
+ * Enforces scaleX === scaleY (pixels per world unit) around the current center.
+ * The under-sized axis is expanded so the whole previous region stays visible.
+ */
+export function squareViewport(
+  vp: Viewport2DBounds,
+  width: number,
+  height: number
+): Viewport2DBounds {
+  const aspect = Math.max(width, 1) / Math.max(height, 1);
+  const xMid = (vp.xMin + vp.xMax) * 0.5;
+  const yMid = (vp.yMin + vp.yMax) * 0.5;
+  let spanX = Math.max(vp.xMax - vp.xMin, 1e-9);
+  let spanY = Math.max(vp.yMax - vp.yMin, 1e-9);
+  if (spanX / aspect > spanY) {
+    spanY = spanX / aspect;
+  } else {
+    spanX = spanY * aspect;
+  }
+  return {
+    xMin: xMid - spanX * 0.5,
+    xMax: xMid + spanX * 0.5,
+    yMin: yMid - spanY * 0.5,
+    yMax: yMid + spanY * 0.5,
+  };
 }
 
 export function panViewport(
