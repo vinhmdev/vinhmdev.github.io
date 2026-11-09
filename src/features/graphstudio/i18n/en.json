@@ -19,7 +19,7 @@
   "math_sliders_title": "Parameter Sliders",
   "axis_var_label": "Plot axis",
   "sliders_summary_label": "Sliders",
-  "data_table_title": "Interactive Dataset (Train / Test)",
+  "data_table_title": "Dataset",
   "math_points_title": "Coordinate Points (x, y)",
   "add_point": "+ Point",
   "brush_mode": "Point Brush",

@@ -505,12 +505,12 @@ export function DualViewportPanel({
   return (
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Main Split Viewports */}
-      <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
+      <div class="flex-1 grid grid-cols-1 auto-rows-fr lg:grid-cols-2 min-h-0 relative">
         {/* LEFT PANE: 2D Data / Function Space + Interactive Whiteboard */}
         {showLeft && (
           <div
             ref={leftContainerRef}
-            class={`relative min-h-[260px] h-full border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 overflow-hidden ${
+            class={`relative min-h-[96px] lg:min-h-[260px] h-full border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 overflow-hidden ${
               !showRight ? 'lg:col-span-2' : ''
             }`}
           >
@@ -921,7 +921,7 @@ export function DualViewportPanel({
         {showRight && (
           <div
             ref={rightContainerRef}
-            class={`relative min-h-[260px] h-full overflow-hidden ${
+            class={`relative min-h-[96px] lg:min-h-[260px] h-full overflow-hidden ${
               !showLeft ? 'lg:col-span-2' : ''
             }`}
           >
