@@ -367,7 +367,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         (e.target as HTMLInputElement).value
                       )
                     }
-                    class="min-w-0 flex-1 max-w-[140px] px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
+                    class="min-w-[4rem] flex-1 max-w-[140px] text-ellipsis px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
                   />
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
@@ -388,26 +388,28 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showFirstDerivative')}
-                    class={`px-1.5 py-0.5 rounded text-[11px] font-mono border ${
+                    class={`inline-flex items-center max-w-[4.5rem] px-1.5 py-0.5 rounded text-[11px] font-mono border ${
                       expr.showFirstDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
                     }`}
                     title={`Toggle 1st Derivative ${derivSymbol}'(${classified.primaryVar}) (dashed)`}
                   >
-                    {derivSymbol}&apos;({classified.primaryVar})
+                    <span class="min-w-0 truncate">{derivSymbol}</span>
+                    <span class="shrink-0">&apos;({classified.primaryVar})</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showSecondDerivative')}
-                    class={`px-1.5 py-0.5 rounded text-[11px] font-mono border ${
+                    class={`inline-flex items-center max-w-[4.5rem] px-1.5 py-0.5 rounded text-[11px] font-mono border ${
                       expr.showSecondDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
                     }`}
                     title={`Toggle 2nd Derivative ${derivSymbol}''(${classified.primaryVar}) (dash-dot, Dirac mollifier)`}
                   >
-                    {derivSymbol}&apos;&apos;({classified.primaryVar})
+                    <span class="min-w-0 truncate">{derivSymbol}</span>
+                    <span class="shrink-0">&apos;&apos;({classified.primaryVar})</span>
                   </button>
                   <button
                     type="button"
@@ -501,10 +503,10 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       type="button"
                       onClick={() => setEditingExprId(expr.id)}
                       title="Click to edit raw LaTeX / mathematical formula"
-                      class="group w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/60 bg-neutral-50/70 dark:bg-neutral-950/70 text-left overflow-x-auto transition-colors cursor-text"
+                      class="group w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/60 bg-neutral-50/70 dark:bg-neutral-950/70 text-left min-w-0 overflow-hidden transition-colors cursor-text"
                     >
                       <span
-                        class="text-xs text-neutral-900 dark:text-neutral-100 py-0.5 overflow-x-auto"
+                        class="gs-katex-line min-w-0 flex-1 text-xs text-neutral-900 dark:text-neutral-100"
                         dangerouslySetInnerHTML={{
                           __html: renderLatexPreview(formatExpressionForKatex(expr.latex)),
                         }}
@@ -574,7 +576,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   {/* Symbolic Derivative Readouts with KaTeX rendering [FR-2.1] */}
                   {classified.valid && expr.showFirstDerivative && curvePacket?.firstDerivFormulaLatex && (
                     <div
-                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
+                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded gs-katex-line"
                       dangerouslySetInnerHTML={{
                         __html: renderLatexPreview(
                           `${derivSymbol}'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
@@ -584,7 +586,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   )}
                   {classified.valid && expr.showSecondDerivative && curvePacket?.secondDerivFormulaLatex && (
                     <div
-                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded overflow-x-auto"
+                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded gs-katex-line"
                       dangerouslySetInnerHTML={{
                         __html: renderLatexPreview(
                           `${derivSymbol}''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
