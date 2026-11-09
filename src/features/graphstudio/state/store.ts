@@ -283,6 +283,7 @@ export interface GraphStoreState {
   addExpressionsBatch: (items: ExpressionBatchItem[], replaceId?: string) => void;
   setExpressionKind: (id: string, kind: ExpressionKind) => void;
   removeExpression: (id: string) => void;
+  clearAllExpressions: () => void;
   toggleExpressionProp: (
     id: string,
     prop:
@@ -573,7 +574,10 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         showSecondDerivative: false,
         ...(inferredLabel ? { label: inferredLabel } : {}),
       };
-      commitGraph({ ...g, expressions: [...g.expressions, newExpr] }, true);
+      commitGraph(
+        { ...g, expressions: ensureFitTarget([...g.expressions, newExpr]) },
+        true
+      );
     },
 
     addExpressionsBatch(items, replaceId) {
@@ -630,20 +634,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     removeExpression(id) {
       const g = get().graph;
-      if (g.expressions.length <= 1) {
-        commitGraph(
-          {
-            ...g,
-            expressions: g.expressions.map((e) =>
-              e.id === id ? { ...e, latex: '', fitLoss: true } : e
-            ),
-          },
-          true
-        );
-        return;
-      }
       const filtered = g.expressions.filter((e) => e.id !== id);
       commitGraph({ ...g, expressions: ensureFitTarget(filtered) }, true);
+    },
+
+    clearAllExpressions() {
+      const g = get().graph;
+      commitGraph({ ...g, expressions: [], sliders: {} }, true);
     },
 
     toggleExpressionProp(id, prop) {

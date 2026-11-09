@@ -667,10 +667,19 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     graphStore.getState().updateExpressionLatex(firstId, 'm * sin(');
     expect(Object.keys(graphStore.getState().graph.sliders).sort()).toEqual(['d', 'm']);
 
-    // Removing the last remaining expression clears its latex to '' AND prunes orphaned sliders
+    // Removing the last remaining expression removes it completely AND prunes orphaned sliders
     graphStore.getState().removeExpression(firstId);
+    expect(graphStore.getState().graph.expressions.length).toBe(0);
+    expect(Object.keys(graphStore.getState().graph.sliders)).toEqual([]);
+
+    // Adding expression when empty sets fitLoss: true
+    graphStore.getState().addExpression('x^2');
     expect(graphStore.getState().graph.expressions.length).toBe(1);
-    expect(graphStore.getState().graph.expressions[0].latex).toBe('');
+    expect(graphStore.getState().graph.expressions[0].fitLoss).toBe(true);
+
+    // clearAllExpressions removes all expressions and sliders
+    graphStore.getState().clearAllExpressions();
+    expect(graphStore.getState().graph.expressions.length).toBe(0);
     expect(Object.keys(graphStore.getState().graph.sliders)).toEqual([]);
 
     // Whiteboard Pen, Highlighter, Eraser (including segment interior hit-testing) & Clear actions

@@ -113,4 +113,37 @@ describe('Note rows — store actions', () => {
     expect(fit.length).toBe(1);
     expect(fit[0].kind).toBeUndefined();
   });
+
+  it('removes expressions one by one, and removing the last expression leaves expressions empty (0 rows)', () => {
+    const store = graphStore.getState();
+    const id1 = store.graph.expressions[0].id;
+    const id2 = store.graph.expressions[1].id;
+    store.removeExpression(id1);
+    expect(graphStore.getState().graph.expressions.length).toBe(1);
+    store.removeExpression(id2);
+    expect(graphStore.getState().graph.expressions).toEqual([]);
+    expect(graphStore.getState().graph.sliders).toEqual({});
+  });
+
+  it('clearAllExpressions purges all expressions and sliders completely', () => {
+    const store = graphStore.getState();
+    store.addExpression('a \\cdot x + b');
+    expect(graphStore.getState().graph.expressions.length).toBeGreaterThanOrEqual(2);
+    store.clearAllExpressions();
+    expect(graphStore.getState().graph.expressions).toEqual([]);
+    expect(graphStore.getState().graph.sliders).toEqual({});
+  });
+
+  it('allows inserting presets or batch additions into clean state without needing replacement', () => {
+    const store = graphStore.getState();
+    store.clearAllExpressions();
+    expect(graphStore.getState().graph.expressions.length).toBe(0);
+
+    store.addExpression('x^2 + 1', 'f(x)');
+    const exprs = graphStore.getState().graph.expressions;
+    expect(exprs.length).toBe(1);
+    expect(exprs[0].latex).toBe('x^2 + 1');
+    expect(exprs[0].label).toBe('f(x)');
+    expect(exprs[0].fitLoss).toBe(true);
+  });
 });

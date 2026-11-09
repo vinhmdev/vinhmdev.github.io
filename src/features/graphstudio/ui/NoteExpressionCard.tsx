@@ -13,7 +13,7 @@ import { IconChevronDown, IconChevronRight, IconFunction, IconTrash } from './ic
 interface NoteExpressionCardProps {
   expr: ExpressionItem;
   storeState: GraphStoreState;
-  canDelete: boolean;
+  canDelete?: boolean;
 }
 
 function renderNoteKaTeX(latex: string): string {
@@ -27,7 +27,6 @@ function renderNoteKaTeX(latex: string): string {
 export function NoteExpressionCard({
   expr,
   storeState,
-  canDelete,
 }: NoteExpressionCardProps): JSX.Element {
   const [editing, setEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,7 +83,7 @@ export function NoteExpressionCard({
             type="button"
             onClick={() => storeState.removeExpression(expr.id)}
             class="p-1 rounded text-neutral-400 hover:text-red-500"
-            title={canDelete ? 'Delete' : 'Clear'}
+            title={t('delete_note') || 'Delete note'}
           >
             <IconTrash />
           </button>

@@ -165,37 +165,11 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   }, [anySliderPlaying]);
 
   const handleInsertPreset = (latex: string, presetLabel?: string): void => {
-    const emptyExpr = graph.expressions.find((e) => e.latex.trim().length === 0);
-    if (emptyExpr) {
-      storeState.updateExpressionLatex(emptyExpr.id, latex);
-      if (presetLabel && !emptyExpr.label) {
-        storeState.updateExpressionLabel(emptyExpr.id, presetLabel);
-      }
-    } else {
-      storeState.addExpression(latex, presetLabel);
-    }
+    storeState.addExpression(latex, presetLabel);
   };
 
   const handleClearAllExpressions = (): void => {
-    storeState.loadFullState(
-      {
-        ...graph,
-        sliders: {},
-        expressions: [
-          {
-            id: 'expr-1',
-            latex: '',
-            color: '#f97316',
-            visible: true,
-            showFirstDerivative: false,
-            showSecondDerivative: false,
-            fitLoss: true,
-            label: 'f(x)',
-          },
-        ],
-      },
-      true
-    );
+    storeState.clearAllExpressions();
   };
 
   return (
@@ -283,7 +257,8 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           <button
             type="button"
             onClick={() => storeState.toggleAllExpressionsVisible()}
-            class="flex items-center justify-center w-7 h-7 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors"
+            disabled={graph.expressions.length === 0}
+            class="flex items-center justify-center w-7 h-7 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500 transition-colors disabled:opacity-40 disabled:pointer-events-none"
             title={anyExprVisible ? 'Hide all curves' : 'Show all curves'}
             aria-label={anyExprVisible ? 'Hide all curves' : 'Show all curves'}
           >
@@ -292,8 +267,9 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           <button
             type="button"
             onClick={handleClearAllExpressions}
-            class="flex items-center gap-1 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-red-500 hover:text-red-500 transition-colors text-[11px]"
-            title="Clear all expressions to a blank input"
+            disabled={graph.expressions.length === 0}
+            class="flex items-center gap-1 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-red-500 hover:text-red-500 transition-colors text-[11px] disabled:opacity-40 disabled:pointer-events-none"
+            title={t('clear_expr_btn_tooltip') || 'Clear all expressions'}
           >
             <IconTrash class="w-3.5 h-3.5" />
             <span>{t('clear_expr_btn')}</span>
@@ -335,6 +311,19 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
       </div>
 
       <div class="flex flex-col gap-2.5">
+        {graph.expressions.length === 0 && (
+          <div class="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-300 dark:border-neutral-800 rounded-lg text-neutral-400 dark:text-neutral-500">
+            <p class="text-xs">{t('no_expressions') || 'No expressions yet'}</p>
+            <button
+              type="button"
+              onClick={() => storeState.addExpression()}
+              class="mt-2 inline-flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
+            >
+              <IconPlus class="w-3 h-3" />
+              <span>{t('add_function_short')}</span>
+            </button>
+          </div>
+        )}
         {graph.expressions.map((expr, idx) => {
           if (isNoteExpression(expr)) {
             return (
@@ -342,7 +331,6 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                 key={expr.id}
                 expr={expr}
                 storeState={storeState}
-                canDelete={graph.expressions.length > 1}
               />
             );
           }
@@ -453,7 +441,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     type="button"
                     onClick={() => storeState.removeExpression(expr.id)}
                     class="p-1 rounded text-neutral-400 hover:text-red-500"
-                    title={graph.expressions.length > 1 ? 'Delete expression' : 'Clear expression'}
+                    title={t('delete_expression') || 'Delete expression'}
                   >
                     <IconTrash />
                   </button>
