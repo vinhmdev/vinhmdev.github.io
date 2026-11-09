@@ -382,16 +382,11 @@ export default function GraphStudioApp(): JSX.Element {
             desktopSidebarOpen ? 'lg:w-80 xl:w-96 lg:flex' : 'lg:hidden'
           } shrink-0 flex flex-col border-t lg:border-t-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75`}
         >
-          {/* Bottom-sheet handle + peek summary (< 1024px) */}
-          <div class="lg:hidden bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200/80 dark:border-neutral-800">
+          {/* Bottom-sheet handle (< 1024px) */}
+          <div class="lg:hidden">
             <MobileSheetHandle
               isOpen={mobileSheetOpen}
               onOpenChange={setMobileSheetOpen}
-              summary={`𝑓(x) ${storeState.graph.expressions.length}${
-                Object.keys(storeState.graph.sliders).length > 0
-                  ? ` · ${t('sliders_title')} ${Object.keys(storeState.graph.sliders).length}`
-                  : ''
-              }`}
             />
           </div>
 
