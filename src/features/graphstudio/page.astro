@@ -47,7 +47,7 @@ import GraphStudioApp from './ui/GraphStudioApp';
       <button
         id="share-btn"
         type="button"
-        class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
+        aria-label="Share" class="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold hover:opacity-90 transition-all"
         title="Share or Publish Graph"
       >
         <svg
@@ -66,7 +66,7 @@ import GraphStudioApp from './ui/GraphStudioApp';
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
         </svg>
-        <span data-i18n="share_btn">Share</span>
+        <span class="hidden sm:inline" data-i18n="share_btn">Share</span>
       </button>
 
       <button

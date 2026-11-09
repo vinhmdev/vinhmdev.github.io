@@ -1,13 +1,23 @@
 /**
- * Subheader Toolbar: Streamlined Studio Header with Blank Reset, View Mode Switcher,
- * Examples Drawer Trigger, Undo/Redo, Compact Tools Dropdown Menu, and 2x DPI PNG Export.
+ * Subheader Toolbar (single row at every width): Sidebar Toggle, View Mode Switcher,
+ * Examples Drawer Trigger, Undo/Redo, secondary PNG Export, and a "More" overflow menu
+ * (New blank graph, Save to browser, Kink subgradient, frame-compute latency).
+ * JSON export lives only in Share › Offline/JSON so each action has one home.
  */
 import type { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { downloadStateJsonFile, saveStateToLocalStorage } from '../state/local-persistence';
+import { saveStateToLocalStorage } from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
-import { IconBoard, IconDownload, IconRedo, IconSave, IconSidebarToggle, IconUndo } from './icons';
+import {
+  IconBoard,
+  IconDownload,
+  IconMore,
+  IconRedo,
+  IconSave,
+  IconSidebarToggle,
+  IconUndo,
+} from './icons';
 
 interface ToolbarProps {
   storeState: GraphStoreState;
@@ -50,7 +60,7 @@ export function ToolbarSubheader({
             aria-expanded={sidebarOpen}
             aria-label={t('toggle_sidebar_btn')}
             onClick={onToggleSidebar}
-            class={`hidden md:flex items-center justify-center shrink-0 w-7 h-7 rounded-md border transition-colors ${
+            class={`hidden lg:flex items-center justify-center shrink-0 w-7 h-7 rounded-md border transition-colors ${
               sidebarOpen
                 ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
                 : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
@@ -61,20 +71,6 @@ export function ToolbarSubheader({
           </button>
         )}
 
-        <button
-          id="blank-graph-btn"
-          type="button"
-          onClick={() => {
-            storeState.resetToBlankCanvas();
-            onToast(t('blank_mode_toast'));
-          }}
-          class="flex items-center gap-1 shrink-0 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500 font-semibold transition-colors"
-          title={t('t00_title')}
-        >
-          <IconBoard class="w-3.5 h-3.5 text-orange-500" />
-          <span class="hidden sm:inline">{t('blank_mode_btn')}</span>
-        </button>
-
         {/* View Mode Segmented Switcher (2D / 3D / Split) */}
         <div class="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden shrink-0">
           {(['inference', 'optimization', 'dual'] as const).map((m) => (
@@ -82,17 +78,34 @@ export function ToolbarSubheader({
               key={m}
               type="button"
               onClick={() => storeState.setViewMode(m)}
-              class={`px-2 sm:px-2.5 h-7 text-[11px] sm:text-xs font-medium transition-colors ${
+              aria-pressed={graph.viewMode === m}
+              title={
+                m === 'inference'
+                  ? t('view_inference')
+                  : m === 'optimization'
+                    ? t('view_optimization')
+                    : t('view_dual')
+              }
+              class={`px-2.5 h-7 text-xs font-medium whitespace-nowrap transition-colors ${
                 graph.viewMode === m
                   ? 'bg-orange-500 text-white font-semibold'
                   : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
               }`}
             >
-              {m === 'inference'
-                ? t('view_inference')
-                : m === 'optimization'
-                  ? t('view_optimization')
-                  : t('view_dual')}
+              <span class="lg:hidden">
+                {m === 'inference'
+                  ? t('view_inference_short')
+                  : m === 'optimization'
+                    ? t('view_optimization_short')
+                    : t('view_dual_short')}
+              </span>
+              <span class="hidden lg:inline">
+                {m === 'inference'
+                  ? t('view_inference')
+                  : m === 'optimization'
+                    ? t('view_optimization')
+                    : t('view_dual')}
+              </span>
             </button>
           ))}
         </div>
@@ -105,25 +118,19 @@ export function ToolbarSubheader({
           title={t('explore_examples_btn')}
         >
           <span>📚</span>
-          <span class="hidden md:inline">{t('explore_examples_btn')}</span>
+          <span class="hidden lg:inline">{t('explore_examples_btn')}</span>
         </button>
       </div>
 
-      {/* Right Group: Latency Badge, Undo/Redo, Compact Tools Menu, and Export PNG */}
+      {/* Right Group: Undo/Redo, secondary PNG export, and the "More" overflow menu */}
       <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-        <span
-          class="hidden xl:inline-block px-2 py-0.5 rounded bg-neutral-200/70 dark:bg-neutral-800 text-[11px] font-mono text-neutral-600 dark:text-neutral-400"
-          title="Worker frame recalculation latency (Budget < 4.0ms)"
-        >
-          {storeState.computeDurationMs.toFixed(2)} ms
-        </span>
-
         <button
           type="button"
           disabled={undoStack.length === 0}
           onClick={() => storeState.undo()}
           class="flex items-center justify-center w-7 h-7 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 disabled:opacity-40 hover:border-orange-500"
           title={t('undo_btn')}
+          aria-label={t('undo_btn')}
         >
           <IconUndo />
         </button>
@@ -133,67 +140,86 @@ export function ToolbarSubheader({
           onClick={() => storeState.redo()}
           class="flex items-center justify-center w-7 h-7 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 disabled:opacity-40 hover:border-orange-500"
           title={t('redo_btn')}
+          aria-label={t('redo_btn')}
         >
           <IconRedo />
         </button>
 
-        {/* Consolidated Studio Tools Dropdown Menu */}
+        <button
+          type="button"
+          onClick={onExportPng}
+          class="flex items-center gap-1 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500 font-medium transition-colors"
+          title="Export 2x DPI PNG image"
+          aria-label={t('export_png_btn')}
+        >
+          <IconDownload class="w-3.5 h-3.5" />
+          <span class="hidden sm:inline">PNG</span>
+        </button>
+
+        {/* "More" overflow menu: occasional actions only */}
         <div class="relative inline-block">
           <button
             type="button"
             aria-expanded={toolsMenuOpen}
+            aria-haspopup="menu"
+            aria-label={t('more_menu_btn')}
             onClick={(e) => {
               e.stopPropagation();
               setToolsMenuOpen((prev) => !prev);
             }}
-            class={`inline-flex items-center gap-1 h-7 px-2 rounded-md border font-medium transition-colors ${
+            class={`flex items-center justify-center w-7 h-7 rounded-md border transition-colors ${
               toolsMenuOpen
                 ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
                 : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
             }`}
-            title={t('tools_menu_btn')}
+            title={t('more_menu_btn')}
           >
-            <span>⚙️</span>
-            <span class="hidden sm:inline">{t('tools_menu_btn')}</span>
-            <span class="text-[10px] opacity-75">▾</span>
+            <IconMore />
           </button>
 
           {toolsMenuOpen && (
             <div
+              role="menu"
               onClick={(e) => e.stopPropagation()}
-              class="absolute right-0 top-full mt-1.5 z-40 w-56 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-xs"
+              class="absolute right-0 top-full mt-1.5 z-40 w-60 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-xs"
             >
               <button
+                id="blank-graph-btn"
                 type="button"
-                onClick={handleSaveLocal}
-                class="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                role="menuitem"
+                onClick={() => {
+                  storeState.resetToBlankCanvas();
+                  onToast(t('blank_mode_toast'));
+                  setToolsMenuOpen(false);
+                }}
+                class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                title={t('t00_title')}
               >
-                <IconSave class="w-3.5 h-3.5 text-orange-500" />
-                <span>{t('save_btn')} (LocalStorage)</span>
+                <IconBoard class="w-3.5 h-3.5 text-orange-500" />
+                <span>{t('new_blank_graph')}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  downloadStateJsonFile(graph);
-                  setToolsMenuOpen(false);
-                }}
-                class="flex items-center gap-2 px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                role="menuitem"
+                onClick={handleSaveLocal}
+                class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
               >
-                <IconDownload class="w-3.5 h-3.5 text-blue-500" />
-                <span>Export Session (.JSON)</span>
+                <IconSave class="w-3.5 h-3.5 text-orange-500" />
+                <span>{t('save_browser')}</span>
               </button>
 
               <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => {
                   storeState.setSubgradConvention(
                     graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
                   );
                 }}
-                class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                class="flex items-center justify-between px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 title="Toggle Clarke Subdifferential at kink u = 0"
               >
                 <span>Kink Subgradient</span>
@@ -201,19 +227,17 @@ export function ToolbarSubheader({
                   {graph.subgradConvention === 'zero' ? 'H(0)=0' : 'H(0)=0.5'}
                 </span>
               </button>
+
+              <div
+                class="mt-1 px-3 pt-1.5 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400"
+                title="Worker frame recalculation latency (Budget < 4.0ms)"
+              >
+                <span>{t('latency_label')}</span>
+                <span class="font-mono">{storeState.computeDurationMs.toFixed(2)} ms</span>
+              </div>
             </div>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={onExportPng}
-          class="flex items-center gap-1 h-7 px-2 sm:px-2.5 rounded-md bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
-          title="Export 2x DPI PNG image"
-        >
-          <IconDownload class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">{t('export_png_btn')}</span>
-        </button>
       </div>
     </div>
   );
