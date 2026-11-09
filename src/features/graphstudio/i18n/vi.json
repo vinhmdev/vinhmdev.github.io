@@ -51,7 +51,8 @@
   "wb_highlighter": "Bút dạ quang",
   "wb_eraser": "Tẩy xóa",
   "wb_clear": "Xóa nét vẽ",
-  "reset_view_btn": "Gốc tọa độ",
+  "reset_view_btn": "Định vị",
+  "reset_view_tooltip": "Định vị về giữa đồ thị & dữ liệu (Tránh trôi màn hình)",
   "quick_presets_label": "Hàm mẫu nhanh",
   "clear_expr_btn": "Làm trống",
   "t00_title": "Bảng trắng & Tự vẽ biểu đồ",
@@ -157,5 +158,8 @@
   "imp_reason_constraint": "Ràng buộc hoặc đẳng thức không có biến để vẽ",
   "imp_reason_unknown_function": "Hàm chưa biết (định nghĩa trước hoặc bật trong Thư viện fx)",
   "imp_reason_too_many_terms": "Quá nhiều số hạng sau khai triển (tối đa 64)",
-  "imp_reason_parse_failed": "Không phân tích được"
+  "imp_reason_parse_failed": "Không phân tích được",
+  "undefined_subfunction_hint": "Hàm phụ chưa định nghĩa",
+  "create_subfunction_btn": "Tạo hàm",
+  "lock_1to1_tooltip": "Khóa tỉ lệ 1:1 (Lưới vuông chuẩn: giữ ô vuông không bị méo khi co/dãn canvas)"
 }

@@ -20,7 +20,7 @@ import { graphStore, type GraphStoreState } from '../state/store';
 import { getPlottableExpressions, isNoteExpression } from '../state/expression-kind';
 import { NoteExpressionCard } from './NoteExpressionCard';
 import { LatexImportModal, type LatexImportDraft } from './LatexImportModal';
-import { shouldInterceptPaste } from '../core/parser/latex-importer';
+import { analyzePastedLatex, shouldInterceptPaste } from '../core/parser/latex-importer';
 import type { SymbolRole } from '../types/math';
 import type { PlaybackSpeed, SliderLoopMode } from '../types/state';
 import { t } from '../scripts/i18n-client';
@@ -442,11 +442,34 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       onFocus={() => setEditingExprId(expr.id)}
                       onPaste={(e) => {
                         const text = e.clipboardData?.getData('text/plain') ?? '';
-                        const intercept = shouldInterceptPaste(text, isEmpty, {
+                        if (!text.trim()) return;
+                        const LATEX_MARKER_RE = /\\(?:[a-zA-Z]+|\[|\()|_\{|\^\{/;
+                        const importCtx = {
                           symbolOverrides: graph.symbolOverrides,
                           existingExpressions: plottableExprs,
                           functionLibrary: graph.functionLibrary,
-                        });
+                        };
+
+                        if (LATEX_MARKER_RE.test(text)) {
+                          const segments = analyzePastedLatex(text, importCtx);
+                          if (segments.length === 1 && segments[0].status !== 'note') {
+                            e.preventDefault();
+                            const input = e.currentTarget;
+                            const start = input.selectionStart ?? 0;
+                            const end = input.selectionEnd ?? input.value.length;
+                            const isWhole = (start === 0 && end === input.value.length) || isEmpty;
+                            const updatedLatex = isWhole
+                              ? segments[0].latex
+                              : input.value.slice(0, start) + segments[0].latex + input.value.slice(end);
+                            storeState.updateExpressionLatex(expr.id, updatedLatex);
+                            return;
+                          }
+                          e.preventDefault();
+                          setImportDraft({ text, replaceId: isEmpty ? expr.id : undefined });
+                          return;
+                        }
+
+                        const intercept = shouldInterceptPaste(text, isEmpty, importCtx);
                         if (!intercept) return;
                         e.preventDefault();
                         setImportDraft({ text, replaceId: isEmpty ? expr.id : undefined });
@@ -521,9 +544,32 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       </div>
                     )}
 
-                  {!isEmpty && !classified.valid && (
-                    <p class="text-[11px] text-red-500 font-medium">{classified.errorMessage}</p>
-                  )}
+                  {!isEmpty && !classified.valid && (() => {
+                    const unknownFnMatch = classified.errorMessage?.match(/Unknown function '([^']+)'/);
+                    const unknownFn = unknownFnMatch?.[1];
+                    const pVar = classified.primaryVar || 'x';
+                    return (
+                      <div class="space-y-1">
+                        <p class="text-[11px] text-red-500 font-medium">{classified.errorMessage}</p>
+                        {unknownFn && (
+                          <div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-300">
+                            <span>
+                              {t('undefined_subfunction_hint')}: <code class="font-mono font-bold">{unknownFn}({pVar})</code>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                storeState.addExpression(`${unknownFn}(${pVar}) = ${pVar}`);
+                              }}
+                              class="shrink-0 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-100 font-semibold text-[10px] transition-colors"
+                            >
+                              + {t('create_subfunction_btn')} {unknownFn}({pVar}) = {pVar}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Symbolic Derivative Readouts with KaTeX rendering [FR-2.1] */}
                   {classified.valid && expr.showFirstDerivative && curvePacket?.firstDerivFormulaLatex && (
@@ -569,9 +615,13 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                               }`}
                               title="Choose symbol role: Data (Axis), Param, or Hyper"
                             >
-                              <span>
-                                {roleLabel}: {sym.name}
-                              </span>
+                              <span>{roleLabel}: </span>
+                              <span
+                                class="inline-block"
+                                dangerouslySetInnerHTML={{
+                                  __html: renderLatexPreview(sym.latex || sym.name),
+                                }}
+                              />
                               <span class="opacity-70 text-[9px]">▾</span>
                             </button>
 
@@ -705,7 +755,13 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         </div>
 
                         <label class="inline-flex items-center gap-1 font-mono font-bold text-neutral-800 dark:text-neutral-100 ml-0.5">
-                          <span>{sl.name} =</span>
+                          <span
+                            class="inline-block"
+                            dangerouslySetInnerHTML={{
+                              __html: renderLatexPreview(sl.latex || sl.name),
+                            }}
+                          />
+                          <span>=</span>
                           <input
                             type="number"
                             step={sl.step}

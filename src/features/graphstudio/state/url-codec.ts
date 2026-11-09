@@ -95,6 +95,7 @@ interface CompactPayloadV2 {
     number,
     number,
     number,
+    number?,
   ];
   /** Expressions: [id, latex, color, bitFlags (vis|d1<<1|d2<<2|fitLoss<<3|collapsed<<4|note<<5), label?] */
   e: CompactExprTuple[];
@@ -265,6 +266,7 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
       state.batchNormEnabled ? 1 : 0,
       state.showResiduals ? 1 : 0,
       state.showVectorField ? 1 : 0,
+      state.lock1to1 !== false ? 1 : 0,
     ],
     e,
     s,
@@ -307,6 +309,7 @@ export function unpackCompactV2ToState(
     batchNormBit,
     showResBit,
     showVecBit,
+    lock1to1Bit,
   ] = compact.m;
 
   const expressions: ExpressionItem[] = compact.e.map(([id, latex, color, flags, label]) => ({
@@ -414,6 +417,7 @@ export function unpackCompactV2ToState(
     batchNormEnabled: batchNormBit === 1,
     showResiduals: showResBit === 1,
     showVectorField: showVecBit === 1,
+    lock1to1: lock1to1Bit !== undefined ? lock1to1Bit === 1 : true,
     expressions,
     sliders,
     dataPoints,

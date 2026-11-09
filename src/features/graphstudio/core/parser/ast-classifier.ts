@@ -98,7 +98,8 @@ const SYMBOL_LATEX_MAP: Record<string, string> = {
 
 export function getDefaultSliderBounds(
   name: string,
-  role: SymbolRole
+  role: SymbolRole,
+  isDenominator = false
 ): { min: number; max: number; step: number; defaultValue: number } {
   if (name === 'sigma') {
     return { min: 0.1, max: 5.0, step: 0.05, defaultValue: 1.0 };
@@ -124,8 +125,20 @@ export function getDefaultSliderBounds(
   if (name === 't') {
     return { min: 0, max: 1, step: 0.01, defaultValue: 1.0 };
   }
+  if (name.startsWith('N_') || name === 'N' || name.startsWith('K_') || name === 'K') {
+    return { min: 1, max: 100, step: 1, defaultValue: name === 'K' || name.startsWith('K_') ? 3 : 10 };
+  }
+  if (name === 'TSS' || name.includes('ref') || name.includes('train') || name.includes('global')) {
+    return { min: 0.1, max: 50.0, step: 0.1, defaultValue: 1.0 };
+  }
+  if (isDenominator) {
+    return { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 };
+  }
   if (role === 'hyperparam') {
     return { min: 0.01, max: 5.0, step: 0.05, defaultValue: 0.5 };
+  }
+  if (name.includes('_') || (name.length > 1 && /^[A-Z]/.test(name))) {
+    return { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 };
   }
   return {
     min: -5.0,
@@ -374,6 +387,31 @@ export function classifyLatexExpression(
   const formalParams = parsed.signature?.formalParams ?? [];
   const leadingFormalParam = formalParams[0];
 
+  const denominatorSymbols = new Set<string>();
+  function findDenominators(node: MathJsonExpr): void {
+    if (typeof node === 'number' || typeof node === 'string') return;
+    if (Array.isArray(node)) {
+      if (node[0] === 'Divide' && node.length >= 3) {
+        collectLeafSymbols(node[2], denominatorSymbols);
+      }
+      for (let i = 1; i < node.length; i++) {
+        findDenominators(node[i]);
+      }
+    }
+  }
+  function collectLeafSymbols(node: MathJsonExpr, out: Set<string>): void {
+    if (typeof node === 'string') {
+      out.add(node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (let i = 1; i < node.length; i++) {
+        collectLeafSymbols(node[i], out);
+      }
+    }
+  }
+  findDenominators(stabilizedExpr);
+
   function walk(node: MathJsonExpr): void {
     if (typeof node === 'number') return;
     if (typeof node === 'string') {
@@ -384,10 +422,16 @@ export function classifyLatexExpression(
         role = 'data_var';
       }
       if (role !== 'constant' && !symbolMap.has(node)) {
-        const bounds = getDefaultSliderBounds(node, role);
+        const bounds = getDefaultSliderBounds(
+          node,
+          role,
+          denominatorSymbols.has(node)
+        );
+        const latexDisplay =
+          parsed.tokenToLatexMap?.[node] ?? SYMBOL_LATEX_MAP[node] ?? node;
         symbolMap.set(node, {
           name: node,
-          latex: SYMBOL_LATEX_MAP[node] ?? node,
+          latex: latexDisplay,
           role,
           defaultMin: bounds.min,
           defaultMax: bounds.max,

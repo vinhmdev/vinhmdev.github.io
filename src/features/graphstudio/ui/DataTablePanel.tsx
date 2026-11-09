@@ -126,27 +126,6 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
                 <button
                   type="button"
                   onClick={() => {
-                    storeState.setShowResiduals(!graph.showResiduals);
-                  }}
-                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <span>🟧 {t('residuals_btn')}</span>
-                  <span
-                    class={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold ${
-                      graph.showResiduals
-                        ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400'
-                        : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'
-                    }`}
-                  >
-                    {graph.showResiduals ? 'ON' : 'OFF'}
-                  </span>
-                </button>
-
-                <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
-
-                <button
-                  type="button"
-                  onClick={() => {
                     setShowCsvBox((prev) => !prev);
                     setIsExpanded(true);
                     setActionsMenuOpen(false);

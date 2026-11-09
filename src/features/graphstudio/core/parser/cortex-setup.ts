@@ -232,6 +232,22 @@ export const KNOWN_SYMBOLS = new Set([
   'delta',
   'epsilon',
   'tau',
+  'phi',
+  'psi',
+  'omega',
+  'rho',
+  'kappa',
+  'nu',
+  'xi',
+  'zeta',
+  'chi',
+  'Theta',
+  'Phi',
+  'Psi',
+  'Omega',
+  'Delta',
+  'Lambda',
+  'Gamma',
   'L',
   'k',
   'n',
@@ -290,9 +306,9 @@ function findTopLevelAssignmentEquals(s: string): number {
  */
 function normalizeSingleSymbolName(rawSym: string): string {
   let s = rawSym.trim();
-  s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_]+)\s*\}/g, '$1');
+  s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\s-]+)\s*\}/g, '$1');
   s = s.replace(/_\{([a-zA-Z0-9_]+)\}/g, '_$1');
-  s = s.replace(/^\\(sigma|theta|mu|eta|alpha|beta|lambda|gamma|delta|epsilon|varepsilon|tau|pi)$/, (_, g: string) =>
+  s = s.replace(/^\\(sigma|theta|mu|eta|alpha|beta|lambda|gamma|delta|epsilon|varepsilon|tau|pi|phi|psi|omega|rho|kappa|nu|xi|zeta|chi|Theta|Phi|Psi|Omega|Delta|Lambda|Gamma)$/, (_, g: string) =>
     g === 'varepsilon' ? 'epsilon' : g === 'pi' ? 'Pi' : g
   );
   return s.replace(/[{}]/g, '').trim();
@@ -309,7 +325,7 @@ export function extractFunctionSignature(raw: string): FunctionSignature | null 
   if (!s) return null;
   // Unwrap \operatorname{Name}, \text{Name}, \mathrm{Name}, \hat{y}, \mathcal{L} before finding top-level =
   const preUnwrapped = s
-    .replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_]+)\s*\}/g, '$1')
+    .replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\s-]+)\s*\}/g, '$1')
     .replace(/_\{([a-zA-Z0-9_]+)\}/g, '_$1');
   const eqIdx = findTopLevelAssignmentEquals(preUnwrapped);
   if (eqIdx <= 0) return null;
@@ -318,7 +334,7 @@ export function extractFunctionSignature(raw: string): FunctionSignature | null 
   if (!lhs || !rhs) return null;
 
   const match =
-    /^(\\hat\{[a-zA-Z]+\}|\\mathcal\{[A-Z]\}|[a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\(([^()]*)\))?$/.exec(
+    /^(\\hat\{[a-zA-Z]+\}|\\mathcal\{[A-Z]\}(?:_[a-zA-Z0-9_]+)?|[a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\(([^()]*)\))?$/.exec(
       lhs
     );
   if (!match) return null;
@@ -352,6 +368,75 @@ export function extractLeadingFunctionLabel(raw: string): string | null {
   return sig ? sig.rawHeader : null;
 }
 
+export interface PreservedSymbolInfo {
+  tokenToLatex: Record<string, string>;
+  tokenSet: Set<string>;
+}
+
+/**
+ * Extracts and maps complex LaTeX macro identifiers (e.g. \text{TSS}, \mathcal{L}_{1,\text{global}},
+ * N_{\text{ref}}, N_{\text{train}}, \sigma_{\text{init}}) to safe alphanumeric tokens for AST/JIT.
+ */
+export function extractPreservedSymbols(raw: string): PreservedSymbolInfo {
+  const tokenToLatex: Record<string, string> = {};
+  const tokenSet = new Set<string>();
+
+  // 1. Base + subscript: \mathcal{L}_{1,\text{global}}, N_{\text{ref}}, N_{\text{train}}, \sigma_{\text{init}}, L_c
+  // Exclude big operators (\sum, \prod, \lim, \int) and equations in limits (k=1)
+  const subRegex =
+    /(\\mathcal\{[A-Za-z]\}|\\(?:text|mathrm|operatorname)\{[^{}]+\}|\\(?:sigma|theta|mu|eta|alpha|beta|lambda|gamma|delta|epsilon|varepsilon|tau|pi|phi|psi|omega|rho|kappa|nu|xi|zeta|chi)|(?<![a-zA-Z\\])[a-zA-Z])\s*_\s*(?:\{((?:[^{}]|\\(?:text|mathrm|operatorname)\{[^{}]+\})+)\}|([a-zA-Z0-9]))/g;
+  let m: RegExpExecArray | null;
+  while ((m = subRegex.exec(raw)) !== null) {
+    const full = m[0];
+    const basePart = m[1];
+    const subPart = m[2] ?? m[3];
+    if (subPart.includes('=')) continue;
+    const cleanBase = basePart
+      .replace(/\\mathcal\{([A-Za-z])\}/, '$1')
+      .replace(/\\(?:text|mathrm|operatorname)\{([^{}]+)\}/, '$1')
+      .replace(/^\\/, '');
+    const lowerBase = cleanBase.toLowerCase();
+    if (lowerBase === 'sum' || lowerBase === 'prod' || lowerBase === 'int' || lowerBase === 'lim') {
+      continue;
+    }
+    const cleanSub = subPart
+      .replace(/\\(?:text|mathrm|operatorname)\{([^{}]+)\}/g, '$1')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    if (cleanBase && cleanSub) {
+      const token = `${cleanBase}_${cleanSub}`;
+      if (!(token.toLowerCase() in ML_FUNCTION_HEADS)) {
+        tokenToLatex[token] = full;
+        tokenSet.add(token);
+      }
+    }
+  }
+
+  // 2. Standalone \text{...}, \mathrm{...} multi-letter constants (e.g. \text{TSS}, \mathrm{WCSS})
+  const textRegex = /\\(?:text|mathrm|operatorname)\s*\{\s*([a-zA-Z][a-zA-Z0-9_\s-]*)\s*\}/g;
+  while ((m = textRegex.exec(raw)) !== null) {
+    const full = m[0];
+    const inner = m[1].replace(/[\s-]+/g, '_').replace(/^_+|_+$/g, '');
+    if (inner && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(inner)) {
+      if (!(inner.toLowerCase() in ML_FUNCTION_HEADS)) {
+        tokenToLatex[inner] = full;
+        tokenSet.add(inner);
+      }
+    }
+  }
+
+  // 3. Standalone \mathcal{L}
+  const calRegex = /\\mathcal\s*\{\s*([A-Za-z])\s*\}/g;
+  while ((m = calRegex.exec(raw)) !== null) {
+    const full = m[0];
+    const letter = m[1];
+    tokenToLatex[letter] = full;
+    tokenSet.add(letter);
+  }
+
+  return { tokenToLatex, tokenSet };
+}
+
 /**
  * Pre-normalizes LaTeX macros (\frac, \sqrt, \left|, \text{...}, Greek letters, matrix transpose ^T,
  * \begin{cases}...\end{cases}, and piecewise/conditional braces {...}) into clean mathematical notation.
@@ -368,6 +453,12 @@ export function normalizeLatexToAscii(raw: string): string {
     if (eqMatch && eqMatch.index > 0) {
       s = s.slice(eqMatch.index + 1).trim();
     }
+  }
+
+  // Substitute preserved multi-letter and subscript macros into safe tokens first
+  const preserved = extractPreservedSymbols(s);
+  for (const [token, latex] of Object.entries(preserved.tokenToLatex)) {
+    s = s.split(latex).join(` ${token} `);
   }
 
   // Convert \begin{cases} ... \end{cases} into Desmos-style piecewise { cond1 : val1, cond2 : val2, defaultVal }
@@ -400,12 +491,19 @@ export function normalizeLatexToAscii(raw: string): string {
   // Unescape \{ and \} into { and } for piecewise/domain conditions
   s = s.replace(/\\\{/g, '{').replace(/\\\}/g, '}');
 
-  // Replace \left and \right, spacing macros (\!, \,, \;, \quad), and unescape \_
+  // Replace \left and \right, \left. and \right., spacing macros (\!, \,, \;, \quad), and unescape \_
   s = s
+    .replace(/\\(?:left|right)\s*\./g, '')
     .replace(/\\left\s*/g, '')
     .replace(/\\right\s*/g, '')
     .replace(/\\[,;!:]|\\quad\b|\\qquad\b/g, ' ')
     .replace(/\\_/g, '_');
+
+  // Strip typesetting / font wrappers
+  s = s.replace(/\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle)(?![a-zA-Z])/g, '');
+  for (const cmd of ['mathbf', 'boldsymbol', 'bm', 'mathit', 'mathsf', 'mathbfit', 'vec', 'pmb']) {
+    s = s.replace(new RegExp(`\\\\${cmd}\\s*\\{([^{}]+)\\}`, 'g'), '$1');
+  }
 
   // Normalize transpose superscripts: K^T, K^\top, K^{\top}, K^{T} -> K (scalar/1D dot-product projection)
   s = s
@@ -413,7 +511,7 @@ export function normalizeLatexToAscii(raw: string): string {
     .replace(/\^\s*(?:\\top|\\intercal)\b/g, '')
     .replace(/\^\s*T\b/g, '');
 
-  // Replace \text{...} and \operatorname{...} with surrounding spaces so adjacent identifiers do not fuse
+  // Replace remaining \text{...} and \operatorname{...} with surrounding spaces so adjacent identifiers do not fuse
   s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\\]+)\s*\}/g, ' $1 ');
 
   // Recursively expand \frac{A}{B} -> ((A)/(B)) and \sqrt{A} -> sqrt(A)
@@ -456,7 +554,24 @@ export function normalizeLatexToAscii(raw: string): string {
     [/\\(?:epsilon|varepsilon)\b/g, ' epsilon'],
     [/\\tau\b/g, ' tau'],
     [/\\pi\b/g, ' Pi'],
-    [/\\(?:cdot|times|odot|otimes)\b/g, '*'],
+    [/\\phi\b/g, ' phi'],
+    [/\\varphi\b/g, ' phi'],
+    [/\\psi\b/g, ' psi'],
+    [/\\omega\b/g, ' omega'],
+    [/\\rho\b/g, ' rho'],
+    [/\\kappa\b/g, ' kappa'],
+    [/\\nu\b/g, ' nu'],
+    [/\\xi\b/g, ' xi'],
+    [/\\zeta\b/g, ' zeta'],
+    [/\\chi\b/g, ' chi'],
+    [/\\Theta\b/g, ' Theta'],
+    [/\\Phi\b/g, ' Phi'],
+    [/\\Psi\b/g, ' Psi'],
+    [/\\Omega\b/g, ' Omega'],
+    [/\\Delta\b/g, ' Delta'],
+    [/\\Lambda\b/g, ' Lambda'],
+    [/\\Gamma\b/g, ' Gamma'],
+    [/\\(?:cdot|times|odot|otimes)(?![a-zA-Z])/g, '*'],
     [/\\div\b/g, '/'],
     [/\\ln\b/g, ' ln'],
     [/\\log\b/g, ' log'],
@@ -586,8 +701,9 @@ function isKnownFunctionName(name: string, userFunctions?: UserFunctionRegistry)
 function isValidSymbolToken(name: string, extraAllowed?: Set<string>): boolean {
   if (extraAllowed?.has(name)) return true;
   if (KNOWN_SYMBOLS.has(name)) return true;
-  // Single letter or letter/Greek with subscript (e.g., x_1, d_k, w_q, Q_1)
-  if (/^[a-zA-Z](?:_[a-zA-Z0-9]+)?$/.test(name)) return true;
+  // Single letter (e.g. x, a, b) or identifier with subscript (e.g., x_1, d_k, w_q, L_1_global, N_ref)
+  if (/^[a-zA-Z](?:_[a-zA-Z0-9_]+)+$/.test(name)) return true;
+  if (/^[a-zA-Z]$/.test(name)) return true;
   return false;
 }
 
@@ -783,14 +899,17 @@ function tokenize(
       next.type === 'lbrace';
 
     if (currIsValue && nextIsStart) {
-      // Do NOT insert '*' if curr is a function identifier followed by '('
-      // or an unknown multi-letter identifier followed by '(' (so parsePrimary reports 'Unknown function')
-      const isValidVar = isValidSymbolToken(curr.value, extraAllowed);
-      const isFnCallOrUnknownFn =
+      // Do NOT insert '*' if curr is an identifier followed by '(' UNLESS it is a known data variable (x, y, r, x_1, x_2)
+      // e.g. x(x+1) -> x * (x+1), but W(x) -> function call W(x)
+      const isDataVar =
         curr.type === 'id' &&
-        next.type === 'lparen' &&
-        (isKnownFunctionName(curr.value, userFunctions) || !isValidVar);
-      if (!isFnCallOrUnknownFn) {
+        (curr.value === 'x' ||
+          curr.value === 'y' ||
+          curr.value === 'r' ||
+          curr.value === 'x_1' ||
+          curr.value === 'x_2');
+      const isFnCall = curr.type === 'id' && next.type === 'lparen' && !isDataVar;
+      if (!isFnCall) {
         out.push({ type: 'op', value: '*', pos: curr.pos });
       }
     }
@@ -950,6 +1069,7 @@ export interface ParseResult {
   valid: boolean;
   expr: MathJsonExpr;
   signature?: FunctionSignature;
+  tokenToLatexMap?: Record<string, string>;
   errorMessage?: string;
   errorOffset?: number;
 }
@@ -980,8 +1100,12 @@ export function parseLatexToMathJson(
   }
 
   try {
+    const preserved = extractPreservedSymbols(trimmed);
     const signature = extractFunctionSignature(trimmed) ?? undefined;
     const allowedSet = new Set<string>(options?.extraAllowedSymbols ?? []);
+    for (const tok of preserved.tokenSet) {
+      allowedSet.add(tok);
+    }
     if (signature) {
       for (const p of signature.formalParams) {
         allowedSet.add(p);
@@ -1236,7 +1360,7 @@ export function parseLatexToMathJson(
 
     // Touch ComputeEngine singleton to ensure Cortex dictionary compatibility
     getComputeEngine();
-    return { valid: true, expr: ast, signature };
+    return { valid: true, expr: ast, signature, tokenToLatexMap: preserved.tokenToLatex };
   } catch (err) {
     return {
       valid: false,

@@ -18,6 +18,7 @@ import {
   renderSvmFeature3DCanvas,
 } from '../renderers/specialized-canvas';
 import {
+  computeChartFocusViewport,
   hitTestDataPoint,
   panViewport,
   screenToWorld,
@@ -27,7 +28,8 @@ import {
   renderLossSpaceOverlay2D,
   WebGL2SurfaceRenderer,
 } from '../renderers/webgl2-surface';
-import type { GraphStoreState } from '../state/store';
+import { getTemplateById } from '../extensions/templates';
+import { graphStore, type GraphStoreState } from '../state/store';
 import { getPlottableExpressions } from '../state/expression-kind';
 import type {
   LossKind,
@@ -43,6 +45,7 @@ import {
   IconHighlighter,
   IconHome,
   IconPen,
+  IconTarget,
   IconTrash,
 } from './icons';
 
@@ -120,6 +123,7 @@ export function DualViewportPanel({
   const lastMouseLeftRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchMapLeftRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const prevPinchDistLeftRef = useRef<number | null>(null);
+  const prevLeftSizeRef = useRef<{ width: number; height: number } | null>(null);
 
   const rightDragModeRef = useRef<'none' | 'param' | 'orbit' | 'reg_radius'>('none');
   const lastMouseRightRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -157,9 +161,47 @@ export function DualViewportPanel({
         if (r.width >= 40 && r.height >= 40) {
           const w = Math.round(r.width);
           const h = Math.round(r.height);
-          setLeftSize((prev) =>
-            prev.width === w && prev.height === h ? prev : { width: w, height: h }
-          );
+          const prev = prevLeftSizeRef.current;
+          const sizeChanged = !prev || prev.width !== w || prev.height !== h;
+
+          if (sizeChanged) {
+            prevLeftSizeRef.current = { width: w, height: h };
+            setLeftSize((old) =>
+              old.width === w && old.height === h ? old : { width: w, height: h }
+            );
+
+            const currentGraph = graphStore.getState().graph;
+            if (currentGraph.lock1to1 !== false) {
+              const curVp = currentGraph.leftViewport;
+              const curYSpan = Math.max(curVp.yMax - curVp.yMin, 1e-9);
+              const xMid = (curVp.xMin + curVp.xMax) * 0.5;
+              const yMid = (curVp.yMin + curVp.yMax) * 0.5;
+
+              if (prev && prev.width > 0 && prev.height > 0) {
+                // Smoothly preserve the pixel scale (pxPerUnit) during resize
+                const pxPerUnit = prev.height / curYSpan;
+                const newHalfX = (w / pxPerUnit) * 0.5;
+                const newHalfY = (h / pxPerUnit) * 0.5;
+                storeState.setLeftViewport({
+                  xMin: xMid - newHalfX,
+                  xMax: xMid + newHalfX,
+                  yMin: yMid - newHalfY,
+                  yMax: yMid + newHalfY,
+                });
+              } else {
+                // Initial mount or transition: snap to square 1:1 aspect ratio
+                const aspect = w / h;
+                const halfY = curYSpan * 0.5;
+                const halfX = halfY * aspect;
+                storeState.setLeftViewport({
+                  xMin: xMid - halfX,
+                  xMax: xMid + halfX,
+                  yMin: yMid - halfY,
+                  yMax: yMid + halfY,
+                });
+              }
+            }
+          }
         }
       }
       if (rightContainerRef.current) {
@@ -394,11 +436,23 @@ export function DualViewportPanel({
   };
 
   const handleResetLeftViewport = (): void => {
-    if (graph.activeTemplateId === 'T-00') {
-      storeState.setLeftViewport({ xMin: -10, xMax: 10, yMin: -6, yMax: 6 });
-    } else {
-      storeState.setLeftViewport({ xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 });
-    }
+    const tpl = getTemplateById(graph.activeTemplateId);
+    const fallback =
+      tpl?.buildInitialState().leftViewport ??
+      (graph.activeTemplateId === 'T-00'
+        ? { xMin: -10, xMax: 10, yMin: -6, yMax: 6 }
+        : { xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 });
+
+    const nextVp = computeChartFocusViewport({
+      dataPoints: graph.dataPoints,
+      curves,
+      fallbackViewport: fallback,
+      lock1to1: graph.lock1to1 !== false,
+      width: leftSize.width,
+      height: leftSize.height,
+    });
+
+    storeState.setLeftViewport(nextVp);
   };
 
   const wbTools: { id: WhiteboardTool; labelKey: string; icon: JSX.Element }[] = [
@@ -674,46 +728,84 @@ export function DualViewportPanel({
                 <button
                   type="button"
                   onClick={handleResetLeftViewport}
-                  class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs"
-                  title={t('reset_view_btn')}
+                  class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs transition-colors"
+                  title={t('reset_view_tooltip')}
                 >
-                  <IconHome class="w-3 h-3" />
+                  <IconTarget class="w-3 h-3" />
                   <span class="hidden sm:inline">{t('reset_view_btn')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    const aspect = Math.max(leftSize.width, 1) / Math.max(leftSize.height, 1);
-                    const yMid = (graph.leftViewport.yMin + graph.leftViewport.yMax) * 0.5;
-                    const xMid = (graph.leftViewport.xMin + graph.leftViewport.xMax) * 0.5;
-                    const halfY = (graph.leftViewport.yMax - graph.leftViewport.yMin) * 0.5;
-                    const halfX = halfY * aspect;
-                    storeState.setLeftViewport({
-                      xMin: xMid - halfX,
-                      xMax: xMid + halfX,
-                      yMin: yMid - halfY,
-                      yMax: yMid + halfY,
-                    });
+                    const nextLock = !(graph.lock1to1 ?? true);
+                    storeState.setLock1to1(nextLock);
+                    if (nextLock) {
+                      const aspect = Math.max(leftSize.width, 1) / Math.max(leftSize.height, 1);
+                      const yMid = (graph.leftViewport.yMin + graph.leftViewport.yMax) * 0.5;
+                      const xMid = (graph.leftViewport.xMin + graph.leftViewport.xMax) * 0.5;
+                      const halfY = (graph.leftViewport.yMax - graph.leftViewport.yMin) * 0.5;
+                      const halfX = halfY * aspect;
+                      storeState.setLeftViewport({
+                        xMin: xMid - halfX,
+                        xMax: xMid + halfX,
+                        yMin: yMid - halfY,
+                        yMax: yMid + halfY,
+                      });
+                    }
                   }}
-                  class="px-1.5 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-mono font-semibold shadow-2xs"
-                  title="Square 1:1 Aspect Ratio"
+                  class={`px-1.5 py-0.5 rounded font-mono font-semibold shadow-2xs transition-colors border ${
+                    graph.lock1to1 !== false
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+                  }`}
+                  title={t('lock_1to1_tooltip')}
                 >
                   1:1
                 </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    storeState.setProbeX(graph.probeX === null ? 0.0 : null)
-                  }
-                  class={`px-2 py-0.5 rounded border font-medium shadow-2xs ${
-                    graph.probeX !== null
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 hover:border-orange-500'
-                  }`}
-                  title="Toggle draggable Tangent Probe on primary curve"
-                >
-                  {graph.probeX !== null ? `Probe x₀=${graph.probeX.toFixed(2)}` : 'Probe'}
-                </button>
+                {(() => {
+                  const activePrimaryVar =
+                    curves.find((c) => c.visible && c.primaryVar)?.primaryVar ||
+                    curves.find((c) => c.primaryVar)?.primaryVar ||
+                    'x';
+                  const displayVar =
+                    activePrimaryVar === 'theta'
+                      ? 'θ'
+                      : activePrimaryVar === 'phi'
+                      ? 'φ'
+                      : activePrimaryVar === 'psi'
+                      ? 'ψ'
+                      : activePrimaryVar === 'omega'
+                      ? 'ω'
+                      : activePrimaryVar === 'mu'
+                      ? 'μ'
+                      : activePrimaryVar === 'lambda'
+                      ? 'λ'
+                      : activePrimaryVar === 'eta'
+                      ? 'η'
+                      : activePrimaryVar === 'alpha'
+                      ? 'α'
+                      : activePrimaryVar === 'beta'
+                      ? 'β'
+                      : activePrimaryVar === 'gamma'
+                      ? 'γ'
+                      : activePrimaryVar;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        storeState.setProbeX(graph.probeX === null ? 0.0 : null)
+                      }
+                      class={`px-2 py-0.5 rounded border font-medium shadow-2xs ${
+                        graph.probeX !== null
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 hover:border-orange-500'
+                      }`}
+                      title={`Toggle draggable Tangent Probe on primary curve (${displayVar})`}
+                    >
+                      {graph.probeX !== null ? `Probe ${displayVar}₀=${graph.probeX.toFixed(2)}` : 'Probe'}
+                    </button>
+                  );
+                })()}
                 <button
                   type="button"
                   onClick={() => storeState.setShowResiduals(!graph.showResiduals)}

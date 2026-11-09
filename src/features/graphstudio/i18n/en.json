@@ -51,7 +51,8 @@
   "wb_highlighter": "Highlighter",
   "wb_eraser": "Eraser",
   "wb_clear": "Clear Ink",
-  "reset_view_btn": "Reset View",
+  "reset_view_btn": "Locate",
+  "reset_view_tooltip": "Locate center of chart & data (Avoid lost view)",
   "quick_presets_label": "Quick Formulas",
   "clear_expr_btn": "Clear All",
   "t00_title": "Blank Graph & Whiteboard",
@@ -157,5 +158,8 @@
   "imp_reason_constraint": "Constraint or identity with no plotting variable",
   "imp_reason_unknown_function": "Unknown function (define it first or enable it in fx Lib)",
   "imp_reason_too_many_terms": "Too many expanded terms (max 64)",
-  "imp_reason_parse_failed": "Could not parse"
+  "imp_reason_parse_failed": "Could not parse",
+  "undefined_subfunction_hint": "Undefined sub-function",
+  "create_subfunction_btn": "Create function",
+  "lock_1to1_tooltip": "Lock 1:1 square aspect ratio (keeps grid square when resizing canvas)"
 }

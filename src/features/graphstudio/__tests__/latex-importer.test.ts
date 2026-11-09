@@ -107,18 +107,21 @@ describe('analyzePastedLatex — corpus invariants', () => {
     it(`${name}: every segment is plottable or a reasoned note`, () => {
       const segs = analyze(raw);
       expect(segs.length).toBeGreaterThan(0);
+      const plottable: { id: string; latex: string }[] = [];
       for (const seg of segs) {
         if (seg.status === 'note') {
           expect(seg.reason?.code).toMatch(/^imp_reason_/);
           expect(seg.latex).toBe(seg.original);
         } else {
-          const cls = classifyLatexExpression(seg.latex);
+          const registry = buildUserFunctionRegistry(plottable);
+          const cls = classifyLatexExpression(seg.latex, {}, registry);
           expect(cls.errorMessage).toBeUndefined();
           expect(cls.valid).toBe(true);
           // A plotted row must be a function, never a 0/1 comparison like `GELU(x) = …`.
           const top = Array.isArray(cls.expr) ? cls.expr[0] : null;
           expect(['Equal', 'NotEqual', 'Less', 'Greater', 'LessEqual', 'GreaterEqual']).not.toContain(top);
           expect(seg.status === 'fixed').toBe(seg.fixes.length > 0);
+          plottable.push({ id: `p-${plottable.length}`, latex: seg.latex });
         }
       }
     });

@@ -60,11 +60,15 @@ import {
 import { classifyUrlHash } from '../state/hash-router';
 import { createInitialGraphState, graphStore } from '../state/store';
 import {
+  computeChartFocusViewport,
+} from '../renderers/viewport-controller';
+import {
   decodeStateFromUrlHashAsync,
   decodeStateFromUrlHashSync,
   encodeStateToUrlHashAsync,
   encodeStateToUrlHashSync,
 } from '../state/url-codec';
+import { analyzePastedLatex } from '../core/parser/latex-importer';
 import { executeComputeJob } from '../worker/compute.worker';
 import type { DataPoint2D } from '../types/state';
 
@@ -1198,6 +1202,42 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(resolveDerivSymbol('Attention(Q, K, V)', attnLatex, 0)).toBe('Attention');
     expect(resolveDerivSymbol(undefined, '\\operatorname{SwiGLU}(x, w_1, w_2) = x', 1)).toBe('SwiGLU');
 
+    // 4b. Preserve user constants, complex macros, sub-function semantics, and LHS auto-aliasing [FR-Enhancements]
+    const complexMacro = classifyLatexExpression(
+      'f(x) = \\frac{x}{\\text{TSS}} + \\mathcal{L}_{1,\\text{global}} + N_{\\text{ref}}'
+    );
+    expect(complexMacro.valid).toBe(true);
+    const tssSym = complexMacro.symbols.find((s) => s.name === 'TSS');
+    expect(tssSym).toBeDefined();
+    expect(tssSym?.latex).toBe('\\text{TSS}');
+    expect(tssSym?.defaultValue).toBe(1.0);
+    expect(tssSym?.defaultMin).toBeGreaterThan(0);
+
+    const l1Sym = complexMacro.symbols.find((s) => s.name === 'L_1_global');
+    expect(l1Sym).toBeDefined();
+    expect(l1Sym?.latex).toBe('\\mathcal{L}_{1,\\text{global}}');
+
+    const nRefSym = complexMacro.symbols.find((s) => s.name === 'N_ref');
+    expect(nRefSym).toBeDefined();
+    expect(nRefSym?.latex).toBe('N_{\\text{ref}}');
+    expect(nRefSym?.defaultMin).toBeGreaterThanOrEqual(0.1);
+
+    // Sub-function vs. Implicit Multiplication: W(x) must NOT be W * x
+    const undefinedFn = classifyLatexExpression('f(x) = W(x) + 2');
+    expect(undefinedFn.valid).toBe(false);
+    expect(undefinedFn.errorMessage).toContain("Unknown function 'W'");
+
+    // Auto-alias Independent Variable from LHS: J(K) and L(theta)
+    const jk = classifyLatexExpression('J(K) = \\frac{1}{K}');
+    expect(jk.valid).toBe(true);
+    expect(jk.primaryVar).toBe('K');
+    expect(jk.symbols.find((s) => s.name === 'K')?.role).toBe('data_var');
+
+    const ltheta = classifyLatexExpression('L(\\theta) = \\theta^2');
+    expect(ltheta.valid).toBe(true);
+    expect(ltheta.primaryVar).toBe('theta');
+    expect(ltheta.symbols.find((s) => s.name === 'theta')?.role).toBe('data_var');
+
     // 5. Cross-expression Function Composition via AST Beta-Reduction:
     // Expression 1 defines Attention(Q, K, V) = softmax(Q*K^T / sqrt(d_k)) * V
     // Expression 2 reuses Attention(x, K, V) and 2 * Attention(x, 1, 3)
@@ -1658,6 +1698,194 @@ describe('Edge Cases, Quadrature, Undo/Redo, and Error Paths', () => {
     expect(pwLossRes.trainLoss).toBeCloseTo(0.0, 8);
   });
 });
+
+describe('GraphStudio LaTeX Enhancements & Safe Constants [Item 1..5]', () => {
+  it('preserves complex macro constants and maps them to clean tokens with LaTeX labels (Item 1)', () => {
+    const raw = 'f(x) = \\frac{\\text{TSS}}{x} + \\mathcal{L}_{1,\\text{global}} + N_{\\text{ref}}';
+    const cls = classifyLatexExpression(raw);
+    expect(cls.valid).toBe(true);
+
+    const names = cls.symbols.map((s) => s.name);
+    expect(names).toContain('TSS');
+    expect(names).toContain('L_1_global');
+    expect(names).toContain('N_ref');
+
+    // Display labels should keep original LaTeX markup
+    const tssSym = cls.symbols.find((s) => s.name === 'TSS');
+    expect(tssSym?.latex).toBe('\\text{TSS}');
+    expect(tssSym?.defaultMin).toBeGreaterThan(0); // Safe positive default for denominator/multi-letter
+    expect(tssSym?.defaultValue).toBe(1.0);
+
+    const l1Sym = cls.symbols.find((s) => s.name === 'L_1_global');
+    expect(l1Sym?.latex).toBe('\\mathcal{L}_{1,\\text{global}}');
+
+    const nRefSym = cls.symbols.find((s) => s.name === 'N_ref');
+    expect(nRefSym?.latex).toBe('N_{\\text{ref}}');
+    expect(nRefSym?.defaultMin).toBeGreaterThanOrEqual(1); // N_ count default min >= 1
+  });
+
+  it('preserves undefined sub-function calls without decaying into implicit multiplication (Item 2)', () => {
+    // 1. Without W(x) in registry: parser must NOT split into W * x, must throw Unknown function 'W'
+    const unk = classifyLatexExpression('f(x) = W(x) + 2');
+    expect(unk.valid).toBe(false);
+    expect(unk.errorMessage).toContain("Unknown function 'W'");
+
+    // 2. When W(x) is registered as user function: resolves cleanly
+    const registry = buildUserFunctionRegistry([{ id: 'w1', latex: 'W(x) = 3 * x' }]);
+    const resolved = classifyLatexExpression('f(x) = W(x) + 2', {}, registry);
+    expect(resolved.valid).toBe(true);
+  });
+
+  it('auto-aliases independent variable from LHS (Item 3)', () => {
+    const jk = classifyLatexExpression('J(K) = \\frac{1}{K}');
+    expect(jk.valid).toBe(true);
+    expect(jk.primaryVar).toBe('K');
+    expect(jk.symbols.find((s) => s.name === 'K')?.role).toBe('data_var');
+
+    // In compute worker, curvePacket has primaryVar = 'K'
+    const job = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 701,
+      expressions: [
+        {
+          id: 'jk-curve',
+          latex: 'J(K) = 2 * K + 1',
+          color: '#3b82f6',
+          visible: true,
+          showFirstDerivative: true,
+          showSecondDerivative: false,
+          fitLoss: false,
+        },
+      ],
+      paramValues: {},
+      symbolOverrides: {},
+      subgradConvention: 'zero',
+      leftViewport: { xMin: 0.1, xMax: 10, yMin: 0, yMax: 25 },
+      rightViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      screenWidth: 720,
+      screenHeight: 520,
+      dataPoints: [],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.0,
+      batchNormEnabled: false,
+      optimizerRace: createInitialGraphState('T-00').optimizerRace,
+      hoveredDataPointId: null,
+    });
+
+    expect(job.curves[0].primaryVar).toBe('K');
+    expect(job.curves[0].label).toContain('(K)');
+  });
+
+  it('smart paste pre-cleans LaTeX formulas without syntax error (Item 4)', () => {
+    const segsFrac = analyzePastedLatex('\\frac{1}{1 + e^{-x}}');
+    expect(segsFrac.length).toBe(1);
+    expect(segsFrac[0].status).not.toBe('note');
+
+    const segsWcss = analyzePastedLatex('\\text{WCSS}(K) = \\frac{1}{K}');
+    expect(segsWcss.length).toBe(1);
+    expect(segsWcss[0].status).not.toBe('note');
+  });
+
+  it('manages 1:1 aspect ratio toggle lock and preserves square grid scale', () => {
+    const store = graphStore.getState();
+    // 1. Initial state defaults lock1to1 to true
+    expect(store.graph.lock1to1).toBe(true);
+
+    // 2. Toggle lock1to1 off and on
+    store.setLock1to1(false);
+    expect(graphStore.getState().graph.lock1to1).toBe(false);
+
+    store.setLock1to1(true);
+    expect(graphStore.getState().graph.lock1to1).toBe(true);
+
+    // 3. URL encoding/decoding preserves lock1to1 bit
+    const encoded = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const decoded = decodeStateFromUrlHashSync(encoded, createInitialGraphState('T-00'));
+    expect(decoded?.lock1to1).toBe(true);
+
+    // 4. Squaring math verification: given W = 800, H = 400 (aspect = 2.0) and y in [-5, 5] (ySpan = 10)
+    // Locked 1:1 requires xSpan = ySpan * aspect = 20 (x in [-10, 10]), so pxPerUnitX == pxPerUnitY == 40
+    const w = 800;
+    const h = 400;
+    const aspect = w / h;
+    const curVp = { xMin: -5, xMax: 5, yMin: -5, yMax: 5 };
+    const curYSpan = curVp.yMax - curVp.yMin;
+    const halfY = curYSpan * 0.5;
+    const halfX = halfY * aspect;
+    const xMid = (curVp.xMin + curVp.xMax) * 0.5;
+    const yMid = (curVp.yMin + curVp.yMax) * 0.5;
+    const squaredVp = {
+      xMin: xMid - halfX,
+      xMax: xMid + halfX,
+      yMin: yMid - halfY,
+      yMax: yMid + halfY,
+    };
+    const pxPerUnitX = w / (squaredVp.xMax - squaredVp.xMin);
+    const pxPerUnitY = h / (squaredVp.yMax - squaredVp.yMin);
+    expect(pxPerUnitX).toBe(40);
+    expect(pxPerUnitY).toBe(40);
+    expect(pxPerUnitX).toBe(pxPerUnitY);
+  });
+
+  it('locates and centers viewport directly on data points or curve features (Locate Button)', () => {
+    // 1. Data points far away: x in [100, 140], y in [200, 260]
+    const pts = [
+      { id: 'p1', x: 100, y: 200, split: 'train' as const },
+      { id: 'p2', x: 140, y: 260, split: 'train' as const },
+    ];
+    const vp = computeChartFocusViewport({
+      dataPoints: pts,
+      curves: [],
+      width: 800,
+      height: 400, // aspect = 2.0
+      lock1to1: true,
+    });
+
+    const xMid = (vp.xMin + vp.xMax) * 0.5;
+    const yMid = (vp.yMin + vp.yMax) * 0.5;
+    expect(xMid).toBeCloseTo(120, 4); // exactly center of [100, 140]
+    expect(yMid).toBeCloseTo(230, 4); // exactly center of [200, 260]
+
+    // Ensure all points fit inside with padding
+    expect(vp.xMin).toBeLessThan(100);
+    expect(vp.xMax).toBeGreaterThan(140);
+    expect(vp.yMin).toBeLessThan(200);
+    expect(vp.yMax).toBeGreaterThan(260);
+
+    // 1:1 Aspect ratio maintained
+    const xSpan = vp.xMax - vp.xMin;
+    const ySpan = vp.yMax - vp.yMin;
+    expect(xSpan / ySpan).toBeCloseTo(2.0, 4);
+
+    // 2. Curve POIs when no data points exist
+    const curveVp = computeChartFocusViewport({
+      dataPoints: [],
+      curves: [
+        {
+          exprId: 'c1',
+          color: '#f97316',
+          visible: true,
+          primaryPoints: new Float64Array(0),
+          pois: [
+            { kind: 'root', x: -3, y: 0, label: 'x=-3' },
+            { kind: 'root', x: 3, y: 0, label: 'x=3' },
+            { kind: 'extremum', x: 0, y: -9, label: 'min' },
+          ],
+        },
+      ],
+      width: 600,
+      height: 600, // aspect = 1.0
+      lock1to1: true,
+    });
+
+    const cXMid = (curveVp.xMin + curveVp.xMax) * 0.5;
+    const cYMid = (curveVp.yMin + curveVp.yMax) * 0.5;
+    expect(cXMid).toBeCloseTo(0, 4);
+    expect(cYMid).toBeCloseTo(-4.5, 4); // midpoint of [-9, 0]
+  });
+});
+
 
 
 

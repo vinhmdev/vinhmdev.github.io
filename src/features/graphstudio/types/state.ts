@@ -171,6 +171,8 @@ export interface GraphStateV2 {
   batchNormEnabled: boolean;
   showResiduals: boolean;
   showVectorField: boolean;
+  /** Lock 1:1 square aspect ratio: prevents grid distortion when resizing canvas */
+  lock1to1?: boolean;
   surface3DOrbitPitch: number;
   surface3DOrbitYaw: number;
   surface3DZScale: number;
@@ -193,6 +195,7 @@ export interface CurveRenderPacket {
   label?: string;
   color: string;
   visible: boolean;
+  primaryVar?: string;
   /** Interleaved [x0, y0, x1, y1, ...] with NaN, NaN breaks */
   primaryPoints: Float64Array;
   firstDerivPoints?: Float64Array;

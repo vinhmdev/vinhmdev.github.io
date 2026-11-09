@@ -1,7 +1,7 @@
 /**
  * Viewport Coordinate Transformer, Nice Axis Tick Generator & Spatial Hit-Tester.
  */
-import type { DataPoint2D, Viewport2DBounds } from '../types/state';
+import type { CurveRenderPacket, DataPoint2D, Viewport2DBounds } from '../types/state';
 
 export function worldToScreen(
   wx: number,
@@ -100,4 +100,110 @@ export function hitTestDataPoint(
     }
   }
   return null;
+}
+
+export interface ChartFocusParams {
+  dataPoints?: DataPoint2D[];
+  curves?: CurveRenderPacket[];
+  fallbackViewport?: Viewport2DBounds;
+  lock1to1?: boolean;
+  width: number;
+  height: number;
+}
+
+/**
+ * Computes a balanced, centered 2D viewport framing data points and curve features (POIs),
+ * preventing users from getting lost when dragging or zooming far from the chart.
+ */
+export function computeChartFocusViewport(params: ChartFocusParams): Viewport2DBounds {
+  const {
+    dataPoints = [],
+    curves = [],
+    fallbackViewport = { xMin: -5, xMax: 5, yMin: -3.5, yMax: 3.5 },
+    lock1to1 = true,
+    width,
+    height,
+  } = params;
+
+  const aspect = Math.max(width, 1) / Math.max(height, 1);
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  // 1. Data Points bounding box
+  for (const pt of dataPoints) {
+    if (Number.isFinite(pt.x) && Number.isFinite(pt.y)) {
+      minX = Math.min(minX, pt.x);
+      maxX = Math.max(maxX, pt.x);
+      minY = Math.min(minY, pt.y);
+      maxY = Math.max(maxY, pt.y);
+    }
+  }
+
+  // 2. Visible curve POIs (roots, local extrema, inflection points, piecewise kinks)
+  for (const c of curves) {
+    if (!c.visible) continue;
+    for (const poi of c.pois) {
+      if (Number.isFinite(poi.x) && Number.isFinite(poi.y)) {
+        minX = Math.min(minX, poi.x);
+        maxX = Math.max(maxX, poi.x);
+        minY = Math.min(minY, poi.y);
+        maxY = Math.max(maxY, poi.y);
+      }
+    }
+  }
+
+  // If features exist: center on them with 35% margin
+  if (
+    Number.isFinite(minX) &&
+    Number.isFinite(maxX) &&
+    Number.isFinite(minY) &&
+    Number.isFinite(maxY)
+  ) {
+    const rawSpanX = Math.max(maxX - minX, 1.5);
+    const rawSpanY = Math.max(maxY - minY, 1.5);
+    const xMid = (minX + maxX) * 0.5;
+    const yMid = (minY + maxY) * 0.5;
+
+    let spanX = rawSpanX * 1.35;
+    let spanY = rawSpanY * 1.35;
+
+    if (lock1to1) {
+      if (spanX / aspect > spanY) {
+        spanY = spanX / aspect;
+      } else {
+        spanX = spanY * aspect;
+      }
+    }
+
+    return {
+      xMin: xMid - spanX * 0.5,
+      xMax: xMid + spanX * 0.5,
+      yMin: yMid - spanY * 0.5,
+      yMax: yMid + spanY * 0.5,
+    };
+  }
+
+  // 3. Fallback to designated template viewport
+  const xMid = (fallbackViewport.xMin + fallbackViewport.xMax) * 0.5;
+  const yMid = (fallbackViewport.yMin + fallbackViewport.yMax) * 0.5;
+  let spanX = Math.max(fallbackViewport.xMax - fallbackViewport.xMin, 1e-4);
+  let spanY = Math.max(fallbackViewport.yMax - fallbackViewport.yMin, 1e-4);
+
+  if (lock1to1) {
+    if (spanX / aspect > spanY) {
+      spanY = spanX / aspect;
+    } else {
+      spanX = spanY * aspect;
+    }
+  }
+
+  return {
+    xMin: xMid - spanX * 0.5,
+    xMax: xMid + spanX * 0.5,
+    yMin: yMid - spanY * 0.5,
+    yMax: yMid + spanY * 0.5,
+  };
 }

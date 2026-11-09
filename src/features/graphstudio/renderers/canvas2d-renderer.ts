@@ -352,7 +352,30 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
       ctx.fill();
       ctx.fillStyle = isDark ? '#f5f5f5' : '#171717';
       ctx.font = '600 11px Inter, system-ui, sans-serif';
-      ctx.fillText(`dy/dx = ${slope.toFixed(3)}`, p0.sx + 9, p0.sy - 8);
+      const pVar = primaryCurve.primaryVar ?? 'x';
+      const dVar =
+        pVar === 'theta'
+          ? 'θ'
+          : pVar === 'phi'
+          ? 'φ'
+          : pVar === 'psi'
+          ? 'ψ'
+          : pVar === 'omega'
+          ? 'ω'
+          : pVar === 'mu'
+          ? 'μ'
+          : pVar === 'lambda'
+          ? 'λ'
+          : pVar === 'eta'
+          ? 'η'
+          : pVar === 'alpha'
+          ? 'α'
+          : pVar === 'beta'
+          ? 'β'
+          : pVar === 'gamma'
+          ? 'γ'
+          : pVar;
+      ctx.fillText(`dy/d${dVar} = ${slope.toFixed(3)}`, p0.sx + 9, p0.sy - 8);
       ctx.restore();
     }
   }

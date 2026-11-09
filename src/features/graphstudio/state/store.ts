@@ -94,6 +94,7 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
     batchNormEnabled: partial.batchNormEnabled ?? false,
     showResiduals: partial.showResiduals ?? true,
     showVectorField: partial.showVectorField ?? true,
+    lock1to1: partial.lock1to1 ?? true,
     surface3DOrbitPitch: partial.surface3DOrbitPitch ?? 0.55,
     surface3DOrbitYaw: partial.surface3DOrbitYaw ?? -0.65,
     surface3DZScale: partial.surface3DZScale ?? 0.0,
@@ -178,6 +179,7 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
           nextSliders[sym.name] = {
             ...nextSliders[sym.name],
             role: sym.role,
+            latex: sym.latex || nextSliders[sym.name].latex || sym.name,
           };
         }
       } else if (sym.role === 'data_var') {
@@ -270,6 +272,7 @@ export interface GraphStoreState {
   setSubgradConvention: (conv: SubgradConvention) => void;
   setShowResiduals: (show: boolean) => void;
   setShowVectorField: (show: boolean) => void;
+  setLock1to1: (lock: boolean) => void;
   updateExpressionLatex: (id: string, latex: string) => void;
   updateExpressionLabel: (id: string, label: string) => void;
   addExpression: (customLatex?: string, customLabel?: string) => void;
@@ -526,6 +529,10 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     setShowVectorField(showVectorField) {
       commitGraph({ ...get().graph, showVectorField }, true, true);
+    },
+
+    setLock1to1(lock1to1) {
+      commitGraph({ ...get().graph, lock1to1 }, false, true);
     },
 
     updateExpressionLatex(id, latex) {
