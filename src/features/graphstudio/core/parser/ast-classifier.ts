@@ -391,7 +391,19 @@ export function classifyLatexExpression(
   function findDenominators(node: MathJsonExpr): void {
     if (typeof node === 'number' || typeof node === 'string') return;
     if (Array.isArray(node)) {
-      if (node[0] === 'Divide' && node.length >= 3) {
+      const head = node[0];
+      if (head === 'Divide' && node.length >= 3) {
+        collectLeafSymbols(node[2], denominatorSymbols);
+      } else if (
+        (head === 'Sqrt' ||
+          head === 'Ln' ||
+          head === 'Log' ||
+          head === 'Log2' ||
+          head === 'Log10') &&
+        node.length >= 2
+      ) {
+        collectLeafSymbols(node[1], denominatorSymbols);
+      } else if (head === 'SafeXLogY' && node.length >= 3) {
         collectLeafSymbols(node[2], denominatorSymbols);
       }
       for (let i = 1; i < node.length; i++) {

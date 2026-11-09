@@ -425,23 +425,24 @@ export function DualViewportPanel({
   const updateRightParamsFromWorld = (wx: number, wy: number): void => {
     const s1 = graph.sliders[w1Key];
     if (s1) {
-      if (wx < s1.min || wx > s1.max) {
+      const targetWx = s1.min > 0 ? Math.max(s1.min, wx) : wx;
+      if (targetWx < s1.min || targetWx > s1.max) {
         storeState.updateSliderBounds(w1Key, {
-          min: Math.min(s1.min, Math.floor(wx * 10) / 10),
-          max: Math.max(s1.max, Math.ceil(wx * 10) / 10),
-          value: wx,
+          min: s1.min > 0 ? Math.max(s1.min, Math.floor(targetWx * 10) / 10) : Math.min(s1.min, Math.floor(targetWx * 10) / 10),
+          max: Math.max(s1.max, Math.ceil(targetWx * 10) / 10),
+          value: targetWx,
           playing: false,
         });
       } else {
-        storeState.setSliderValue(w1Key, wx);
+        storeState.setSliderValue(w1Key, targetWx);
       }
     }
     const s2 = graph.sliders[w2Key];
     if (s2 && w2Key !== w1Key) {
-      const targetWy = w2Key === 'sigma' ? Math.max(0.1, wy) : wy;
+      const targetWy = s2.min > 0 ? Math.max(s2.min, wy) : wy;
       if (targetWy < s2.min || targetWy > s2.max) {
         storeState.updateSliderBounds(w2Key, {
-          min: Math.min(s2.min, Math.floor(targetWy * 10) / 10),
+          min: s2.min > 0 ? Math.max(s2.min, Math.floor(targetWy * 10) / 10) : Math.min(s2.min, Math.floor(targetWy * 10) / 10),
           max: Math.max(s2.max, Math.ceil(targetWy * 10) / 10),
           value: targetWy,
           playing: false,

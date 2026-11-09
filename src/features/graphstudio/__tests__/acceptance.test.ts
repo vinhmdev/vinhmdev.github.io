@@ -2003,4 +2003,18 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
       }
     }
   });
+
+  it('assigns positive domain bounds to free parameters under Sqrt and Ln to prevent NaN', () => {
+    const sqrtExpr = classifyLatexExpression('f(x) = \\sqrt{c} \\cdot x');
+    const cSym = sqrtExpr.symbols.find((s) => s.name === 'c');
+    expect(cSym).toBeDefined();
+    expect(cSym?.defaultMin).toBeGreaterThanOrEqual(0.01);
+    expect(cSym?.defaultValue).toBeGreaterThan(0);
+
+    const lnExpr = classifyLatexExpression('f(x) = \\ln(a) \\cdot x');
+    const aSym = lnExpr.symbols.find((s) => s.name === 'a');
+    expect(aSym).toBeDefined();
+    expect(aSym?.defaultMin).toBeGreaterThanOrEqual(0.01);
+    expect(aSym?.defaultValue).toBeGreaterThan(0);
+  });
 });
