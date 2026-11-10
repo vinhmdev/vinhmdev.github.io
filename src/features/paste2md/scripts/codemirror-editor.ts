@@ -5,7 +5,9 @@
 import {
   EditorView,
   keymap,
+  lineNumbers,
   highlightActiveLine,
+  highlightActiveLineGutter,
   drawSelection,
   rectangularSelection,
 } from '@codemirror/view';
@@ -103,7 +105,7 @@ const baseTheme = EditorView.theme({
     overflow: 'auto',
   },
   '.cm-content': {
-    padding: '0 1.25rem',
+    padding: '0 1.25rem 0 0.5rem',
     caretColor: '#f97316',
   },
   '.cm-cursor': {
@@ -120,7 +122,21 @@ const baseTheme = EditorView.theme({
     backgroundColor: 'rgba(249, 115, 22, 0.2) !important',
   },
   '.cm-gutters': {
-    display: 'none',
+    backgroundColor: 'transparent',
+    borderRight: 'none',
+    color: 'var(--color-neutral-400)',
+    userSelect: 'none',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 0.75rem 0 1rem',
+    minWidth: '2.75rem',
+    textAlign: 'right',
+    fontSize: '0.75rem',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'transparent',
+    color: '#f97316',
+    fontWeight: '600',
   },
   '.cm-line': {
     padding: '0 4px',
@@ -172,6 +188,8 @@ export function createEditor(parent: HTMLElement): EditorView {
       highlightCompartment.of(getHighlightExtensions()),
       readOnlyCompartment.of(EditorState.readOnly.of(false)),
       history(),
+      lineNumbers(),
+      highlightActiveLineGutter(),
       drawSelection(),
       rectangularSelection(),
       highlightActiveLine(),

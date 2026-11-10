@@ -14,6 +14,19 @@
  * storage; the key lives only in the link fragment, so the server only ever
  * sees ciphertext.
  */
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  drawSelection,
+  rectangularSelection,
+  placeholder,
+} from '@codemirror/view';
+import { EditorState, Compartment } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { initTheme } from '@shared/theme/toggle';
 import { init as initI18n, t } from './i18n-client';
 import {
@@ -43,48 +56,68 @@ function showToast(icon: string, message: string): void {
   toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2400);
 }
 
-// ─── Editor ──────────────────────────────────────────────────────────────────
-/** Auto-grow the editor so the page scrolls instead of an inner box. */
-function autoGrow(el: HTMLTextAreaElement): void {
-  // When empty or cleared, let flex: 1 naturally fill the viewport height
-  if (!el.value) {
-    el.style.height = '';
-    el.scrollTop = 0;
-    return;
-  }
+// ─── CodeMirror Theme & Compartments ────────────────────────────────────────
+const readOnlyCompartment = new Compartment();
+const placeholderCompartment = new Compartment();
 
-  // If native field-sizing is supported, the browser handles height natively without scroll jumps.
-  if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('field-sizing', 'content')) {
-    el.scrollTop = 0;
-    return;
-  }
-
-  const currentHeight = el.offsetHeight;
-  // If content grew, expand directly without collapsing first — prevents scroll clamping.
-  if (el.scrollHeight > currentHeight) {
-    el.style.height = `${el.scrollHeight}px`;
-    el.scrollTop = 0;
-    return;
-  }
-
-  // If content might have shrunk (e.g. deletion):
-  // Lock parent min-height temporarily during measurement so the document doesn't collapse
-  // and force window.scrollY to clamp to the top.
-  const parent = el.parentElement;
-  const savedScrollY = window.scrollY;
-  if (parent) {
-    parent.style.minHeight = `${parent.offsetHeight}px`;
-  }
-  el.style.height = 'auto';
-  el.style.height = `${el.scrollHeight}px`;
-  el.scrollTop = 0;
-  if (parent) {
-    parent.style.minHeight = '';
-  }
-  if (window.scrollY !== savedScrollY) {
-    window.scrollTo({ top: savedScrollY, behavior: 'instant' as ScrollBehavior });
-  }
-}
+const pasteEditorTheme = EditorView.theme({
+  '&': {
+    flex: '1',
+    width: '100%',
+    fontSize: '0.9375rem',
+    backgroundColor: 'transparent',
+  },
+  '.cm-scroller': {
+    fontFamily: "'JetBrains Mono', monospace",
+    lineHeight: '1.7',
+    padding: '1.5rem 0',
+    overflow: 'visible',
+  },
+  '.cm-content': {
+    padding: '0 clamp(1rem, 3vw, 2rem) 0 0.5rem',
+    caretColor: '#f97316',
+    minHeight: '100%',
+  },
+  '.cm-cursor': {
+    borderLeftColor: '#f97316',
+    borderLeftWidth: '2px',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'rgba(249, 115, 22, 0.04)',
+  },
+  '.cm-selectionBackground': {
+    backgroundColor: 'rgba(249, 115, 22, 0.15) !important',
+  },
+  '&.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'rgba(249, 115, 22, 0.2) !important',
+  },
+  '.cm-gutters': {
+    backgroundColor: 'transparent',
+    borderRight: 'none',
+    color: 'var(--color-neutral-400)',
+    userSelect: 'none',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 0.75rem 0 clamp(0.75rem, 2vw, 1.5rem)',
+    minWidth: '2.75rem',
+    textAlign: 'right',
+    fontSize: '0.75rem',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'transparent',
+    color: '#f97316',
+    fontWeight: '600',
+  },
+  '.cm-line': {
+    padding: '0 4px',
+  },
+  '.cm-placeholder': {
+    color: 'var(--color-neutral-400)',
+  },
+  '&.cm-focused': {
+    outline: 'none',
+  },
+});
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -93,27 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initI18n();
 
   const title = document.getElementById('paste-title') as HTMLInputElement;
-  const input = document.getElementById('paste-input') as HTMLTextAreaElement;
+  const host = document.getElementById('paste-input') as HTMLDivElement;
   const charCount = document.getElementById('char-count');
   const draftStore = createDualDraftStore('paste');
 
-  const getValue = (): string => input.value;
-  const setValue = (s: string): void => {
-    input.value = s;
-    if (charCount) charCount.textContent = String(s.length);
-    autoGrow(input);
-  };
-  const getTitle = (): string => title.value;
-  const setTitle = (s: string): void => {
-    title.value = s;
-  };
-
   let isReadOnly = false;
-  const setReadOnly = (ro: boolean): void => {
-    isReadOnly = ro;
-    title.readOnly = ro;
-    input.readOnly = ro;
-    document.body.classList.toggle('paste-is-readonly', ro);
+  let isProgrammaticSet = false;
+
+  const openShare = (): boolean => {
+    document.getElementById('share-btn')?.click();
+    return true;
   };
 
   // Warn with a friendly toast when typing is attempted while in read-only mode.
@@ -138,32 +160,100 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     showToast('lock', t('toast_readonly_hint'));
   };
-  title.addEventListener('keydown', handleReadOnlyAttempt);
-  input.addEventListener('keydown', handleReadOnlyAttempt);
 
-  function persistDraftIfUnshared(): void {
+  function persistDraftIfUnshared(content: string): void {
     if (!hasActiveSharedDoc()) {
-      draftStore.save({ title: title.value, content: input.value });
+      draftStore.save({ title: title.value, content });
     }
   }
 
-  // Keep char count + height in sync, persist working draft, and refresh the share bar's dirty state.
-  input.addEventListener('input', () => {
-    if (charCount) charCount.textContent = String(input.value.length);
-    autoGrow(input);
-    persistDraftIfUnshared();
-    shareNotify();
+  const editorView = new EditorView({
+    state: EditorState.create({
+      doc: '',
+      extensions: [
+        pasteEditorTheme,
+        readOnlyCompartment.of(EditorState.readOnly.of(false)),
+        placeholderCompartment.of(placeholder(t('placeholder_input'))),
+        history(),
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        drawSelection(),
+        rectangularSelection(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        EditorView.lineWrapping,
+        keymap.of([
+          { key: 'Mod-Enter', run: openShare },
+          ...defaultKeymap,
+          ...historyKeymap,
+          ...searchKeymap,
+          indentWithTab,
+        ]),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            const val = update.state.doc.toString();
+            if (charCount) charCount.textContent = String(val.length);
+            if (!isProgrammaticSet) {
+              persistDraftIfUnshared(val);
+            }
+            shareNotify();
+          }
+        }),
+        EditorView.domEventHandlers({
+          keydown: (e: KeyboardEvent) => {
+            handleReadOnlyAttempt(e);
+            return false;
+          },
+          paste: () => {
+            if (isReadOnly) {
+              showToast('lock', t('toast_readonly_hint'));
+              return true;
+            }
+            return false;
+          },
+        }),
+      ],
+    }),
+    parent: host,
   });
-  title.addEventListener('input', () => {
-    persistDraftIfUnshared();
-    shareNotify();
-  });
-  autoGrow(input);
 
-  // Ctrl/Cmd+Enter opens the share dialog.
-  const openShare = (): void => document.getElementById('share-btn')?.click();
-  input.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') openShare();
+  // Update placeholder text when language changes.
+  window.addEventListener('langchange', () => {
+    editorView.dispatch({
+      effects: placeholderCompartment.reconfigure(placeholder(t('placeholder_input'))),
+    });
+  });
+
+  const getValue = (): string => editorView.state.doc.toString();
+  const setValue = (s: string): void => {
+    isProgrammaticSet = true;
+    try {
+      editorView.dispatch({
+        changes: { from: 0, to: editorView.state.doc.length, insert: s },
+      });
+      if (charCount) charCount.textContent = String(s.length);
+    } finally {
+      isProgrammaticSet = false;
+    }
+  };
+  const getTitle = (): string => title.value;
+  const setTitle = (s: string): void => {
+    title.value = s;
+  };
+
+  const setReadOnly = (ro: boolean): void => {
+    isReadOnly = ro;
+    title.readOnly = ro;
+    editorView.dispatch({
+      effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(ro)),
+    });
+    document.body.classList.toggle('paste-is-readonly', ro);
+  };
+
+  title.addEventListener('keydown', handleReadOnlyAttempt);
+  title.addEventListener('input', () => {
+    persistDraftIfUnshared(getValue());
+    shareNotify();
   });
 
   // Clear button resets title + content and clears working draft if unshared.

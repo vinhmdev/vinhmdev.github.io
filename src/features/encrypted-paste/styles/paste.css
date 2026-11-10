@@ -11,7 +11,6 @@
 
   /* Shared horizontal padding — small, so the editor stays wide. */
   .paste-titlebar,
-  .paste-editor,
   .paste-editor-foot {
     padding-left: clamp(1rem, 3vw, 2rem);
     padding-right: clamp(1rem, 3vw, 2rem);
@@ -44,27 +43,40 @@
   .paste-title-input::placeholder { color: var(--color-neutral-400); font-weight: 500; }
   .paste-title-input:read-only { cursor: default; }
 
-  /* Auto-growing textarea: fills viewport when empty, page scrolls as it grows. */
+  /* Auto-growing CodeMirror host: fills viewport when empty, page scrolls as it grows. */
   .paste-editor {
-    display: block;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     flex: 1;
     min-height: 0;
-    border: none;
-    outline: none;
-    resize: none;
-    overflow: hidden;
-    field-sizing: content;
-    background: transparent;
-    color: inherit;
-    font-family: var(--font-mono);
-    font-size: 0.9375rem;
-    line-height: 1.7;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
   }
-  .paste-editor::placeholder { color: var(--color-neutral-400); }
-  .paste-editor:read-only { cursor: default; }
+  .paste-editor .cm-editor {
+    flex: 1;
+    width: 100%;
+  }
+  .paste-editor .cm-scroller {
+    flex: 1;
+  }
+  :global(.dark) .paste-editor .cm-editor .cm-content {
+    caret-color: var(--color-primary-400);
+  }
+  :global(.dark) .paste-editor .cm-editor .cm-cursor {
+    border-left-color: var(--color-primary-400);
+  }
+  :global(.dark) .paste-editor .cm-editor .cm-activeLine {
+    background-color: color-mix(in srgb, var(--color-primary-400) 6%, transparent);
+  }
+  :global(.dark) .paste-editor .cm-editor .cm-gutters {
+    color: var(--color-neutral-500);
+  }
+  :global(.dark) .paste-editor .cm-editor .cm-activeLineGutter {
+    color: var(--color-primary-400);
+    background-color: transparent;
+  }
+  :global(.paste-is-readonly) .paste-editor .cm-editor .cm-content {
+    cursor: default;
+  }
 
   .paste-editor-foot {
     display: flex;

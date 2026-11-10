@@ -135,6 +135,13 @@
   :global(.dark) #codemirror-host .cm-editor .cm-activeLine {
     background-color: color-mix(in srgb, var(--color-primary-400) 6%, transparent);
   }
+  :global(.dark) #codemirror-host .cm-editor .cm-gutters {
+    color: var(--color-neutral-500);
+  }
+  :global(.dark) #codemirror-host .cm-editor .cm-activeLineGutter {
+    color: var(--color-primary-400);
+    background-color: transparent;
+  }
 
   /* preview-host: Shadow DOM host — fills pane-body, scroll handled inside shadow root */
   #preview-host {

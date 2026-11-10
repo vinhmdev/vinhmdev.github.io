@@ -30,7 +30,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <script is:inline src="https://cdn.jsdelivr.net/npm/lucide@0.372.0/dist/umd/lucide.min.js"
@@ -118,14 +118,8 @@ import BaseLayout from '@layouts/BaseLayout.astro';
       />
     </div>
 
-    <!-- Auto-growing editor (page scrolls, not the box) -->
-    <textarea
-      id="paste-input"
-      class="paste-editor"
-      placeholder="Type or paste your text here…"
-      data-i18n="placeholder_input"
-      data-i18n-attr="placeholder"
-      autofocus></textarea>
+    <!-- Auto-growing CodeMirror editor with line numbers (page scrolls, not an inner box) -->
+    <div id="paste-input" class="paste-editor"></div>
 
     <div class="paste-editor-foot">
       <span class="flex items-center gap-1.5">
