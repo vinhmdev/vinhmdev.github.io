@@ -8,6 +8,7 @@ import type {
   SymbolRole,
 } from '../types/math';
 import type {
+  CurveLineStyle,
   CurveRenderPacket,
   DataPoint2D,
   ExpressionItem,
@@ -35,7 +36,13 @@ import {
 import {
   DEFAULT_FUNCTION_LIBRARY,
   extractLeadingFunctionLabel,
+  resolveDerivSymbol,
 } from '../core/parser/cortex-setup';
+import {
+  mathJsonToLatex,
+  symbolicDiff,
+  symbolicSecondDiff,
+} from '../core/calculus/symbolic-diff';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { isBoundedDomainParam, projectParam } from '../core/simulation/optimizers';
 import { getTemplateById, isMathTemplateId } from '../extensions/templates';
@@ -259,9 +266,45 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     }
   }
 
+  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(
+    nextSliders,
+    state.surfaceParamW1,
+    state.surfaceParamW2
+  );
+  let rightViewport = state.rightViewport;
+  const s1 = nextSliders[w1Key];
+  if (
+    s1 &&
+    Number.isFinite(w1) &&
+    (w1 < rightViewport.xMin ||
+      w1 > rightViewport.xMax ||
+      s1.max < rightViewport.xMin ||
+      s1.min > rightViewport.xMax ||
+      s1.max - s1.min > (rightViewport.xMax - rightViewport.xMin) * 2.5)
+  ) {
+    const lo = Math.min(s1.min, w1);
+    const hi = Math.max(s1.max, w1, lo + 0.5);
+    rightViewport = { ...rightViewport, xMin: lo, xMax: hi };
+  }
+  const s2 = nextSliders[w2Key];
+  if (
+    s2 &&
+    Number.isFinite(w2) &&
+    (w2 < rightViewport.yMin ||
+      w2 > rightViewport.yMax ||
+      s2.max < rightViewport.yMin ||
+      s2.min > rightViewport.yMax ||
+      s2.max - s2.min > (rightViewport.yMax - rightViewport.yMin) * 2.5)
+  ) {
+    const lo = Math.min(s2.min, w2);
+    const hi = Math.max(s2.max, w2, lo + 0.5);
+    rightViewport = { ...rightViewport, yMin: lo, yMax: hi };
+  }
+
   return {
     ...state,
     sliders: nextSliders,
+    rightViewport,
   };
 }
 
@@ -318,6 +361,15 @@ export interface GraphStoreState {
   setLock1to1: (lock: boolean) => void;
   updateExpressionLatex: (id: string, latex: string) => void;
   updateExpressionLabel: (id: string, label: string) => void;
+  updateExpressionStyle: (
+    id: string,
+    patch: { color?: string; lineStyle?: CurveLineStyle; lineWidth?: number }
+  ) => void;
+  cloneDerivativeAsExpression: (
+    sourceExprId: string,
+    order?: 1 | 2,
+    formulaLatex?: string
+  ) => string | null;
   addExpression: (customLatex?: string, customLabel?: string) => void;
   /**
    * Inserts several rows in a single commit (one undo step). When `replaceId` names an existing row,
@@ -401,11 +453,19 @@ export interface GraphStoreState {
   }) => void;
 }
 
-const EXPRESSION_COLORS = ['#f97316', '#3b82f6', '#10b981', '#a855f7', '#ec4899'];
+export const EXPRESSION_COLORS = [
+  '#f97316',
+  '#3b82f6',
+  '#10b981',
+  '#a855f7',
+  '#ec4899',
+  '#ef4444',
+  '#eab308',
+  '#06b6d4',
+];
 
 export function isStrictlyPositiveParam(slider: SliderState): boolean {
   return (
-    slider.min > 0 ||
     slider.name === 'sigma' ||
     slider.name === 'd_k' ||
     slider.name === 'd_v' ||
@@ -450,14 +510,24 @@ function syncSlidersToRaceStep(
   preferredW2?: string
 ): Record<string, SliderState> {
   const priorityOrder: OptimizerId[] = ['adam', 'momentum', 'rmsprop', 'sgd', 'custom_js'];
-  const leadOpt = priorityOrder.find(
-    (id) => race.enabledOptimizers[id] && trajectories[id] && trajectories[id].length > 0
-  );
+  const leadOpt =
+    priorityOrder.find(
+      (id) =>
+        race.enabledOptimizers[id] &&
+        trajectories[id] &&
+        trajectories[id].length > 0 &&
+        !trajectories[id][trajectories[id].length - 1]?.diverged
+    ) ??
+    priorityOrder.find(
+      (id) => race.enabledOptimizers[id] && trajectories[id] && trajectories[id].length > 0
+    );
   if (!leadOpt) return sliders;
 
   const traj = trajectories[leadOpt];
   const pt = traj[Math.min(Math.max(0, step), traj.length - 1)];
-  if (!pt || !Number.isFinite(pt.w1) || !Number.isFinite(pt.w2)) return sliders;
+  if (!pt || pt.diverged || !Number.isFinite(pt.w1) || !Number.isFinite(pt.w2)) {
+    return sliders;
+  }
 
   const nextSliders: Record<string, SliderState> = { ...sliders };
   const { w1Key, w2Key } = resolveSurfaceParamPair(
@@ -480,6 +550,37 @@ function syncSlidersToRaceStep(
     }
   }
   return nextSliders;
+}
+
+function expandRightViewportForActiveParams(
+  rightViewport: Viewport2DBounds,
+  sliders: Record<string, SliderState>,
+  preferredW1?: string,
+  preferredW2?: string
+): Viewport2DBounds {
+  const { w1Key, w2Key, w1, w2 } = resolveSurfaceParamPair(
+    sliders,
+    preferredW1,
+    preferredW2
+  );
+  let nextVp = rightViewport;
+  const s1 = sliders[w1Key];
+  if (s1 && Number.isFinite(w1) && (w1 < nextVp.xMin || w1 > nextVp.xMax)) {
+    nextVp = {
+      ...nextVp,
+      xMin: Math.min(nextVp.xMin, s1.min, w1),
+      xMax: Math.max(nextVp.xMax, s1.max, w1),
+    };
+  }
+  const s2 = sliders[w2Key];
+  if (s2 && Number.isFinite(w2) && (w2 < nextVp.yMin || w2 > nextVp.yMax)) {
+    nextVp = {
+      ...nextVp,
+      yMin: Math.min(nextVp.yMin, s2.min, w2),
+      yMax: Math.max(nextVp.yMax, s2.max, w2),
+    };
+  }
+  return nextVp;
 }
 
 export const graphStore = createStore<GraphStoreState>((set, get) => {
@@ -626,6 +727,94 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       commitGraph({ ...g, expressions }, true, true);
     },
 
+    updateExpressionStyle(id, patch) {
+      const prev = get();
+      const g = prev.graph;
+      const expressions = g.expressions.map((e) =>
+        e.id === id
+          ? {
+              ...e,
+              ...(patch.color !== undefined ? { color: patch.color } : {}),
+              ...(patch.lineStyle !== undefined ? { lineStyle: patch.lineStyle } : {}),
+              ...(patch.lineWidth !== undefined ? { lineWidth: patch.lineWidth } : {}),
+            }
+          : e
+      );
+      const curves = prev.curves.map((c) =>
+        c.exprId === id
+          ? {
+              ...c,
+              ...(patch.color !== undefined ? { color: patch.color } : {}),
+              ...(patch.lineStyle !== undefined ? { lineStyle: patch.lineStyle } : {}),
+              ...(patch.lineWidth !== undefined ? { lineWidth: patch.lineWidth } : {}),
+            }
+          : c
+      );
+      set({ curves });
+      commitGraph({ ...g, expressions }, true, true);
+    },
+
+    cloneDerivativeAsExpression(sourceExprId, order = 1, formulaLatex) {
+      const prev = get();
+      const g = prev.graph;
+      const sourceIdx = g.expressions.findIndex((e) => e.id === sourceExprId);
+      if (sourceIdx < 0) return null;
+      const sourceExpr = g.expressions[sourceIdx];
+      if (isNoteExpression(sourceExpr) || !sourceExpr.latex.trim()) return null;
+
+      const plottable = getPlottableExpressions(g.expressions);
+      const userFunctions = buildUserFunctionRegistry(plottable, g.functionLibrary);
+      const classified = classifyLatexExpression(
+        sourceExpr.latex,
+        g.symbolOverrides,
+        userFunctions
+      );
+      if (!classified.valid) return null;
+
+      const packet = prev.curves.find((c) => c.exprId === sourceExprId);
+      const packetLatex =
+        order === 2 ? packet?.secondDerivFormulaLatex : packet?.firstDerivFormulaLatex;
+      const resolvedDerivLatex =
+        formulaLatex?.trim() ||
+        packetLatex?.trim() ||
+        mathJsonToLatex(
+          order === 2
+            ? symbolicSecondDiff(classified.stabilizedExpr, classified.primaryVar)
+            : symbolicDiff(classified.stabilizedExpr, classified.primaryVar)
+        );
+      if (!resolvedDerivLatex) return null;
+
+      const derivSymbol = resolveDerivSymbol(
+        classified.signature?.rawHeader ?? sourceExpr.label ?? `f_${sourceIdx + 1}`
+      );
+      const primaryVar = classified.primaryVar || 'x';
+      const primeSuffix = order === 2 ? "''" : "'";
+      const clonedLabel = `${derivSymbol}${primeSuffix}(${primaryVar})`;
+
+      const usedColors = new Set(g.expressions.map((e) => e.color.toLowerCase()));
+      const unusedColor = EXPRESSION_COLORS.find((c) => !usedColors.has(c.toLowerCase()));
+      const idx = g.expressions.length;
+      const nextColor =
+        unusedColor ??
+        EXPRESSION_COLORS.find((c) => c.toLowerCase() !== sourceExpr.color.toLowerCase()) ??
+        EXPRESSION_COLORS[idx % EXPRESSION_COLORS.length];
+
+      const newExpr: ExpressionItem = {
+        id: `expr-${Date.now()}-${idx}`,
+        latex: resolvedDerivLatex,
+        label: clonedLabel,
+        color: nextColor,
+        visible: true,
+        showFirstDerivative: false,
+        showSecondDerivative: false,
+      };
+      commitGraph(
+        { ...g, expressions: ensureFitTarget([...g.expressions, newExpr]) },
+        true
+      );
+      return newExpr.id;
+    },
+
     addExpression(customLatex, customLabel) {
       const g = get().graph;
       const idx = g.expressions.length;
@@ -749,11 +938,46 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const nextW1 = w1Key.trim() || undefined;
       const nextW2 =
         w2Key.trim() && w2Key.trim() !== nextW1 ? w2Key.trim() : undefined;
+      const { w1Key: rW1, w2Key: rW2, w1, w2 } = resolveSurfaceParamPair(
+        g.sliders,
+        nextW1,
+        nextW2
+      );
+      const s1 = g.sliders[rW1];
+      const s2 = g.sliders[rW2];
+      let rightViewport = g.rightViewport;
+      if (
+        s1 &&
+        (w1 < rightViewport.xMin ||
+          w1 > rightViewport.xMax ||
+          s1.max < rightViewport.xMin ||
+          s1.min > rightViewport.xMax)
+      ) {
+        rightViewport = {
+          ...rightViewport,
+          xMin: Math.min(s1.min, w1),
+          xMax: Math.max(s1.max, w1, Math.min(s1.min, w1) + 0.5),
+        };
+      }
+      if (
+        s2 &&
+        (w2 < rightViewport.yMin ||
+          w2 > rightViewport.yMax ||
+          s2.max < rightViewport.yMin ||
+          s2.min > rightViewport.yMax)
+      ) {
+        rightViewport = {
+          ...rightViewport,
+          yMin: Math.min(s2.min, w2),
+          yMax: Math.max(s2.max, w2, Math.min(s2.min, w2) + 0.5),
+        };
+      }
       commitGraph(
         {
           ...g,
           surfaceParamW1: nextW1,
           surfaceParamW2: nextW2,
+          rightViewport,
         },
         true,
         true
@@ -897,10 +1121,30 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         ...g.sliders,
         [name]: { ...existing, value: clamped },
       };
+      const { w1Key, w2Key } = resolveSurfaceParamPair(
+        sliders,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
+      let rightViewport = g.rightViewport;
+      if (name === w1Key && (clamped < rightViewport.xMin || clamped > rightViewport.xMax)) {
+        rightViewport = {
+          ...rightViewport,
+          xMin: Math.min(rightViewport.xMin, existing.min, clamped),
+          xMax: Math.max(rightViewport.xMax, existing.max, clamped),
+        };
+      }
+      if (name === w2Key && (clamped < rightViewport.yMin || clamped > rightViewport.yMax)) {
+        rightViewport = {
+          ...rightViewport,
+          yMin: Math.min(rightViewport.yMin, existing.min, clamped),
+          yMax: Math.max(rightViewport.yMax, existing.max, clamped),
+        };
+      }
       const optimizerRace = g.optimizerRace.playing
         ? { ...g.optimizerRace, playing: false }
         : g.optimizerRace;
-      commitGraph({ ...g, sliders, optimizerRace }, commitUndo, true);
+      commitGraph({ ...g, sliders, rightViewport, optimizerRace }, commitUndo, true);
     },
 
     updateSliderBounds(name, bounds) {
@@ -923,7 +1167,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
       const isPositive = isStrictlyPositiveParam(existing);
       if (isPositive && nextMin <= 0) {
-        nextMin = existing.min > 0 ? existing.min : 0.01;
+        nextMin = 0.01;
       }
 
       if (nextMin > nextMax) {
@@ -987,7 +1231,40 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           direction: nextDir,
         },
       };
-      commitGraph({ ...g, sliders }, false, true);
+      const boundsEdited =
+        (bounds.min !== undefined || bounds.max !== undefined) &&
+        bounds.value === undefined;
+      const { w1Key, w2Key } = resolveSurfaceParamPair(
+        sliders,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
+      let rightViewport = g.rightViewport;
+      if (
+        name === w1Key &&
+        (boundsEdited || nextValue < rightViewport.xMin || nextValue > rightViewport.xMax)
+      ) {
+        const lo = boundsEdited
+          ? Math.min(nextMin, nextValue)
+          : Math.min(rightViewport.xMin, nextMin, nextValue);
+        const hi = boundsEdited
+          ? Math.max(nextMax, nextValue, lo + 0.5)
+          : Math.max(rightViewport.xMax, nextMax, nextValue, lo + 0.5);
+        rightViewport = { ...rightViewport, xMin: lo, xMax: hi };
+      }
+      if (
+        name === w2Key &&
+        (boundsEdited || nextValue < rightViewport.yMin || nextValue > rightViewport.yMax)
+      ) {
+        const lo = boundsEdited
+          ? Math.min(nextMin, nextValue)
+          : Math.min(rightViewport.yMin, nextMin, nextValue);
+        const hi = boundsEdited
+          ? Math.max(nextMax, nextValue, lo + 0.5)
+          : Math.max(rightViewport.yMax, nextMax, nextValue, lo + 0.5);
+        rightViewport = { ...rightViewport, yMin: lo, yMax: hi };
+      }
+      commitGraph({ ...g, sliders, rightViewport }, false, true);
     },
 
     stepSliderByDelta(name, dir) {
@@ -1007,7 +1284,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           playing: false,
         },
       };
-      commitGraph({ ...g, sliders }, true, true);
+      const rightViewport = expandRightViewportForActiveParams(
+        g.rightViewport,
+        sliders,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
+      commitGraph({ ...g, sliders, rightViewport }, true, true);
     },
 
     toggleAllSlidersPlay() {
@@ -1105,7 +1388,13 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       }
 
       if (anyUpdated) {
-        commitGraph({ ...g, sliders: nextSliders }, false, true);
+        const rightViewport = expandRightViewportForActiveParams(
+          g.rightViewport,
+          nextSliders,
+          g.surfaceParamW1,
+          g.surfaceParamW2
+        );
+        commitGraph({ ...g, sliders: nextSliders, rightViewport }, false, true);
       }
       return anyStillPlaying;
     },
@@ -1268,10 +1557,20 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         );
       }
 
+      const rightViewport = shouldSyncStepToSliders
+        ? expandRightViewportForActiveParams(
+            g.rightViewport,
+            nextSliders,
+            g.surfaceParamW1,
+            g.surfaceParamW2
+          )
+        : g.rightViewport;
+
       commitGraph(
         {
           ...g,
           sliders: nextSliders,
+          rightViewport,
           optimizerRace: nextRace,
         },
         false,
@@ -1342,11 +1641,18 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         g.surfaceParamW1,
         g.surfaceParamW2
       );
+      const rightViewport = expandRightViewportForActiveParams(
+        g.rightViewport,
+        nextSliders,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
 
       commitGraph(
         {
           ...g,
           sliders: nextSliders,
+          rightViewport,
           optimizerRace: {
             ...cur,
             currentStep: nextStep,

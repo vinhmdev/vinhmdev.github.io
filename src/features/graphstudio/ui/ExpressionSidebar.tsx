@@ -15,14 +15,19 @@ import {
   formatExpressionForKatex,
   resolveDerivSymbol,
 } from '../core/parser/cortex-setup';
+import {
+  mathJsonToLatex,
+  symbolicDiff,
+  symbolicSecondDiff,
+} from '../core/calculus/symbolic-diff';
 import { QUICK_FORMULA_GROUPS } from '../extensions/templates';
-import { graphStore, type GraphStoreState } from '../state/store';
+import { EXPRESSION_COLORS, graphStore, type GraphStoreState } from '../state/store';
 import { getPlottableExpressions, isNoteExpression } from '../state/expression-kind';
 import { NoteExpressionCard } from './NoteExpressionCard';
 import { LatexImportModal, type LatexImportDraft } from './LatexImportModal';
 import { analyzePastedLatex, shouldInterceptPaste } from '../core/parser/latex-importer';
 import type { SymbolRole } from '../types/math';
-import type { PlaybackSpeed, SliderLoopMode } from '../types/state';
+import type { CurveLineStyle, PlaybackSpeed, SliderLoopMode } from '../types/state';
 import { t } from '../scripts/i18n-client';
 import {
   IconChevronDown,
@@ -91,6 +96,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
   const { graph, curves } = storeState;
   const sliderList = Object.values(graph.sliders);
   const [openRoleMenuKey, setOpenRoleMenuKey] = useState<string | null>(null);
+  const [openStyleMenuExprId, setOpenStyleMenuExprId] = useState<string | null>(null);
   const [showQuickPresets, setShowQuickPresets] = useState<boolean>(false);
   const [addMenuOpen, setAddMenuOpen] = useState<boolean>(false);
   const [slidersCollapsed, setSlidersCollapsed] = useState<boolean>(false);
@@ -120,16 +126,20 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
     plottableExprs.find((e) => e.fitLoss)?.id ?? plottableExprs[0]?.id;
 
   useEffect(() => {
-    if ((!openRoleMenuKey && !showQuickPresets && !addMenuOpen) || typeof window === 'undefined')
+    if (
+      (!openRoleMenuKey && !openStyleMenuExprId && !showQuickPresets && !addMenuOpen) ||
+      typeof window === 'undefined'
+    )
       return;
     const closeMenu = (): void => {
       setOpenRoleMenuKey(null);
+      setOpenStyleMenuExprId(null);
       setShowQuickPresets(false);
       setAddMenuOpen(false);
     };
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
-  }, [openRoleMenuKey, showQuickPresets, addMenuOpen]);
+  }, [openRoleMenuKey, openStyleMenuExprId, showQuickPresets, addMenuOpen]);
 
   // Configure MathLive custom element offline (disable external audio requests) [FR-1.1]
   useEffect(() => {
@@ -344,7 +354,23 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
           const derivSymbol = resolveDerivSymbol(
             classified.signature?.rawHeader ?? expr.label
           );
+          const shortDerivSymbol = derivSymbol.length <= 2 ? derivSymbol : 'f';
           const isFitTarget = expr.id === activeFitExprId;
+          const activeLineStyle: CurveLineStyle = expr.lineStyle ?? 'solid';
+          const activeLineWidth = expr.lineWidth ?? 2.6;
+          const isStyleMenuOpen = openStyleMenuExprId === expr.id;
+          const firstDerivLatex =
+            classified.valid && expr.showFirstDerivative
+              ? curvePacket?.firstDerivFormulaLatex ||
+                mathJsonToLatex(symbolicDiff(classified.stabilizedExpr, classified.primaryVar))
+              : undefined;
+          const secondDerivLatex =
+            classified.valid && expr.showSecondDerivative
+              ? curvePacket?.secondDerivFormulaLatex ||
+                mathJsonToLatex(
+                  symbolicSecondDiff(classified.stabilizedExpr, classified.primaryVar)
+                )
+              : undefined;
 
           return (
             <div
@@ -355,7 +381,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   : 'border-neutral-200/60 dark:border-neutral-800/60 opacity-75'
               }`}
             >
-              <div class="flex items-center justify-between gap-1">
+              <div class="flex items-center justify-between gap-1.5 min-w-0">
                 <div class="flex items-center gap-1 min-w-0 flex-1">
                   <button
                     type="button"
@@ -369,10 +395,227 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                       <IconChevronDown class="w-3 h-3" />
                     )}
                   </button>
-                  <span
-                    class="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: expr.color }}
-                  />
+                  {/* Line Color, Dash Style & Weight Menu Button (Popover) */}
+                  <div class="relative shrink-0">
+                    <button
+                      type="button"
+                      data-testid={`expr-style-btn-${expr.id}`}
+                      aria-haspopup="menu"
+                      aria-expanded={isStyleMenuOpen}
+                      aria-label={t('line_style_btn') || 'Line color & style'}
+                      title={
+                        t('line_style_tooltip') ||
+                        'Customize curve color, dash style (solid / dashed / dotted), and line weight'
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenRoleMenuKey(null);
+                        setShowQuickPresets(false);
+                        setAddMenuOpen(false);
+                        setOpenStyleMenuExprId((prev) => (prev === expr.id ? null : expr.id));
+                      }}
+                      class={`inline-flex items-center gap-1 h-6 px-1.5 rounded-md border transition-colors ${
+                        isStyleMenuOpen
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-neutral-200 dark:border-neutral-700 hover:border-orange-500 bg-neutral-50 dark:bg-neutral-800/70'
+                      }`}
+                    >
+                      <span
+                        class="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: expr.color }}
+                      />
+                      <svg class="w-4 h-2.5 overflow-visible" viewBox="0 0 18 8">
+                        <line
+                          x1="1"
+                          y1="4"
+                          x2="17"
+                          y2="4"
+                          stroke={expr.color}
+                          stroke-width={activeLineWidth > 3.2 ? 3.2 : activeLineWidth < 2 ? 1.5 : 2.3}
+                          stroke-linecap="round"
+                          stroke-dasharray={
+                            activeLineStyle === 'dashed'
+                              ? '4 3'
+                              : activeLineStyle === 'dotted'
+                                ? '1 3.5'
+                                : undefined
+                          }
+                        />
+                      </svg>
+                    </button>
+
+                    {isStyleMenuOpen && (
+                      <div
+                        role="menu"
+                        data-testid={`expr-style-popover-${expr.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        class="absolute left-0 top-full mt-1.5 z-40 w-56 p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col gap-2.5 text-[11px]"
+                      >
+                        {/* 1. Line Color Swatches + Custom Picker */}
+                        <div class="flex flex-col gap-1">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                            {t('style_color_label') || 'Line Color'}
+                          </span>
+                          <div class="flex flex-wrap items-center gap-1.5">
+                            {EXPRESSION_COLORS.map((swatch) => {
+                              const isSelected =
+                                expr.color.toLowerCase() === swatch.toLowerCase();
+                              return (
+                                <button
+                                  key={swatch}
+                                  type="button"
+                                  onClick={() =>
+                                    storeState.updateExpressionStyle(expr.id, { color: swatch })
+                                  }
+                                  class={`w-5 h-5 rounded-full border transition-transform ${
+                                    isSelected
+                                      ? 'scale-110 ring-2 ring-orange-500 border-white dark:border-neutral-900'
+                                      : 'border-neutral-300 dark:border-neutral-700 hover:scale-105'
+                                  }`}
+                                  style={{ backgroundColor: swatch }}
+                                  title={swatch}
+                                  aria-label={`Select color ${swatch}`}
+                                />
+                              );
+                            })}
+                            <label
+                              class="relative inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-neutral-400 dark:border-neutral-600 cursor-pointer hover:border-orange-500 overflow-hidden"
+                              title="Custom color"
+                            >
+                              <span class="text-[9px] font-bold text-neutral-500">+</span>
+                              <input
+                                type="color"
+                                value={expr.color}
+                                onInput={(e) =>
+                                  storeState.updateExpressionStyle(expr.id, {
+                                    color: (e.target as HTMLInputElement).value,
+                                  })
+                                }
+                                class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                aria-label="Custom line color"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 2. Line Dash Style: Solid, Dashed, Dotted */}
+                        <div class="flex flex-col gap-1">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                            {t('style_dash_label') || 'Line Style'}
+                          </span>
+                          <div class="grid grid-cols-3 gap-1">
+                            {(
+                              [
+                                {
+                                  id: 'solid' as const,
+                                  label: t('style_solid') || 'Solid',
+                                  dash: undefined,
+                                },
+                                {
+                                  id: 'dashed' as const,
+                                  label: t('style_dashed') || 'Dashed',
+                                  dash: '5 3.5',
+                                },
+                                {
+                                  id: 'dotted' as const,
+                                  label: t('style_dotted') || 'Dotted',
+                                  dash: '1.5 4',
+                                },
+                              ] as const
+                            ).map((opt) => {
+                              const active = activeLineStyle === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() =>
+                                    storeState.updateExpressionStyle(expr.id, {
+                                      lineStyle: opt.id,
+                                    })
+                                  }
+                                  class={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded border text-[10px] font-medium transition-colors ${
+                                    active
+                                      ? 'border-orange-500 bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold'
+                                      : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                                  }`}
+                                >
+                                  <svg class="w-8 h-2 overflow-visible" viewBox="0 0 32 6">
+                                    <line
+                                      x1="2"
+                                      y1="3"
+                                      x2="30"
+                                      y2="3"
+                                      stroke={expr.color}
+                                      stroke-width="2.4"
+                                      stroke-linecap="round"
+                                      stroke-dasharray={opt.dash}
+                                    />
+                                  </svg>
+                                  <span>{opt.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 3. Line Thickness / Weight: Thin (1.6), Normal (2.6), Bold (4.2) */}
+                        <div class="flex flex-col gap-1">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                            {t('style_weight_label') || 'Line Weight'}
+                          </span>
+                          <div class="grid grid-cols-3 gap-1">
+                            {(
+                              [
+                                {
+                                  width: 1.6,
+                                  label: t('style_thin') || 'Thin',
+                                },
+                                {
+                                  width: 2.6,
+                                  label: t('style_normal') || 'Normal',
+                                },
+                                {
+                                  width: 4.2,
+                                  label: t('style_bold') || 'Bold',
+                                },
+                              ] as const
+                            ).map((wOpt) => {
+                              const active = Math.abs(activeLineWidth - wOpt.width) < 0.3;
+                              return (
+                                <button
+                                  key={wOpt.width}
+                                  type="button"
+                                  onClick={() =>
+                                    storeState.updateExpressionStyle(expr.id, {
+                                      lineWidth: wOpt.width,
+                                    })
+                                  }
+                                  class={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded border text-[10px] font-medium transition-colors ${
+                                    active
+                                      ? 'border-orange-500 bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold'
+                                      : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                                  }`}
+                                >
+                                  <svg class="w-8 h-2.5 overflow-visible" viewBox="0 0 32 8">
+                                    <line
+                                      x1="2"
+                                      y1="4"
+                                      x2="30"
+                                      y2="4"
+                                      stroke={expr.color}
+                                      stroke-width={wOpt.width}
+                                      stroke-linecap="round"
+                                    />
+                                  </svg>
+                                  <span>{wOpt.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={expr.label ?? ''}
@@ -385,7 +628,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         (e.target as HTMLInputElement).value
                       )
                     }
-                    class="min-w-[4rem] flex-1 max-w-[140px] text-ellipsis px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
+                    class="w-0 min-w-[2.5rem] flex-1 max-w-[180px] text-ellipsis px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
                   />
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
@@ -406,28 +649,26 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showFirstDerivative')}
-                    class={`inline-flex items-center max-w-[4.5rem] px-1.5 py-0.5 rounded text-[11px] font-mono border ${
+                    class={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
                       expr.showFirstDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
-                        : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
+                        : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-orange-500'
                     }`}
                     title={`Toggle 1st Derivative ${derivSymbol}'(${classified.primaryVar}) (dashed)`}
                   >
-                    <span class="min-w-0 truncate">{derivSymbol}</span>
-                    <span class="shrink-0">&apos;({classified.primaryVar})</span>
+                    <span>{shortDerivSymbol}&apos;</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showSecondDerivative')}
-                    class={`inline-flex items-center max-w-[4.5rem] px-1.5 py-0.5 rounded text-[11px] font-mono border ${
+                    class={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
                       expr.showSecondDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
-                        : 'border-neutral-300 dark:border-neutral-700 text-neutral-500'
+                        : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-orange-500'
                     }`}
                     title={`Toggle 2nd Derivative ${derivSymbol}''(${classified.primaryVar}) (dash-dot, Dirac mollifier)`}
                   >
-                    <span class="min-w-0 truncate">{derivSymbol}</span>
-                    <span class="shrink-0">&apos;&apos;({classified.primaryVar})</span>
+                    <span>{shortDerivSymbol}&apos;&apos;</span>
                   </button>
                   <button
                     type="button"
@@ -591,26 +832,82 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     );
                   })()}
 
-                  {/* Symbolic Derivative Readouts with KaTeX rendering [FR-2.1] */}
-                  {classified.valid && expr.showFirstDerivative && curvePacket?.firstDerivFormulaLatex && (
-                    <div
-                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded gs-katex-line"
-                      dangerouslySetInnerHTML={{
-                        __html: renderLatexPreview(
-                          `${derivSymbol}'(${classified.primaryVar}) = ${curvePacket.firstDerivFormulaLatex}`
-                        ),
-                      }}
-                    />
+                  {/* Symbolic Derivative Readouts with KaTeX rendering & Clone to Function Button [FR-2.1] */}
+                  {classified.valid && expr.showFirstDerivative && firstDerivLatex && (
+                    <div class="flex items-center justify-between gap-1.5 text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded">
+                      <div
+                        class="gs-katex-line min-w-0 flex-1 overflow-x-auto"
+                        dangerouslySetInnerHTML={{
+                          __html: renderLatexPreview(
+                            `${derivSymbol}'(${classified.primaryVar}) = ${firstDerivLatex}`
+                          ),
+                        }}
+                      />
+                      <button
+                        type="button"
+                        data-testid={`clone-deriv-1-${expr.id}`}
+                        onClick={() =>
+                          storeState.cloneDerivativeAsExpression(
+                            expr.id,
+                            1,
+                            firstDerivLatex
+                          )
+                        }
+                        class="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-orange-500/15 hover:bg-orange-500/25 text-orange-700 dark:text-orange-300 border border-orange-500/30 font-semibold text-[10px] transition-colors"
+                        title={
+                          t('clone_deriv_tooltip') ||
+                          `Clone ${derivSymbol}'(${classified.primaryVar}) as a new standalone function`
+                        }
+                        aria-label={
+                          t('clone_deriv_tooltip') ||
+                          `Clone ${derivSymbol}'(${classified.primaryVar}) as a new standalone function`
+                        }
+                      >
+                        <IconPlus class="w-2.5 h-2.5" />
+                        <span>
+                          {t('clone_deriv_btn') || 'Clone'} {derivSymbol}&apos;(
+                          {classified.primaryVar})
+                        </span>
+                      </button>
+                    </div>
                   )}
-                  {classified.valid && expr.showSecondDerivative && curvePacket?.secondDerivFormulaLatex && (
-                    <div
-                      class="text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded gs-katex-line"
-                      dangerouslySetInnerHTML={{
-                        __html: renderLatexPreview(
-                          `${derivSymbol}''(${classified.primaryVar}) = ${curvePacket.secondDerivFormulaLatex}`
-                        ),
-                      }}
-                    />
+                  {classified.valid && expr.showSecondDerivative && secondDerivLatex && (
+                    <div class="flex items-center justify-between gap-1.5 text-[11px] text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 px-2 py-1 rounded">
+                      <div
+                        class="gs-katex-line min-w-0 flex-1 overflow-x-auto"
+                        dangerouslySetInnerHTML={{
+                          __html: renderLatexPreview(
+                            `${derivSymbol}''(${classified.primaryVar}) = ${secondDerivLatex}`
+                          ),
+                        }}
+                      />
+                      <button
+                        type="button"
+                        data-testid={`clone-deriv-2-${expr.id}`}
+                        onClick={() =>
+                          storeState.cloneDerivativeAsExpression(
+                            expr.id,
+                            2,
+                            secondDerivLatex
+                          )
+                        }
+                        class="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-orange-500/15 hover:bg-orange-500/25 text-orange-700 dark:text-orange-300 border border-orange-500/30 font-semibold text-[10px] transition-colors"
+                        title={
+                          t('clone_deriv_tooltip') ||
+                          `Clone ${derivSymbol}''(${classified.primaryVar}) as a new standalone function`
+                        }
+                        aria-label={
+                          t('clone_deriv_tooltip') ||
+                          `Clone ${derivSymbol}''(${classified.primaryVar}) as a new standalone function`
+                        }
+                      >
+                        <IconPlus class="w-2.5 h-2.5" />
+                        <span>
+                          {t('clone_deriv_btn') || 'Clone'} {derivSymbol}&apos;&apos;(
+                          {classified.primaryVar})
+                        </span>
+                      </button>
+                    </div>
                   )}
 
                   {/* Full Role-Selection Badges (Data / Param / Hyper) [FR-1.4] */}

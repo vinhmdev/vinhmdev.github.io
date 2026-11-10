@@ -764,11 +764,41 @@ export function compileJet2Kernel(
         break;
       }
 
+      case 'Digamma': {
+        const a = childIds[0];
+        const bit = nextBit();
+        statements.push(
+          `const v${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-5) - rt.lgamma(v${a} - 1e-5)) / 2e-5 : NaN; ` +
+            `const fp_${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-4) - 2.0 * rt.lgamma(v${a}) + rt.lgamma(v${a} - 1e-4)) / 1e-8 : NaN; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a}; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(
+          `const v${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-5) - rt.lgamma(v${a} - 1e-5)) / 2e-5 : NaN;`
+        );
+        break;
+      }
+
+      case 'Trigamma': {
+        const a = childIds[0];
+        const bit = nextBit();
+        statements.push(
+          `const v${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-4) - 2.0 * rt.lgamma(v${a}) + rt.lgamma(v${a} - 1e-4)) / 1e-8 : NaN; ` +
+            `const d1_${id} = 0.0, d2_${id} = 0.0; ` +
+            `const bm${id} = bm${a}, dm${id} = dm${a} | (v${a} > 0.0 ? ${bit} : 0);`
+        );
+        scalarStatements.push(
+          `const v${id} = v${a} > 1e-4 ? (rt.lgamma(v${a} + 1e-4) - 2.0 * rt.lgamma(v${a}) + rt.lgamma(v${a} - 1e-4)) / 1e-8 : NaN;`
+        );
+        break;
+      }
+
       case 'GELUDeriv1': {
         const a = childIds[0];
         statements.push(
           `const v${id} = rt.geluDeriv1(v${a}), fp_${id} = rt.geluDeriv2(v${a}); ` +
-            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
+            `const fpp_${id} = (rt.geluDeriv2(v${a} + 1e-5) - rt.geluDeriv2(v${a} - 1e-5)) / 2e-5; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a} + fpp_${id} * d1_${a} * d1_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = rt.geluDeriv1(v${a});`);
         break;
@@ -777,7 +807,9 @@ export function compileJet2Kernel(
       case 'GELUDeriv2': {
         const a = childIds[0];
         statements.push(
-          `const v${id} = rt.geluDeriv2(v${a}), d1_${id} = 0.0, d2_${id} = 0.0, bm${id} = bm${a}, dm${id} = dm${a};`
+          `const v${id} = rt.geluDeriv2(v${a}); ` +
+            `const fp_${id} = (rt.geluDeriv2(v${a} + 1e-5) - rt.geluDeriv2(v${a} - 1e-5)) / 2e-5; ` +
+            `const d1_${id} = fp_${id} * d1_${a}, d2_${id} = fp_${id} * d2_${a}, bm${id} = bm${a}, dm${id} = dm${a};`
         );
         scalarStatements.push(`const v${id} = rt.geluDeriv2(v${a});`);
         break;

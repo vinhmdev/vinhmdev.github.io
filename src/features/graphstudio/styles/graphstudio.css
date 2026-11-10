@@ -90,4 +90,19 @@ math-field:focus-within {
   padding-block: 0.3em;
   line-height: normal;
   white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 163, 163, 0.35) transparent;
+}
+
+.gs-katex-line::-webkit-scrollbar {
+  height: 4px;
+}
+
+.gs-katex-line::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gs-katex-line::-webkit-scrollbar-thumb {
+  background: rgba(163, 163, 163, 0.35);
+  border-radius: 999px;
 }

@@ -20,6 +20,7 @@ import {
 } from '../renderers/specialized-canvas';
 import {
   computeChartFocusViewport,
+  computeSurfaceFocusViewport,
   hitTestDataPoint,
   panViewport,
   screenToWorld,
@@ -28,7 +29,10 @@ import {
   zoomViewportAt,
 } from '../renderers/viewport-controller';
 import {
+  projectSurface3DPoint,
   renderLossSpaceOverlay2D,
+  sampleNormalizedSurfaceHeight,
+  screenToWorldSurface3D,
   WebGL2SurfaceRenderer,
 } from '../renderers/webgl2-surface';
 import { getTemplateById } from '../extensions/templates';
@@ -358,8 +362,9 @@ export function DualViewportPanel({
     }
 
     // Default: WebGL2 Loss Landscape + Instanced Vector Field + 2D Particle Overlay
+    let glRendered = false;
     if (glRendererRef.current) {
-      glRendererRef.current.renderSurface(
+      glRendered = glRendererRef.current.renderSurface(
         lossGrid,
         minLoss,
         maxLoss,
@@ -395,6 +400,7 @@ export function DualViewportPanel({
       minLoss,
       maxLoss,
       lossGrid,
+      glRendered,
       linkedBrushPull,
     });
   }, [
@@ -430,10 +436,7 @@ export function DualViewportPanel({
       const targetVal = projectParam(key, worldVal, { min: s.min, max: s.max });
       if (targetVal < s.min || targetVal > s.max) {
         storeState.updateSliderBounds(key, {
-          min:
-            s.min > 0
-              ? Math.max(s.min, Math.floor(targetVal * 10) / 10)
-              : Math.min(s.min, Math.floor(targetVal * 10) / 10),
+          min: Math.min(s.min, Math.floor(targetVal * 10) / 10),
           max: Math.max(s.max, Math.ceil(targetVal * 10) / 10),
           value: targetVal,
           playing: false,
@@ -468,6 +471,29 @@ export function DualViewportPanel({
     storeState.setLeftViewport(nextVp);
   };
 
+  const handleResetRightViewport = (): void => {
+    const tpl = getTemplateById(graph.activeTemplateId);
+    const fallback = tpl?.buildInitialState().rightViewport ?? {
+      xMin: -4,
+      xMax: 4,
+      yMin: -4,
+      yMax: 4,
+    };
+    const nextRightVp = computeSurfaceFocusViewport({
+      sliderW1: graph.sliders[w1Key],
+      sliderW2: w2Key !== w1Key ? graph.sliders[w2Key] : undefined,
+      w1,
+      w2,
+      fallbackViewport: fallback,
+    });
+    storeState.setRightViewport(nextRightVp);
+    storeState.setOrbit3D(
+      0.55,
+      -0.65,
+      graph.surface3DZScale > 0.01 ? 0.65 : 0.0
+    );
+  };
+
   // Split mode: each pane can be maximized in place (replaces the old duplicate pane tab row)
   const renderPaneMaximizeBtn = (pane: 'data' | 'loss'): JSX.Element | null => {
     if (graph.viewMode !== 'dual') return null;
@@ -499,17 +525,18 @@ export function DualViewportPanel({
   ];
 
   return (
-    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div class="relative z-10 flex-1 flex flex-col min-h-0">
       {/* Main Split Viewports */}
-      <div class="flex-1 grid grid-cols-1 auto-rows-fr lg:grid-cols-2 min-h-0 relative">
+      <div class="flex-1 grid grid-cols-1 auto-rows-fr md:grid-cols-2 min-h-0 relative">
         {/* LEFT PANE: 2D Data / Function Space + Interactive Whiteboard */}
         {showLeft && (
           <div
             ref={leftContainerRef}
-            class={`relative min-h-[96px] lg:min-h-[260px] h-full border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 overflow-hidden ${
-              !showRight ? 'lg:col-span-2' : ''
+            class={`relative min-h-0 lg:min-h-[260px] h-full border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 ${
+              !showRight ? 'md:col-span-2' : ''
             }`}
           >
+            <div class="absolute inset-0 overflow-hidden">
             <canvas
               ref={leftCanvasRef}
               width={Math.round(leftSize.width * dpr)}
@@ -734,9 +761,10 @@ export function DualViewportPanel({
                 );
               }}
             />
+            </div>
 
             {/* Top-Left & Top-Right Overlay Controls: Compact & Decluttered */}
-            <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
+            <div class="absolute top-2 left-2 right-2 z-20 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
               {/* Left Compact Pill Row: Reset, 1:1, Tangent Probe */}
               <div class="flex items-center gap-1 pointer-events-auto">
                 {renderPaneMaximizeBtn('data')}
@@ -828,7 +856,7 @@ export function DualViewportPanel({
               </div>
 
               {/* Right: Compact Whiteboard Dropdown / Popover Toolbar */}
-              <div class="relative flex flex-col items-end gap-1 pointer-events-auto">
+              <div class="relative flex flex-col items-end pointer-events-auto shrink-0">
                 <button
                   type="button"
                   onClick={() => setLeftToolsOpen((prev) => !prev)}
@@ -847,7 +875,7 @@ export function DualViewportPanel({
                 </button>
 
                 {(leftToolsOpen || whiteboardTool !== 'cursor') && (
-                  <div class="flex flex-wrap items-center gap-1 px-1.5 py-1 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-800 shadow-lg">
+                  <div class="absolute right-0 top-full mt-1.5 z-30 flex items-center gap-1 px-1.5 py-1 max-w-[calc(100vw-1.5rem)] overflow-x-auto whitespace-nowrap rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-800 shadow-lg">
                     {wbTools.map((tool) => {
                       const active = whiteboardTool === tool.id;
                       return (
@@ -917,10 +945,11 @@ export function DualViewportPanel({
         {showRight && (
           <div
             ref={rightContainerRef}
-            class={`relative min-h-[96px] lg:min-h-[260px] h-full overflow-hidden ${
-              !showLeft ? 'lg:col-span-2' : ''
+            class={`relative min-h-0 lg:min-h-[260px] h-full ${
+              !showLeft ? 'md:col-span-2' : ''
             }`}
           >
+            <div class="absolute inset-0 overflow-hidden">
             <canvas
               ref={rightGlCanvasRef}
               width={Math.round(rightSize.width * dpr)}
@@ -945,6 +974,62 @@ export function DualViewportPanel({
 
                 if (e.shiftKey) {
                   rightDragModeRef.current = 'orbit';
+                  return;
+                }
+
+                const is3D = graph.surface3DZScale > 0.01;
+                if (is3D) {
+                  const projParams = {
+                    zScale: graph.surface3DZScale,
+                    pitch: graph.surface3DOrbitPitch,
+                    yaw: graph.surface3DOrbitYaw,
+                    width: W,
+                    height: H,
+                  };
+                  const currentNormH = sampleNormalizedSurfaceHeight(
+                    w1,
+                    w2,
+                    graph.rightViewport,
+                    lossGrid,
+                    minLoss,
+                    maxLoss,
+                    trainLoss
+                  );
+                  const rawScreen = projectSurface3DPoint(
+                    w1,
+                    w2,
+                    currentNormH,
+                    graph.rightViewport,
+                    projParams,
+                    true
+                  );
+                  const pScreen = {
+                    sx: Math.min(Math.max(rawScreen.sx, 8), Math.max(W - 8, 8)),
+                    sy: Math.min(Math.max(rawScreen.sy, 8), Math.max(H - 8, 8)),
+                  };
+                  const distToParam = Math.hypot(sx - pScreen.sx, sy - pScreen.sy);
+                  if (distToParam > 24) {
+                    rightDragModeRef.current = 'orbit';
+                    return;
+                  }
+                  rightDragModeRef.current = 'param';
+                  const { wx, wy } = screenToWorldSurface3D(
+                    sx,
+                    sy,
+                    graph.rightViewport,
+                    projParams,
+                    currentNormH,
+                    lossGrid,
+                    minLoss,
+                    maxLoss
+                  );
+                  updateRightParamsFromWorld(wx, wy);
+                  storeState.updateOptimizerRace({
+                    startW1: wx,
+                    startW2: wy,
+                    currentStep: graph.optimizerRace.steps,
+                    playing: false,
+                  });
                   return;
                 }
 
@@ -993,7 +1078,37 @@ export function DualViewportPanel({
                   return;
                 }
 
-                const { wx, wy } = screenToWorld(sx, sy, graph.rightViewport, W, H);
+                const currentNormH =
+                  graph.surface3DZScale > 0.01
+                    ? sampleNormalizedSurfaceHeight(
+                        w1,
+                        w2,
+                        graph.rightViewport,
+                        lossGrid,
+                        minLoss,
+                        maxLoss,
+                        trainLoss
+                      )
+                    : 0.5;
+                const { wx, wy } =
+                  graph.surface3DZScale > 0.01
+                    ? screenToWorldSurface3D(
+                        sx,
+                        sy,
+                        graph.rightViewport,
+                        {
+                          zScale: graph.surface3DZScale,
+                          pitch: graph.surface3DOrbitPitch,
+                          yaw: graph.surface3DOrbitYaw,
+                          width: W,
+                          height: H,
+                        },
+                        currentNormH,
+                        lossGrid,
+                        minLoss,
+                        maxLoss
+                      )
+                    : screenToWorld(sx, sy, graph.rightViewport, W, H);
                 if (rightDragModeRef.current === 'reg_radius') {
                   const nextRadius =
                     graph.regularizationKind === 'l1'
@@ -1020,18 +1135,54 @@ export function DualViewportPanel({
               onPointerCancel={() => {
                 rightDragModeRef.current = 'none';
               }}
+              onWheel={(e) => {
+                if (graph.rightViewportMode !== 'loss_surface') return;
+                e.preventDefault();
+                const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+                const W = Math.max(rect.width, 1);
+                const H = Math.max(rect.height, 1);
+                const is3D = graph.surface3DZScale > 0.01;
+                const sx = is3D ? W * 0.5 : e.clientX - rect.left;
+                const sy = is3D ? H * 0.5 : e.clientY - rect.top;
+                const factor = e.deltaY > 0 ? 1.1 : 0.9;
+                storeState.setRightViewport(
+                  zoomViewportAt(graph.rightViewport, factor, sx, sy, W, H)
+                );
+              }}
             />
+            </div>
 
             {/* Top-Left Live Train/Test Loss Badges & Compact 3D Options Menu [FR-4.1, FR-4.3] */}
-            <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1.5 pointer-events-auto text-[11px]">
-              <div class="flex flex-wrap items-center gap-1">
+            <div class="absolute top-2 left-2 right-2 z-20 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
+              <div class="flex flex-wrap items-center gap-1 pointer-events-auto">
                 {renderPaneMaximizeBtn('loss')}
+                {graph.rightViewportMode === 'loss_surface' && (
+                  <button
+                    type="button"
+                    onClick={handleResetRightViewport}
+                    class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-medium shadow-2xs transition-colors"
+                    title={t('reset_view_tooltip')}
+                  >
+                    <IconTarget class="w-3 h-3" />
+                    <span class="hidden sm:inline">{t('reset_view_btn')}</span>
+                  </button>
+                )}
                 <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
-                  Loss: {trainLoss.toFixed(4)}
+                  Loss:{' '}
+                  {!Number.isFinite(trainLoss)
+                    ? '—'
+                    : Math.abs(trainLoss) >= 1e4
+                      ? trainLoss.toExponential(2)
+                      : trainLoss.toFixed(4)}
                 </span>
                 {testLoss > 0 && (
                   <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-blue-600 dark:text-blue-400 shadow-2xs">
-                    Test: {testLoss.toFixed(4)}
+                    Test:{' '}
+                    {!Number.isFinite(testLoss)
+                      ? '—'
+                      : Math.abs(testLoss) >= 1e4
+                        ? testLoss.toExponential(2)
+                        : testLoss.toFixed(4)}
                   </span>
                 )}
                 {graph.rightViewportMode === 'loss_surface' && (
@@ -1041,13 +1192,13 @@ export function DualViewportPanel({
                       storeState.setOrbit3D(
                         graph.surface3DOrbitPitch,
                         graph.surface3DOrbitYaw,
-                        graph.surface3DZScale > 0.05 ? 0.0 : 0.65
+                        graph.surface3DZScale > 0.01 ? 0.0 : 0.65
                       )
                     }
                     class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500 font-semibold shadow-2xs"
                     title="Toggle 2D Contour vs 3D Surface Projection (Shift+drag to orbit)"
                   >
-                    {graph.surface3DZScale > 0.05 ? '3D Orbit' : '2D Contour'}
+                    {graph.surface3DZScale > 0.01 ? '3D Orbit' : '2D Contour'}
                   </button>
                 )}
               </div>
@@ -1055,13 +1206,13 @@ export function DualViewportPanel({
               {/* Consolidated Right Viewport & 3D Options Popover Menu */}
               <div
                 onClick={(e) => e.stopPropagation()}
-                class="relative flex flex-col items-end"
+                class="relative flex flex-col items-end pointer-events-auto shrink-0"
               >
                 <button
                   type="button"
                   onClick={() => setRightToolsOpen((prev) => !prev)}
                   aria-expanded={rightToolsOpen}
-                  class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs transition-colors ${
+                  class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold shadow-2xs transition-colors shrink-0 ${
                     rightToolsOpen
                       ? 'bg-orange-500 text-white border-orange-500'
                       : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
@@ -1074,7 +1225,7 @@ export function DualViewportPanel({
                 </button>
 
                 {rightToolsOpen && (
-                  <div class="mt-1.5 z-30 w-64 p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
+                  <div class="absolute right-0 top-full mt-1.5 z-30 w-64 max-w-[calc(100vw-1.5rem)] max-h-[min(320px,55vh)] overflow-y-auto overscroll-contain p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
                     <label class="flex flex-col gap-1">
                       <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                         Right Space Mode

@@ -175,5 +175,18 @@
   "race_options_btn": "Race options",
   "sheet_expand": "Expand panel",
   "sheet_collapse": "Collapse panel",
-  "role_edit_hint": "Change the role from the chips on the function card"
+  "role_edit_hint": "Change the role from the chips on the function card",
+  "clone_deriv_btn": "Clone",
+  "clone_deriv_tooltip": "Clone this derivative into a new standalone function row to edit and customize",
+  "line_style_btn": "Line color & style",
+  "line_style_tooltip": "Customize curve color, dash style (solid / dashed / dotted), and line weight",
+  "style_color_label": "Line Color",
+  "style_dash_label": "Line Style",
+  "style_weight_label": "Line Weight",
+  "style_solid": "Solid",
+  "style_dashed": "Dashed",
+  "style_dotted": "Dotted",
+  "style_thin": "Thin",
+  "style_normal": "Normal",
+  "style_bold": "Bold"
 }

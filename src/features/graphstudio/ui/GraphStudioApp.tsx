@@ -395,7 +395,9 @@ export default function GraphStudioApp(): JSX.Element {
 
           <aside
             class={`w-full overflow-y-auto overscroll-contain ${
-              mobileSheetOpen ? 'max-h-[50vh] lg:max-h-none block' : 'hidden lg:block lg:max-h-none'
+              mobileSheetOpen
+                ? 'max-h-[38vh] sm:max-h-[42vh] lg:max-h-none block'
+                : 'hidden lg:block lg:max-h-none'
             } flex-1`}
           >
             <ExpressionSidebar storeState={storeState} />
@@ -456,7 +458,7 @@ export default function GraphStudioApp(): JSX.Element {
 
       {/* Toast Notification */}
       {toastMsg && (
-        <div class="fixed bottom-14 right-4 z-50 px-3.5 py-2 rounded-lg bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold shadow-lg">
+        <div class="fixed bottom-14 right-4 z-50 pointer-events-none px-3.5 py-2 rounded-lg bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold shadow-lg">
           {toastMsg}
         </div>
       )}

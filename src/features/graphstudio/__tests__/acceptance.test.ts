@@ -63,10 +63,24 @@ import { createInitialGraphState, graphStore } from '../state/store';
 import {
   computeChartFocusViewport,
   computeNiceTicks,
+  computeSurfaceFocusViewport,
   computeUniformTickStep,
   squareViewport,
   viewportAspectError,
 } from '../renderers/viewport-controller';
+import {
+  renderDataSpaceCanvas2D,
+  resolveCurveDashPattern,
+} from '../renderers/canvas2d-renderer';
+import {
+  computeSurface3DCameraTransform,
+  normalizeLossHeight,
+  projectSurface3DPoint,
+  renderLossSpaceOverlay2D,
+  sampleNormalizedSurfaceHeight,
+  screenToWorldSurface3D,
+  WebGL2SurfaceRenderer,
+} from '../renderers/webgl2-surface';
 import {
   decodeStateFromUrlHashAsync,
   decodeStateFromUrlHashSync,
@@ -2157,7 +2171,8 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
 
     // executeComputeJob intersects AST restricted domain bounds even when req.paramBounds has generic [-5, 5]
     const workerRes = executeComputeJob({
-      jobId: 99,
+      type: 'EVALUATE_FRAME',
+      seq: 99,
       expressions: [
         {
           id: 'arc-fit',
@@ -2183,7 +2198,8 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
       batchNormEnabled: false,
       leftViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
       rightViewport: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
-      rightViewportMode: 'loss_surface',
+      screenWidth: 600,
+      screenHeight: 400,
       optimizerRace: {
         enabledOptimizers: { sgd: true, momentum: true, rmsprop: false, adam: false, custom_js: false },
         startW1: 2.5,
@@ -2195,7 +2211,6 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
         adamBiasCorrection: true,
         lrSchedule: 'constant',
       },
-      probeX: null,
       hoveredDataPointId: null,
     });
     for (const step of workerRes.trajectories.sgd) {
@@ -2258,5 +2273,728 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
         expect(step.nagLookaheadW1).toBeLessThanOrEqual(1.0);
       }
     }
+  });
+
+  it('allows manually lowering slider min to zero or negative values on non-strictly-positive parameters and formats Function Library math for KaTeX', () => {
+    // 1. Subscripted model weights (w_1, w_2, z_1) default to [-5, 5] rather than [0.01, 10]
+    const swigluExpr = classifyLatexExpression('f(x) = w_1 \\cdot x + w_2');
+    const w1Sym = swigluExpr.symbols.find((s) => s.name === 'w_1');
+    const w2Sym = swigluExpr.symbols.find((s) => s.name === 'w_2');
+    expect(w1Sym?.defaultMin).toBe(-5.0);
+    expect(w1Sym?.defaultMax).toBe(5.0);
+    expect(w2Sym?.defaultMin).toBe(-5.0);
+
+    // 2. Parameters that start with defaultMin > 0 (e.g. alpha, L, or b under Sqrt) can have their min manually lowered <= 0 by the user
+    const store = graphStore.getState();
+    store.selectTemplate('T-00');
+    store.updateExpressionLatex('expr-1', 'f(x) = \\alpha \\cdot x + L + \\sqrt{b}');
+    expect(graphStore.getState().graph.sliders.alpha.min).toBe(0.01);
+    expect(graphStore.getState().graph.sliders.L.min).toBe(1);
+    expect(graphStore.getState().graph.sliders.b.min).toBe(0.01);
+
+    store.updateSliderBounds('alpha', { min: -2, value: -1.5 });
+    expect(graphStore.getState().graph.sliders.alpha.min).toBe(-2);
+    expect(graphStore.getState().graph.sliders.alpha.value).toBe(-1.5);
+
+    store.updateSliderBounds('L', { min: -5, value: -3 });
+    expect(graphStore.getState().graph.sliders.L.min).toBe(-5);
+    expect(graphStore.getState().graph.sliders.L.value).toBe(-3);
+
+    store.updateSliderBounds('b', { min: -4, value: -2 });
+    expect(graphStore.getState().graph.sliders.b.min).toBe(-4);
+    expect(graphStore.getState().graph.sliders.b.value).toBe(-2);
+
+    // 3. Even if a regular slider's min was set to > 0 (e.g. min: 2), the user can lower it back to <= 0
+    store.selectTemplate('T-00');
+    store.updateSliderBounds('a', { min: 2, max: 10, value: 3 });
+    expect(graphStore.getState().graph.sliders.a.min).toBe(2);
+    store.updateSliderBounds('a', { min: -5, value: -1 });
+    expect(graphStore.getState().graph.sliders.a.min).toBe(-5);
+    expect(graphStore.getState().graph.sliders.a.value).toBe(-1);
+
+    // 4. Function Library definitions format cleanly for KaTeX with \operatorname{...}
+    for (const entry of DEFAULT_FUNCTION_LIBRARY) {
+      const katexReady = formatExpressionForKatex(entry.definitionLatex);
+      expect(katexReady).toContain(`\\operatorname{${entry.name}}(`);
+    }
+    const customKatex = formatExpressionForKatex('PolyGate(x, a) = a * x^3 + leaky_relu(x)');
+    expect(customKatex).toContain('\\operatorname{PolyGate}(');
+    expect(customKatex).toContain('\\operatorname{leaky\\_relu}(');
+    expect(customKatex).toContain('\\cdot');
+  });
+
+  it('clones 1st and 2nd derivatives into standalone editable function rows and customizes curve color, dash style, and line weight across Worker, Canvas2D, and URL codec', () => {
+    const store = graphStore.getState();
+    store.selectTemplate('T-00');
+    store.clearAllExpressions();
+    store.addExpression('a \\cdot x^3 - 3 \\cdot x', 'f(x)');
+    const srcExpr = graphStore.getState().graph.expressions[0];
+    expect(srcExpr).toBeDefined();
+
+    // Enable 1st and 2nd derivative on f(x)
+    store.toggleExpressionProp(srcExpr.id, 'showFirstDerivative');
+    store.toggleExpressionProp(srcExpr.id, 'showSecondDerivative');
+    expect(graphStore.getState().graph.expressions[0].showFirstDerivative).toBe(true);
+    expect(graphStore.getState().graph.expressions[0].showSecondDerivative).toBe(true);
+
+    // Clone f'(x) into a new standalone expression row
+    const clonedD1Id = store.cloneDerivativeAsExpression(srcExpr.id, 1);
+    expect(clonedD1Id).not.toBeNull();
+    let exprs = graphStore.getState().graph.expressions;
+    expect(exprs.length).toBe(2);
+    const clonedD1 = exprs.find((e) => e.id === clonedD1Id)!;
+    expect(clonedD1.label).toBe("f'(x)");
+    expect(clonedD1.color).not.toBe(srcExpr.color);
+    expect(classifyLatexExpression(clonedD1.latex).valid).toBe(true);
+
+    // Clone f''(x) into another standalone expression row
+    const clonedD2Id = store.cloneDerivativeAsExpression(srcExpr.id, 2);
+    expect(clonedD2Id).not.toBeNull();
+    exprs = graphStore.getState().graph.expressions;
+    expect(exprs.length).toBe(3);
+    const clonedD2 = exprs.find((e) => e.id === clonedD2Id)!;
+    expect(clonedD2.label).toBe("f''(x)");
+    expect(classifyLatexExpression(clonedD2.latex).valid).toBe(true);
+
+    // Further customize the cloned derivative expression (e.g. add parameter c -> auto-creates slider c)
+    store.updateExpressionLatex(clonedD1.id, `${clonedD1.latex} + c`);
+    expect(graphStore.getState().graph.sliders.c).toBeDefined();
+
+    // Clone GELU derivative and verify it parses and compiles cleanly
+    store.addExpression('\\operatorname{gelu}(x)', 'g(x)');
+    const geluExpr = graphStore.getState().graph.expressions[3];
+    const geluD1Id = store.cloneDerivativeAsExpression(geluExpr.id, 1);
+    expect(geluD1Id).not.toBeNull();
+    const geluD1 = graphStore.getState().graph.expressions.find((e) => e.id === geluD1Id)!;
+    expect(geluD1.label).toBe("g'(x)");
+    expect(classifyLatexExpression(geluD1.latex).valid).toBe(true);
+
+    // Customize curve line style (color, lineStyle: dashed/dotted/solid, lineWidth: thin/normal/bold)
+    store.updateExpressionStyle(clonedD1.id, {
+      color: '#10b981',
+      lineStyle: 'dashed',
+      lineWidth: 4.2,
+    });
+    store.updateExpressionStyle(clonedD2.id, {
+      color: '#a855f7',
+      lineStyle: 'dotted',
+      lineWidth: 1.6,
+    });
+
+    const updatedD1 = graphStore.getState().graph.expressions.find((e) => e.id === clonedD1.id)!;
+    const updatedD2 = graphStore.getState().graph.expressions.find((e) => e.id === clonedD2.id)!;
+    expect(updatedD1.color).toBe('#10b981');
+    expect(updatedD1.lineStyle).toBe('dashed');
+    expect(updatedD1.lineWidth).toBe(4.2);
+    expect(updatedD2.color).toBe('#a855f7');
+    expect(updatedD2.lineStyle).toBe('dotted');
+    expect(updatedD2.lineWidth).toBe(1.6);
+
+    // Verify Compute Worker propagates lineStyle and lineWidth into CurveRenderPacket
+    const gNow = graphStore.getState().graph;
+    const workerRes = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 1,
+      expressions: gNow.expressions,
+      paramValues: { a: 1, c: 2 },
+      subgradConvention: 'zero',
+      leftViewport: gNow.leftViewport,
+      rightViewport: gNow.rightViewport,
+      screenWidth: 600,
+      screenHeight: 400,
+      dataPoints: [],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      batchNormEnabled: false,
+      optimizerRace: gNow.optimizerRace,
+      hoveredDataPointId: null,
+    });
+    const pktD1 = workerRes.curves.find((c) => c.exprId === clonedD1.id)!;
+    const pktD2 = workerRes.curves.find((c) => c.exprId === clonedD2.id)!;
+    expect(pktD1.color).toBe('#10b981');
+    expect(pktD1.lineStyle).toBe('dashed');
+    expect(pktD1.lineWidth).toBe(4.2);
+    expect(pktD2.color).toBe('#a855f7');
+    expect(pktD2.lineStyle).toBe('dotted');
+    expect(pktD2.lineWidth).toBe(1.6);
+
+    // Verify resolveCurveDashPattern and Canvas2D renderer apply dash and lineWidth
+    expect(resolveCurveDashPattern('solid', 2.6)).toEqual([]);
+    expect(resolveCurveDashPattern('dashed', 4.2)).toEqual([10, 6]);
+    expect(resolveCurveDashPattern('dotted', 1.6)).toEqual([2, 5]);
+
+    const recordedStrokes: { color: string; lineWidth: number; dash: number[] }[] = [];
+    let currentDash: number[] = [];
+    const mockCtx = {
+      canvas: { width: 600, height: 400 },
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
+      globalAlpha: 1,
+      lineCap: 'butt',
+      lineJoin: 'miter',
+      font: '',
+      textAlign: 'left',
+      save: () => {},
+      restore: () => {},
+      setTransform: () => {},
+      fillRect: () => {},
+      beginPath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      fill: () => {},
+      arc: () => {},
+      ellipse: () => {},
+      fillText: () => {},
+      strokeText: () => {},
+      setLineDash: (d: number[]) => {
+        currentDash = d;
+      },
+      stroke: function (this: {
+        globalAlpha: number;
+        lineWidth: number;
+        strokeStyle: string;
+      }) {
+        if (this.globalAlpha === 1 && (this.lineWidth === 4.2 || this.lineWidth === 1.6)) {
+          recordedStrokes.push({
+            color: String(this.strokeStyle),
+            lineWidth: this.lineWidth,
+            dash: [...currentDash],
+          });
+        }
+      },
+    } as unknown as CanvasRenderingContext2D;
+
+    renderDataSpaceCanvas2D({
+      ctx: mockCtx,
+      width: 600,
+      height: 400,
+      isDark: true,
+      viewport: gNow.leftViewport,
+      curves: workerRes.curves,
+      dataPoints: [],
+      showResiduals: false,
+      probeX: null,
+      hoveredDataPointId: null,
+      activeTemplateId: 'T-00',
+    });
+    expect(
+      recordedStrokes.some(
+        (s) => s.color === '#10b981' && s.lineWidth === 4.2 && s.dash.length === 2
+      )
+    ).toBe(true);
+    expect(
+      recordedStrokes.some(
+        (s) => s.color === '#a855f7' && s.lineWidth === 1.6 && s.dash.length === 2
+      )
+    ).toBe(true);
+
+    // Verify lossless round-trip through #v2.dr.* URL Hash Codec
+    const encodedHash = encodeStateToUrlHashSync(gNow);
+    const decodedState = decodeStateFromUrlHashSync(
+      encodedHash,
+      createInitialGraphState('T-00')
+    );
+    expect(decodedState).not.toBeNull();
+    const restoredD1 = decodedState!.expressions.find((e) => e.id === clonedD1.id)!;
+    const restoredD2 = decodedState!.expressions.find((e) => e.id === clonedD2.id)!;
+    expect(restoredD1.label).toBe("f'(x)");
+    expect(restoredD1.color).toBe('#10b981');
+    expect(restoredD1.lineStyle).toBe('dashed');
+    expect(restoredD1.lineWidth).toBe(4.2);
+    expect(restoredD2.label).toBe("f''(x)");
+    expect(restoredD2.color).toBe('#a855f7');
+    expect(restoredD2.lineStyle).toBe('dotted');
+    expect(restoredD2.lineWidth).toBe(1.6);
+  });
+
+  it('keeps 3D surface centered, inside the camera frustum, and well-proportioned under extreme loss values or large parameter bounds', () => {
+    // 1. Verify 3D bounding-box auto-fit across all 8 corners, arbitrary yaw/pitch/zScale, and aspect ratios
+    const vpLarge = { xMin: -250, xMax: 500, yMin: 100, yMax: 850 };
+    const xMid = (vpLarge.xMin + vpLarge.xMax) * 0.5;
+    const yMid = (vpLarge.yMin + vpLarge.yMax) * 0.5;
+
+    for (const [w, h] of [
+      [800, 500],
+      [400, 700],
+      [600, 600],
+    ]) {
+      for (const yaw of [-2.4, -0.65, 0, 0.785, 1.9]) {
+        for (const pitch of [0.1, 0.55, 1.35]) {
+          const projParams = { width: w, height: h, yaw, pitch, zScale: 0.65 };
+          const cam = computeSurface3DCameraTransform(projParams);
+          expect(cam.scaleX).toBeGreaterThan(0);
+          expect(cam.scaleY).toBeGreaterThan(0);
+          expect(cam.scaleZ).toBeGreaterThan(0);
+
+          // Center of viewport at mid-height (normH = 0.5) must project to exact screen center
+          const centerProj = projectSurface3DPoint(
+            xMid,
+            yMid,
+            0.5,
+            vpLarge,
+            projParams
+          );
+          expect(centerProj.sx).toBeCloseTo(w * 0.5, 5);
+          expect(centerProj.sy).toBeCloseTo(h * 0.5, 5);
+          expect(centerProj.clipX).toBeCloseTo(0, 5);
+          expect(centerProj.clipY).toBeCloseTo(0, 5);
+          expect(centerProj.clipZ).toBeCloseTo(0, 5);
+
+          // Higher loss must project higher on screen (smaller sy in canvas 2D coordinates)
+          const lowLossProj = projectSurface3DPoint(
+            xMid,
+            yMid,
+            0.0,
+            vpLarge,
+            projParams
+          );
+          const highLossProj = projectSurface3DPoint(
+            xMid,
+            yMid,
+            1.0,
+            vpLarge,
+            projParams
+          );
+          expect(highLossProj.sy).toBeLessThan(lowLossProj.sy);
+
+          // Every corner of the [xMin, xMax] x [yMin, yMax] x [0, 1] box must stay strictly within [-0.85, 0.85] clip space
+          for (const wx of [vpLarge.xMin, vpLarge.xMax]) {
+            for (const wy of [vpLarge.yMin, vpLarge.yMax]) {
+              for (const normH of [0.0, 1.0]) {
+                const corner = projectSurface3DPoint(
+                  wx,
+                  wy,
+                  normH,
+                  vpLarge,
+                  projParams
+                );
+                expect(Math.abs(corner.clipX)).toBeLessThanOrEqual(0.85);
+                expect(Math.abs(corner.clipY)).toBeLessThanOrEqual(0.85);
+                expect(Math.abs(corner.clipZ)).toBeLessThanOrEqual(0.86);
+                expect(corner.sx).toBeGreaterThanOrEqual(0);
+                expect(corner.sx).toBeLessThanOrEqual(w);
+                expect(corner.sy).toBeGreaterThanOrEqual(0);
+                expect(corner.sy).toBeLessThanOrEqual(h);
+              }
+            }
+          }
+
+          // Verify screenToWorldSurface3D accurately inverts projection across all heights (0.0, 0.5, 1.0)
+          for (const testNormH of [0.0, 0.5, 1.0]) {
+            const testPt = projectSurface3DPoint(
+              125,
+              475,
+              testNormH,
+              vpLarge,
+              projParams
+            );
+            const unproj = screenToWorldSurface3D(
+              testPt.sx,
+              testPt.sy,
+              vpLarge,
+              projParams,
+              testNormH
+            );
+            expect(unproj.wx).toBeCloseTo(125, 4);
+            expect(unproj.wy).toBeCloseTo(475, 4);
+          }
+        }
+      }
+    }
+
+    // 2. Verify extreme / exponential loss surface does not overflow Float32Array or flatten the valley
+    const packed = packDataset([
+      { id: 'p1', x: 1, y: 2, label: 1, split: 'train' },
+      { id: 'p2', x: 4, y: 5, label: 1, split: 'train' },
+    ]);
+    const steepVp = { xMin: -20, xMax: 20, yMin: -20, yMax: 45 };
+    const steepModel: PredictorModel = {
+      paramNames: ['a', 'b'],
+      baseParams: { a: 1, b: 0 },
+      w1Key: 'a',
+      w2Key: 'b',
+      isCustomPredictor: true,
+      evalScalar: (x, params) => {
+        const a = params.a ?? 0;
+        const b = params.b ?? 0;
+        // Exponential spike in one corner plus a linear term near the origin
+        const expTerm = Math.exp(Math.min(200, b * x));
+        return a * x + expTerm;
+      },
+      paramGradKernels: {
+        a: (x) => x,
+        b: (x, params) => x * Math.exp(Math.min(200, (params.b ?? 0) * x)),
+      },
+    };
+    const surfaceSteep = computeLossSurfaceAndVectorField(
+      packed,
+      steepVp,
+      'mse',
+      1.0,
+      'none',
+      0,
+      32,
+      10,
+      steepModel
+    );
+    expect(Number.isFinite(surfaceSteep.minLoss)).toBe(true);
+    expect(Number.isFinite(surfaceSteep.maxLoss)).toBe(true);
+    expect(surfaceSteep.maxLoss).toBeGreaterThan(surfaceSteep.minLoss);
+    for (let i = 0; i < surfaceSteep.lossGrid.length; i++) {
+      expect(Number.isFinite(surfaceSteep.lossGrid[i])).toBe(true);
+      const nh = normalizeLossHeight(
+        surfaceSteep.lossGrid[i],
+        surfaceSteep.minLoss,
+        surfaceSteep.maxLoss
+      );
+      expect(nh).toBeGreaterThanOrEqual(0);
+      expect(nh).toBeLessThanOrEqual(1);
+    }
+    // Crucially: verify the quadratic valley (b = -10, a = -18 vs a = 1) is NOT flattened to 0.0
+    const valleyMinH = sampleNormalizedSurfaceHeight(
+      1,
+      -10,
+      steepVp,
+      surfaceSteep.lossGrid,
+      surfaceSteep.minLoss,
+      surfaceSteep.maxLoss
+    );
+    const valleyWallH = sampleNormalizedSurfaceHeight(
+      -18,
+      -10,
+      steepVp,
+      surfaceSteep.lossGrid,
+      surfaceSteep.minLoss,
+      surfaceSteep.maxLoss
+    );
+    const expPeakH = sampleNormalizedSurfaceHeight(
+      15,
+      40,
+      steepVp,
+      surfaceSteep.lossGrid,
+      surfaceSteep.minLoss,
+      surfaceSteep.maxLoss
+    );
+    expect(valleyWallH).toBeGreaterThan(valleyMinH + 0.12);
+    expect(valleyWallH).toBeLessThan(0.75);
+    expect(expPeakH).toBeGreaterThan(0.95);
+
+    // Also test a single-corner needle spike (1e20) over a gentle quadratic bowl
+    const cornerSpikeModel: PredictorModel = {
+      paramNames: ['a', 'b'],
+      baseParams: { a: 0, b: 0 },
+      w1Key: 'a',
+      w2Key: 'b',
+      isCustomPredictor: true,
+      evalScalar: (x, params) => {
+        const a = params.a ?? 0;
+        const b = params.b ?? 0;
+        if (a > 3.5 && b > 3.5) return 1e10;
+        return a * x + b;
+      },
+      paramGradKernels: { a: (x) => x, b: () => 1 },
+    };
+    const spikeVp = { xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
+    const surfaceSpike = computeLossSurfaceAndVectorField(
+      packed,
+      spikeVp,
+      'mse',
+      1.0,
+      'none',
+      0,
+      32,
+      10,
+      cornerSpikeModel
+    );
+    const bowlEdgeH = sampleNormalizedSurfaceHeight(
+      -3.5,
+      -3.5,
+      spikeVp,
+      surfaceSpike.lossGrid,
+      surfaceSpike.minLoss,
+      surfaceSpike.maxLoss
+    );
+    expect(bowlEdgeH).toBeGreaterThan(0.15);
+    expect(bowlEdgeH).toBeLessThan(0.85);
+
+    // Also test a huge constant offset loss (e.g., 1e8 + small quadratic) to ensure Float32 precision is preserved
+    const hugeOffsetModel: PredictorModel = {
+      paramNames: ['a', 'b'],
+      baseParams: { a: 0, b: 0 },
+      w1Key: 'a',
+      w2Key: 'b',
+      isCustomPredictor: true,
+      evalScalar: (x, params) => 1e4 + (params.a ?? 0) * x + (params.b ?? 0),
+      paramGradKernels: {
+        a: (x) => x,
+        b: () => 1,
+      },
+    };
+    const surfaceOffset = computeLossSurfaceAndVectorField(
+      packed,
+      { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
+      'mse',
+      1.0,
+      'none',
+      0,
+      32,
+      10,
+      hugeOffsetModel
+    );
+    expect(surfaceOffset.maxLoss - surfaceOffset.minLoss).toBeGreaterThan(0);
+
+    // 3. Verify store automatically adapts rightViewport when slider bounds, values, expressions, or race steps become large
+    const storeApi = graphStore.getState();
+    storeApi.selectTemplate('T-01');
+    const g0 = graphStore.getState().graph;
+    const { w1Key, w2Key } = resolveSurfaceParamPair(
+      g0.sliders,
+      g0.surfaceParamW1,
+      g0.surfaceParamW2
+    );
+
+    storeApi.updateSliderBounds(w1Key, { min: -100, max: 100, step: 1 });
+    const rvAfterBounds = graphStore.getState().graph.rightViewport;
+    expect(rvAfterBounds.xMin).toBeLessThanOrEqual(-100);
+    expect(rvAfterBounds.xMax).toBeGreaterThanOrEqual(100);
+
+    // Narrow rightViewport manually, then set slider value near max -> rightViewport expands to keep particle visible
+    storeApi.setRightViewport({ xMin: -5, xMax: 5, yMin: -5, yMax: 5 });
+    storeApi.setSliderValue(w1Key, 95);
+    const rvAfterVal = graphStore.getState().graph.rightViewport;
+    expect(rvAfterVal.xMax).toBeGreaterThanOrEqual(95);
+
+    // Stepping slider via stepSliderByDelta outside narrowed rightViewport also expands rightViewport
+    storeApi.setRightViewport({ xMin: -5, xMax: 5, yMin: -5, yMax: 5 });
+    storeApi.stepSliderByDelta(w1Key, 1);
+    expect(graphStore.getState().graph.rightViewport.xMax).toBeGreaterThanOrEqual(96);
+
+    // Diverged trajectory step (diverged: true, w1: 1e6) must NOT blow up slider bounds or rightViewport
+    storeApi.setRightViewport({ xMin: -5, xMax: 5, yMin: -5, yMax: 5 });
+    storeApi.updateSliderBounds(w1Key, { min: -5, max: 5, value: 1 });
+    storeApi.applyWorkerResult({
+      curves: [],
+      trainLoss: 1,
+      testLoss: 0,
+      lossGrid: surfaceSteep.lossGrid,
+      minLoss: surfaceSteep.minLoss,
+      maxLoss: surfaceSteep.maxLoss,
+      vectorField: surfaceSteep.vectorField,
+      trajectories: {
+        sgd: [
+          { step: 0, w1: 1, w2: 0, loss: 1, gradW1: 1, gradW2: 1, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: false },
+          { step: 1, w1: 1e6, w2: 1e6, loss: 1e20, gradW1: 1e9, gradW2: 1e9, velW1: 0, velW2: 0, cacheW1: 0, cacheW2: 0, diverged: true },
+        ],
+        momentum: [],
+        rmsprop: [],
+        adam: [],
+        custom_js: [],
+      },
+      computeDurationMs: 1,
+    });
+    storeApi.updateOptimizerRace({ steps: 1, currentStep: 1, playing: false });
+    expect(graphStore.getState().graph.sliders[w1Key].max).toBeLessThan(100);
+    expect(graphStore.getState().graph.rightViewport.xMax).toBeLessThan(100);
+
+    // computeSurfaceFocusViewport frames active w1/w2 slider bounds cleanly
+    storeApi.updateSliderBounds(w1Key, { min: -100, max: 100, step: 1 });
+    const g1 = graphStore.getState().graph;
+    const focusedRv = computeSurfaceFocusViewport({
+      sliderW1: g1.sliders[w1Key],
+      sliderW2: g1.sliders[w2Key],
+      w1: g1.sliders[w1Key]?.value,
+      w2: g1.sliders[w2Key]?.value,
+    });
+    expect(focusedRv.xMax).toBeGreaterThanOrEqual(100);
+    expect(focusedRv.xMin).toBeLessThanOrEqual(-100);
+
+    // 4. Verify renderLossSpaceOverlay2D clamps diverged trajectories / huge pull vectors and draws fallback wireframe when glRendered=false
+    const recordedPoints: Array<{ x: number; y: number }> = [];
+    const mockOverlayCtx = {
+      save: () => {},
+      restore: () => {},
+      setTransform: () => {},
+      clearRect: () => {},
+      fillRect: () => {},
+      strokeRect: () => {},
+      beginPath: () => {},
+      closePath: () => {},
+      moveTo: (x: number, y: number) => {
+        recordedPoints.push({ x, y });
+      },
+      lineTo: (x: number, y: number) => {
+        recordedPoints.push({ x, y });
+      },
+      arc: (x: number, y: number) => {
+        recordedPoints.push({ x, y });
+      },
+      fill: () => {},
+      stroke: () => {},
+      fillText: () => {},
+      setLineDash: () => {},
+    } as unknown as CanvasRenderingContext2D;
+
+    renderLossSpaceOverlay2D({
+      ctx: mockOverlayCtx,
+      width: 600,
+      height: 500,
+      isDark: true,
+      viewport: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+      w1: 999,
+      w2: -999,
+      vectorField: surfaceSteep.vectorField,
+      showVectorField: true,
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      trajectories: {
+        sgd: [
+          {
+            step: 0,
+            w1: 0,
+            w2: 0,
+            loss: 1,
+            gradW1: 1,
+            gradW2: 1,
+            velW1: 0,
+            velW2: 0,
+            cacheW1: 0,
+            cacheW2: 0,
+            diverged: false,
+          },
+          {
+            step: 1,
+            w1: 5000,
+            w2: -5000,
+            loss: 1e12,
+            gradW1: 1e9,
+            gradW2: -1e9,
+            velW1: 1e9,
+            velW2: -1e9,
+            cacheW1: 1e18,
+            cacheW2: 1e18,
+            diverged: true,
+          },
+        ],
+        momentum: [],
+        rmsprop: [],
+        adam: [],
+        custom_js: [],
+      },
+      currentStep: 1,
+      zScale: 0.65,
+      pitch: 0.55,
+      yaw: -0.65,
+      minLoss: surfaceSteep.minLoss,
+      maxLoss: surfaceSteep.maxLoss,
+      lossGrid: surfaceSteep.lossGrid,
+      glRendered: false,
+      linkedBrushPull: { pointId: 'p1', pullW1: 1e9, pullW2: -1e9, sampleLoss: 1e12 },
+    });
+
+    expect(recordedPoints.length).toBeGreaterThan(20);
+    for (const pt of recordedPoints) {
+      expect(Number.isFinite(pt.x)).toBe(true);
+      expect(Number.isFinite(pt.y)).toBe(true);
+      expect(pt.x).toBeGreaterThanOrEqual(-30);
+      expect(pt.x).toBeLessThanOrEqual(630);
+      expect(pt.y).toBeGreaterThanOrEqual(-30);
+      expect(pt.y).toBeLessThanOrEqual(530);
+    }
+
+    // 5. Verify WebGL2SurfaceRenderer uploads pre-normalized [0, 1] heights and frustum u_projScale uniforms
+    const uploadedSubData: Float32Array[] = [];
+    const uniform3fCalls: Record<string, [number, number, number]> = {};
+    let drawElementsCalled = false;
+    const mockGl = {
+      VERTEX_SHADER: 35633,
+      FRAGMENT_SHADER: 35632,
+      COMPILE_STATUS: 35713,
+      LINK_STATUS: 35714,
+      ARRAY_BUFFER: 34962,
+      ELEMENT_ARRAY_BUFFER: 34963,
+      STATIC_DRAW: 35044,
+      DYNAMIC_DRAW: 35048,
+      FLOAT: 5126,
+      TRIANGLES: 4,
+      UNSIGNED_INT: 5125,
+      LINES: 1,
+      COLOR_BUFFER_BIT: 16384,
+      DEPTH_BUFFER_BIT: 256,
+      DEPTH_TEST: 2929,
+      BLEND: 3042,
+      SRC_ALPHA: 770,
+      ONE_MINUS_SRC_ALPHA: 771,
+      drawingBufferWidth: 800,
+      drawingBufferHeight: 500,
+      createShader: () => ({}),
+      shaderSource: () => {},
+      compileShader: () => {},
+      getShaderParameter: () => true,
+      createProgram: () => ({}),
+      attachShader: () => {},
+      linkProgram: () => {},
+      getProgramParameter: () => true,
+      createVertexArray: () => ({}),
+      bindVertexArray: () => {},
+      createBuffer: () => ({}),
+      bindBuffer: () => {},
+      bufferData: () => {},
+      bufferSubData: (_target: number, _offset: number, data: ArrayBufferView) => {
+        if (data instanceof Float32Array) {
+          uploadedSubData.push(new Float32Array(data));
+        }
+      },
+      getAttribLocation: () => 0,
+      enableVertexAttribArray: () => {},
+      vertexAttribPointer: () => {},
+      vertexAttribDivisor: () => {},
+      viewport: () => {},
+      clearColor: () => {},
+      clear: () => {},
+      enable: () => {},
+      disable: () => {},
+      blendFunc: () => {},
+      useProgram: () => {},
+      getUniformLocation: (_prog: unknown, name: string) => name,
+      uniform1f: () => {},
+      uniform1i: () => {},
+      uniform3f: (loc: unknown, x: number, y: number, z: number) => {
+        uniform3fCalls[String(loc)] = [x, y, z];
+      },
+      uniform4f: () => {},
+      drawElements: () => {
+        drawElementsCalled = true;
+      },
+      drawArraysInstanced: () => {},
+    };
+    const mockGlCanvas = {
+      getContext: () => mockGl,
+    } as unknown as HTMLCanvasElement;
+    const glRenderer = new WebGL2SurfaceRenderer(mockGlCanvas, 32);
+    const renderedOk = glRenderer.renderSurface(
+      surfaceSteep.lossGrid,
+      surfaceSteep.minLoss,
+      surfaceSteep.maxLoss,
+      0.65,
+      0.55,
+      -0.65,
+      true,
+      800,
+      500
+    );
+    expect(renderedOk).toBe(true);
+    expect(drawElementsCalled).toBe(true);
+    expect(uploadedSubData.length).toBe(1);
+    for (let i = 0; i < uploadedSubData[0].length; i++) {
+      expect(uploadedSubData[0][i]).toBeGreaterThanOrEqual(0);
+      expect(uploadedSubData[0][i]).toBeLessThanOrEqual(1);
+    }
+    expect(uniform3fCalls['u_projScale']).toBeDefined();
+    expect(uniform3fCalls['u_projScale'][0]).toBeGreaterThan(0);
+    expect(uniform3fCalls['u_projScale'][1]).toBeGreaterThan(0);
+    expect(uniform3fCalls['u_projScale'][2]).toBeGreaterThan(0);
   });
 });

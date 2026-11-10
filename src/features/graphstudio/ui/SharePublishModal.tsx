@@ -136,9 +136,9 @@ export function SharePublishModal({
   };
 
   return (
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div class="w-full max-w-lg rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl flex flex-col overflow-hidden text-xs">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+      <div class="w-full max-w-lg max-h-[90vh] rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl flex flex-col overflow-hidden text-xs">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
           <h3 class="font-bold text-sm">Share &amp; Publish Graph</h3>
           <button
             type="button"
@@ -150,14 +150,14 @@ export function SharePublishModal({
         </div>
 
         {/* 3 Mode Tabs */}
-        <div class="grid grid-cols-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-950">
+        <div class="grid grid-cols-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-950 shrink-0 text-[11px] sm:text-xs">
           <button
             type="button"
             onClick={() => {
               setActiveTab('e2ee');
               setGeneratedUrl(null);
             }}
-            class={`py-2 font-semibold ${
+            class={`py-2 px-1 font-semibold truncate ${
               activeTab === 'e2ee'
                 ? 'border-b-2 border-orange-500 text-orange-600 dark:text-orange-400 bg-white dark:bg-neutral-900'
                 : 'text-neutral-500'
@@ -171,7 +171,7 @@ export function SharePublishModal({
               setActiveTab('gallery');
               setGeneratedUrl(null);
             }}
-            class={`py-2 font-semibold ${
+            class={`py-2 px-1 font-semibold truncate ${
               activeTab === 'gallery'
                 ? 'border-b-2 border-orange-500 text-orange-600 dark:text-orange-400 bg-white dark:bg-neutral-900'
                 : 'text-neutral-500'
@@ -185,7 +185,7 @@ export function SharePublishModal({
               setActiveTab('stateless');
               setGeneratedUrl(null);
             }}
-            class={`py-2 font-semibold ${
+            class={`py-2 px-1 font-semibold truncate ${
               activeTab === 'stateless'
                 ? 'border-b-2 border-orange-500 text-orange-600 dark:text-orange-400 bg-white dark:bg-neutral-900'
                 : 'text-neutral-500'
@@ -195,7 +195,7 @@ export function SharePublishModal({
           </button>
         </div>
 
-        <div class="p-4 flex flex-col gap-3">
+        <div class="p-4 flex flex-col gap-3 overflow-y-auto">
           {activeTab === 'e2ee' && (
             <>
               <p class="text-neutral-500">

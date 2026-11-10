@@ -272,3 +272,57 @@ export function computeChartFocusViewport(params: ChartFocusParams): Viewport2DB
     yMax: yMid + spanY * 0.5,
   };
 }
+
+export interface SurfaceFocusParams {
+  sliderW1?: { min: number; max: number; value: number };
+  sliderW2?: { min: number; max: number; value: number };
+  w1?: number;
+  w2?: number;
+  fallbackViewport?: Viewport2DBounds;
+}
+
+/**
+ * Computes a centered 2D parameter-space viewport for the 3D Loss Surface,
+ * framing the active (w1, w2) slider bounds and current parameter values so
+ * the surface and parameter particle never drift off-screen when bounds are large.
+ */
+export function computeSurfaceFocusViewport(params: SurfaceFocusParams): Viewport2DBounds {
+  const fallback = params.fallbackViewport ?? { xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
+
+  const resolveAxis = (
+    slider: { min: number; max: number; value: number } | undefined,
+    val: number | undefined,
+    fbMin: number,
+    fbMax: number
+  ): { min: number; max: number } => {
+    let lo = slider && Number.isFinite(slider.min) ? slider.min : fbMin;
+    let hi = slider && Number.isFinite(slider.max) ? slider.max : fbMax;
+    const v =
+      val !== undefined && Number.isFinite(val)
+        ? val
+        : slider && Number.isFinite(slider.value)
+          ? slider.value
+          : (lo + hi) * 0.5;
+    lo = Math.min(lo, v);
+    hi = Math.max(hi, v);
+    const span = Math.max(hi - lo, 0.5);
+    const pad = slider ? 0.0 : span * 0.1;
+    const minOut = lo - pad;
+    const maxOut = hi + pad;
+    if (maxOut - minOut < 0.2) {
+      const mid = (minOut + maxOut) * 0.5;
+      return { min: mid - 0.5, max: mid + 0.5 };
+    }
+    return { min: minOut, max: maxOut };
+  };
+
+  const axX = resolveAxis(params.sliderW1, params.w1, fallback.xMin, fallback.xMax);
+  const axY = resolveAxis(params.sliderW2, params.w2, fallback.yMin, fallback.yMax);
+
+  return {
+    xMin: axX.min,
+    xMax: axX.max,
+    yMin: axY.min,
+    yMax: axY.max,
+  };
+}

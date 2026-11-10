@@ -564,12 +564,17 @@ export function computeLossSurfaceAndVectorField(
 
   // Compute on a 32x32 control lattice and bilinearly upsample to 128x128 in < 0.4ms
   const coarseN = 32;
-  const coarseLoss = new Float32Array(coarseN * coarseN);
-  const coarseG1 = new Float32Array(coarseN * coarseN);
-  const coarseG2 = new Float32Array(coarseN * coarseN);
+  const totalCoarse = coarseN * coarseN;
+  const coarseLoss = new Float64Array(totalCoarse);
+  const coarseG1 = new Float32Array(totalCoarse);
+  const coarseG2 = new Float32Array(totalCoarse);
 
   const cdw1 = (w1Max - w1Min) / (coarseN - 1);
   const cdw2 = (w2Max - w2Min) / (coarseN - 1);
+
+  const MAX_SAFE_LOSS = 1e30;
+  const MAX_SAFE_GRAD = 1e18;
+  let finiteCount = 0;
 
   for (let r = 0; r < coarseN; r++) {
     const w2 = w2Min + r * cdw2;
@@ -588,12 +593,107 @@ export function computeLossSurfaceAndVectorField(
         'zero',
         predictor
       );
-      const safeL = Number.isFinite(ev.loss) ? ev.loss : 100.0;
-      coarseLoss[rOff + c] = safeL;
-      coarseG1[rOff + c] = ev.gradW1;
-      coarseG2[rOff + c] = ev.gradW2;
-      if (safeL < minLoss) minLoss = safeL;
-      if (safeL > maxLoss) maxLoss = safeL;
+      const idx = rOff + c;
+      if (Number.isFinite(ev.loss)) {
+        const clampedL = Math.min(Math.max(ev.loss, -MAX_SAFE_LOSS), MAX_SAFE_LOSS);
+        coarseLoss[idx] = clampedL;
+        if (clampedL < minLoss) minLoss = clampedL;
+        if (clampedL > maxLoss) maxLoss = clampedL;
+        finiteCount++;
+      } else {
+        coarseLoss[idx] = Number.NaN;
+      }
+      coarseG1[idx] = Number.isFinite(ev.gradW1)
+        ? Math.min(Math.max(ev.gradW1, -MAX_SAFE_GRAD), MAX_SAFE_GRAD)
+        : 0.0;
+      coarseG2[idx] = Number.isFinite(ev.gradW2)
+        ? Math.min(Math.max(ev.gradW2, -MAX_SAFE_GRAD), MAX_SAFE_GRAD)
+        : 0.0;
+    }
+  }
+
+  if (finiteCount === 0 || !Number.isFinite(minLoss) || !Number.isFinite(maxLoss)) {
+    minLoss = 0.0;
+    maxLoss = 1.0;
+    coarseLoss.fill(0.0);
+  } else {
+    // Compute quantiles strictly on finite samples before replacing NaNs so outliers/walls
+    // never flatten the optimization valley into a zero-height plane.
+    const rawSpan = maxLoss - minLoss;
+    if (rawSpan > 1e-3 && finiteCount >= 4) {
+      const finiteSorted = new Float64Array(finiteCount);
+      let fPtr = 0;
+      for (let i = 0; i < totalCoarse; i++) {
+        const v = coarseLoss[i];
+        if (!Number.isNaN(v)) {
+          finiteSorted[fPtr++] = v;
+        }
+      }
+      finiteSorted.sort();
+
+      const q25 = finiteSorted[Math.floor((finiteCount - 1) * 0.25)] - minLoss;
+      const q50 = finiteSorted[Math.floor((finiteCount - 1) * 0.5)] - minLoss;
+      const q75 = finiteSorted[Math.floor((finiteCount - 1) * 0.75)] - minLoss;
+      const q85 = finiteSorted[Math.floor((finiteCount - 1) * 0.85)] - minLoss;
+
+      let baseScale = 0.0;
+      if (q25 > 1e-6 && q50 > 12.0 * q25 && rawSpan > 25.0 * q25) {
+        baseScale = q25;
+      } else if (q50 > 1e-6 && rawSpan > 10.0 * q50) {
+        baseScale = q50;
+      } else if (q75 > 1e-6 && rawSpan > 6.0 * q75) {
+        baseScale = q75;
+      } else if (q85 > 1e-6 && rawSpan > 5.0 * q85) {
+        baseScale = q85;
+      }
+
+      if (baseScale > 0.0) {
+        const knee = minLoss + 2.5 * baseScale;
+        const tailCap = 3.5;
+        if (maxLoss > knee) {
+          let newMax = minLoss;
+          for (let i = 0; i < totalCoarse; i++) {
+            const v = coarseLoss[i];
+            if (Number.isNaN(v)) continue;
+            if (v > knee) {
+              const u = (v - knee) / baseScale;
+              const logU = Math.log1p(u);
+              const compressed =
+                knee + baseScale * ((tailCap * logU) / (tailCap + logU));
+              coarseLoss[i] = compressed;
+              if (compressed > newMax) newMax = compressed;
+            } else if (v > newMax) {
+              newMax = v;
+            }
+          }
+          maxLoss = newMax > minLoss ? newMax : minLoss + 1.0;
+        }
+      }
+    }
+
+    const fallbackHigh = maxLoss > minLoss ? maxLoss : minLoss + 1.0;
+    if (finiteCount < totalCoarse) {
+      for (let i = 0; i < totalCoarse; i++) {
+        if (Number.isNaN(coarseLoss[i])) {
+          coarseLoss[i] = fallbackHigh;
+        }
+      }
+      if (fallbackHigh > maxLoss) maxLoss = fallbackHigh;
+    }
+
+    // Prevent Float32Array precision loss or overflow when loss values or offsets are huge
+    const spanAfter = Math.max(maxLoss - minLoss, 1e-9);
+    if (
+      Math.abs(minLoss) > 1e4 ||
+      Math.abs(maxLoss) > 1e5 ||
+      Math.abs(minLoss) > spanAfter * 500
+    ) {
+      const targetScale = 100.0 / spanAfter;
+      for (let i = 0; i < totalCoarse; i++) {
+        coarseLoss[i] = (coarseLoss[i] - minLoss) * targetScale;
+      }
+      minLoss = 0.0;
+      maxLoss = 100.0;
     }
   }
 

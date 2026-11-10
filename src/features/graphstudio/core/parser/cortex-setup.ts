@@ -69,6 +69,8 @@ export const ML_FUNCTION_HEADS: Record<string, string> = {
   erf: 'Erf',
   gamma: 'Gamma',
   lgamma: 'Lgamma',
+  digamma: 'Digamma',
+  trigamma: 'Trigamma',
   betapdf: 'BetaPdf',
   beta_pdf: 'BetaPdf',
   sigmoid: 'Sigmoid',
@@ -81,6 +83,8 @@ export const ML_FUNCTION_HEADS: Record<string, string> = {
   swish: 'Swish',
   silu: 'Swish',
   gelu: 'GELU',
+  geluderiv1: 'GELUDeriv1',
+  geluderiv2: 'GELUDeriv2',
   softplus: 'Softplus',
   softmax: 'Softmax',
   huber: 'Huber',
@@ -334,7 +338,7 @@ export function extractFunctionSignature(raw: string): FunctionSignature | null 
   if (!lhs || !rhs) return null;
 
   const match =
-    /^(\\hat\{[a-zA-Z]+\}|\\mathcal\{[A-Z]\}(?:_[a-zA-Z0-9_]+)?|[a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\(([^()]*)\))?$/.exec(
+    /^(\\hat\{[a-zA-Z]+\}'*|\\mathcal\{[A-Z]\}(?:_[a-zA-Z0-9_]+)?'*|[a-zA-Z_][a-zA-Z0-9_]*'*)\s*(?:\(([^()]*)\))?$/.exec(
       lhs
     );
   if (!match) return null;
@@ -513,6 +517,9 @@ export function normalizeLatexToAscii(raw: string): string {
 
   // Replace remaining \text{...} and \operatorname{...} with surrounding spaces so adjacent identifiers do not fuse
   s = s.replace(/\\(?:text|operatorname|mathrm)\s*\{\s*([a-zA-Z0-9_\\]+)\s*\}/g, ' $1 ');
+  s = s
+    .replace(/\bGELU\s*''/gi, ' geluderiv2')
+    .replace(/\bGELU\s*'/gi, ' geluderiv1');
 
   // Recursively expand \frac{A}{B} -> ((A)/(B)) and \sqrt{A} -> sqrt(A)
   let prev = '';
@@ -1385,7 +1392,7 @@ export function resolveDerivSymbol(
   }
   if (!label || !label.trim()) return `f${idx > 0 ? idx + 1 : ''}`;
   const trimmed = label.trim();
-  const fnMatch = trimmed.match(/^([a-zA-Z\u0370-\u03FF][a-zA-Z0-9_]*)\s*\(/);
+  const fnMatch = trimmed.match(/^([a-zA-Z\u0370-\u03FF][a-zA-Z0-9_]*'*)\s*\(/);
   if (fnMatch) return fnMatch[1];
   if (trimmed.length <= 14 && !/\s/.test(trimmed)) return trimmed;
   return `f${idx > 0 ? idx + 1 : ''}`;
@@ -1411,10 +1418,10 @@ export function formatExpressionForKatex(rawLatex: string): string {
     .replace(/!=/g, ' \\ne ')
     .replace(/\*/g, ' \\cdot ');
 
-  // Wrap bare multi-letter functions (not already preceded by `\` or `{`) in \operatorname{...}
+  // Wrap bare multi-letter functions (not already preceded by `\`, `{`, or `_`) in \operatorname{...}
   s = s.replace(
-    /(?<![\\{a-zA-Z])(Attention|SwiGLU|GeGLU|RMSNorm|LayerNorm|RoPE|softmax|softplus|sigmoid|relu|gelu|swish|mish|huber|hinge|sinc|floor|ceil|sign)\s*\(/g,
-    '\\operatorname{$1}('
+    /(?<![\\{a-zA-Z_])([a-zA-Z]{2,}[a-zA-Z0-9_]*)\s*\(/g,
+    (_m, fnName: string) => `\\operatorname{${fnName.replace(/_/g, '\\_')}}(`
   );
 
   return s;

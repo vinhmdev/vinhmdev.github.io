@@ -19,6 +19,7 @@ import type {
 } from '../types/math';
 import { DEFAULT_FUNCTION_LIBRARY } from '../core/parser/cortex-setup';
 import type {
+  CurveLineStyle,
   DataPoint2D,
   ExpressionItem,
   GraphStateV2,
@@ -65,7 +66,7 @@ function num4(n: number): number {
   return Math.round(n * 10000) / 10000;
 }
 
-type CompactExprTuple = [string, string, string, number, string?];
+type CompactExprTuple = [string, string, string, number, string?, number?];
 type CompactSliderTuple = [
   string,
   string,
@@ -148,13 +149,25 @@ function isDefaultFunctionLibrary(lib?: LibraryFunctionEntry[]): boolean {
 
 export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
   const e: CompactExprTuple[] = state.expressions.map((item) => {
+    const styleBits =
+      item.lineStyle === 'dashed'
+        ? 64
+        : item.lineStyle === 'dotted'
+          ? 128
+          : item.lineStyle === 'solid'
+            ? 192
+            : 0;
     const flags =
       (item.visible ? 1 : 0) |
       (item.showFirstDerivative ? 2 : 0) |
       (item.showSecondDerivative ? 4 : 0) |
       (item.fitLoss ? 8 : 0) |
       (item.collapsed ? 16 : 0) |
-      (item.kind === 'note' ? 32 : 0);
+      (item.kind === 'note' ? 32 : 0) |
+      styleBits;
+    if (item.lineWidth !== undefined) {
+      return [item.id, item.latex, item.color, flags, item.label ?? '', num4(item.lineWidth)];
+    }
     return item.label
       ? [item.id, item.latex, item.color, flags, item.label]
       : [item.id, item.latex, item.color, flags];
@@ -312,18 +325,33 @@ export function unpackCompactV2ToState(
     lock1to1Bit,
   ] = compact.m;
 
-  const expressions: ExpressionItem[] = compact.e.map(([id, latex, color, flags, label]) => ({
-    id,
-    latex,
-    color,
-    visible: (flags & 1) !== 0,
-    showFirstDerivative: (flags & 2) !== 0,
-    showSecondDerivative: (flags & 4) !== 0,
-    fitLoss: (flags & 8) !== 0,
-    collapsed: (flags & 16) !== 0,
-    ...((flags & 32) !== 0 ? { kind: 'note' as const } : {}),
-    label,
-  }));
+  const expressions: ExpressionItem[] = compact.e.map(
+    ([id, latex, color, flags, label, lineWidth]) => {
+      const styleBits = flags & 192;
+      const lineStyle: CurveLineStyle | undefined =
+        styleBits === 64
+          ? 'dashed'
+          : styleBits === 128
+            ? 'dotted'
+            : styleBits === 192
+              ? 'solid'
+              : undefined;
+      return {
+        id,
+        latex,
+        color,
+        visible: (flags & 1) !== 0,
+        showFirstDerivative: (flags & 2) !== 0,
+        showSecondDerivative: (flags & 4) !== 0,
+        fitLoss: (flags & 8) !== 0,
+        collapsed: (flags & 16) !== 0,
+        ...((flags & 32) !== 0 ? { kind: 'note' as const } : {}),
+        ...(lineStyle ? { lineStyle } : {}),
+        ...(typeof lineWidth === 'number' ? { lineWidth } : {}),
+        label: label || undefined,
+      };
+    }
+  );
 
   const sliders: Record<string, SliderState> = {};
   for (const [name, latex, role, value, min, max, step, loopMode, speed, direction] of compact.s) {

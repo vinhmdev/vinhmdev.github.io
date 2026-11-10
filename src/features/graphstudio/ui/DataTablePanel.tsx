@@ -68,7 +68,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
           aria-expanded={isExpanded}
-          class="flex items-center gap-1.5 font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors truncate"
+          class="flex items-center gap-1.5 min-w-0 flex-1 font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 text-[11px] hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors truncate"
         >
           <span>{isExpanded ? '▾' : '▸'}</span>
           <span class="truncate">

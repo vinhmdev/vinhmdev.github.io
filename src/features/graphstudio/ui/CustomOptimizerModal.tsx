@@ -65,11 +65,11 @@ export function CustomOptimizerModal({
   };
 
   return (
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div class="w-full max-w-xl rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl flex flex-col overflow-hidden text-xs">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
-          <div>
-            <h3 class="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+      <div class="w-full max-w-xl max-h-[90vh] rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl flex flex-col overflow-hidden text-xs">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+          <div class="min-w-0">
+            <h3 class="font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
               Custom JS Optimizer (QuickJS WebAssembly Sandbox)
             </h3>
             <p class="text-[11px] text-neutral-500">
@@ -79,13 +79,13 @@ export function CustomOptimizerModal({
           <button
             type="button"
             onClick={() => storeState.setCustomOptModalOpen(false)}
-            class="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            class="p-1 shrink-0 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <IconClose />
           </button>
         </div>
 
-        <div class="p-4 flex flex-col gap-3">
+        <div class="p-4 flex flex-col gap-3 overflow-y-auto">
           <textarea
             rows={12}
             value={code}

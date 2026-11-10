@@ -175,5 +175,18 @@
   "race_options_btn": "Tùy chọn race",
   "sheet_expand": "Mở bảng",
   "sheet_collapse": "Thu gọn bảng",
-  "role_edit_hint": "Đổi vai trò bằng chip trong thẻ hàm"
+  "role_edit_hint": "Đổi vai trò bằng chip trong thẻ hàm",
+  "clone_deriv_btn": "Tách hàm",
+  "clone_deriv_tooltip": "Clone đạo hàm này ra thành 1 hàm số độc lập mới để tùy chỉnh tiếp",
+  "line_style_btn": "Màu & kiểu nét",
+  "line_style_tooltip": "Tùy chỉnh màu đường cong, kiểu nét (nét liền / nét đứt / nét chấm) và độ đậm",
+  "style_color_label": "Màu đường cong",
+  "style_dash_label": "Kiểu đường nét",
+  "style_weight_label": "Độ đậm nét",
+  "style_solid": "Nét liền",
+  "style_dashed": "Nét đứt",
+  "style_dotted": "Nét chấm",
+  "style_thin": "Mảnh",
+  "style_normal": "Thường",
+  "style_bold": "Đậm"
 }

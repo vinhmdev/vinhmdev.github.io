@@ -7,6 +7,7 @@
  * - Primary curves, POIs & data points : opacity 1.0
  */
 import type {
+  CurveLineStyle,
   CurveRenderPacket,
   DataPoint2D,
   LossKind,
@@ -15,6 +16,19 @@ import type {
   WhiteboardStroke,
 } from '../types/state';
 import { computeNiceTicks, computeUniformTickStep, worldToScreen } from './viewport-controller';
+
+export function resolveCurveDashPattern(
+  lineStyle?: CurveLineStyle,
+  lineWidth = 2.6
+): number[] {
+  if (lineStyle === 'dashed') {
+    return lineWidth > 3.2 ? [10, 6] : [7, 5];
+  }
+  if (lineStyle === 'dotted') {
+    return lineWidth > 3.2 ? [2.5, 6] : [2, 5];
+  }
+  return [];
+}
 
 export interface Canvas2DRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -241,10 +255,12 @@ export function renderDataSpaceCanvas2D(p: Canvas2DRenderParams): void {
     }
 
     if (c.primaryPoints.length >= 4) {
+      const primaryLineWidth =
+        c.lineWidth && Number.isFinite(c.lineWidth) && c.lineWidth > 0 ? c.lineWidth : 2.6;
       drawPolylineWithBreaks(ctx, c.primaryPoints, viewport, width, height, {
         color: c.color,
-        lineWidth: 2.6,
-        dash: [],
+        lineWidth: primaryLineWidth,
+        dash: resolveCurveDashPattern(c.lineStyle, primaryLineWidth),
         opacity: 1.0,
       });
     }

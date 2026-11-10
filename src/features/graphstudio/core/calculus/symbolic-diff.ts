@@ -243,6 +243,55 @@ function diffNode(expr: MathJsonExpr, v: string): MathJsonExpr {
       return ['Multiply', ['GELUDeriv2', u], diffNode(u, v)];
     }
 
+    case 'GELUDeriv2': {
+      const u = args[0];
+      const du = diffNode(u, v);
+      if (du === 0) return 0;
+      const expTerm: MathJsonExpr = [
+        'Divide',
+        ['Exp', ['Negate', ['Divide', ['Power', u, 2], 2]]],
+        ['Sqrt', ['Multiply', 2, 'Pi']],
+      ];
+      return ['Multiply', ['Multiply', ['Subtract', ['Power', u, 2], 3], expTerm], du];
+    }
+
+    case 'Gamma': {
+      const u = args[0];
+      return ['Multiply', ['Multiply', ['Gamma', u], ['Digamma', u]], diffNode(u, v)];
+    }
+
+    case 'Lgamma': {
+      const u = args[0];
+      return ['Multiply', ['Digamma', u], diffNode(u, v)];
+    }
+
+    case 'Digamma': {
+      const u = args[0];
+      return ['Multiply', ['Trigamma', u], diffNode(u, v)];
+    }
+
+    case 'Trigamma':
+      return 0;
+
+    case 'BetaPdf': {
+      const [th, a, b] = args;
+      const dth = diffNode(th, v);
+      if (dth === 0) return 0;
+      return [
+        'Multiply',
+        [
+          'Multiply',
+          ['BetaPdf', th, a, b],
+          [
+            'Subtract',
+            ['Divide', ['Subtract', a, 1], th],
+            ['Divide', ['Subtract', b, 1], ['Subtract', 1, th]],
+          ],
+        ],
+        dth,
+      ];
+    }
+
     case 'Abs': {
       const u = args[0];
       return ['Multiply', ['Sign', u], diffNode(u, v)];
@@ -469,8 +518,30 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       'delta',
       'tau',
       'epsilon',
+      'rho',
+      'phi',
+      'psi',
+      'omega',
+      'kappa',
+      'zeta',
+      'nu',
+      'xi',
+      'chi',
     ];
     if (greek.includes(expr)) return `\\${expr}`;
+    const uIdx = expr.indexOf('_');
+    if (uIdx > 0) {
+      const base = expr.slice(0, uIdx);
+      const sub = expr.slice(uIdx + 1);
+      const formattedBase = greek.includes(base) ? `\\${base}` : base;
+      if (sub.length === 1) {
+        return `${formattedBase}_${sub}`;
+      }
+      return `${formattedBase}_{${sub.replace(/_/g, ',')}}`;
+    }
+    if (expr.length > 1 && /^[a-zA-Z0-9]+$/.test(expr)) {
+      return `\\text{${expr}}`;
+    }
     return expr;
   }
   if (!Array.isArray(expr)) return '0';
@@ -493,10 +564,16 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       return `${wrapIfCompound(expr[1], s[0])}^{${s[1]}}`;
     case 'Sqrt':
       return `\\sqrt{${s[0]}}`;
+    case 'Cbrt':
+      return `\\operatorname{cbrt}(${s[0]})`;
     case 'Exp':
       return `e^{${s[0]}}`;
     case 'Ln':
       return `\\ln(${s[0]})`;
+    case 'Log10':
+      return `\\log_{10}(${s[0]})`;
+    case 'Log2':
+      return `\\log_2(${s[0]})`;
     case 'Sin':
       return `\\sin(${s[0]})`;
     case 'Cos':
@@ -538,6 +615,12 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       return `\\operatorname{softmax}(${s.join(', ')})`;
     case 'ReLU':
       return `\\operatorname{ReLU}(${s[0]})`;
+    case 'LeakyReLU':
+      return `\\operatorname{leaky\\_relu}(${s.join(', ')})`;
+    case 'ELU':
+      return `\\operatorname{elu}(${s.join(', ')})`;
+    case 'Swish':
+      return `\\operatorname{swish}(${s.join(', ')})`;
     case 'Heaviside':
       return `H(${s[0]})`;
     case 'DiracDelta':
@@ -550,6 +633,32 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
       return `\\operatorname{GELU}'(${s[0]})`;
     case 'GELUDeriv2':
       return `\\operatorname{GELU}''(${s[0]})`;
+    case 'Gamma':
+      return `\\operatorname{gamma}(${s[0]})`;
+    case 'Lgamma':
+      return `\\operatorname{lgamma}(${s[0]})`;
+    case 'Digamma':
+      return `\\operatorname{digamma}(${s[0]})`;
+    case 'Trigamma':
+      return `\\operatorname{trigamma}(${s[0]})`;
+    case 'BetaPdf':
+      return `\\operatorname{beta\\_pdf}(${s.join(', ')})`;
+    case 'Max':
+      return `\\max(${s.join(', ')})`;
+    case 'Min':
+      return `\\min(${s.join(', ')})`;
+    case 'Erf':
+      return `\\operatorname{erf}(${s[0]})`;
+    case 'Huber':
+      return `\\operatorname{huber}(${s.join(', ')})`;
+    case 'Hinge':
+      return `\\operatorname{hinge}(${s.join(', ')})`;
+    case 'BCE':
+      return `\\operatorname{bce}(${s.join(', ')})`;
+    case 'BCEWithLogits':
+      return `\\operatorname{bce\\_with\\_logits}(${s.join(', ')})`;
+    case 'SafeXLogY':
+      return `\\operatorname{xlogy}(${s.join(', ')})`;
     case 'Less':
       return `${s[0]} < ${s[1]}`;
     case 'LessEqual':
@@ -563,8 +672,9 @@ export function mathJsonToLatex(expr: MathJsonExpr): string {
     case 'NotEqual':
       return `${s[0]} \\ne ${s[1]}`;
     case 'And':
+      return s.join(' \\land ');
     case 'Or':
-      return s.join(', ');
+      return s.join(' \\lor ');
     case 'Piecewise': {
       if (args.length === 2 && args[1] === 1) {
         return `\\left\\{${s[0]}\\right\\}`;

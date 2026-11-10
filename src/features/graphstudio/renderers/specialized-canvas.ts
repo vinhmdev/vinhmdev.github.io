@@ -198,37 +198,66 @@ export function renderSvmFeature3DCanvas(
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
-  const gamma = params['gamma'] ?? 0.6;
-  const tau = params['tau'] ?? 0.45;
+  const gamma = Math.max(params['gamma'] ?? 0.6, 0.01);
+  const rawTau = params['tau'] ?? 0.45;
+  const clampedTau = Math.min(Math.max(Number.isFinite(rawTau) ? rawTau : 0.45, -0.15), 1.15);
+
+  let maxCoord = 2.5;
+  for (const pt of points) {
+    const x2 = pt.x2 ?? pt.y;
+    if (Number.isFinite(pt.x)) maxCoord = Math.max(maxCoord, Math.abs(pt.x) * 1.15);
+    if (Number.isFinite(x2)) maxCoord = Math.max(maxCoord, Math.abs(x2) * 1.15);
+  }
+  const coordNorm = 2.5 / Math.max(maxCoord, 2.5);
+
   const cx = width * 0.5;
-  const cy = height * 0.68;
-  const scale = Math.min(width, height) * 0.16;
+  const cy = height * 0.66;
+  const scale = Math.min(width, height) * 0.15;
 
   const project3D = (x1: number, x2: number, z: number): { sx: number; sy: number } => {
-    const isoX = (x1 - x2) * 0.866;
-    const isoY = (x1 + x2) * 0.35 - z * 2.2;
+    const nx1 = Math.min(Math.max(x1 * coordNorm, -2.7), 2.7);
+    const nx2 = Math.min(Math.max(x2 * coordNorm, -2.7), 2.7);
+    const nz = Math.min(Math.max(Number.isFinite(z) ? z : 0, -0.2), 1.2);
+    const isoX = (nx1 - nx2) * 0.866;
+    const isoY = (nx1 + nx2) * 0.35 - nz * 2.1;
     return { sx: cx + isoX * scale, sy: cy + isoY * scale };
   };
 
-  // Wireframe RBF Gaussian hill
+  // Wireframe RBF Gaussian hill (both U and V families for a complete 3D surface grid)
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(23, 23, 23, 0.16)';
   ctx.lineWidth = 1;
-  for (let u = -2.5; u <= 2.5; u += 0.5) {
+  const gridRadius = 2.5 / coordNorm;
+  const uStep = gridRadius / 5;
+  const vStep = gridRadius / 10;
+  for (let i = -5; i <= 5; i++) {
+    const u = i * uStep;
     ctx.beginPath();
-    for (let v = -2.5; v <= 2.5; v += 0.25) {
-      const z = computeRbfLift3D(u, v, gamma);
+    for (let j = -10; j <= 10; j++) {
+      const v = j * vStep;
+      const z = computeRbfLift3D(u * coordNorm, v * coordNorm, gamma);
       const { sx, sy } = project3D(u, v, z);
-      if (v === -2.5) ctx.moveTo(sx, sy);
+      if (j === -10) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (let j = -10; j <= 10; j++) {
+      const v = j * vStep;
+      const z = computeRbfLift3D(v * coordNorm, u * coordNorm, gamma);
+      const { sx, sy } = project3D(v, u, z);
+      if (j === -10) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
     ctx.stroke();
   }
 
   // Separating horizontal plane at z = tau
-  const c1 = project3D(-2.4, -2.4, tau);
-  const c2 = project3D(2.4, -2.4, tau);
-  const c3 = project3D(2.4, 2.4, tau);
-  const c4 = project3D(-2.4, 2.4, tau);
+  const planeExt = 2.4 / coordNorm;
+  const c1 = project3D(-planeExt, -planeExt, clampedTau);
+  const c2 = project3D(planeExt, -planeExt, clampedTau);
+  const c3 = project3D(planeExt, planeExt, clampedTau);
+  const c4 = project3D(-planeExt, planeExt, clampedTau);
   ctx.fillStyle = 'rgba(59, 130, 246, 0.22)';
   ctx.strokeStyle = 'rgba(59, 130, 246, 0.75)';
   ctx.beginPath();
@@ -243,7 +272,7 @@ export function renderSvmFeature3DCanvas(
   // Lifted 3D points
   for (const pt of points) {
     const x2 = pt.x2 ?? pt.y;
-    const z = computeRbfLift3D(pt.x, x2, gamma);
+    const z = computeRbfLift3D(pt.x * coordNorm, x2 * coordNorm, gamma);
     const { sx, sy } = project3D(pt.x, x2, z);
     ctx.beginPath();
     ctx.arc(sx, sy, 5.5, 0, Math.PI * 2);
@@ -256,7 +285,7 @@ export function renderSvmFeature3DCanvas(
 
   ctx.fillStyle = isDark ? '#f5f5f5' : '#171717';
   ctx.font = '600 12px Inter, system-ui, sans-serif';
-  ctx.fillText(`3D RBF Lift φ(x) = exp(-${gamma.toFixed(2)}||x||²)  |  Hyperplane z = ${tau.toFixed(2)}`, 16, 26);
+  ctx.fillText(`3D RBF Lift φ(x) = exp(-${gamma.toFixed(2)}||x||²)  |  Hyperplane z = ${rawTau.toFixed(2)}`, 16, 26);
   ctx.restore();
 }
 
@@ -273,10 +302,18 @@ export function renderMlpSpaceFoldingCanvas(
   ctx.fillStyle = isDark ? '#171717' : '#fafafa';
   ctx.fillRect(0, 0, width, height);
 
-  const t = params['t'] ?? 1.0;
+  const rawT = params['t'] ?? 1.0;
+  const t = Math.min(Math.max(Number.isFinite(rawT) ? rawT : 1.0, -1.5), 2.5);
+  let maxWarpExtent = 1.8;
+  for (const pt of points) {
+    const x2 = pt.x2 ?? pt.y;
+    const { wx, wy } = warpMlpHomotopyPoint(pt.x, x2, t);
+    if (Number.isFinite(wx)) maxWarpExtent = Math.max(maxWarpExtent, Math.abs(wx) * 1.15);
+    if (Number.isFinite(wy)) maxWarpExtent = Math.max(maxWarpExtent, Math.abs(wy) * 1.15);
+  }
   const cx = width * 0.5;
   const cy = height * 0.52;
-  const scale = Math.min(width, height) * 0.22;
+  const scale = (Math.min(width, height) * 0.4) / Math.max(maxWarpExtent, 1.8);
 
   const toScreen = (wx: number, wy: number): { sx: number; sy: number } => ({
     sx: cx + wx * scale,

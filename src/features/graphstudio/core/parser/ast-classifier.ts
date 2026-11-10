@@ -190,7 +190,7 @@ export function getDefaultSliderBounds(
   if (role === 'hyperparam') {
     return { min: 0.01, max: 5.0, step: 0.05, defaultValue: 0.5 };
   }
-  if (name.includes('_') || (name.length > 1 && /^[A-Z]/.test(name))) {
+  if (name.length > 1 && /^[A-Z]/.test(name)) {
     return { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 };
   }
   return {

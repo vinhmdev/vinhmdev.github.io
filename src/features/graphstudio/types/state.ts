@@ -56,6 +56,8 @@ export type RegularizationKind = 'none' | 'l1' | 'l2';
 /** Optimizer algorithm identifiers [FR-4.2] */
 export type OptimizerId = 'sgd' | 'momentum' | 'rmsprop' | 'adam' | 'custom_js';
 
+export type CurveLineStyle = 'solid' | 'dashed' | 'dotted';
+
 export interface ExpressionItem {
   id: string;
   latex: string;
@@ -63,6 +65,10 @@ export interface ExpressionItem {
   visible: boolean;
   showFirstDerivative: boolean;
   showSecondDerivative: boolean;
+  /** Optional primary curve stroke dash style: 'solid' (default), 'dashed', or 'dotted' */
+  lineStyle?: CurveLineStyle;
+  /** Optional primary curve stroke width in px (default: 2.6; e.g. 1.6 thin, 2.6 normal, 4.2 bold) */
+  lineWidth?: number;
   /** Optional human-readable label for template curves */
   label?: string;
   /** Whether this expression is the active predictor / objective for Loss & 3D Optimization */
@@ -195,6 +201,8 @@ export interface CurveRenderPacket {
   label?: string;
   color: string;
   visible: boolean;
+  lineStyle?: CurveLineStyle;
+  lineWidth?: number;
   primaryVar?: string;
   /** Interleaved [x0, y0, x1, y1, ...] with NaN, NaN breaks */
   primaryPoints: Float64Array;
