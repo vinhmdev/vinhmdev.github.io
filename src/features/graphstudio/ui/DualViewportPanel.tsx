@@ -10,6 +10,7 @@
 import type { JSX, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
+import { projectParam } from '../core/simulation/optimizers';
 import { renderDataSpaceCanvas2D } from '../renderers/canvas2d-renderer';
 import {
   renderMlpSpaceFoldingCanvas,
@@ -423,33 +424,27 @@ export function DualViewportPanel({
   ]);
 
   const updateRightParamsFromWorld = (wx: number, wy: number): void => {
-    const s1 = graph.sliders[w1Key];
-    if (s1) {
-      const targetWx = s1.min > 0 ? Math.max(s1.min, wx) : wx;
-      if (targetWx < s1.min || targetWx > s1.max) {
-        storeState.updateSliderBounds(w1Key, {
-          min: s1.min > 0 ? Math.max(s1.min, Math.floor(targetWx * 10) / 10) : Math.min(s1.min, Math.floor(targetWx * 10) / 10),
-          max: Math.max(s1.max, Math.ceil(targetWx * 10) / 10),
-          value: targetWx,
+    const applyDraggedParam = (key: string, worldVal: number): void => {
+      const s = graph.sliders[key];
+      if (!s) return;
+      const targetVal = projectParam(key, worldVal, { min: s.min, max: s.max });
+      if (targetVal < s.min || targetVal > s.max) {
+        storeState.updateSliderBounds(key, {
+          min:
+            s.min > 0
+              ? Math.max(s.min, Math.floor(targetVal * 10) / 10)
+              : Math.min(s.min, Math.floor(targetVal * 10) / 10),
+          max: Math.max(s.max, Math.ceil(targetVal * 10) / 10),
+          value: targetVal,
           playing: false,
         });
       } else {
-        storeState.setSliderValue(w1Key, targetWx);
+        storeState.setSliderValue(key, targetVal);
       }
-    }
-    const s2 = graph.sliders[w2Key];
-    if (s2 && w2Key !== w1Key) {
-      const targetWy = s2.min > 0 ? Math.max(s2.min, wy) : wy;
-      if (targetWy < s2.min || targetWy > s2.max) {
-        storeState.updateSliderBounds(w2Key, {
-          min: s2.min > 0 ? Math.max(s2.min, Math.floor(targetWy * 10) / 10) : Math.min(s2.min, Math.floor(targetWy * 10) / 10),
-          max: Math.max(s2.max, Math.ceil(targetWy * 10) / 10),
-          value: targetWy,
-          playing: false,
-        });
-      } else {
-        storeState.setSliderValue(w2Key, targetWy);
-      }
+    };
+    applyDraggedParam(w1Key, wx);
+    if (w2Key !== w1Key) {
+      applyDraggedParam(w2Key, wy);
     }
   };
 

@@ -13,7 +13,6 @@ import { IconChevronDown, IconChevronRight, IconFunction, IconTrash } from './ic
 interface NoteExpressionCardProps {
   expr: ExpressionItem;
   storeState: GraphStoreState;
-  canDelete?: boolean;
 }
 
 function renderNoteKaTeX(latex: string): string {

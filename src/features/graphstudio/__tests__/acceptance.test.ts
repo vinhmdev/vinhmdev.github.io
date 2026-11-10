@@ -2023,8 +2023,12 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
     // 1. projectParam unit behavior
     expect(projectParam('c', -1.5, { min: 0.1, max: 10.0 })).toBe(0.1);
     expect(projectParam('c', 2.5, { min: 0.1, max: 10.0 })).toBe(2.5);
+    expect(projectParam('c', 15.0, { min: 0.1, max: 10.0 })).toBe(10.0); // Upper bound respected
+    expect(projectParam('k', -1.5, { min: -1.0, max: 1.0 })).toBe(-1.0); // Unit-bounded lower bound (Arcsin/Arccos)
+    expect(projectParam('k', 1.8, { min: -1.0, max: 1.0 })).toBe(1.0); // Unit-bounded upper bound (Arcsin/Arccos)
     expect(projectParam('sigma', -0.5)).toBe(0.05); // Fallback positive bound
     expect(projectParam('w', -3.5, { min: -5.0, max: 5.0 })).toBe(-3.5); // Standard unconstrained weight
+    expect(projectParam('w', 8.0, { min: -5.0, max: 5.0 })).toBe(8.0); // Standard unconstrained weight expands freely
 
     // 2. Projected Gradient Descent in 4-optimizer race with arbitrary positive param
     const pts: DataPoint2D[] = [
@@ -2107,5 +2111,152 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
     expect(kSym).toBeDefined();
     expect(kSym?.defaultMin).toBe(-1.0);
     expect(kSym?.defaultMax).toBe(1.0);
+
+    // Intersected domain restrictions when a symbol appears in both Arcsin and Sqrt (in either order)
+    const bothOrder1 = classifyLatexExpression('f(x) = \\arcsin(a) + \\sqrt{a} \\cdot x');
+    const aSym1 = bothOrder1.symbols.find((s) => s.name === 'a');
+    expect(aSym1?.defaultMin).toBe(0.01);
+    expect(aSym1?.defaultMax).toBe(1.0);
+
+    const bothOrder2 = classifyLatexExpression('f(x) = \\sqrt{a} \\cdot x + \\arcsin(a)');
+    const aSym2 = bothOrder2.symbols.find((s) => s.name === 'a');
+    expect(aSym2?.defaultMin).toBe(0.01);
+    expect(aSym2?.defaultMax).toBe(1.0);
+    expect(aSym2?.defaultValue).toBe(aSym1?.defaultValue);
+
+    // Named heuristic symbol 't' respects restricted domain bounds when in denominator or Ln
+    const lnTExpr = classifyLatexExpression('f(x) = \\ln(t) \\cdot x + \\frac{1}{t}');
+    const tSym = lnTExpr.symbols.find((s) => s.name === 't');
+    expect(tSym?.defaultMin).toBe(0.01);
+    expect(tSym?.defaultMax).toBe(1.0);
+
+    // Named heuristic symbol 'L' (min: 1) inside Arcsin does not collapse to a degenerate [1, 1] range
+    const arcsinLExpr = classifyLatexExpression('f(x) = \\arcsin(L) + \\arcsin(t) \\cdot x');
+    const lSym = arcsinLExpr.symbols.find((s) => s.name === 'L');
+    const tArcSym = arcsinLExpr.symbols.find((s) => s.name === 't');
+    expect(lSym?.defaultMin).toBe(-1.0);
+    expect(lSym?.defaultMax).toBe(1.0);
+    expect(tArcSym?.defaultValue).toBeGreaterThan(0.0);
+    expect(tArcSym?.defaultValue).toBeLessThan(1.0);
+
+    // Editing an unconstrained expression in-place on T-00 tightens existing generic [-5, 5] sliders
+    graphStore.getState().selectTemplate('T-00');
+    expect(graphStore.getState().graph.sliders.a.min).toBe(-5.0);
+    expect(graphStore.getState().graph.sliders.b.value).toBe(0.0);
+    graphStore
+      .getState()
+      .updateExpressionLatex('expr-1', 'f(x) = \\arcsin(a) \\cdot x + \\sqrt{b}');
+    expect(graphStore.getState().graph.sliders.a.min).toBe(-1.0);
+    expect(graphStore.getState().graph.sliders.a.max).toBe(1.0);
+    expect(graphStore.getState().graph.sliders.b.min).toBe(0.01);
+    expect(graphStore.getState().graph.sliders.b.max).toBe(10.0);
+    expect(graphStore.getState().graph.sliders.b.value).toBeGreaterThanOrEqual(0.01);
+
+    // projectParam never clamps below fallbackMin even if corrupted bounds.max < fallbackMin
+    expect(projectParam('sigma', 0.5, { min: -5.0, max: -1.0 })).toBeGreaterThanOrEqual(0.05);
+
+    // executeComputeJob intersects AST restricted domain bounds even when req.paramBounds has generic [-5, 5]
+    const workerRes = executeComputeJob({
+      jobId: 99,
+      expressions: [
+        {
+          id: 'arc-fit',
+          latex: 'f(x) = \\arcsin(a) \\cdot x',
+          color: '#f97316',
+          visible: true,
+          showFirstDerivative: false,
+          showSecondDerivative: false,
+          fitLoss: true,
+        },
+      ],
+      symbolOverrides: {},
+      paramValues: { a: 0.5, eta: 2.0 },
+      paramBounds: { a: { min: -5.0, max: 5.0 } },
+      dataPoints: [
+        { id: 'p1', x: 1, y: 10, split: 'train' },
+        { id: 'p2', x: 2, y: 20, split: 'train' },
+      ],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1.5,
+      subgradConvention: 'zero',
+      batchNormEnabled: false,
+      leftViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      rightViewport: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
+      rightViewportMode: 'loss_surface',
+      optimizerRace: {
+        enabledOptimizers: { sgd: true, momentum: true, rmsprop: false, adam: false, custom_js: false },
+        startW1: 2.5,
+        startW2: 0.0,
+        steps: 10,
+        currentStep: 0,
+        playing: false,
+        useNesterov: true,
+        adamBiasCorrection: true,
+        lrSchedule: 'constant',
+      },
+      probeX: null,
+      hoveredDataPointId: null,
+    });
+    for (const step of workerRes.trajectories.sgd) {
+      expect(step.w1).toBeGreaterThanOrEqual(-1.0);
+      expect(step.w1).toBeLessThanOrEqual(1.0);
+    }
+
+    // Nesterov lookahead projects parameters before evaluating loss and gradients
+    const observedC: number[] = [];
+    const pts: DataPoint2D[] = [
+      { id: '1', x: 1, y: 2, split: 'train' },
+      { id: '2', x: 2, y: 4, split: 'train' },
+    ];
+    const packed = packDataset(pts, false);
+    const nagPredictor: PredictorModel = {
+      evalScalar: (x: number, params: Record<string, number>) => {
+        observedC.push(params.c ?? 1.0);
+        return x / (params.c ?? 1.0);
+      },
+      paramGradKernels: {
+        c: (x: number, params: Record<string, number>) => {
+          observedC.push(params.c ?? 1.0);
+          return -x / Math.pow(params.c ?? 1.0, 2);
+        },
+      },
+      paramNames: ['c', 'b'],
+      baseParams: { c: 0.2, b: 0.0 },
+      paramBounds: { c: { min: 0.1, max: 1.0 }, b: { min: -5.0, max: 5.0 } },
+      w1Key: 'c',
+      w2Key: 'b',
+      isCustomPredictor: true,
+    };
+    const nagRace = runOptimizerRace(
+      packed,
+      {
+        enabledOptimizers: { sgd: false, momentum: true, rmsprop: false, adam: false, custom_js: false },
+        startW1: 0.12,
+        startW2: 0.0,
+        steps: 25,
+        currentStep: 0,
+        playing: false,
+        useNesterov: true,
+        adamBiasCorrection: true,
+        lrSchedule: 'constant',
+      },
+      { eta: 1.5, beta1: 0.95, beta2: 0.99, epsilon: 1e-8, delta: 1.0, lambda: 0.0 },
+      'mse',
+      'none',
+      'zero',
+      nagPredictor
+    );
+    expect(nagRace.momentum.length).toBeGreaterThan(0);
+    for (const cVal of observedC) {
+      expect(cVal).toBeGreaterThanOrEqual(0.1);
+      expect(cVal).toBeLessThanOrEqual(1.0);
+    }
+    for (const step of nagRace.momentum) {
+      if (step.nagLookaheadW1 !== undefined) {
+        expect(step.nagLookaheadW1).toBeGreaterThanOrEqual(0.1);
+        expect(step.nagLookaheadW1).toBeLessThanOrEqual(1.0);
+      }
+    }
   });
 });

@@ -37,6 +37,7 @@ import {
   extractLeadingFunctionLabel,
 } from '../core/parser/cortex-setup';
 import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
+import { isBoundedDomainParam, projectParam } from '../core/simulation/optimizers';
 import { getTemplateById, isMathTemplateId } from '../extensions/templates';
 import { ensureFitTarget, getPlottableExpressions, isNoteExpression } from './expression-kind';
 import { scheduleAutoSave } from './local-persistence';
@@ -140,10 +141,17 @@ export function createInitialGraphState(templateId = 'T-00'): GraphStateV2 {
 export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const nextSliders: Record<string, SliderState> = { ...state.sliders };
   const activeSymbols = new Set<string>();
+  const restrictedInPass = new Set<string>();
   let hasInvalidNonEmptyExpr = false;
   const plottable = getPlottableExpressions(state.expressions);
 
   const userFunctions = buildUserFunctionRegistry(plottable, state.functionLibrary);
+
+  const isGenericAutoBounds = (s: SliderState): boolean =>
+    (s.min === -5 && s.max === 5) ||
+    (s.min === 0.01 && s.max === 10) ||
+    (s.min === -1 && s.max === 1) ||
+    (s.min === 0.01 && s.max === 1);
 
   for (const expr of plottable) {
     const trimmed = expr.latex.trim();
@@ -161,7 +169,12 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     for (const sym of classified.symbols) {
       if (sym.role === 'param' || sym.role === 'hyperparam') {
         activeSymbols.add(sym.name);
+        const symIsRestricted = isBoundedDomainParam(sym.name, {
+          min: sym.defaultMin,
+          max: sym.defaultMax,
+        });
         if (!nextSliders[sym.name]) {
+          if (symIsRestricted) restrictedInPass.add(sym.name);
           nextSliders[sym.name] = {
             name: sym.name,
             latex: sym.latex,
@@ -176,10 +189,40 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
             direction: 1,
           };
         } else {
+          const existing = nextSliders[sym.name];
+          const wasCreatedInPass = !state.sliders[sym.name];
+          const shouldTightenBounds =
+            symIsRestricted && (wasCreatedInPass || isGenericAutoBounds(existing));
+          let nextMin = existing.min;
+          let nextMax = existing.max;
+          let nextStep = existing.step;
+          let nextVal = existing.value;
+
+          if (shouldTightenBounds) {
+            const mergeWithPriorRestricted = restrictedInPass.has(sym.name);
+            nextMin = mergeWithPriorRestricted
+              ? Math.max(existing.min, sym.defaultMin)
+              : sym.defaultMin;
+            nextMax = mergeWithPriorRestricted
+              ? Math.max(nextMin, Math.min(existing.max, sym.defaultMax))
+              : sym.defaultMax;
+            nextStep = mergeWithPriorRestricted
+              ? Math.min(existing.step, sym.defaultStep)
+              : sym.defaultStep;
+            if (nextVal < nextMin || nextVal > nextMax) {
+              nextVal = Math.min(Math.max(sym.defaultValue, nextMin), nextMax);
+            }
+            restrictedInPass.add(sym.name);
+          }
+
           nextSliders[sym.name] = {
-            ...nextSliders[sym.name],
+            ...existing,
             role: sym.role,
-            latex: sym.latex || nextSliders[sym.name].latex || sym.name,
+            latex: sym.latex || existing.latex || sym.name,
+            min: nextMin,
+            max: nextMax,
+            step: nextStep,
+            value: nextVal,
           };
         }
       } else if (sym.role === 'data_var') {
@@ -378,17 +421,21 @@ function applySyncedSliderVal(
   slider: SliderState,
   rawVal: number
 ): SliderState {
+  const projected = projectParam(slider.name, rawVal, {
+    min: slider.min,
+    max: slider.max,
+  });
   const isStrictlyPositive = isStrictlyPositiveParam(slider);
   const floorLimit = slider.min > 0 ? slider.min : 0.01;
-  const guardedVal = isStrictlyPositive ? Math.max(floorLimit, rawVal) : rawVal;
+  const guardedVal = isStrictlyPositive ? Math.max(floorLimit, projected) : projected;
   const val = Math.round(guardedVal * 1e6) / 1e6;
-  const nextMin = isStrictlyPositive
-    ? Math.max(floorLimit, Math.min(slider.min, Math.floor(val * 10) / 10))
-    : Math.min(slider.min, Math.floor(val * 10) / 10);
+  const rawMin = val < slider.min ? Math.floor(val * 10) / 10 : slider.min;
+  const nextMin = isStrictlyPositive ? Math.max(floorLimit, rawMin) : rawMin;
+  const nextMax = val > slider.max ? Math.ceil(val * 10) / 10 : slider.max;
   return {
     ...slider,
     min: nextMin,
-    max: Math.max(slider.max, Math.ceil(val * 10) / 10),
+    max: Math.max(nextMin, nextMax),
     value: val,
     playing: false,
   };

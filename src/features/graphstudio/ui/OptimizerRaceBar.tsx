@@ -52,8 +52,15 @@ export function OptimizerRaceBar({ storeState }: RaceBarProps): JSX.Element {
   useEffect(() => {
     if (!optionsOpen || typeof window === 'undefined') return;
     const close = (): void => setOptionsOpen(false);
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOptionsOpen(false);
+    };
     window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, [optionsOpen]);
 
   const anyDiverged = Object.values(trajectories).some((traj) =>

@@ -101,41 +101,91 @@ export function getDefaultSliderBounds(
   role: SymbolRole,
   restrictedBounds?: { min: number; max: number; step: number; defaultValue: number } | boolean
 ): { min: number; max: number; step: number; defaultValue: number } {
+  const resolvedRestricted =
+    typeof restrictedBounds === 'object' && restrictedBounds !== null
+      ? restrictedBounds
+      : restrictedBounds === true
+        ? { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 }
+        : undefined;
+
+  const mergeWithRestricted = (base: {
+    min: number;
+    max: number;
+    step: number;
+    defaultValue: number;
+  }): { min: number; max: number; step: number; defaultValue: number } => {
+    if (!resolvedRestricted) return base;
+    // If base heuristic range (e.g. L in [1, 10]) is completely above a unit domain [-1, 1],
+    // fall back to the restricted domain instead of collapsing to a degenerate [1, 1] point.
+    if (resolvedRestricted.max <= base.min) {
+      return { ...resolvedRestricted };
+    }
+    const min = Math.max(base.min, resolvedRestricted.min);
+    const max =
+      resolvedRestricted.max <= 1.0 || resolvedRestricted.min < 0
+        ? Math.max(min, Math.min(base.max, resolvedRestricted.max))
+        : Math.max(min, base.max);
+    const step =
+      max - min <= 2.0 ? Math.min(base.step, resolvedRestricted.step) : base.step;
+    let defaultValue = Math.min(Math.max(base.defaultValue, min), max);
+    if (
+      resolvedRestricted.max <= 1.0 &&
+      (defaultValue <= min || defaultValue >= max) &&
+      max > min
+    ) {
+      const mid = Math.round(((min + max) * 0.5) / step) * step;
+      defaultValue = Math.min(Math.max(Number(mid.toFixed(4)), min), max);
+    }
+    return { min, max, step, defaultValue };
+  };
+
   if (name === 'sigma') {
-    return { min: 0.1, max: 5.0, step: 0.05, defaultValue: 1.0 };
+    return mergeWithRestricted({ min: 0.1, max: 5.0, step: 0.05, defaultValue: 1.0 });
   }
   if (name === 'eta' || name === 'lambda' || name === 'tau') {
-    return { min: 0.001, max: 2.0, step: 0.01, defaultValue: name === 'tau' ? 0.5 : 0.1 };
+    return mergeWithRestricted({
+      min: 0.001,
+      max: 2.0,
+      step: 0.01,
+      defaultValue: name === 'tau' ? 0.5 : 0.1,
+    });
   }
   if (name === 'epsilon') {
-    return { min: 0.0001, max: 1.0, step: 0.001, defaultValue: 0.01 };
+    return mergeWithRestricted({ min: 0.0001, max: 1.0, step: 0.001, defaultValue: 0.01 });
   }
   if (name === 'd_k' || name === 'd_v' || name === 'd_model') {
-    return { min: 0.5, max: 64.0, step: 0.5, defaultValue: 4.0 };
+    return mergeWithRestricted({ min: 0.5, max: 64.0, step: 0.5, defaultValue: 4.0 });
   }
   if (name === 'delta') {
-    return { min: 0.05, max: 5.0, step: 0.05, defaultValue: 1.0 };
+    return mergeWithRestricted({ min: 0.05, max: 5.0, step: 0.05, defaultValue: 1.0 });
   }
   if (name === 'L') {
-    return { min: 1, max: 10, step: 1, defaultValue: 4 };
+    return mergeWithRestricted({ min: 1, max: 10, step: 1, defaultValue: 4 });
   }
   if (name === 'alpha' || name === 'beta') {
-    return { min: 0.01, max: 5.0, step: 0.05, defaultValue: name === 'alpha' ? 0.2 : 1.0 };
+    return mergeWithRestricted({
+      min: 0.01,
+      max: 5.0,
+      step: 0.05,
+      defaultValue: name === 'alpha' ? 0.2 : 1.0,
+    });
   }
   if (name === 't') {
-    return { min: 0, max: 1, step: 0.01, defaultValue: 1.0 };
+    return mergeWithRestricted({ min: 0, max: 1, step: 0.01, defaultValue: 1.0 });
   }
   if (name.startsWith('N_') || name === 'N' || name.startsWith('K_') || name === 'K') {
-    return { min: 1, max: 100, step: 1, defaultValue: name === 'K' || name.startsWith('K_') ? 3 : 10 };
+    return mergeWithRestricted({
+      min: 1,
+      max: 100,
+      step: 1,
+      defaultValue: name === 'K' || name.startsWith('K_') ? 3 : 10,
+    });
   }
   if (name === 'TSS' || name.includes('ref') || name.includes('train') || name.includes('global')) {
-    return { min: 0.1, max: 50.0, step: 0.1, defaultValue: 1.0 };
+    return mergeWithRestricted({ min: 0.1, max: 50.0, step: 0.1, defaultValue: 1.0 });
   }
-  if (typeof restrictedBounds === 'object' && restrictedBounds !== null) {
-    return restrictedBounds;
-  }
-  if (restrictedBounds === true) {
-    return { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 };
+  if (resolvedRestricted) {
+    return resolvedRestricted;
   }
   if (role === 'hyperparam') {
     return { min: 0.01, max: 5.0, step: 0.05, defaultValue: 0.5 };
@@ -394,6 +444,43 @@ export function classifyLatexExpression(
     string,
     { min: number; max: number; step: number; defaultValue: number }
   >();
+  const POSITIVE_RESTRICTION = {
+    min: 0.01,
+    max: 10.0,
+    step: 0.05,
+    defaultValue: 1.0,
+  };
+  const UNIT_RESTRICTION = {
+    min: -1.0,
+    max: 1.0,
+    step: 0.01,
+    defaultValue: 0.0,
+  };
+
+  function mergeDomainRestriction(
+    symbolName: string,
+    incoming: { min: number; max: number; step: number; defaultValue: number }
+  ): void {
+    const existing = domainRestrictedSymbols.get(symbolName);
+    if (!existing) {
+      domainRestrictedSymbols.set(symbolName, { ...incoming });
+      return;
+    }
+    const min = Math.max(existing.min, incoming.min);
+    const max = Math.max(min, Math.min(existing.max, incoming.max));
+    const step = Math.min(existing.step, incoming.step);
+    let defaultValue = existing.defaultValue;
+    if (
+      defaultValue <= min ||
+      defaultValue >= max ||
+      incoming.defaultValue <= min ||
+      incoming.defaultValue >= max
+    ) {
+      defaultValue = Math.round(((min + max) * 0.5) / step) * step;
+      defaultValue = Math.min(Math.max(Number(defaultValue.toFixed(4)), min), max);
+    }
+    domainRestrictedSymbols.set(symbolName, { min, max, step, defaultValue });
+  }
 
   function scanDomainRestrictions(node: MathJsonExpr): void {
     if (typeof node === 'number' || typeof node === 'string') return;
@@ -403,7 +490,7 @@ export function classifyLatexExpression(
         const denLeaves = new Set<string>();
         collectLeafSymbols(node[2], denLeaves);
         for (const s of denLeaves) {
-          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+          mergeDomainRestriction(s, POSITIVE_RESTRICTION);
         }
       } else if (
         (head === 'Sqrt' ||
@@ -417,13 +504,13 @@ export function classifyLatexExpression(
         const argLeaves = new Set<string>();
         collectLeafSymbols(node[1], argLeaves);
         for (const s of argLeaves) {
-          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+          mergeDomainRestriction(s, POSITIVE_RESTRICTION);
         }
       } else if (head === 'SafeXLogY' && node.length >= 3) {
         const argLeaves = new Set<string>();
         collectLeafSymbols(node[2], argLeaves);
         for (const s of argLeaves) {
-          domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+          mergeDomainRestriction(s, POSITIVE_RESTRICTION);
         }
       } else if (head === 'Power' && node.length >= 3) {
         const exponent = node[2];
@@ -434,7 +521,7 @@ export function classifyLatexExpression(
           const baseLeaves = new Set<string>();
           collectLeafSymbols(node[1], baseLeaves);
           for (const s of baseLeaves) {
-            domainRestrictedSymbols.set(s, { min: 0.01, max: 10.0, step: 0.05, defaultValue: 1.0 });
+            mergeDomainRestriction(s, POSITIVE_RESTRICTION);
           }
         }
       } else if (
@@ -445,7 +532,7 @@ export function classifyLatexExpression(
         collectLeafSymbols(node[1], argLeaves);
         for (const s of argLeaves) {
           if (!DATA_VARS.has(s) && s !== leadingFormalParam && s !== 'x' && s !== 'y') {
-            domainRestrictedSymbols.set(s, { min: -1.0, max: 1.0, step: 0.01, defaultValue: 0.0 });
+            mergeDomainRestriction(s, UNIT_RESTRICTION);
           }
         }
       }

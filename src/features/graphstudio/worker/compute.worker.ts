@@ -28,7 +28,10 @@ import {
   type PredictorModel,
   resolveSurfaceParamPair,
 } from '../core/simulation/loss-evaluator';
-import { runOptimizerRace } from '../core/simulation/optimizers';
+import {
+  isBoundedDomainParam,
+  runOptimizerRace,
+} from '../core/simulation/optimizers';
 import type { MathJsonExpr, SymbolRole, UserFunctionRegistry } from '../types/math';
 import type { CurveRenderPacket } from '../types/state';
 import { createDoubleBufferPool } from './double-buffer';
@@ -44,6 +47,7 @@ interface CachedExpressionEntry {
   secondDerivLatex?: string;
   paramNames?: string[];
   paramGradKernels?: Record<string, (x: number, params: Record<string, number>) => number>;
+  defaultParamBounds?: Record<string, { min: number; max: number }>;
   isCustomPredictor?: boolean;
 }
 
@@ -128,6 +132,13 @@ function getOrCompileExpression(
     }
   }
 
+  const defaultParamBounds: Record<string, { min: number; max: number }> = {};
+  for (const sym of classified.symbols) {
+    if (sym.role === 'param' || sym.role === 'hyperparam') {
+      defaultParamBounds[sym.name] = { min: sym.defaultMin, max: sym.defaultMax };
+    }
+  }
+
   const entry: CachedExpressionEntry = {
     latex,
     valid: true,
@@ -137,6 +148,7 @@ function getOrCompileExpression(
     secondDerivLatex: mathJsonToLatex(d2Ast),
     paramNames,
     paramGradKernels,
+    defaultParamBounds,
     isCustomPredictor,
   };
 
@@ -281,6 +293,28 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     req.expressions[0];
   const targetCompiled = targetExpr ? compiledByExprId.get(targetExpr.id) : undefined;
 
+  let effectiveParamBounds: Record<string, { min: number; max: number }> | undefined;
+  if (targetCompiled?.defaultParamBounds || req.paramBounds) {
+    effectiveParamBounds = {
+      ...(targetCompiled?.defaultParamBounds ?? {}),
+      ...(req.paramBounds ?? {}),
+    };
+    if (targetCompiled?.defaultParamBounds && req.paramBounds) {
+      for (const [k, astB] of Object.entries(targetCompiled.defaultParamBounds)) {
+        const reqB = req.paramBounds[k];
+        if (!reqB) continue;
+        if (isBoundedDomainParam(k, astB)) {
+          const min = Math.max(astB.min, reqB.min);
+          const max =
+            astB.max <= 1.0
+              ? Math.max(min, Math.min(astB.max, reqB.max))
+              : Math.max(min, reqB.max);
+          effectiveParamBounds[k] = { min, max };
+        }
+      }
+    }
+  }
+
   let predictor: PredictorModel | undefined;
   if (
     targetCompiled &&
@@ -294,7 +328,7 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
       paramGradKernels: targetCompiled.paramGradKernels ?? {},
       paramNames: targetCompiled.paramNames ?? [],
       baseParams: req.paramValues,
-      paramBounds: req.paramBounds,
+      paramBounds: effectiveParamBounds,
       w1Key,
       w2Key,
       isCustomPredictor: true,
@@ -357,7 +391,7 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     req.regularizationKind,
     req.subgradConvention,
     predictor,
-    req.paramBounds
+    effectiveParamBounds
   );
 
   let linkedBrushPull: ComputeJobResponse['linkedBrushPull'];

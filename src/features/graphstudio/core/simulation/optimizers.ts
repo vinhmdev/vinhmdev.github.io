@@ -33,7 +33,17 @@ const POSITIVE_DOMAIN_BOUNDS: Record<string, number> = {
   tau: 0.001,
   epsilon: 0.0001,
   delta: 0.01,
+  gamma: 0.01,
 };
+
+export function isBoundedDomainParam(
+  name: string,
+  bounds?: { min: number; max: number }
+): boolean {
+  if (POSITIVE_DOMAIN_BOUNDS[name] !== undefined) return true;
+  if (!bounds) return false;
+  return bounds.min >= 0 || (bounds.min >= -1.0 && bounds.max <= 1.0);
+}
 
 export function projectParam(
   name: string,
@@ -43,11 +53,22 @@ export function projectParam(
   if (!Number.isFinite(val)) return val;
   let clamped = val;
   const fallbackMin = POSITIVE_DOMAIN_BOUNDS[name];
+  const hasRestrictedDomain = isBoundedDomainParam(name, bounds);
+  let effectiveMin: number | undefined;
   if (fallbackMin !== undefined) {
-    const minBound = bounds?.min !== undefined ? Math.max(fallbackMin, bounds.min) : fallbackMin;
-    clamped = Math.max(minBound, clamped);
-  } else if (bounds?.min !== undefined && bounds.min >= 0) {
-    clamped = Math.max(bounds.min, clamped);
+    effectiveMin =
+      bounds?.min !== undefined && bounds.min > 0
+        ? Math.max(fallbackMin, bounds.min)
+        : fallbackMin;
+    clamped = Math.max(effectiveMin, clamped);
+  } else if (hasRestrictedDomain && bounds?.min !== undefined) {
+    effectiveMin = bounds.min;
+    clamped = Math.max(effectiveMin, clamped);
+  }
+  if (hasRestrictedDomain && bounds?.max !== undefined) {
+    const effectiveMax =
+      effectiveMin !== undefined ? Math.max(effectiveMin, bounds.max) : bounds.max;
+    clamped = Math.min(effectiveMax, clamped);
   }
   return clamped;
 }
@@ -106,13 +127,16 @@ export function runOptimizerRace(
       )
     : [];
   const hasMultiParams = extraKeys.length > 0;
+  const effectiveBounds = predictor?.paramBounds ?? paramBounds;
+  const w1Name = predictor?.w1Key ?? 'w';
+  const w2Name = predictor?.w2Key ?? 'b';
 
   for (const optId of optIds) {
     if (!config.enabledOptimizers[optId]) continue;
 
     const traj: OptimizerTrajectoryStep[] = [];
-    let w1 = config.startW1;
-    let w2 = config.startW2;
+    let w1 = projectParam(w1Name, config.startW1, effectiveBounds?.[w1Name]);
+    let w2 = projectParam(w2Name, config.startW2, effectiveBounds?.[w2Name]);
     let m1 = 0.0;
     let m2 = 0.0;
     let v1 = 0.0;
@@ -124,7 +148,11 @@ export function runOptimizerRace(
     const extraV: Record<string, number> = {};
     if (hasMultiParams && predictor) {
       for (const k of extraKeys) {
-        extraVals[k] = predictor.baseParams[k] ?? 0.0;
+        extraVals[k] = projectParam(
+          k,
+          predictor.baseParams[k] ?? 0.0,
+          effectiveBounds?.[k]
+        );
         extraM[k] = 0.0;
         extraV[k] = 0.0;
       }
@@ -149,8 +177,16 @@ export function runOptimizerRace(
       let nagLookW1: number | undefined;
       let nagLookW2: number | undefined;
       if (optId === 'momentum' && config.useNesterov) {
-        nagLookW1 = w1 + hyper.beta1 * m1;
-        nagLookW2 = w2 + hyper.beta1 * m2;
+        nagLookW1 = projectParam(
+          w1Name,
+          w1 + hyper.beta1 * m1,
+          effectiveBounds?.[w1Name]
+        );
+        nagLookW2 = projectParam(
+          w2Name,
+          w2 + hyper.beta1 * m2,
+          effectiveBounds?.[w2Name]
+        );
       }
 
       const stepParams: Record<string, number> | undefined = predictor
@@ -200,7 +236,11 @@ export function runOptimizerRace(
             : undefined;
           if (hasMultiParams && nagExtra) {
             for (const k of extraKeys) {
-              nagExtra[k] = extraVals[k] + hyper.beta1 * extraM[k];
+              nagExtra[k] = projectParam(
+                k,
+                extraVals[k] + hyper.beta1 * extraM[k],
+                effectiveBounds?.[k]
+              );
             }
           }
           const lookEval = evaluateEmpiricalLossAndGrad(
@@ -282,9 +322,6 @@ export function runOptimizerRace(
         }
       }
 
-      const effectiveBounds = predictor?.paramBounds ?? paramBounds;
-      const w1Name = predictor?.w1Key ?? 'w';
-      const w2Name = predictor?.w2Key ?? 'b';
       w1 = projectParam(w1Name, w1, effectiveBounds?.[w1Name]);
       w2 = projectParam(w2Name, w2, effectiveBounds?.[w2Name]);
       if (hasMultiParams) {
