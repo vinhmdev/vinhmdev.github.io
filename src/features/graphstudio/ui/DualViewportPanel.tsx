@@ -115,11 +115,14 @@ export function DualViewportPanel({
   const [rightToolsOpen, setRightToolsOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!rightToolsOpen || typeof window === 'undefined') return;
-    const closeRightMenu = (): void => setRightToolsOpen(false);
-    window.addEventListener('click', closeRightMenu);
-    return () => window.removeEventListener('click', closeRightMenu);
-  }, [rightToolsOpen]);
+    if ((!leftToolsOpen && !rightToolsOpen) || typeof window === 'undefined') return;
+    const closeMenus = (): void => {
+      setLeftToolsOpen(false);
+      setRightToolsOpen(false);
+    };
+    window.addEventListener('click', closeMenus);
+    return () => window.removeEventListener('click', closeMenus);
+  }, [leftToolsOpen, rightToolsOpen]);
 
   const glRendererRef = useRef<WebGL2SurfaceRenderer | null>(null);
   const glCanvasBoundRef = useRef<HTMLCanvasElement | null>(null);
@@ -856,7 +859,10 @@ export function DualViewportPanel({
               </div>
 
               {/* Right: Compact Whiteboard Dropdown / Popover Toolbar */}
-              <div class="relative flex flex-col items-end pointer-events-auto shrink-0">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                class="relative flex flex-col items-end pointer-events-auto shrink-0"
+              >
                 <button
                   type="button"
                   onClick={() => setLeftToolsOpen((prev) => !prev)}
@@ -1225,7 +1231,13 @@ export function DualViewportPanel({
                 </button>
 
                 {rightToolsOpen && (
-                  <div class="absolute right-0 top-full mt-1.5 z-30 w-64 max-w-[calc(100vw-1.5rem)] max-h-[min(220px,45vh)] sm:max-h-[min(320px,55vh)] overflow-y-auto overscroll-contain p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
+                  <div
+                    class={`absolute right-0 top-full mt-1.5 z-30 w-64 max-w-[calc(100vw-1.5rem)] ${
+                      graph.viewMode === 'dual'
+                        ? 'max-h-[min(175px,31vh)]'
+                        : 'max-h-[min(220px,45vh)]'
+                    } sm:max-h-[min(320px,55vh)] overflow-y-auto overscroll-contain p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs`}
+                  >
                     <label class="flex flex-col gap-1">
                       <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                         Right Space Mode

@@ -631,12 +631,12 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                     class="w-0 min-w-[2.5rem] flex-1 max-w-[180px] text-ellipsis px-1.5 py-0.5 rounded border border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-orange-500 focus:bg-neutral-50 dark:focus:bg-neutral-950 bg-transparent font-semibold text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none transition-colors"
                   />
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-0.5 sm:gap-1 shrink-0">
                   {/* Loss Fitting Target Toggle */}
                   <button
                     type="button"
                     onClick={() => storeState.setExpressionFitLoss(expr.id)}
-                    class={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-colors ${
+                    class={`inline-flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-colors ${
                       isFitTarget
                         ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/50'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'
@@ -649,7 +649,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showFirstDerivative')}
-                    class={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
+                    class={`inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
                       expr.showFirstDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-orange-500'
@@ -661,7 +661,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'showSecondDerivative')}
-                    class={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
+                    class={`inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 rounded text-[11px] font-mono border transition-colors ${
                       expr.showSecondDerivative
                         ? 'bg-orange-500 text-white border-orange-500'
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-orange-500'
@@ -673,7 +673,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.toggleExpressionProp(expr.id, 'visible')}
-                    class={`p-1 rounded ${expr.visible ? 'text-orange-500' : 'text-neutral-400'}`}
+                    class={`p-0.5 sm:p-1 rounded ${expr.visible ? 'text-orange-500' : 'text-neutral-400'}`}
                     title={expr.visible ? 'Hide curve' : 'Show curve'}
                   >
                     {expr.visible ? <IconEye /> : <IconEyeOff />}
@@ -681,7 +681,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                   <button
                     type="button"
                     onClick={() => storeState.removeExpression(expr.id)}
-                    class="p-1 rounded text-neutral-400 hover:text-red-500"
+                    class="p-0.5 sm:p-1 rounded text-neutral-400 hover:text-red-500"
                     title={t('delete_expression') || 'Delete expression'}
                   >
                     <IconTrash />
