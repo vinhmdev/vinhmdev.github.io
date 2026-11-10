@@ -289,7 +289,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
         {showQuickPresets && (
           <div
             onClick={(e) => e.stopPropagation()}
-            class="absolute left-0 right-0 top-full mt-1.5 z-40 w-full max-h-80 overflow-y-auto p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col gap-2 text-xs"
+            class="absolute left-0 right-0 top-full mt-1.5 z-40 w-full max-h-48 sm:max-h-80 overflow-y-auto p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col gap-2 text-xs"
           >
             {QUICK_FORMULA_GROUPS.map((grp) => (
               <div key={grp.groupKey} class="flex flex-col gap-0.5">
@@ -449,14 +449,14 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         role="menu"
                         data-testid={`expr-style-popover-${expr.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        class="absolute left-0 top-full mt-1.5 z-40 w-56 p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col gap-2.5 text-[11px]"
+                        class="absolute left-0 top-full mt-1 z-40 w-60 max-h-[min(155px,28vh)] sm:max-h-none overflow-y-auto overscroll-contain p-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col gap-1.5 text-[11px]"
                       >
                         {/* 1. Line Color Swatches + Custom Picker */}
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-0.5">
                           <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                             {t('style_color_label') || 'Line Color'}
                           </span>
-                          <div class="flex flex-wrap items-center gap-1.5">
+                          <div class="flex flex-wrap items-center gap-1">
                             {EXPRESSION_COLORS.map((swatch) => {
                               const isSelected =
                                 expr.color.toLowerCase() === swatch.toLowerCase();
@@ -467,7 +467,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                                   onClick={() =>
                                     storeState.updateExpressionStyle(expr.id, { color: swatch })
                                   }
-                                  class={`w-5 h-5 rounded-full border transition-transform ${
+                                  class={`w-4 h-4 rounded-full border transition-transform ${
                                     isSelected
                                       ? 'scale-110 ring-2 ring-orange-500 border-white dark:border-neutral-900'
                                       : 'border-neutral-300 dark:border-neutral-700 hover:scale-105'
@@ -479,7 +479,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                               );
                             })}
                             <label
-                              class="relative inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-neutral-400 dark:border-neutral-600 cursor-pointer hover:border-orange-500 overflow-hidden"
+                              class="relative inline-flex items-center justify-center w-4 h-4 rounded-full border border-dashed border-neutral-400 dark:border-neutral-600 cursor-pointer hover:border-orange-500 overflow-hidden"
                               title="Custom color"
                             >
                               <span class="text-[9px] font-bold text-neutral-500">+</span>
@@ -499,7 +499,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         </div>
 
                         {/* 2. Line Dash Style: Solid, Dashed, Dotted */}
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-0.5">
                           <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                             {t('style_dash_label') || 'Line Style'}
                           </span>
@@ -533,20 +533,20 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                                       lineStyle: opt.id,
                                     })
                                   }
-                                  class={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded border text-[10px] font-medium transition-colors ${
+                                  class={`flex items-center justify-center gap-1 py-1 px-1 rounded border text-[10px] font-medium transition-colors ${
                                     active
                                       ? 'border-orange-500 bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold'
                                       : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
                                   }`}
                                 >
-                                  <svg class="w-8 h-2 overflow-visible" viewBox="0 0 32 6">
+                                  <svg class="w-4 h-2 overflow-visible shrink-0" viewBox="0 0 18 6">
                                     <line
-                                      x1="2"
+                                      x1="1"
                                       y1="3"
-                                      x2="30"
+                                      x2="17"
                                       y2="3"
                                       stroke={expr.color}
-                                      stroke-width="2.4"
+                                      stroke-width="2.2"
                                       stroke-linecap="round"
                                       stroke-dasharray={opt.dash}
                                     />
@@ -559,7 +559,7 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                         </div>
 
                         {/* 3. Line Thickness / Weight: Thin (1.6), Normal (2.6), Bold (4.2) */}
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-0.5">
                           <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                             {t('style_weight_label') || 'Line Weight'}
                           </span>
@@ -590,17 +590,17 @@ export function ExpressionSidebar({ storeState }: SidebarProps): JSX.Element {
                                       lineWidth: wOpt.width,
                                     })
                                   }
-                                  class={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded border text-[10px] font-medium transition-colors ${
+                                  class={`flex items-center justify-center gap-1 py-1 px-1 rounded border text-[10px] font-medium transition-colors ${
                                     active
                                       ? 'border-orange-500 bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold'
                                       : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
                                   }`}
                                 >
-                                  <svg class="w-8 h-2.5 overflow-visible" viewBox="0 0 32 8">
+                                  <svg class="w-4 h-2.5 overflow-visible shrink-0" viewBox="0 0 18 8">
                                     <line
-                                      x1="2"
+                                      x1="1"
                                       y1="4"
-                                      x2="30"
+                                      x2="17"
                                       y2="4"
                                       stroke={expr.color}
                                       stroke-width={wOpt.width}

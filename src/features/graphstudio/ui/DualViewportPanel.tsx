@@ -766,7 +766,7 @@ export function DualViewportPanel({
             {/* Top-Left & Top-Right Overlay Controls: Compact & Decluttered */}
             <div class="absolute top-2 left-2 right-2 z-20 flex items-start justify-between gap-1.5 pointer-events-none text-[11px]">
               {/* Left Compact Pill Row: Reset, 1:1, Tangent Probe */}
-              <div class="flex items-center gap-1 pointer-events-auto">
+              <div class="flex flex-wrap items-center gap-1 pointer-events-auto">
                 {renderPaneMaximizeBtn('data')}
                 <button
                   type="button"
@@ -775,7 +775,7 @@ export function DualViewportPanel({
                   title={t('reset_view_tooltip')}
                 >
                   <IconTarget class="w-3 h-3" />
-                  <span class="hidden sm:inline">{t('reset_view_btn')}</span>
+                  <span class="hidden xl:inline">{t('reset_view_btn')}</span>
                 </button>
                 <button
                   type="button"
@@ -870,7 +870,7 @@ export function DualViewportPanel({
                   aria-label={t('wb_menu_btn')}
                 >
                   <span aria-hidden="true">✏️</span>
-                  <span class="hidden sm:inline">{t('wb_menu_btn')}</span>
+                  <span class="hidden xl:inline">{t('wb_menu_btn')}</span>
                   <span>{leftToolsOpen || whiteboardTool !== 'cursor' ? '▴' : '▾'}</span>
                 </button>
 
@@ -1164,7 +1164,7 @@ export function DualViewportPanel({
                     title={t('reset_view_tooltip')}
                   >
                     <IconTarget class="w-3 h-3" />
-                    <span class="hidden sm:inline">{t('reset_view_btn')}</span>
+                    <span class="hidden xl:inline">{t('reset_view_btn')}</span>
                   </button>
                 )}
                 <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
@@ -1220,12 +1220,12 @@ export function DualViewportPanel({
                   title={t('view3d_options_btn')}
                 >
                   <span>⚙️</span>
-                  <span class="hidden sm:inline">{t('view3d_options_btn')}</span>
+                  <span class="hidden xl:inline">{t('view3d_options_btn')}</span>
                   <span>{rightToolsOpen ? '▴' : '▾'}</span>
                 </button>
 
                 {rightToolsOpen && (
-                  <div class="absolute right-0 top-full mt-1.5 z-30 w-64 max-w-[calc(100vw-1.5rem)] max-h-[min(320px,55vh)] overflow-y-auto overscroll-contain p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
+                  <div class="absolute right-0 top-full mt-1.5 z-30 w-64 max-w-[calc(100vw-1.5rem)] max-h-[min(220px,45vh)] sm:max-h-[min(320px,55vh)] overflow-y-auto overscroll-contain p-2.5 rounded-lg bg-white/95 dark:bg-neutral-900/95 border border-neutral-200 dark:border-neutral-700 shadow-xl flex flex-col gap-2 text-xs">
                     <label class="flex flex-col gap-1">
                       <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                         Right Space Mode
