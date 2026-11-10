@@ -18,6 +18,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
   const [csvText, setCsvText] = useState('');
   const [showCsvBox, setShowCsvBox] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsMenuUpward, setActionsMenuUpward] = useState(true);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   useEffect(() => {
@@ -112,6 +113,17 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
               aria-expanded={actionsMenuOpen}
               onClick={(e) => {
                 e.stopPropagation();
+                const btnEl = e.currentTarget as HTMLElement;
+                const asideEl = btnEl.closest('aside');
+                if (asideEl) {
+                  const br = btnEl.getBoundingClientRect();
+                  const ar = asideEl.getBoundingClientRect();
+                  const spaceBelow = ar.bottom - br.bottom;
+                  const spaceAbove = br.top - ar.top;
+                  setActionsMenuUpward(spaceBelow < 185 && spaceAbove >= spaceBelow);
+                } else {
+                  setActionsMenuUpward(true);
+                }
                 setActionsMenuOpen((prev) => !prev);
               }}
               class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium transition-colors ${
@@ -128,7 +140,9 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             {actionsMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                class="absolute right-0 top-full mt-1 z-40 w-56 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]"
+                class={`absolute right-0 ${
+                  actionsMenuUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+                } z-40 w-56 max-h-[min(170px,30vh)] sm:max-h-56 overflow-y-auto overscroll-contain py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]`}
               >
                 <button
                   type="button"
