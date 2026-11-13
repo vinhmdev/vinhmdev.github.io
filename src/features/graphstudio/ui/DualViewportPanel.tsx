@@ -50,12 +50,13 @@ import {
   IconCursor,
   IconEraser,
   IconHighlighter,
-  IconHome,
   IconMaximize,
   IconMinimize,
   IconPen,
+  IconRedo,
   IconTarget,
   IconTrash,
+  IconUndo,
 } from './icons';
 
 interface DualViewportProps {
@@ -97,6 +98,8 @@ export function DualViewportPanel({
     whiteboardTool,
     whiteboardColor,
     whiteboardStrokes,
+    whiteboardUndoStack,
+    whiteboardRedoStack,
   } = storeState;
 
   const leftContainerRef = useRef<HTMLDivElement>(null);
@@ -129,8 +132,16 @@ export function DualViewportPanel({
   const draggingPointIdRef = useRef<string | null>(null);
   const isPanningLeftRef = useRef(false);
   const isBrushingLeftRef = useRef(false);
+  const pendingTouchBrushLeftRef = useRef<{
+    pointerId: number;
+    sx: number;
+    sy: number;
+    wx: number;
+    wy: number;
+  } | null>(null);
   const isDraggingProbeLeftRef = useRef(false);
   const isErasingWhiteboardRef = useRef(false);
+  const eraseSnapshotRecordedRef = useRef(false);
   const draftStrokeRef = useRef<WhiteboardStroke | null>(null);
   const lastMouseLeftRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchMapLeftRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -138,7 +149,16 @@ export function DualViewportPanel({
   const prevLeftSizeRef = useRef<{ width: number; height: number } | null>(null);
 
   const rightDragModeRef = useRef<'none' | 'param' | 'orbit' | 'reg_radius'>('none');
+  const pendingTouchParamRightRef = useRef<{
+    pointerId: number;
+    sx: number;
+    sy: number;
+    wx: number;
+    wy: number;
+  } | null>(null);
   const lastMouseRightRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const touchMapRightRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const prevPinchDistRightRef = useRef<number | null>(null);
 
   const showLeft =
     graph.viewMode === 'inference' ||
@@ -560,15 +580,26 @@ export function DualViewportPanel({
                 const sx = e.clientX - rect.left;
                 const sy = e.clientY - rect.top;
 
-                touchMapLeftRef.current.set(e.pointerId, { x: sx, y: sy });
-                if (touchMapLeftRef.current.size === 2) {
-                  const pts = Array.from(touchMapLeftRef.current.values());
-                  prevPinchDistLeftRef.current = Math.hypot(
-                    pts[1].x - pts[0].x,
-                    pts[1].y - pts[0].y
-                  );
-                  isPanningLeftRef.current = false;
-                  return;
+                if (e.pointerType === 'touch') {
+                  touchMapLeftRef.current.set(e.pointerId, { x: sx, y: sy });
+                  if (touchMapLeftRef.current.size >= 2) {
+                    const pts = Array.from(touchMapLeftRef.current.values());
+                    prevPinchDistLeftRef.current = Math.hypot(
+                      pts[1].x - pts[0].x,
+                      pts[1].y - pts[0].y
+                    );
+                    isPanningLeftRef.current = false;
+                    isBrushingLeftRef.current = false;
+                    pendingTouchBrushLeftRef.current = null;
+                    draggingPointIdRef.current = null;
+                    isDraggingProbeLeftRef.current = false;
+                    isErasingWhiteboardRef.current = false;
+                    if (draftStrokeRef.current) {
+                      draftStrokeRef.current = null;
+                      setDraftStroke(null);
+                    }
+                    return;
+                  }
                 }
 
                 // Whiteboard Freehand Pen / Highlighter / Eraser Mode
@@ -588,18 +619,30 @@ export function DualViewportPanel({
 
                 if (whiteboardTool === 'eraser') {
                   isErasingWhiteboardRef.current = true;
-                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
-                  const radiusWorld =
-                    ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
-                  storeState.eraseWhiteboardAt(wx, wy, radiusWorld);
+                  eraseSnapshotRecordedRef.current = false;
+                  if (e.pointerType !== 'touch') {
+                    const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                    const radiusWorld =
+                      ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
+                    if (storeState.eraseWhiteboardAt(wx, wy, radiusWorld, true)) {
+                      eraseSnapshotRecordedRef.current = true;
+                    }
+                  }
                   return;
                 }
 
                 if (brushActive) {
-                  isBrushingLeftRef.current = true;
                   lastMouseLeftRef.current = { x: sx, y: sy };
                   const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
-                  storeState.addDataPoint({ x: wx, y: wy, split: 'train' });
+                  if (e.pointerType === 'touch') {
+                    // Defer initial spray point until 1-finger drag (> 6px) or 1-finger tap release
+                    // so a 2-finger pinch never sprays an accidental data point!
+                    pendingTouchBrushLeftRef.current = { pointerId: e.pointerId, sx, sy, wx, wy };
+                    isBrushingLeftRef.current = true;
+                  } else {
+                    isBrushingLeftRef.current = true;
+                    storeState.addDataPoint({ x: wx, y: wy, split: 'train' });
+                  }
                   return;
                 }
 
@@ -643,7 +686,7 @@ export function DualViewportPanel({
                 }
 
                 // 2-Finger Touch Pinch-to-Zoom
-                if (touchMapLeftRef.current.size === 2) {
+                if (touchMapLeftRef.current.size >= 2) {
                   const pts = Array.from(touchMapLeftRef.current.values());
                   const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                   if (prevPinchDistLeftRef.current && dist > 8) {
@@ -673,11 +716,28 @@ export function DualViewportPanel({
                   const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
                   const radiusWorld =
                     ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
-                  storeState.eraseWhiteboardAt(wx, wy, radiusWorld);
+                  if (
+                    storeState.eraseWhiteboardAt(
+                      wx,
+                      wy,
+                      radiusWorld,
+                      !eraseSnapshotRecordedRef.current
+                    )
+                  ) {
+                    eraseSnapshotRecordedRef.current = true;
+                  }
                   return;
                 }
 
                 if (isBrushingLeftRef.current && brushActive) {
+                  if (pendingTouchBrushLeftRef.current) {
+                    const pending = pendingTouchBrushLeftRef.current;
+                    if (Math.hypot(sx - pending.sx, sy - pending.sy) <= 6) {
+                      return;
+                    }
+                    pendingTouchBrushLeftRef.current = null;
+                    storeState.addDataPoint({ x: pending.wx, y: pending.wy, split: 'train' });
+                  }
                   const distPx = Math.hypot(
                     sx - lastMouseLeftRef.current.x,
                     sy - lastMouseLeftRef.current.y
@@ -729,12 +789,37 @@ export function DualViewportPanel({
                 if (touchMapLeftRef.current.size < 2) {
                   prevPinchDistLeftRef.current = null;
                 }
+                if (
+                  pendingTouchBrushLeftRef.current &&
+                  pendingTouchBrushLeftRef.current.pointerId === e.pointerId
+                ) {
+                  const pending = pendingTouchBrushLeftRef.current;
+                  pendingTouchBrushLeftRef.current = null;
+                  storeState.addDataPoint({ x: pending.wx, y: pending.wy, split: 'train' });
+                }
+                if (
+                  isErasingWhiteboardRef.current &&
+                  whiteboardTool === 'eraser' &&
+                  e.pointerType === 'touch' &&
+                  !eraseSnapshotRecordedRef.current
+                ) {
+                  const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+                  const W = Math.max(rect.width, 1);
+                  const H = Math.max(rect.height, 1);
+                  const sx = e.clientX - rect.left;
+                  const sy = e.clientY - rect.top;
+                  const { wx, wy } = screenToWorld(sx, sy, graph.leftViewport, W, H);
+                  const radiusWorld =
+                    ((graph.leftViewport.xMax - graph.leftViewport.xMin) / W) * 18;
+                  storeState.eraseWhiteboardAt(wx, wy, radiusWorld, true);
+                }
                 if (draftStrokeRef.current) {
                   storeState.addWhiteboardStroke(draftStrokeRef.current);
                   draftStrokeRef.current = null;
                   setDraftStroke(null);
                 }
                 isErasingWhiteboardRef.current = false;
+                eraseSnapshotRecordedRef.current = false;
                 draggingPointIdRef.current = null;
                 isPanningLeftRef.current = false;
                 isBrushingLeftRef.current = false;
@@ -743,9 +828,11 @@ export function DualViewportPanel({
               onPointerCancel={(e) => {
                 touchMapLeftRef.current.delete(e.pointerId);
                 prevPinchDistLeftRef.current = null;
+                pendingTouchBrushLeftRef.current = null;
                 draftStrokeRef.current = null;
                 setDraftStroke(null);
                 isErasingWhiteboardRef.current = false;
+                eraseSnapshotRecordedRef.current = false;
                 draggingPointIdRef.current = null;
                 isPanningLeftRef.current = false;
                 isBrushingLeftRef.current = false;
@@ -802,6 +889,9 @@ export function DualViewportPanel({
                 </button>
                 {(() => {
                   const activePrimaryVar =
+                    curves.find(
+                      (c) => c.exprId === fitLossExprId && c.visible && c.primaryVar
+                    )?.primaryVar ||
                     curves.find((c) => c.visible && c.primaryVar)?.primaryVar ||
                     curves.find((c) => c.primaryVar)?.primaryVar ||
                     'x';
@@ -844,18 +934,20 @@ export function DualViewportPanel({
                     </button>
                   );
                 })()}
-                <button
-                  type="button"
-                  onClick={() => storeState.setShowResiduals(!graph.showResiduals)}
-                  class={`px-1.5 py-0.5 rounded border font-mono font-semibold shadow-2xs transition-colors ${
-                    graph.showResiduals
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
-                  }`}
-                  title={t('residuals_btn')}
-                >
-                  r²
-                </button>
+                {graph.dataPoints.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => storeState.setShowResiduals(!graph.showResiduals)}
+                    class={`px-1.5 py-0.5 rounded border font-mono font-semibold shadow-2xs transition-colors ${
+                      graph.showResiduals
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white/90 dark:bg-neutral-900/90 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+                    }`}
+                    title={t('residuals_btn')}
+                  >
+                    r²
+                  </button>
+                )}
               </div>
 
               {/* Right: Compact Whiteboard Dropdown / Popover Toolbar */}
@@ -930,6 +1022,32 @@ export function DualViewportPanel({
                       ))}
                     </div>
 
+                    {/* Whiteboard Undo / Redo */}
+                    {(whiteboardUndoStack.length > 0 || whiteboardRedoStack.length > 0) && (
+                      <div class="flex items-center gap-0.5 pl-1 border-l border-neutral-200 dark:border-neutral-700">
+                        <button
+                          type="button"
+                          disabled={whiteboardUndoStack.length === 0}
+                          onClick={() => storeState.undoWhiteboard()}
+                          class="flex items-center justify-center w-6 h-6 rounded text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-35"
+                          title={t('wb_undo')}
+                          aria-label={t('wb_undo')}
+                        >
+                          <IconUndo class="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={whiteboardRedoStack.length === 0}
+                          onClick={() => storeState.redoWhiteboard()}
+                          class="flex items-center justify-center w-6 h-6 rounded text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-35"
+                          title={t('wb_redo')}
+                          aria-label={t('wb_redo')}
+                        >
+                          <IconRedo class="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
                     {whiteboardStrokes.length > 0 && (
                       <button
                         type="button"
@@ -944,6 +1062,19 @@ export function DualViewportPanel({
                 )}
               </div>
             </div>
+
+            {/* Active Point Brush Floating Indicator Pill */}
+            {brushActive && (
+              <div class="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-[calc(100%-1rem)]">
+                <button
+                  type="button"
+                  onClick={() => storeState.setBrushActive(false)}
+                  class="px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-semibold shadow-lg border border-orange-400/50 truncate transition-colors"
+                >
+                  {t('brush_active_pill')}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -971,12 +1102,32 @@ export function DualViewportPanel({
               class="absolute inset-0 w-full h-full block cursor-pointer touch-none"
               onPointerDown={(e) => {
                 if (graph.rightViewportMode !== 'loss_surface') return;
-                const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+                const canvasEl = e.currentTarget as HTMLCanvasElement;
+                try {
+                  canvasEl.setPointerCapture?.(e.pointerId);
+                } catch {
+                  /* ignore synthetic pointerId in automated tests */
+                }
+                const rect = canvasEl.getBoundingClientRect();
                 const W = Math.max(rect.width, 1);
                 const H = Math.max(rect.height, 1);
                 const sx = e.clientX - rect.left;
                 const sy = e.clientY - rect.top;
                 lastMouseRightRef.current = { x: sx, y: sy };
+
+                if (e.pointerType === 'touch') {
+                  touchMapRightRef.current.set(e.pointerId, { x: sx, y: sy });
+                  if (touchMapRightRef.current.size >= 2) {
+                    const pts = Array.from(touchMapRightRef.current.values());
+                    prevPinchDistRightRef.current = Math.hypot(
+                      pts[1].x - pts[0].x,
+                      pts[1].y - pts[0].y
+                    );
+                    pendingTouchParamRightRef.current = null;
+                    rightDragModeRef.current = 'none';
+                    return;
+                  }
+                }
 
                 if (e.shiftKey) {
                   rightDragModeRef.current = 'orbit';
@@ -1029,13 +1180,17 @@ export function DualViewportPanel({
                     minLoss,
                     maxLoss
                   );
-                  updateRightParamsFromWorld(wx, wy);
-                  storeState.updateOptimizerRace({
-                    startW1: wx,
-                    startW2: wy,
-                    currentStep: graph.optimizerRace.steps,
-                    playing: false,
-                  });
+                  if (e.pointerType === 'touch') {
+                    pendingTouchParamRightRef.current = { pointerId: e.pointerId, sx, sy, wx, wy };
+                  } else {
+                    updateRightParamsFromWorld(wx, wy);
+                    storeState.updateOptimizerRace({
+                      startW1: wx,
+                      startW2: wy,
+                      currentStep: graph.optimizerRace.steps,
+                      playing: false,
+                    });
+                  }
                   return;
                 }
 
@@ -1052,26 +1207,58 @@ export function DualViewportPanel({
                 }
 
                 rightDragModeRef.current = 'param';
-                updateRightParamsFromWorld(wx, wy);
-                storeState.updateOptimizerRace({
-                  startW1: wx,
-                  startW2: wy,
-                  currentStep: graph.optimizerRace.steps,
-                  playing: false,
-                });
+                if (e.pointerType === 'touch') {
+                  pendingTouchParamRightRef.current = { pointerId: e.pointerId, sx, sy, wx, wy };
+                } else {
+                  updateRightParamsFromWorld(wx, wy);
+                  storeState.updateOptimizerRace({
+                    startW1: wx,
+                    startW2: wy,
+                    currentStep: graph.optimizerRace.steps,
+                    playing: false,
+                  });
+                }
               }}
               onPointerMove={(e) => {
-                if (
-                  rightDragModeRef.current === 'none' ||
-                  graph.rightViewportMode !== 'loss_surface'
-                ) {
-                  return;
-                }
+                if (graph.rightViewportMode !== 'loss_surface') return;
                 const rect = (e.currentTarget as HTMLCanvasElement).getBoundingClientRect();
                 const W = Math.max(rect.width, 1);
                 const H = Math.max(rect.height, 1);
                 const sx = e.clientX - rect.left;
                 const sy = e.clientY - rect.top;
+
+                if (touchMapRightRef.current.has(e.pointerId)) {
+                  touchMapRightRef.current.set(e.pointerId, { x: sx, y: sy });
+                }
+
+                // 2-Finger Touch Pinch-to-Zoom on Right Loss Surface / Contour Viewport
+                if (touchMapRightRef.current.size >= 2) {
+                  const pts = Array.from(touchMapRightRef.current.values());
+                  const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+                  if (prevPinchDistRightRef.current && dist > 8) {
+                    const factor = prevPinchDistRightRef.current / dist;
+                    const is3D = graph.surface3DZScale > 0.01;
+                    const midX = is3D ? W * 0.5 : (pts[0].x + pts[1].x) * 0.5;
+                    const midY = is3D ? H * 0.5 : (pts[0].y + pts[1].y) * 0.5;
+                    storeState.setRightViewport(
+                      zoomViewportAt(graph.rightViewport, factor, midX, midY, W, H)
+                    );
+                  }
+                  prevPinchDistRightRef.current = dist;
+                  return;
+                }
+
+                if (rightDragModeRef.current === 'none') {
+                  return;
+                }
+
+                if (pendingTouchParamRightRef.current) {
+                  const pending = pendingTouchParamRightRef.current;
+                  if (Math.hypot(sx - pending.sx, sy - pending.sy) <= 5) {
+                    return;
+                  }
+                  pendingTouchParamRightRef.current = null;
+                }
 
                 if (rightDragModeRef.current === 'orbit') {
                   const dx = sx - lastMouseRightRef.current.x;
@@ -1135,10 +1322,31 @@ export function DualViewportPanel({
                   playing: false,
                 });
               }}
-              onPointerUp={() => {
+              onPointerUp={(e) => {
+                touchMapRightRef.current.delete(e.pointerId);
+                if (touchMapRightRef.current.size < 2) {
+                  prevPinchDistRightRef.current = null;
+                }
+                if (
+                  pendingTouchParamRightRef.current &&
+                  pendingTouchParamRightRef.current.pointerId === e.pointerId
+                ) {
+                  const pending = pendingTouchParamRightRef.current;
+                  pendingTouchParamRightRef.current = null;
+                  updateRightParamsFromWorld(pending.wx, pending.wy);
+                  storeState.updateOptimizerRace({
+                    startW1: pending.wx,
+                    startW2: pending.wy,
+                    currentStep: graph.optimizerRace.steps,
+                    playing: false,
+                  });
+                }
                 rightDragModeRef.current = 'none';
               }}
-              onPointerCancel={() => {
+              onPointerCancel={(e) => {
+                touchMapRightRef.current.delete(e.pointerId);
+                prevPinchDistRightRef.current = null;
+                pendingTouchParamRightRef.current = null;
                 rightDragModeRef.current = 'none';
               }}
               onWheel={(e) => {
@@ -1173,23 +1381,27 @@ export function DualViewportPanel({
                     <span class="hidden xl:inline">{t('reset_view_btn')}</span>
                   </button>
                 )}
-                <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
-                  Loss:{' '}
-                  {!Number.isFinite(trainLoss)
-                    ? '—'
-                    : Math.abs(trainLoss) >= 1e4
-                      ? trainLoss.toExponential(2)
-                      : trainLoss.toFixed(4)}
-                </span>
-                {testLoss > 0 && (
-                  <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-blue-600 dark:text-blue-400 shadow-2xs">
-                    Test:{' '}
-                    {!Number.isFinite(testLoss)
-                      ? '—'
-                      : Math.abs(testLoss) >= 1e4
-                        ? testLoss.toExponential(2)
-                        : testLoss.toFixed(4)}
-                  </span>
+                {graph.rightViewportMode === 'loss_surface' && (
+                  <>
+                    <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-orange-600 dark:text-orange-400 shadow-2xs">
+                      Loss:{' '}
+                      {!Number.isFinite(trainLoss)
+                        ? '—'
+                        : Math.abs(trainLoss) >= 1e4
+                          ? trainLoss.toExponential(2)
+                          : trainLoss.toFixed(4)}
+                    </span>
+                    {testLoss > 0 && (
+                      <span class="px-2 py-0.5 rounded bg-white/90 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 font-mono font-bold text-blue-600 dark:text-blue-400 shadow-2xs">
+                        Test:{' '}
+                        {!Number.isFinite(testLoss)
+                          ? '—'
+                          : Math.abs(testLoss) >= 1e4
+                            ? testLoss.toExponential(2)
+                            : testLoss.toFixed(4)}
+                      </span>
+                    )}
+                  </>
                 )}
                 {graph.rightViewportMode === 'loss_surface' && (
                   <button

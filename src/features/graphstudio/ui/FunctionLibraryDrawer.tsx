@@ -128,19 +128,19 @@ export function FunctionLibraryDrawer({
   };
 
   return (
-    <div class="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-      <div class="w-full max-w-xl h-full bg-[#0d1220] border-l border-slate-800 flex flex-col shadow-2xl">
+    <div class="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
+      <div class="w-full max-w-xl h-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 flex flex-col shadow-2xl text-neutral-900 dark:text-neutral-100">
         {/* Header */}
-        <div class="flex items-center justify-between px-3.5 sm:px-5 py-3.5 border-b border-slate-800 bg-[#0b0f19]">
+        <div class="flex items-center justify-between px-3.5 sm:px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 shrink-0 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-300 flex items-center justify-center">
+            <span class="w-7 h-7 shrink-0 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-300 flex items-center justify-center">
               <IconFunction class="w-4 h-4" />
             </span>
             <div class="min-w-0">
-              <h3 class="text-sm font-bold text-slate-100 truncate">
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-neutral-100 truncate">
                 {t('fn_lib_title') || 'Pure Math & ML Function Library'}
               </h3>
-              <p class="text-[11px] text-slate-400 line-clamp-2">
+              <p class="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
                 {t('fn_lib_subtitle') ||
                   'All functions below are pure mathematical definitions expanded via AST Beta-Reduction.'}
               </p>
@@ -149,17 +149,17 @@ export function FunctionLibraryDrawer({
           <button
             type="button"
             onClick={() => graphStore.getState().setFunctionLibraryDrawerOpen(false)}
-            class="p-1.5 shrink-0 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            class="p-1.5 shrink-0 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <IconClose class="w-4 h-4" />
           </button>
         </div>
 
         {/* Master Toggle Bar */}
-        <div class="flex flex-wrap items-center justify-between gap-2 px-3.5 sm:px-5 py-2.5 border-b border-slate-800/80 bg-slate-900/40">
+        <div class="flex flex-wrap items-center justify-between gap-2 px-3.5 sm:px-5 py-2.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900/60">
           <div class="flex items-center gap-2">
-            <span class="text-[11px] font-semibold text-slate-300">
-              Active Library Functions ({library.filter((f) => f.enabled).length}/{library.length})
+            <span class="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+              {t('fn_lib_active_count')} ({library.filter((f) => f.enabled).length}/{library.length})
             </span>
           </div>
           <div class="flex items-center gap-2">
@@ -168,11 +168,11 @@ export function FunctionLibraryDrawer({
               onClick={() => graphStore.getState().toggleAllLibraryFunctions(!allEnabled)}
               class={`px-2.5 py-1 rounded text-[11px] font-semibold border transition-colors ${
                 allEnabled
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25'
+                  : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
               }`}
             >
-              {allEnabled ? 'Disable All' : 'Enable All'}
+              {allEnabled ? t('fn_lib_disable_all') : t('fn_lib_enable_all')}
             </button>
             <button
               type="button"
@@ -180,9 +180,9 @@ export function FunctionLibraryDrawer({
                 graphStore.getState().resetFunctionLibrary();
                 onToast('Reset function library to defaults');
               }}
-              class="px-2.5 py-1 rounded text-[11px] font-medium bg-slate-800/80 border border-slate-700 text-slate-300 hover:text-white"
+              class="px-2.5 py-1 rounded text-[11px] font-medium bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-orange-500"
             >
-              Reset Defaults
+              {t('fn_lib_reset')}
             </button>
           </div>
         </div>
@@ -192,8 +192,8 @@ export function FunctionLibraryDrawer({
           {/* Card-defined functions in the current worksheet */}
           {cardDefinedFunctions.length > 0 && (
             <div class="space-y-2">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-sky-400">
-                Worksheet Function Definitions (Active on Canvas)
+              <div class="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                {t('fn_lib_worksheet_header')}
               </div>
               <div class="space-y-1.5">
                 {cardDefinedFunctions.map((fn) => (
@@ -202,11 +202,11 @@ export function FunctionLibraryDrawer({
                     class="p-2.5 rounded-lg border border-sky-500/30 bg-sky-500/5 flex items-center justify-between gap-2"
                   >
                     <div class="min-w-0 flex-1">
-                      <div class="text-xs font-mono font-bold text-sky-300">
+                      <div class="text-xs font-mono font-bold text-sky-700 dark:text-sky-300">
                         {fn.name}({fn.formalParams.join(', ')})
                       </div>
                       <div
-                        class="mt-1 gs-katex-line text-xs text-slate-200 overflow-x-auto"
+                        class="mt-1 gs-katex-line text-xs text-neutral-800 dark:text-neutral-200 overflow-x-auto"
                         dangerouslySetInnerHTML={{
                           __html: renderLibraryLatexPreview(fn.latex),
                         }}
@@ -221,9 +221,9 @@ export function FunctionLibraryDrawer({
                           .addExpression(`${fn.name}(${callArgs})`, `${fn.name}(x)`);
                         onToast(`Inserted ${fn.name}(${callArgs})`);
                       }}
-                      class="shrink-0 px-2.5 py-1 rounded text-[11px] font-semibold bg-sky-500/20 border border-sky-500/40 text-sky-200 hover:bg-sky-500/30"
+                      class="shrink-0 px-2.5 py-1 rounded text-[11px] font-semibold bg-sky-500/15 border border-sky-500/40 text-sky-700 dark:text-sky-200 hover:bg-sky-500/25"
                     >
-                      + Reuse Call
+                      {t('fn_lib_reuse_call')}
                     </button>
                   </div>
                 ))}
@@ -232,9 +232,9 @@ export function FunctionLibraryDrawer({
           )}
 
           {/* Add new custom reusable function */}
-          <div class="p-3.5 rounded-xl border border-slate-800 bg-slate-900/50 space-y-2.5">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-orange-300">
-              + Define New Reusable Function
+          <div class="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/60 space-y-2.5">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+              {t('fn_lib_define_new')}
             </div>
             {isEditingNewLatex || newDefLatex.trim().length === 0 ? (
               <div class="space-y-1.5">
@@ -254,11 +254,11 @@ export function FunctionLibraryDrawer({
                   }}
                   onInput={(e) => setNewDefLatex((e.target as HTMLInputElement).value)}
                   placeholder="e.g. Attention(Q, K, V) = \operatorname{softmax}(QK^T/\sqrt{d_k})V"
-                  class="w-full px-3 py-1.5 rounded-lg bg-[#080c14] border border-orange-500/70 ring-1 ring-orange-500/20 text-xs font-mono text-slate-100 focus:outline-none"
+                  class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-neutral-950 border border-orange-500/70 ring-1 ring-orange-500/20 text-xs font-mono text-neutral-900 dark:text-neutral-100 focus:outline-none"
                 />
                 {newDefLatex.trim().length > 0 && (
                   <div
-                    class="px-2.5 py-1 rounded bg-[#080c14]/70 border border-slate-800/80 gs-katex-line text-xs text-slate-200 overflow-x-auto"
+                    class="px-2.5 py-1 rounded bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 gs-katex-line text-xs text-neutral-800 dark:text-neutral-200 overflow-x-auto"
                     dangerouslySetInnerHTML={{
                       __html: renderLibraryLatexPreview(newDefLatex),
                     }}
@@ -270,15 +270,15 @@ export function FunctionLibraryDrawer({
                 type="button"
                 onClick={() => setIsEditingNewLatex(true)}
                 title="Click to edit raw LaTeX / mathematical formula"
-                class="group w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#080c14] border border-slate-700/80 hover:border-orange-500/60 text-left min-w-0 overflow-hidden transition-colors cursor-text"
+                class="group w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 hover:border-orange-500/60 text-left min-w-0 overflow-hidden transition-colors cursor-text"
               >
                 <span
-                  class="gs-katex-line min-w-0 flex-1 text-xs text-slate-100"
+                  class="gs-katex-line min-w-0 flex-1 text-xs text-neutral-900 dark:text-neutral-100"
                   dangerouslySetInnerHTML={{
                     __html: renderLibraryLatexPreview(newDefLatex),
                   }}
                 />
-                <span class="shrink-0 text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="shrink-0 text-[10px] font-mono text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   ✎ LaTeX
                 </span>
               </button>
@@ -288,23 +288,23 @@ export function FunctionLibraryDrawer({
                 type="text"
                 value={newDesc}
                 onInput={(e) => setNewDesc((e.target as HTMLInputElement).value)}
-                placeholder="Optional description (e.g. Scaled dot-product attention)"
-                class="min-w-0 flex-1 px-3 py-1.5 rounded-lg bg-[#080c14] border border-slate-700/80 text-xs text-slate-200 focus:outline-none focus:border-orange-500"
+                placeholder={t('fn_lib_desc_placeholder')}
+                class="min-w-0 flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 text-xs text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-orange-500"
               />
               <button
                 type="button"
                 onClick={handleAddCustomFunction}
-                class="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs transition-colors"
+                class="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors"
               >
-                Save Function
+                {t('fn_lib_save_btn')}
               </button>
             </div>
           </div>
 
           {/* Pre-defined & Custom Library Functions */}
           <div class="space-y-2.5">
-            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Pure Mathematical Function Pack (Toggle ON/OFF)
+            <div class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              {t('fn_lib_pack_header')}
             </div>
             {library.map((entry) => {
               const sig = extractFunctionSignature(entry.definitionLatex);
@@ -316,21 +316,23 @@ export function FunctionLibraryDrawer({
                   key={entry.id}
                   class={`p-3.5 rounded-xl border transition-colors ${
                     entry.enabled
-                      ? 'border-slate-700/90 bg-slate-900/70'
-                      : 'border-slate-800/60 bg-slate-900/25 opacity-65'
+                      ? 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50'
+                      : 'border-neutral-200/70 dark:border-neutral-800/50 bg-neutral-50/30 dark:bg-neutral-950/20 opacity-65'
                   }`}
                 >
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-xs font-mono font-bold text-orange-300">
+                        <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">
                           {entry.name}({paramList.join(', ')})
                         </span>
-                        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase bg-slate-800 text-slate-400 border border-slate-700/70">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-300/80 dark:border-neutral-700/70">
                           {entry.category}
                         </span>
                       </div>
-                      <p class="text-[11px] text-slate-400 mt-0.5">{entry.description}</p>
+                      <p class="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        {entry.description}
+                      </p>
                     </div>
 
                     {/* Toggle ON/OFF Switch */}
@@ -340,8 +342,8 @@ export function FunctionLibraryDrawer({
                         onClick={() => graphStore.getState().toggleLibraryFunction(entry.id)}
                         class={`px-2.5 py-1 rounded-md text-[10px] font-bold border transition-colors ${
                           entry.enabled
-                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                            : 'bg-slate-800 border-slate-700 text-slate-400'
+                            ? 'bg-emerald-500/15 border-emerald-500/45 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-neutral-200/60 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400'
                         }`}
                         title="Toggle whether this function definition is active in the parser"
                       >
@@ -351,7 +353,7 @@ export function FunctionLibraryDrawer({
                         <button
                           type="button"
                           onClick={() => graphStore.getState().removeLibraryFunction(entry.id)}
-                          class="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-slate-800"
+                          class="p-1 rounded text-neutral-400 hover:text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                           title="Delete custom function"
                         >
                           <IconTrash class="w-3.5 h-3.5" />
@@ -380,11 +382,11 @@ export function FunctionLibraryDrawer({
                             setEditingId(null);
                           }
                         }}
-                        class="w-full px-2.5 py-1.5 rounded bg-[#080c14] border border-orange-500/70 ring-1 ring-orange-500/20 text-xs font-mono text-slate-100 focus:outline-none"
+                        class="w-full px-2.5 py-1.5 rounded bg-white dark:bg-neutral-950 border border-orange-500/70 ring-1 ring-orange-500/20 text-xs font-mono text-neutral-900 dark:text-neutral-100 focus:outline-none"
                       />
                       {editFormula.trim().length > 0 && (
                         <div
-                          class="px-2.5 py-1 rounded bg-[#080c14]/70 border border-slate-800/80 gs-katex-line text-xs text-slate-200 overflow-x-auto"
+                          class="px-2.5 py-1 rounded bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 gs-katex-line text-xs text-neutral-800 dark:text-neutral-200 overflow-x-auto"
                           dangerouslySetInnerHTML={{
                             __html: renderLibraryLatexPreview(editFormula),
                           }}
@@ -394,16 +396,16 @@ export function FunctionLibraryDrawer({
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          class="px-2.5 py-1 rounded text-[11px] text-slate-400 hover:text-white bg-slate-800"
+                          class="px-2.5 py-1 rounded text-[11px] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 bg-neutral-100 dark:bg-neutral-800"
                         >
-                          Cancel
+                          {t('latex_import_cancel')}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveEdit(entry)}
-                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-orange-500 text-slate-950"
+                          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-orange-500 text-white"
                         >
-                          Save Formula
+                          {t('fn_lib_save_btn')}
                         </button>
                       </div>
                     </div>
@@ -415,15 +417,15 @@ export function FunctionLibraryDrawer({
                         setEditFormula(entry.definitionLatex);
                       }}
                       title="Click to edit raw LaTeX / mathematical formula"
-                      class="group mt-2 w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[#080c14] border border-slate-800/90 hover:border-orange-500/60 text-left min-w-0 overflow-hidden transition-colors cursor-text"
+                      class="group mt-2 w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/60 text-left min-w-0 overflow-hidden transition-colors cursor-text"
                     >
                       <span
-                        class="gs-katex-line min-w-0 flex-1 text-xs text-slate-100"
+                        class="gs-katex-line min-w-0 flex-1 text-xs text-neutral-900 dark:text-neutral-100"
                         dangerouslySetInnerHTML={{
                           __html: renderLibraryLatexPreview(entry.definitionLatex),
                         }}
                       />
-                      <span class="shrink-0 text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span class="shrink-0 text-[10px] font-mono text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         ✎ LaTeX
                       </span>
                     </button>
@@ -444,9 +446,9 @@ export function FunctionLibraryDrawer({
                           .addExpression(callLatex, `${entry.name}(x)`);
                         onToast(`Added ${entry.name}(x) to expressions`);
                       }}
-                      class="px-2.5 py-1 rounded text-[10px] font-semibold bg-orange-500/15 border border-orange-500/40 text-orange-300 hover:bg-orange-500/25"
+                      class="px-2.5 py-1 rounded text-[10px] font-semibold bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-300 hover:bg-orange-500/25"
                     >
-                      + Use {entry.name}(x)
+                      {t('fn_lib_use_btn').replace('{fn}', entry.name)}
                     </button>
                     <button
                       type="button"
@@ -459,9 +461,9 @@ export function FunctionLibraryDrawer({
                           );
                         onToast(`Inserted full definition of ${entry.name} onto canvas`);
                       }}
-                      class="px-2.5 py-1 rounded text-[10px] font-medium bg-slate-800/80 border border-slate-700 text-slate-300 hover:text-white"
+                      class="px-2.5 py-1 rounded text-[10px] font-medium bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-orange-500"
                     >
-                      + Insert Definition Card
+                      {t('fn_lib_insert_def_btn')}
                     </button>
                     {!isEditing && (
                       <button
@@ -470,9 +472,9 @@ export function FunctionLibraryDrawer({
                           setEditingId(entry.id);
                           setEditFormula(entry.definitionLatex);
                         }}
-                        class="px-2 py-1 rounded text-[10px] text-slate-400 hover:text-slate-200"
+                        class="px-2 py-1 rounded text-[10px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
                       >
-                        Edit Formula
+                        {t('fn_lib_edit_btn')}
                       </button>
                     )}
                   </div>

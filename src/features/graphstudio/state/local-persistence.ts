@@ -42,6 +42,16 @@ export function loadStateFromLocalStorage(): GraphStateV2 | null {
   }
 }
 
+export function clearStateFromLocalStorage(): boolean {
+  try {
+    if (typeof localStorage === 'undefined') return false;
+    localStorage.removeItem(STORAGE_KEY_V2);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function exportStateAsJsonString(state: GraphStateV2): string {
   return JSON.stringify(state, null, 2);
 }

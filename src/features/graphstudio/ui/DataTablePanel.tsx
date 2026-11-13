@@ -3,11 +3,14 @@
  * (CSV Paste/Import, Sample Datasets, and Bayesian Coin Flipper) [FR-4.3].
  */
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import type { DataPoint2D } from '../types/state';
 import type { GraphStoreState } from '../state/store';
 import { t } from '../scripts/i18n-client';
+import { FloatingPopover } from './FloatingPopover';
 import { IconTrash } from './icons';
+
+const INITIAL_VISIBLE_POINTS = 40;
 
 interface DataTableProps {
   storeState: GraphStoreState;
@@ -18,22 +21,9 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
   const [csvText, setCsvText] = useState('');
   const [showCsvBox, setShowCsvBox] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-  const [actionsMenuUpward, setActionsMenuUpward] = useState(true);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (!actionsMenuOpen || typeof window === 'undefined') return;
-    const close = (): void => setActionsMenuOpen(false);
-    const onKeyDown = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setActionsMenuOpen(false);
-    };
-    window.addEventListener('click', close);
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('click', close);
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [actionsMenuOpen]);
+  const [showAllPoints, setShowAllPoints] = useState<boolean>(false);
+  const actionsBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const handleImportCsv = (): void => {
     const lines = csvText
@@ -106,153 +96,147 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             {t('add_point')}
           </button>
 
-          {/* Consolidated Data Actions Dropdown Menu */}
-          <div class="relative inline-block">
+          {/* Consolidated Data Actions Portal Menu */}
+          <button
+            ref={(el) => {
+              actionsBtnRef.current = el;
+            }}
+            type="button"
+            aria-expanded={actionsMenuOpen}
+            aria-haspopup="menu"
+            onClick={() => setActionsMenuOpen((prev) => !prev)}
+            class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium transition-colors ${
+              actionsMenuOpen
+                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
+            }`}
+            title={t('data_actions_btn')}
+          >
+            <span>{t('data_actions_btn')}</span>
+            <span class="text-[9px] opacity-75">▾</span>
+          </button>
+
+          <FloatingPopover
+            open={actionsMenuOpen}
+            anchorEl={actionsBtnRef.current}
+            onClose={() => setActionsMenuOpen(false)}
+            align="right"
+            preferredWidthPx={228}
+            class="w-56 py-1 flex flex-col text-[11px]"
+          >
             <button
               type="button"
-              aria-expanded={actionsMenuOpen}
-              onClick={(e) => {
-                e.stopPropagation();
-                const btnEl = e.currentTarget as HTMLElement;
-                const asideEl = btnEl.closest('aside');
-                if (asideEl) {
-                  const br = btnEl.getBoundingClientRect();
-                  const ar = asideEl.getBoundingClientRect();
-                  const spaceBelow = ar.bottom - br.bottom;
-                  const spaceAbove = br.top - ar.top;
-                  setActionsMenuUpward(spaceBelow < 185 && spaceAbove >= spaceBelow);
-                } else {
-                  setActionsMenuUpward(true);
-                }
-                setActionsMenuOpen((prev) => !prev);
+              role="menuitem"
+              onClick={() => {
+                setShowCsvBox((prev) => !prev);
+                setIsExpanded(true);
+                setActionsMenuOpen(false);
               }}
-              class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium transition-colors ${
-                actionsMenuOpen
-                  ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
-                  : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:border-orange-500'
-              }`}
-              title={t('data_actions_btn')}
+              class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
-              <span>{t('data_actions_btn')}</span>
-              <span class="text-[9px] opacity-75">▾</span>
+              <span>📋 {t('paste_csv')}</span>
             </button>
 
-            {actionsMenuOpen && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                class={`absolute right-0 ${
-                  actionsMenuUpward ? 'bottom-full mb-1' : 'top-full mt-1'
-                } z-40 w-56 max-h-[min(170px,30vh)] sm:max-h-56 overflow-y-auto overscroll-contain py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-[11px]`}
-              >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                storeState.setDataPoints([
+                  { id: 's1', x: -2.0, y: -1.4, split: 'train' },
+                  { id: 's2', x: -1.0, y: -0.6, split: 'train' },
+                  { id: 's3', x: 0.0, y: 0.1, split: 'train' },
+                  { id: 's4', x: 1.0, y: 0.9, split: 'train' },
+                  { id: 's5', x: 2.0, y: 1.8, split: 'train' },
+                ]);
+                setIsExpanded(true);
+                setActionsMenuOpen(false);
+              }}
+              class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <span>📈 Sample Linear Points (5)</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                storeState.setDataPoints([
+                  { id: 'xor1', x: -1.0, y: -1.0, x2: -1.0, label: 0, split: 'train' },
+                  { id: 'xor2', x: 1.0, y: 1.0, x2: 1.0, label: 0, split: 'train' },
+                  { id: 'xor3', x: -1.0, y: 1.0, x2: 1.0, label: 1, split: 'train' },
+                  { id: 'xor4', x: 1.0, y: -1.0, x2: -1.0, label: 1, split: 'train' },
+                ]);
+                setIsExpanded(true);
+                setActionsMenuOpen(false);
+              }}
+              class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <span>🔀 Sample XOR Points (4)</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                storeState.setDataPoints([
+                  { id: 'r1', x: 0.4, y: 0.3, x2: 0.3, label: 1, split: 'train' },
+                  { id: 'r2', x: -0.5, y: 0.4, x2: 0.4, label: 1, split: 'train' },
+                  { id: 'r3', x: 0.3, y: -0.5, x2: -0.5, label: 1, split: 'train' },
+                  { id: 'r4', x: -0.4, y: -0.4, x2: -0.4, label: 1, split: 'train' },
+                  { id: 'r5', x: 2.1, y: 0.8, x2: 0.8, label: 0, split: 'train' },
+                  { id: 'r6', x: -2.0, y: 1.1, x2: 1.1, label: 0, split: 'train' },
+                  { id: 'r7', x: 1.1, y: -2.1, x2: -2.1, label: 0, split: 'train' },
+                  { id: 'r8', x: -1.5, y: -1.8, x2: -1.8, label: 0, split: 'train' },
+                ]);
+                setIsExpanded(true);
+                setActionsMenuOpen(false);
+              }}
+              class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <span>⭕ Sample Ring Points (8)</span>
+            </button>
+
+            <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+
+            <div class="px-3 py-1 flex items-center justify-between gap-1">
+              <span class="text-neutral-500">🪙 Bayes Coins:</span>
+              <div class="inline-flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowCsvBox((prev) => !prev);
-                    setIsExpanded(true);
-                    setActionsMenuOpen(false);
-                  }}
-                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  onClick={() => storeState.flipBayesianCoins(1)}
+                  class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
                 >
-                  <span>📋 {t('paste_csv')}</span>
+                  +1
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => {
-                    storeState.setDataPoints([
-                      { id: 's1', x: -2.0, y: -1.4, split: 'train' },
-                      { id: 's2', x: -1.0, y: -0.6, split: 'train' },
-                      { id: 's3', x: 0.0, y: 0.1, split: 'train' },
-                      { id: 's4', x: 1.0, y: 0.9, split: 'train' },
-                      { id: 's5', x: 2.0, y: 1.8, split: 'train' },
-                    ]);
-                    setIsExpanded(true);
-                    setActionsMenuOpen(false);
-                  }}
-                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  onClick={() => storeState.flipBayesianCoins(10)}
+                  class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
                 >
-                  <span>📈 Sample Linear Points (5)</span>
+                  +10
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    storeState.setDataPoints([
-                      { id: 'xor1', x: -1.0, y: -1.0, x2: -1.0, label: 0, split: 'train' },
-                      { id: 'xor2', x: 1.0, y: 1.0, x2: 1.0, label: 0, split: 'train' },
-                      { id: 'xor3', x: -1.0, y: 1.0, x2: 1.0, label: 1, split: 'train' },
-                      { id: 'xor4', x: 1.0, y: -1.0, x2: -1.0, label: 1, split: 'train' },
-                    ]);
-                    setIsExpanded(true);
-                    setActionsMenuOpen(false);
-                  }}
-                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <span>🔀 Sample XOR Points (4)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    storeState.setDataPoints([
-                      { id: 'r1', x: 0.4, y: 0.3, x2: 0.3, label: 1, split: 'train' },
-                      { id: 'r2', x: -0.5, y: 0.4, x2: 0.4, label: 1, split: 'train' },
-                      { id: 'r3', x: 0.3, y: -0.5, x2: -0.5, label: 1, split: 'train' },
-                      { id: 'r4', x: -0.4, y: -0.4, x2: -0.4, label: 1, split: 'train' },
-                      { id: 'r5', x: 2.1, y: 0.8, x2: 0.8, label: 0, split: 'train' },
-                      { id: 'r6', x: -2.0, y: 1.1, x2: 1.1, label: 0, split: 'train' },
-                      { id: 'r7', x: 1.1, y: -2.1, x2: -2.1, label: 0, split: 'train' },
-                      { id: 'r8', x: -1.5, y: -1.8, x2: -1.8, label: 0, split: 'train' },
-                    ]);
-                    setIsExpanded(true);
-                    setActionsMenuOpen(false);
-                  }}
-                  class="flex items-center justify-between px-3 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <span>⭕ Sample Ring Points (8)</span>
-                </button>
-
-                <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
-
-                <div class="px-3 py-1 flex items-center justify-between gap-1">
-                  <span class="text-neutral-500">🪙 Bayes Coins:</span>
-                  <div class="inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => storeState.flipBayesianCoins(1)}
-                      class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
-                    >
-                      +1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => storeState.flipBayesianCoins(10)}
-                      class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold hover:bg-orange-500/25"
-                    >
-                      +10
-                    </button>
-                  </div>
-                </div>
-
-                {graph.dataPoints.length > 0 && (
-                  <>
-                    <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        storeState.setDataPoints([]);
-                        setActionsMenuOpen(false);
-                      }}
-                      class="flex items-center gap-1.5 px-3 py-1.5 text-left text-red-600 dark:text-red-400 hover:bg-red-500/10"
-                    >
-                      <IconTrash class="w-3.5 h-3.5" />
-                      <span>Clear All Points</span>
-                    </button>
-                  </>
-                )}
               </div>
+            </div>
+
+            {graph.dataPoints.length > 0 && (
+              <>
+                <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    storeState.setDataPoints([]);
+                    setShowAllPoints(false);
+                    setActionsMenuOpen(false);
+                  }}
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-left text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                >
+                  <IconTrash class="w-3.5 h-3.5" />
+                  <span>{t('data_clear_all')}</span>
+                </button>
+              </>
             )}
-          </div>
+          </FloatingPopover>
         </div>
       </div>
 
@@ -270,7 +254,7 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
             onClick={handleImportCsv}
             class="self-end px-2.5 py-1 rounded bg-orange-500 text-white font-semibold"
           >
-            Import Rows
+            {t('data_import_rows')}
           </button>
         </div>
       )}
@@ -280,8 +264,15 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
       )}
 
       {isExpanded && graph.dataPoints.length > 0 && (
-        <div class="max-h-40 overflow-y-auto flex flex-col gap-1 pr-1">
-          {graph.dataPoints.slice(0, 40).map((pt) => (
+        <div
+          class={`${
+            showAllPoints ? 'max-h-72' : 'max-h-44'
+          } overflow-y-auto flex flex-col gap-1 pr-1`}
+        >
+          {(showAllPoints
+            ? graph.dataPoints
+            : graph.dataPoints.slice(0, INITIAL_VISIBLE_POINTS)
+          ).map((pt) => (
             <div
               key={pt.id}
               onMouseEnter={() => storeState.setHoveredDataPoint(pt.id)}
@@ -373,6 +364,18 @@ export function DataTablePanel({ storeState }: DataTableProps): JSX.Element {
               </div>
             </div>
           ))}
+
+          {graph.dataPoints.length > INITIAL_VISIBLE_POINTS && (
+            <button
+              type="button"
+              onClick={() => setShowAllPoints((prev) => !prev)}
+              class="mt-1 py-1 px-2 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-100/80 dark:bg-neutral-800/80 hover:border-orange-500 text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 transition-colors"
+            >
+              {showAllPoints
+                ? t('data_show_less')
+                : t('data_show_all').replace('{n}', String(graph.dataPoints.length))}
+            </button>
+          )}
         </div>
       )}
     </div>

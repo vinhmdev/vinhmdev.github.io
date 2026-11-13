@@ -24,27 +24,6 @@ html.dark {
   --gs-accent: #f97316;
 }
 
-/* MathLive Custom Element Styling Overrides */
-math-field {
-  display: block;
-  width: 100%;
-  min-height: 2.35rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gs-border);
-  background: var(--gs-bg-canvas);
-  color: var(--gs-text);
-  font-size: 0.95rem;
-  line-height: 1.4;
-  transition: border-color 0.15s ease;
-}
-
-math-field:focus-within {
-  outline: none;
-  border-color: var(--gs-accent);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
-}
-
 /* Custom Range Sliders */
 .gs-slider {
   -webkit-appearance: none;

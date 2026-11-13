@@ -34,11 +34,42 @@ import { DualViewportPanel } from './DualViewportPanel';
 import { ExpressionSidebar } from './ExpressionSidebar';
 import { FunctionLibraryDrawer } from './FunctionLibraryDrawer';
 import { MobileSheetHandle } from './MobileSheetHandle';
+import type { SheetSnapTier } from './mobile-sheet-gesture';
 import { OptimizerRaceBar } from './OptimizerRaceBar';
 import { SharePublishModal } from './SharePublishModal';
 import { ToolbarSubheader } from './ToolbarSubheader';
 import { t } from '../scripts/i18n-client';
 import { getPlottableExpressions } from '../state/expression-kind';
+
+const SIDEBAR_MIN_WIDTH_PX = 280;
+const SIDEBAR_MAX_WIDTH_PX = 520;
+const SIDEBAR_WIDTH_STORAGE_KEY = 'graphstudio:sidebar-width:v1';
+
+function readStoredSidebarWidth(): number | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = Number(localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(raw) && raw >= SIDEBAR_MIN_WIDTH_PX && raw <= SIDEBAR_MAX_WIDTH_PX) {
+      return Math.round(raw);
+    }
+  } catch {
+    /* ignore storage restrictions */
+  }
+  return null;
+}
+
+function writeStoredSidebarWidth(widthPx: number | null): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (widthPx === null) {
+      localStorage.removeItem(SIDEBAR_WIDTH_STORAGE_KEY);
+    } else {
+      localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(Math.round(widthPx)));
+    }
+  } catch {
+    /* ignore storage restrictions */
+  }
+}
 
 export default function GraphStudioApp(): JSX.Element {
   const [storeState, setStoreState] = useState<GraphStoreState>(() => graphStore.getState());
@@ -49,8 +80,19 @@ export default function GraphStudioApp(): JSX.Element {
   );
   const [, setLangTick] = useState(0);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [mobileSheetOpen, setMobileSheetOpen] = useState<boolean>(true);
+  const [mobileSheetTier, setMobileSheetTier] = useState<SheetSnapTier>('half');
+  const [mobilePanelSection, setMobilePanelSection] = useState<
+    'all' | 'fx' | 'sliders' | 'data'
+  >('all');
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(true);
+  const [sidebarWidthPx, setSidebarWidthPx] = useState<number | null>(() =>
+    readStoredSidebarWidth()
+  );
+  const [isDesktopLg, setIsDesktopLg] = useState<boolean>(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 1024px)').matches
+      : false
+  );
 
   const workerRef = useRef<Worker | null>(null);
   const seqRef = useRef(0);
@@ -58,6 +100,14 @@ export default function GraphStudioApp(): JSX.Element {
   const leftCanvasRef = useRef<HTMLCanvasElement>(null);
   const rightGlCanvasRef = useRef<HTMLCanvasElement>(null);
   const rightOverlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sidebarContainerRef = useRef<HTMLDivElement | null>(null);
+  const asideScrollRef = useRef<HTMLElement | null>(null);
+  const sidebarResizeRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startW: number;
+    latestW: number;
+  } | null>(null);
 
   const showToast = (msg: string): void => {
     setToastMsg(msg);
@@ -71,6 +121,63 @@ export default function GraphStudioApp(): JSX.Element {
     return graphStore.subscribe((next) => {
       setStoreState({ ...next });
     });
+  }, []);
+
+  // Track Desktop `lg` breakpoint (`>= 1024px`) and global Cmd/Ctrl+Z Undo/Redo shortcuts
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(min-width: 1024px)')
+        : null;
+    const onMqChange = (ev: MediaQueryListEvent): void => setIsDesktopLg(ev.matches);
+    if (mql) {
+      setIsDesktopLg(mql.matches);
+      mql.addEventListener('change', onMqChange);
+    }
+
+    const onGlobalKeyDown = (e: KeyboardEvent): void => {
+      if (e.defaultPrevented || e.altKey || !(e.metaKey || e.ctrlKey)) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      const st = graphStore.getState();
+
+      if (key === 'z' && !e.shiftKey) {
+        if (st.whiteboardTool !== 'cursor' && st.whiteboardUndoStack.length > 0) {
+          e.preventDefault();
+          st.undoWhiteboard();
+        } else if (st.undoStack.length > 0) {
+          e.preventDefault();
+          st.undo();
+        }
+        return;
+      }
+
+      if ((key === 'z' && e.shiftKey) || (key === 'y' && !e.metaKey)) {
+        if (st.whiteboardTool !== 'cursor' && st.whiteboardRedoStack.length > 0) {
+          e.preventDefault();
+          st.redoWhiteboard();
+        } else if (st.redoStack.length > 0) {
+          e.preventDefault();
+          st.redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', onGlobalKeyDown);
+    return () => {
+      mql?.removeEventListener('change', onMqChange);
+      window.removeEventListener('keydown', onGlobalKeyDown);
+    };
   }, []);
 
   // Initialize Web Worker (with synchronous fallback) + Service Worker registration [AC-06]
@@ -378,31 +485,166 @@ export default function GraphStudioApp(): JSX.Element {
         }
       />
 
-      {/* Main Workspace: below lg the graph sits on top with a collapsible bottom sheet; from lg a left sidebar + dual viewport */}
+      {/* Main Workspace: below lg the graph sits on top with a 3-tier bottom sheet + sub-tabs; from lg a resizable left sidebar + dual viewport */}
       <div class="flex-1 flex flex-col-reverse lg:flex-row min-h-0 overflow-hidden">
         <div
-          class={`w-full ${
-            desktopSidebarOpen ? 'lg:w-80 xl:w-96 lg:flex' : 'lg:hidden'
+          ref={(el) => {
+            sidebarContainerRef.current = el;
+          }}
+          style={
+            isDesktopLg && desktopSidebarOpen && sidebarWidthPx !== null
+              ? { width: `${sidebarWidthPx}px` }
+              : undefined
+          }
+          class={`relative w-full max-h-[calc(100%-40px)] lg:max-h-none min-h-0 ${
+            desktopSidebarOpen
+              ? sidebarWidthPx !== null
+                ? 'lg:flex'
+                : 'lg:w-80 xl:w-96 lg:flex'
+              : 'lg:hidden'
           } shrink-0 flex flex-col border-t lg:border-t-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-900/75`}
         >
-          {/* Bottom-sheet handle (< 1024px) */}
-          <div class="lg:hidden">
+          {/* 3-Tier Bottom-Sheet Handle + Sticky Sub-Tabs (< 1024px) */}
+          <div class="lg:hidden shrink-0 border-b border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50 dark:bg-neutral-900">
             <MobileSheetHandle
-              isOpen={mobileSheetOpen}
-              onOpenChange={setMobileSheetOpen}
+              tier={mobileSheetTier}
+              onTierChange={setMobileSheetTier}
             />
+
+            {mobileSheetTier !== 'collapsed' && (
+              <div
+                role="tablist"
+                aria-label="Panel sections"
+                class="grid grid-cols-4 gap-1 px-2 pb-1.5 text-[11px]"
+              >
+                {(
+                  [
+                    { id: 'all', label: t('subtab_all') },
+                    {
+                      id: 'fx',
+                      label: `${t('subtab_fx')} (${storeState.graph.expressions.length})`,
+                    },
+                    {
+                      id: 'sliders',
+                      label: `${t('subtab_sliders')} (${Object.keys(storeState.graph.sliders).length})`,
+                    },
+                    {
+                      id: 'data',
+                      label: `${t('subtab_data')} (${storeState.graph.dataPoints.length})`,
+                    },
+                  ] as const
+                ).map((tabItem) => {
+                  const active = mobilePanelSection === tabItem.id;
+                  return (
+                    <button
+                      key={tabItem.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => {
+                        setMobilePanelSection(tabItem.id);
+                        if (asideScrollRef.current) {
+                          asideScrollRef.current.scrollTop = 0;
+                        }
+                      }}
+                      class={`h-6 px-1 rounded font-semibold truncate transition-colors ${
+                        active
+                          ? 'bg-orange-500 text-white shadow-2xs'
+                          : 'bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100'
+                      }`}
+                    >
+                      {tabItem.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <aside
-            class={`w-full overflow-y-auto overscroll-contain ${
-              mobileSheetOpen
-                ? 'max-h-[38vh] sm:max-h-[42vh] lg:max-h-none block'
-                : 'hidden lg:block lg:max-h-none'
+            ref={(el) => {
+              asideScrollRef.current = el;
+            }}
+            class={`w-full min-h-0 overflow-y-auto overscroll-contain ${
+              mobileSheetTier === 'collapsed'
+                ? 'hidden lg:block lg:max-h-none'
+                : mobileSheetTier === 'full'
+                  ? 'max-h-[78vh] lg:max-h-none block'
+                  : 'max-h-[40vh] sm:max-h-[44vh] lg:max-h-none block'
             } flex-1`}
           >
-            <ExpressionSidebar storeState={storeState} />
-            <DataTablePanel storeState={storeState} />
+            {(isDesktopLg || mobilePanelSection !== 'data') && (
+              <ExpressionSidebar
+                storeState={storeState}
+                visibleSection={
+                  !isDesktopLg &&
+                  (mobilePanelSection === 'fx' || mobilePanelSection === 'sliders')
+                    ? mobilePanelSection
+                    : 'all'
+                }
+              />
+            )}
+            {(isDesktopLg ||
+              mobilePanelSection === 'all' ||
+              mobilePanelSection === 'data') && (
+              <DataTablePanel storeState={storeState} />
+            )}
           </aside>
+
+          {/* Desktop Resizable Right-Edge Splitter (280px – 520px, double-click resets) */}
+          {desktopSidebarOpen && (
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label={t('resize_sidebar_tooltip')}
+              title={t('resize_sidebar_tooltip')}
+              onDblClick={() => {
+                setSidebarWidthPx(null);
+                writeStoredSidebarWidth(null);
+              }}
+              onPointerDown={(e) => {
+                if (e.button !== 0 && e.pointerType === 'mouse') return;
+                const currentW =
+                  sidebarContainerRef.current?.getBoundingClientRect().width ?? 320;
+                sidebarResizeRef.current = {
+                  pointerId: e.pointerId,
+                  startX: e.clientX,
+                  startW: currentW,
+                  latestW: currentW,
+                };
+                try {
+                  (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
+                } catch {
+                  /* ignore synthetic pointerId in tests */
+                }
+              }}
+              onPointerMove={(e) => {
+                const sess = sidebarResizeRef.current;
+                if (!sess || sess.pointerId !== e.pointerId) return;
+                const maxAllowed =
+                  typeof window !== 'undefined'
+                    ? Math.min(SIDEBAR_MAX_WIDTH_PX, Math.round(window.innerWidth * 0.48))
+                    : SIDEBAR_MAX_WIDTH_PX;
+                const clamped = Math.min(
+                  Math.max(SIDEBAR_MIN_WIDTH_PX, Math.round(sess.startW + (e.clientX - sess.startX))),
+                  Math.max(SIDEBAR_MIN_WIDTH_PX, maxAllowed)
+                );
+                sess.latestW = clamped;
+                setSidebarWidthPx(clamped);
+              }}
+              onPointerUp={(e) => {
+                if (sidebarResizeRef.current?.pointerId === e.pointerId) {
+                  const finalW = sidebarResizeRef.current.latestW;
+                  sidebarResizeRef.current = null;
+                  writeStoredSidebarWidth(finalW);
+                }
+              }}
+              onPointerCancel={() => {
+                sidebarResizeRef.current = null;
+              }}
+              class="hidden lg:block absolute top-0 -right-1 bottom-0 w-2 cursor-col-resize z-30 touch-none hover:bg-orange-500/35 active:bg-orange-500/60 transition-colors"
+            />
+          )}
         </div>
 
         <DualViewportPanel
@@ -414,10 +656,11 @@ export default function GraphStudioApp(): JSX.Element {
         />
       </div>
 
-      {/* Bottom 4-Optimizer Race Bar (Shown in Optimization / Dual-Space modes) */}
-      {storeState.graph.viewMode !== 'inference' && (
-        <OptimizerRaceBar storeState={storeState} />
-      )}
+      {/* Bottom 4-Optimizer Race Bar (Shown only when 3D/Contour Loss Surface is visible) */}
+      {storeState.graph.viewMode !== 'inference' &&
+        storeState.graph.rightViewportMode === 'loss_surface' && (
+          <OptimizerRaceBar storeState={storeState} />
+        )}
 
       {/* Active Cloud E2EE Session Status Bar */}
       {storeState.sessionMode === 'cloud_e2ee' && storeState.cloudMeta && (

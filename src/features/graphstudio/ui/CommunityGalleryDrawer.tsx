@@ -19,9 +19,14 @@ import {
   listCommunityGraphs,
   type PublicGraphItem,
 } from '../state/firebase-gallery-store';
+import {
+  clearStateFromLocalStorage,
+  loadStateFromLocalStorage,
+} from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
+import type { GraphStateV2 } from '../types/state';
 import { decodeStateFromUrlHashSync, migrateSchemaToV2 } from '../state/url-codec';
-import { IconClose, IconTrash } from './icons';
+import { IconClose, IconRestore, IconTrash } from './icons';
 
 const docHistoryStore = createDocStore('graphstudio:docs');
 
@@ -39,13 +44,13 @@ interface DrawerProps {
 }
 
 const EXAMPLE_CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'math', label: '📐 Math & Calculus' },
-  { id: 'activation', label: '⚡ Activations' },
-  { id: 'loss', label: '🎯 Loss Functions' },
-  { id: 'probability', label: '🎲 Probability & Bayes' },
-  { id: 'schedule_norm', label: '🚀 LR & BatchNorm' },
-  { id: 'boundary_kernel', label: '🌐 2D/3D Boundaries' },
+  { id: 'all', labelKey: 'gallery_cat_all' },
+  { id: 'math', labelKey: 'gallery_cat_math' },
+  { id: 'activation', labelKey: 'gallery_cat_activation' },
+  { id: 'loss', labelKey: 'gallery_cat_loss' },
+  { id: 'probability', labelKey: 'gallery_cat_probability' },
+  { id: 'schedule_norm', labelKey: 'gallery_cat_schedule' },
+  { id: 'boundary_kernel', labelKey: 'gallery_cat_boundary' },
 ] as const;
 
 export function CommunityGalleryDrawer({
@@ -59,6 +64,7 @@ export function CommunityGalleryDrawer({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [myDocs, setMyDocs] = useState<MyDoc[]>([]);
+  const [localSavedGraph, setLocalSavedGraph] = useState<GraphStateV2 | null>(null);
   const [communityItems, setCommunityItems] = useState<PublicGraphItem[]>([]);
   const [loadingCommunity, setLoadingCommunity] = useState(false);
 
@@ -66,6 +72,7 @@ export function CommunityGalleryDrawer({
     if (!storeState.galleryDrawerOpen) return;
     setTab(storeState.galleryInitialTab || 'examples');
     setMyDocs(docHistoryStore.getDocs());
+    setLocalSavedGraph(loadStateFromLocalStorage());
   }, [storeState.galleryDrawerOpen, storeState.galleryInitialTab]);
 
   useEffect(() => {
@@ -142,7 +149,13 @@ export function CommunityGalleryDrawer({
     <div class="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
       <div class="w-full max-w-md h-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 flex flex-col text-xs shadow-2xl">
         <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
-          <h3 class="font-bold text-sm">{t('mydocs_btn_title')}</h3>
+          <h3 class="font-bold text-sm truncate">
+            {tab === 'examples'
+              ? `📚 ${t('drawer_tab_examples')}`
+              : tab === 'community'
+                ? t('drawer_tab_community')
+                : t('mydocs_btn_title')}
+          </h3>
           <button
             type="button"
             onClick={() => storeState.setGalleryDrawerOpen(false)}
@@ -174,7 +187,7 @@ export function CommunityGalleryDrawer({
                 : 'text-neutral-500'
             }`}
           >
-            {t('drawer_tab_mydocs')} ({myDocs.length})
+            {t('drawer_tab_mydocs')} ({myDocs.length + (localSavedGraph ? 1 : 0)})
           </button>
           <button
             type="button"
@@ -212,15 +225,13 @@ export function CommunityGalleryDrawer({
                         : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-orange-500'
                     }`}
                   >
-                    {cat.label}
+                    {t(cat.labelKey)}
                   </button>
                 ))}
               </div>
 
               {filteredExamples.length === 0 ? (
-                <p class="text-neutral-500 text-center py-8">
-                  No matching scenarios found.
-                </p>
+                <p class="text-neutral-500 text-center py-8">{t('gallery_no_examples')}</p>
               ) : (
                 filteredExamples.map((tpl) => {
                   const isActive = storeState.graph.activeTemplateId === tpl.id;
@@ -272,10 +283,54 @@ export function CommunityGalleryDrawer({
 
           {tab === 'my_docs' && (
             <>
-              {myDocs.length === 0 ? (
-                <p class="text-neutral-500 text-center py-8">
-                  No cloud-shared graphs saved on this device yet.
-                </p>
+              {localSavedGraph && (
+                <div class="p-3 rounded-lg border border-orange-500/40 bg-orange-500/5 flex items-center justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                      {t('browser_saved_card_title')}
+                    </div>
+                    <div class="font-bold text-neutral-900 dark:text-neutral-100 truncate">
+                      {localSavedGraph.title || 'GraphStudio'}
+                    </div>
+                    <div class="text-[11px] text-neutral-500">
+                      {localSavedGraph.expressions.length} fx ·{' '}
+                      {Object.keys(localSavedGraph.sliders ?? {}).length} params
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        storeState.setSessionMode('local_url', null);
+                        storeState.loadFullState(
+                          migrateSchemaToV2(localSavedGraph, storeState.graph),
+                          true
+                        );
+                        storeState.setGalleryDrawerOpen(false);
+                        onToast(t('status_restored_local'));
+                      }}
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[11px]"
+                    >
+                      <IconRestore class="w-3 h-3" />
+                      <span>{t('browser_saved_restore_btn')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearStateFromLocalStorage();
+                        setLocalSavedGraph(null);
+                      }}
+                      class="p-1.5 text-neutral-400 hover:text-red-500"
+                      title="Delete browser save"
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {myDocs.length === 0 && !localSavedGraph ? (
+                <p class="text-neutral-500 text-center py-8">{t('gallery_no_saved')}</p>
               ) : (
                 myDocs.map((doc) => (
                   <div
@@ -332,11 +387,9 @@ export function CommunityGalleryDrawer({
               </div>
 
               {loadingCommunity ? (
-                <p class="text-neutral-500 text-center py-8">Loading community graphs...</p>
+                <p class="text-neutral-500 text-center py-8">{t('gallery_loading_community')}</p>
               ) : filteredCommunityItems.length === 0 ? (
-                <p class="text-neutral-500 text-center py-8">
-                  No community graphs found or Firebase not configured.
-                </p>
+                <p class="text-neutral-500 text-center py-8">{t('gallery_no_community')}</p>
               ) : (
                 filteredCommunityItems.map((item) => (
                   <button

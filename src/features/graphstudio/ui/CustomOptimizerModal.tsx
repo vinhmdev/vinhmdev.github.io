@@ -7,6 +7,7 @@ import {
   getDefaultCustomOptimizerCode,
   runCustomOptimizerInWasmSandbox,
 } from '../extensions/quickjs-sandbox';
+import { t } from '../scripts/i18n-client';
 import type { GraphStoreState } from '../state/store';
 import { IconClose } from './icons';
 
@@ -70,11 +71,9 @@ export function CustomOptimizerModal({
         <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
           <div class="min-w-0">
             <h3 class="font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
-              Custom JS Optimizer (QuickJS WebAssembly Sandbox)
+              {t('custom_opt_modal_title')}
             </h3>
-            <p class="text-[11px] text-neutral-500">
-              Isolated WASM VM: 8 MB RAM cap, 50ms interrupt handler, zero DOM/Network access.
-            </p>
+            <p class="text-[11px] text-neutral-500">{t('custom_opt_modal_subtitle')}</p>
           </div>
           <button
             type="button"
@@ -105,7 +104,7 @@ export function CustomOptimizerModal({
               onClick={() => storeState.setCustomOptModalOpen(false)}
               class="px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700"
             >
-              Cancel
+              {t('custom_opt_cancel')}
             </button>
             <button
               type="button"
@@ -113,7 +112,7 @@ export function CustomOptimizerModal({
               onClick={() => void handleTestAndApply()}
               class="px-4 py-1.5 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50"
             >
-              {testing ? 'Verifying in WASM...' : 'Verify in QuickJS WASM & Activate'}
+              {testing ? t('custom_opt_verifying') : t('custom_opt_submit')}
             </button>
           </div>
         </div>

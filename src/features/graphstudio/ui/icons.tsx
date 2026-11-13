@@ -295,3 +295,52 @@ export function IconPlus({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element
     </svg>
   );
 }
+
+export function IconGripVertical({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element {
+  return (
+    <svg class={cls} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <circle cx="9" cy="6" r="1.7" />
+      <circle cx="15" cy="6" r="1.7" />
+      <circle cx="9" cy="12" r="1.7" />
+      <circle cx="15" cy="12" r="1.7" />
+      <circle cx="9" cy="18" r="1.7" />
+      <circle cx="15" cy="18" r="1.7" />
+    </svg>
+  );
+}
+
+export function IconArrowUp({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element {
+  return (
+    <svg class={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </svg>
+  );
+}
+
+export function IconArrowDown({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element {
+  return (
+    <svg class={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <polyline points="19 12 12 19 5 12" />
+    </svg>
+  );
+}
+
+export function IconCopy({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element {
+  return (
+    <svg class={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+export function IconRestore({ class: cls = 'w-3.5 h-3.5' }: IconProps): JSX.Element {
+  return (
+    <svg class={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="1 4 1 10 7 10" />
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+    </svg>
+  );
+}

@@ -1,19 +1,26 @@
 /**
- * Subheader Toolbar (single row at every width): Sidebar Toggle, View Mode Switcher,
- * Examples Drawer Trigger, Undo/Redo, secondary PNG Export, and a "More" overflow menu
- * (New blank graph, Save to browser, Kink subgradient, frame-compute latency).
- * JSON export lives only in Share › Offline/JSON so each action has one home.
+ * Responsive Studio Toolbar:
+ * - On Desktop (`>= 1024px` `lg+`): Portals directly into `#gs-header-studio-slot` inside the
+ *   static `<header>`, reclaiming `41px` of vertical viewport height with zero CLS.
+ * - On Mobile / Tablet (`< 1024px`): Renders a compact single-row subheader below `<header>`.
  */
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import { saveStateToLocalStorage } from '../state/local-persistence';
+import { createPortal } from 'preact/compat';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+  loadStateFromLocalStorage,
+  saveStateToLocalStorage,
+} from '../state/local-persistence';
 import type { GraphStoreState } from '../state/store';
+import { migrateSchemaToV2 } from '../state/url-codec';
 import { t } from '../scripts/i18n-client';
+import { FloatingPopover } from './FloatingPopover';
 import {
   IconBoard,
   IconDownload,
   IconMore,
   IconRedo,
+  IconRestore,
   IconSave,
   IconSidebarToggle,
   IconUndo,
@@ -33,16 +40,33 @@ export function ToolbarSubheader({
   onToggleSidebar,
   onExportPng,
   onToast,
-}: ToolbarProps): JSX.Element {
+}: ToolbarProps): JSX.Element | null {
   const { graph, undoStack, redoStack } = storeState;
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const moreBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [isDesktopLg, setIsDesktopLg] = useState<boolean>(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 1024px)').matches
+      : false
+  );
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(() =>
+    typeof document !== 'undefined'
+      ? document.getElementById('gs-header-studio-slot')
+      : null
+  );
 
   useEffect(() => {
-    if (!toolsMenuOpen || typeof window === 'undefined') return;
-    const close = (): void => setToolsMenuOpen(false);
-    window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
-  }, [toolsMenuOpen]);
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    setPortalTarget(document.getElementById('gs-header-studio-slot'));
+    if (typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const onChange = (ev: MediaQueryListEvent): void => setIsDesktopLg(ev.matches);
+    setIsDesktopLg(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  const hasLocalSave = toolsMenuOpen ? loadStateFromLocalStorage() !== null : false;
 
   const handleSaveLocal = (): void => {
     const ok = saveStateToLocalStorage(graph);
@@ -50,9 +74,18 @@ export function ToolbarSubheader({
     setToolsMenuOpen(false);
   };
 
-  return (
-    <div class="flex items-center justify-between gap-1.5 px-2.5 sm:px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
-      {/* Left Group: Sidebar Toggle, Blank Reset, View Modes, and Explore Examples Trigger */}
+  const handleRestoreLocal = (): void => {
+    const saved = loadStateFromLocalStorage();
+    if (!saved) return;
+    storeState.setSessionMode('local_url', null);
+    storeState.loadFullState(migrateSchemaToV2(saved, graph), true);
+    onToast(t('status_restored_local'));
+    setToolsMenuOpen(false);
+  };
+
+  const controlsContent = (
+    <>
+      {/* Left Group: Sidebar Toggle, View Modes, and Explore Examples Trigger */}
       <div class="flex items-center gap-1.5 min-w-0">
         {onToggleSidebar && (
           <button
@@ -92,14 +125,14 @@ export function ToolbarSubheader({
                   : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
               }`}
             >
-              <span class="lg:hidden">
+              <span class="xl:hidden">
                 {m === 'inference'
                   ? t('view_inference_short')
                   : m === 'optimization'
                     ? t('view_optimization_short')
                     : t('view_dual_short')}
               </span>
-              <span class="hidden lg:inline">
+              <span class="hidden xl:inline">
                 {m === 'inference'
                   ? t('view_inference')
                   : m === 'optimization'
@@ -110,11 +143,11 @@ export function ToolbarSubheader({
           ))}
         </div>
 
-        {/* Explore Examples Drawer Trigger (replaces bulky <select> dropdown) */}
+        {/* Explore Examples Drawer Trigger */}
         <button
           type="button"
           onClick={() => storeState.setGalleryDrawerOpen(true, 'examples')}
-          class="inline-flex items-center gap-1 shrink-0 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500 font-medium transition-colors"
+          class="inline-flex items-center gap-1 shrink-0 h-7 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500 text-xs font-medium transition-colors"
           title={t('explore_examples_btn')}
         >
           <span>📚</span>
@@ -123,13 +156,13 @@ export function ToolbarSubheader({
       </div>
 
       {/* Right Group: Undo/Redo, secondary PNG export, and the "More" overflow menu */}
-      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 text-xs">
         <button
           type="button"
           disabled={undoStack.length === 0}
           onClick={() => storeState.undo()}
           class="flex items-center justify-center w-7 h-7 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 disabled:opacity-40 hover:border-orange-500"
-          title={t('undo_btn')}
+          title={`${t('undo_btn')} (Ctrl/Cmd+Z)`}
           aria-label={t('undo_btn')}
         >
           <IconUndo />
@@ -139,7 +172,7 @@ export function ToolbarSubheader({
           disabled={redoStack.length === 0}
           onClick={() => storeState.redo()}
           class="flex items-center justify-center w-7 h-7 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 disabled:opacity-40 hover:border-orange-500"
-          title={t('redo_btn')}
+          title={`${t('redo_btn')} (Ctrl/Cmd+Shift+Z)`}
           aria-label={t('redo_btn')}
         >
           <IconRedo />
@@ -156,89 +189,109 @@ export function ToolbarSubheader({
           <span class="hidden sm:inline">PNG</span>
         </button>
 
-        {/* "More" overflow menu: occasional actions only */}
-        <div class="relative inline-block">
+        {/* "More" overflow menu via FloatingPopover Portal */}
+        <button
+          ref={(el) => {
+            moreBtnRef.current = el;
+          }}
+          type="button"
+          aria-expanded={toolsMenuOpen}
+          aria-haspopup="menu"
+          aria-label={t('more_menu_btn')}
+          onClick={() => setToolsMenuOpen((prev) => !prev)}
+          class={`flex items-center justify-center w-7 h-7 rounded-md border transition-colors ${
+            toolsMenuOpen
+              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
+              : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
+          }`}
+          title={t('more_menu_btn')}
+        >
+          <IconMore />
+        </button>
+
+        <FloatingPopover
+          open={toolsMenuOpen}
+          anchorEl={moreBtnRef.current}
+          onClose={() => setToolsMenuOpen(false)}
+          align="right"
+          preferredWidthPx={248}
+          class="w-60 py-1.5 flex flex-col text-xs"
+        >
           <button
+            id="blank-graph-btn"
             type="button"
-            aria-expanded={toolsMenuOpen}
-            aria-haspopup="menu"
-            aria-label={t('more_menu_btn')}
-            onClick={(e) => {
-              e.stopPropagation();
-              setToolsMenuOpen((prev) => !prev);
+            role="menuitem"
+            onClick={() => {
+              storeState.resetToBlankCanvas();
+              onToast(t('blank_mode_toast'));
+              setToolsMenuOpen(false);
             }}
-            class={`flex items-center justify-center w-7 h-7 rounded-md border transition-colors ${
-              toolsMenuOpen
-                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/50'
-                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:border-orange-500'
-            }`}
-            title={t('more_menu_btn')}
+            class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            title={t('t00_title')}
           >
-            <IconMore />
+            <IconBoard class="w-3.5 h-3.5 text-orange-500 shrink-0" />
+            <span>{t('new_blank_graph')}</span>
           </button>
 
-          {toolsMenuOpen && (
-            <div
-              role="menu"
-              onClick={(e) => e.stopPropagation()}
-              class="absolute right-0 top-full mt-1.5 z-40 w-60 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col text-xs"
-            >
-              <button
-                id="blank-graph-btn"
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  storeState.resetToBlankCanvas();
-                  onToast(t('blank_mode_toast'));
-                  setToolsMenuOpen(false);
-                }}
-                class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                title={t('t00_title')}
-              >
-                <IconBoard class="w-3.5 h-3.5 text-orange-500" />
-                <span>{t('new_blank_graph')}</span>
-              </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleSaveLocal}
+            class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
+            <IconSave class="w-3.5 h-3.5 text-orange-500 shrink-0" />
+            <span>{t('save_browser')}</span>
+          </button>
 
-              <button
-                type="button"
-                role="menuitem"
-                onClick={handleSaveLocal}
-                class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              >
-                <IconSave class="w-3.5 h-3.5 text-orange-500" />
-                <span>{t('save_browser')}</span>
-              </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasLocalSave}
+            onClick={handleRestoreLocal}
+            class="flex items-center gap-2 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <IconRestore class="w-3.5 h-3.5 text-orange-500 shrink-0" />
+            <span>{t('restore_browser')}</span>
+          </button>
 
-              <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+          <div class="my-1 border-t border-neutral-200 dark:border-neutral-800" />
 
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  storeState.setSubgradConvention(
-                    graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
-                  );
-                }}
-                class="flex items-center justify-between px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                title="Toggle Clarke Subdifferential at kink u = 0"
-              >
-                <span>Kink Subgradient</span>
-                <span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-bold">
-                  {graph.subgradConvention === 'zero' ? 'H(0)=0' : 'H(0)=0.5'}
-                </span>
-              </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              storeState.setSubgradConvention(
+                graph.subgradConvention === 'zero' ? 'symmetric' : 'zero'
+              );
+            }}
+            class="flex items-center justify-between px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            title="Toggle Clarke Subdifferential at kink u = 0"
+          >
+            <span>Kink Subgradient</span>
+            <span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-bold">
+              {graph.subgradConvention === 'zero' ? 'H(0)=0' : 'H(0)=0.5'}
+            </span>
+          </button>
 
-              <div
-                class="mt-1 px-3 pt-1.5 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400"
-                title="Worker frame recalculation latency (Budget < 4.0ms)"
-              >
-                <span>{t('latency_label')}</span>
-                <span class="font-mono">{storeState.computeDurationMs.toFixed(2)} ms</span>
-              </div>
-            </div>
-          )}
-        </div>
+          <div
+            class="mt-1 px-3 pt-1.5 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400"
+            title="Worker frame recalculation latency (Budget < 4.0ms)"
+          >
+            <span>{t('latency_label')}</span>
+            <span class="font-mono">{storeState.computeDurationMs.toFixed(2)} ms</span>
+          </div>
+        </FloatingPopover>
       </div>
+    </>
+  );
+
+  if (isDesktopLg && portalTarget) {
+    return createPortal(controlsContent, portalTarget);
+  }
+
+  return (
+    <div class="flex items-center justify-between gap-1.5 px-2.5 sm:px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/90 text-xs">
+      {controlsContent}
     </div>
   );
 }

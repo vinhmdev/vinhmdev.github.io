@@ -35,6 +35,7 @@ import {
 } from '../core/parser/ast-classifier';
 import {
   DEFAULT_FUNCTION_LIBRARY,
+  extractFunctionSignature,
   extractLeadingFunctionLabel,
   resolveDerivSymbol,
 } from '../core/parser/cortex-setup';
@@ -325,6 +326,8 @@ export interface GraphStoreState {
   whiteboardTool: WhiteboardTool;
   whiteboardColor: string;
   whiteboardStrokes: WhiteboardStroke[];
+  whiteboardUndoStack: WhiteboardStroke[][];
+  whiteboardRedoStack: WhiteboardStroke[][];
   shareModalOpen: boolean;
   galleryDrawerOpen: boolean;
   galleryInitialTab: 'examples' | 'my_docs' | 'community';
@@ -377,6 +380,9 @@ export interface GraphStoreState {
    */
   addExpressionsBatch: (items: ExpressionBatchItem[], replaceId?: string) => void;
   setExpressionKind: (id: string, kind: ExpressionKind) => void;
+  reorderExpressions: (fromIndex: number, toIndex: number) => void;
+  moveExpression: (id: string, dir: -1 | 1) => void;
+  duplicateExpression: (id: string) => string | null;
   removeExpression: (id: string) => void;
   clearAllExpressions: () => void;
   toggleExpressionProp: (
@@ -404,6 +410,8 @@ export interface GraphStoreState {
   setSliderValue: (name: string, value: number, commitUndo?: boolean) => void;
   updateSliderBounds: (name: string, bounds: Partial<SliderState>) => void;
   stepSliderByDelta: (name: string, dir: 1 | -1) => void;
+  reorderSliders: (fromIndex: number, toIndex: number) => void;
+  moveSlider: (name: string, dir: -1 | 1) => void;
   toggleAllSlidersPlay: () => void;
   stepPlayingSliders: (dtSec: number) => boolean;
   addDataPoint: (pt: Omit<DataPoint2D, 'id'>) => void;
@@ -437,8 +445,15 @@ export interface GraphStoreState {
   setWhiteboardTool: (tool: WhiteboardTool) => void;
   setWhiteboardColor: (color: string) => void;
   addWhiteboardStroke: (stroke: WhiteboardStroke) => void;
-  eraseWhiteboardAt: (wx: number, wy: number, radiusWorld: number) => void;
+  eraseWhiteboardAt: (
+    wx: number,
+    wy: number,
+    radiusWorld: number,
+    recordUndo?: boolean
+  ) => boolean;
   clearWhiteboard: () => void;
+  undoWhiteboard: () => void;
+  redoWhiteboard: () => void;
   applyWorkerResult: (res: {
     curves: CurveRenderPacket[];
     trainLoss: number;
@@ -617,6 +632,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     whiteboardTool: 'cursor',
     whiteboardColor: '#f97316',
     whiteboardStrokes: [],
+    whiteboardUndoStack: [],
+    whiteboardRedoStack: [],
     shareModalOpen: false,
     galleryDrawerOpen: false,
     galleryInitialTab: 'examples',
@@ -642,6 +659,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       set({
         workspaceMode: 'ml',
         whiteboardStrokes: [],
+        whiteboardUndoStack: [],
+        whiteboardRedoStack: [],
         whiteboardTool: 'cursor',
         brushActive: false,
       });
@@ -653,6 +672,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       set({
         workspaceMode: 'ml',
         whiteboardStrokes: [],
+        whiteboardUndoStack: [],
+        whiteboardRedoStack: [],
         whiteboardTool: 'cursor',
         brushActive: false,
       });
@@ -886,6 +907,86 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         return kind === 'note' ? { ...rest, kind: 'note' as const, fitLoss: false } : rest;
       });
       commitGraph({ ...g, expressions: ensureFitTarget(expressions) }, true);
+    },
+
+    reorderExpressions(fromIndex, toIndex) {
+      const prev = get();
+      const g = prev.graph;
+      const len = g.expressions.length;
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= len ||
+        toIndex >= len
+      ) {
+        return;
+      }
+
+      const nextExprs = [...g.expressions];
+      const [moved] = nextExprs.splice(fromIndex, 1);
+      nextExprs.splice(toIndex, 0, moved);
+      const expressions = ensureFitTarget(nextExprs);
+
+      // Update curve packet Z-order synchronously (0ms) so later rows render on top
+      const orderMap = new Map(expressions.map((e, idx) => [e.id, idx]));
+      const curves = [...prev.curves].sort(
+        (a, b) => (orderMap.get(a.exprId) ?? 9999) - (orderMap.get(b.exprId) ?? 9999)
+      );
+      set({ curves });
+
+      // Only run full AST slider sync when duplicate formal function names exist (Last-Row-Wins)
+      const seenFnNames = new Set<string>();
+      let hasDuplicateFnDefs = false;
+      for (const item of getPlottableExpressions(expressions)) {
+        const sig = extractFunctionSignature(item.latex);
+        if (sig && sig.formalParams.length > 0) {
+          const lower = sig.name.toLowerCase();
+          if (seenFnNames.has(lower)) {
+            hasDuplicateFnDefs = true;
+            break;
+          }
+          seenFnNames.add(lower);
+        }
+      }
+
+      commitGraph({ ...g, expressions }, true, !hasDuplicateFnDefs);
+    },
+
+    moveExpression(id, dir) {
+      const exprs = get().graph.expressions;
+      const idx = exprs.findIndex((e) => e.id === id);
+      if (idx < 0) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= exprs.length) return;
+      get().reorderExpressions(idx, targetIdx);
+    },
+
+    duplicateExpression(id) {
+      const g = get().graph;
+      const idx = g.expressions.findIndex((e) => e.id === id);
+      if (idx < 0) return null;
+      const src = g.expressions[idx];
+      const usedColors = new Set(g.expressions.map((e) => e.color.toLowerCase()));
+      const nextColor = isNoteExpression(src)
+        ? src.color
+        : (EXPRESSION_COLORS.find((c) => !usedColors.has(c.toLowerCase())) ??
+          EXPRESSION_COLORS[(g.expressions.length + 1) % EXPRESSION_COLORS.length]);
+      const copyId = `expr-${Date.now()}-${g.expressions.length}`;
+      const cloned: ExpressionItem = {
+        ...src,
+        id: copyId,
+        color: nextColor,
+        fitLoss: false,
+        collapsed: false,
+      };
+      const nextExprs = [
+        ...g.expressions.slice(0, idx + 1),
+        cloned,
+        ...g.expressions.slice(idx + 1),
+      ];
+      commitGraph({ ...g, expressions: ensureFitTarget(nextExprs) }, true);
+      return copyId;
     },
 
     removeExpression(id) {
@@ -1291,6 +1392,76 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         g.surfaceParamW2
       );
       commitGraph({ ...g, sliders, rightViewport }, true, true);
+    },
+
+    reorderSliders(fromIndex, toIndex) {
+      const g = get().graph;
+      const keys = Object.keys(g.sliders);
+      const len = keys.length;
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= len ||
+        toIndex >= len
+      ) {
+        return;
+      }
+
+      const prevAxes = resolveSurfaceParamPair(
+        g.sliders,
+        g.surfaceParamW1,
+        g.surfaceParamW2
+      );
+
+      const nextKeys = [...keys];
+      const [movedKey] = nextKeys.splice(fromIndex, 1);
+      nextKeys.splice(toIndex, 0, movedKey);
+
+      const nextSliders: Record<string, SliderState> = {};
+      for (const k of nextKeys) {
+        nextSliders[k] = g.sliders[k];
+      }
+
+      // Preserve active 3D Loss Surface parameter axes when reordering sliders in the UI
+      let surfaceParamW1 = g.surfaceParamW1;
+      let surfaceParamW2 = g.surfaceParamW2;
+      if (len >= 2) {
+        const afterAxes = resolveSurfaceParamPair(
+          nextSliders,
+          surfaceParamW1,
+          surfaceParamW2
+        );
+        if (
+          (afterAxes.w1Key !== prevAxes.w1Key || afterAxes.w2Key !== prevAxes.w2Key) &&
+          prevAxes.w1Key in nextSliders &&
+          prevAxes.w2Key in nextSliders &&
+          prevAxes.w1Key !== prevAxes.w2Key
+        ) {
+          surfaceParamW1 = prevAxes.w1Key;
+          surfaceParamW2 = prevAxes.w2Key;
+        }
+      }
+
+      commitGraph(
+        {
+          ...g,
+          sliders: nextSliders,
+          surfaceParamW1,
+          surfaceParamW2,
+        },
+        true,
+        true
+      );
+    },
+
+    moveSlider(name, dir) {
+      const keys = Object.keys(get().graph.sliders);
+      const idx = keys.indexOf(name);
+      if (idx < 0) return;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= keys.length) return;
+      get().reorderSliders(idx, targetIdx);
     },
 
     toggleAllSlidersPlay() {
@@ -1715,27 +1886,51 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     undo() {
-      const { undoStack, redoStack, graph } = get();
-      if (undoStack.length === 0) return;
-      const previous = undoStack[undoStack.length - 1];
+      const prev = get();
+      if (prev.undoStack.length === 0) return;
+      const previous = prev.undoStack[prev.undoStack.length - 1];
+      const orderMap = new Map(previous.expressions.map((e, idx) => [e.id, idx]));
+      const curves = [...prev.curves].sort(
+        (a, b) => (orderMap.get(a.exprId) ?? 9999) - (orderMap.get(b.exprId) ?? 9999)
+      );
+      const cloudMeta = prev.cloudMeta ? { ...prev.cloudMeta, isDirty: true } : null;
       set({
         graph: previous,
-        workspaceMode: 'ml',
-        undoStack: undoStack.slice(0, -1),
-        redoStack: [graph, ...redoStack].slice(0, MAX_UNDO_STEPS),
+        curves,
+        cloudMeta,
+        undoStack: prev.undoStack.slice(0, -1),
+        redoStack: [prev.graph, ...prev.redoStack].slice(0, MAX_UNDO_STEPS),
       });
+      scheduleAutoSave(previous, 500);
+      scheduleStatelessUrlUpdate(
+        prev.sessionMode,
+        () => encodeStateToUrlHashSync(previous),
+        300
+      );
     },
 
     redo() {
-      const { undoStack, redoStack, graph } = get();
-      if (redoStack.length === 0) return;
-      const next = redoStack[0];
+      const prev = get();
+      if (prev.redoStack.length === 0) return;
+      const next = prev.redoStack[0];
+      const orderMap = new Map(next.expressions.map((e, idx) => [e.id, idx]));
+      const curves = [...prev.curves].sort(
+        (a, b) => (orderMap.get(a.exprId) ?? 9999) - (orderMap.get(b.exprId) ?? 9999)
+      );
+      const cloudMeta = prev.cloudMeta ? { ...prev.cloudMeta, isDirty: true } : null;
       set({
         graph: next,
-        workspaceMode: 'ml',
-        undoStack: [...undoStack, graph].slice(-MAX_UNDO_STEPS),
-        redoStack: redoStack.slice(1),
+        curves,
+        cloudMeta,
+        undoStack: [...prev.undoStack, prev.graph].slice(-MAX_UNDO_STEPS),
+        redoStack: prev.redoStack.slice(1),
       });
+      scheduleAutoSave(next, 500);
+      scheduleStatelessUrlUpdate(
+        prev.sessionMode,
+        () => encodeStateToUrlHashSync(next),
+        300
+      );
     },
 
     setSessionMode(sessionMode, cloudMeta = null) {
@@ -1776,10 +1971,18 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     },
 
     addWhiteboardStroke(stroke) {
-      set({ whiteboardStrokes: [...get().whiteboardStrokes, stroke] });
+      const prev = get();
+      set({
+        whiteboardUndoStack: [
+          ...prev.whiteboardUndoStack.slice(-(MAX_UNDO_STEPS - 1)),
+          prev.whiteboardStrokes,
+        ],
+        whiteboardRedoStack: [],
+        whiteboardStrokes: [...prev.whiteboardStrokes, stroke],
+      });
     },
 
-    eraseWhiteboardAt(wx, wy, radiusWorld) {
+    eraseWhiteboardAt(wx, wy, radiusWorld, recordUndo = true) {
       const rSq = radiusWorld * radiusWorld;
       const distToSegmentSq = (
         px: number,
@@ -1801,7 +2004,8 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         return (px - projX) * (px - projX) + (py - projY) * (py - projY);
       };
 
-      const filtered = get().whiteboardStrokes.filter((stroke) => {
+      const prev = get();
+      const filtered = prev.whiteboardStrokes.filter((stroke) => {
         const pts = stroke.points;
         if (pts.length === 0) return false;
         if (pts.length === 1) {
@@ -1816,13 +2020,62 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         }
         return true;
       });
-      if (filtered.length !== get().whiteboardStrokes.length) {
-        set({ whiteboardStrokes: filtered });
+      if (filtered.length !== prev.whiteboardStrokes.length) {
+        set({
+          whiteboardStrokes: filtered,
+          ...(recordUndo
+            ? {
+                whiteboardUndoStack: [
+                  ...prev.whiteboardUndoStack.slice(-(MAX_UNDO_STEPS - 1)),
+                  prev.whiteboardStrokes,
+                ],
+                whiteboardRedoStack: [],
+              }
+            : {}),
+        });
+        return true;
       }
+      return false;
     },
 
     clearWhiteboard() {
-      set({ whiteboardStrokes: [] });
+      const prev = get();
+      if (prev.whiteboardStrokes.length === 0) return;
+      set({
+        whiteboardUndoStack: [
+          ...prev.whiteboardUndoStack.slice(-(MAX_UNDO_STEPS - 1)),
+          prev.whiteboardStrokes,
+        ],
+        whiteboardRedoStack: [],
+        whiteboardStrokes: [],
+      });
+    },
+
+    undoWhiteboard() {
+      const prev = get();
+      if (prev.whiteboardUndoStack.length === 0) return;
+      const restored = prev.whiteboardUndoStack[prev.whiteboardUndoStack.length - 1];
+      set({
+        whiteboardStrokes: restored,
+        whiteboardUndoStack: prev.whiteboardUndoStack.slice(0, -1),
+        whiteboardRedoStack: [prev.whiteboardStrokes, ...prev.whiteboardRedoStack].slice(
+          0,
+          MAX_UNDO_STEPS
+        ),
+      });
+    },
+
+    redoWhiteboard() {
+      const prev = get();
+      if (prev.whiteboardRedoStack.length === 0) return;
+      const next = prev.whiteboardRedoStack[0];
+      set({
+        whiteboardStrokes: next,
+        whiteboardUndoStack: [...prev.whiteboardUndoStack, prev.whiteboardStrokes].slice(
+          -MAX_UNDO_STEPS
+        ),
+        whiteboardRedoStack: prev.whiteboardRedoStack.slice(1),
+      });
     },
 
     applyWorkerResult(res) {
