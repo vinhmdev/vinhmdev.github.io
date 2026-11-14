@@ -36,7 +36,11 @@ import {
   WebGL2SurfaceRenderer,
 } from '../renderers/webgl2-surface';
 import { getTemplateById } from '../extensions/templates';
-import { graphStore, type GraphStoreState } from '../state/store';
+import {
+  getSliderDomainMode,
+  graphStore,
+  type GraphStoreState,
+} from '../state/store';
 import { getPlottableExpressions } from '../state/expression-kind';
 import type {
   LossKind,
@@ -456,7 +460,11 @@ export function DualViewportPanel({
     const applyDraggedParam = (key: string, worldVal: number): void => {
       const s = graph.sliders[key];
       if (!s) return;
-      const targetVal = projectParam(key, worldVal, { min: s.min, max: s.max });
+      const targetVal = projectParam(key, worldVal, {
+        min: s.min,
+        max: s.max,
+        domainMode: getSliderDomainMode(s),
+      });
       if (targetVal < s.min || targetVal > s.max) {
         storeState.updateSliderBounds(key, {
           min: Math.min(s.min, Math.floor(targetVal * 10) / 10),

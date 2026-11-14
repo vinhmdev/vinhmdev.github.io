@@ -21,6 +21,23 @@ export type MathJsonExpr =
  */
 export type SymbolRole = 'constant' | 'primitive' | 'data_var' | 'param' | 'hyperparam';
 
+/**
+ * Explicit domain guard mode for a parameter / slider:
+ * - 'free'         : ℝ unconstrained (-∞, +∞) — user can freely set min <= 0 (e.g. -1)
+ * - 'non_negative' : Non-negative (≥ 0, floor = 0)
+ * - 'positive'     : Strictly positive (> 0, floor = 0.01 or custom > 0)
+ */
+export type ParamDomainMode = 'free' | 'non_negative' | 'positive';
+
+export interface LibraryParamConfig {
+  role?: 'param' | 'hyperparam';
+  domainMode?: ParamDomainMode;
+  min?: number;
+  max?: number;
+  step?: number;
+  defaultValue?: number;
+}
+
 export interface ClassifiedSymbol {
   name: string;
   latex: string;
@@ -29,6 +46,8 @@ export interface ClassifiedSymbol {
   defaultMax: number;
   defaultStep: number;
   defaultValue: number;
+  domainMode?: ParamDomainMode;
+  domainSource?: string;
 }
 
 export interface FunctionSignature {
@@ -46,6 +65,8 @@ export interface UserFunctionDef {
   bodyExpr: MathJsonExpr;
   /** Default AST values for optional trailing formal parameters when omitted at call site */
   defaultArgs?: Record<string, MathJsonExpr>;
+  /** Explicit parameter setup (role, domain constraint, default slider bounds) */
+  paramConfigs?: Record<string, LibraryParamConfig>;
   /** Source expression item id or 'library' */
   sourceExprId: string;
   /** Original LaTeX string */
@@ -64,6 +85,8 @@ export interface LibraryFunctionEntry {
   exampleCallLatex: string;
   /** Default AST expressions for omitted trailing arguments */
   defaultArgs?: Record<string, MathJsonExpr>;
+  /** Explicit per-parameter setup (role, domain constraint, default slider bounds) */
+  paramConfigs?: Record<string, LibraryParamConfig>;
   category: 'transformer' | 'activation' | 'normalization' | 'custom';
   description: string;
   enabled: boolean;
@@ -82,6 +105,8 @@ export interface ClassifiedAST {
   isImplicitRelation: boolean;
   /** Extracted formal function signature if defined as `fn(p1, p2, ...) = ...` */
   signature?: FunctionSignature;
+  /** Names of user/library functions directly invoked in this expression */
+  calledFunctions?: string[];
 }
 
 /**

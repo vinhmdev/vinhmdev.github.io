@@ -3,8 +3,15 @@ import type {
   SubgradConvention,
   PointOfInterest,
   LibraryFunctionEntry,
+  LibraryParamConfig,
+  ParamDomainMode,
 } from './math';
-export type { SubgradConvention, LibraryFunctionEntry };
+export type {
+  SubgradConvention,
+  LibraryFunctionEntry,
+  LibraryParamConfig,
+  ParamDomainMode,
+};
 
 /** Three primary view modes in [FR-1.4] */
 export type ViewMode = 'inference' | 'optimization' | 'dual';
@@ -103,6 +110,12 @@ export interface SliderState {
   speed: PlaybackSpeed;
   loopMode: SliderLoopMode;
   direction: 1 | -1;
+  /** Explicit domain constraint ('free' | 'non_negative' | 'positive') */
+  domainMode?: ParamDomainMode;
+  /** Transparent origin of domain constraint (e.g. 'Attention', 'T-07', 'user') */
+  domainSource?: string;
+  /** True when the user explicitly toggled/unlocked domainMode on this slider */
+  domainUserSet?: boolean;
 }
 
 export interface DataPoint2D {

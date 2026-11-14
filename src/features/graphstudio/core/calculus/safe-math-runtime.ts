@@ -70,6 +70,7 @@ export function safeSoftmax(
   z3?: number,
   tau?: number
 ): number {
+  if (Number.isNaN(zi) || Number.isNaN(z1)) return NaN;
   if (z2 === undefined) {
     // 2-arg call: softmax(zi, z1) -> exp(zi) / (exp(zi) + exp(z1))
     const maxS = Math.max(zi, z1);
@@ -77,6 +78,7 @@ export function safeSoftmax(
     const den = num + Math.exp(z1 - maxS);
     return den > 0 ? num / den : 0.0;
   }
+  if (Number.isNaN(z2)) return NaN;
   if (z3 === undefined) {
     // 3-arg call: softmax(zi, z1, z2)
     const maxS = Math.max(zi, z1, z2);
@@ -84,6 +86,7 @@ export function safeSoftmax(
     const den = num + Math.exp(z1 - maxS) + Math.exp(z2 - maxS);
     return den > 0 ? num / den : 0.0;
   }
+  if (Number.isNaN(z3) || (tau !== undefined && Number.isNaN(tau))) return NaN;
   const t = Math.max(Math.abs(tau ?? 1.0), 1e-9);
   const s0 = zi / t;
   const s1 = z1 / t;

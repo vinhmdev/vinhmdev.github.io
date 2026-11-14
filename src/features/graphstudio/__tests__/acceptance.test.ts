@@ -2997,4 +2997,292 @@ describe('1:1 aspect lock: square grid cells & shared tick step', () => {
     expect(uniform3fCalls['u_projScale'][1]).toBeGreaterThan(0);
     expect(uniform3fCalls['u_projScale'][2]).toBeGreaterThan(0);
   });
+
+  it('makes Attention(x) and library parameter domain constraints explicit, unlockable to ℝ (min = -1), and lossless across Worker & #v2.dr.* URL codec', () => {
+    const store = graphStore.getState();
+    store.selectTemplate('T-00');
+    store.resetFunctionLibrary();
+    store.clearAllExpressions();
+
+    // 1. Default Function Library declares explicit paramConfigs for Attention.d_k (> 0)
+    const attentionEntry = DEFAULT_FUNCTION_LIBRARY.find((f) => f.name === 'Attention');
+    expect(attentionEntry?.paramConfigs?.d_k).toEqual({
+      role: 'hyperparam',
+      domainMode: 'positive',
+      min: 0.5,
+      max: 64,
+      step: 0.5,
+      defaultValue: 4,
+    });
+
+    // 2. Adding Attention(x) (1-arg call with defaultArgs expansion) surfaces calledFunctions + d_k domain metadata
+    store.addExpression('\\operatorname{Attention}(x, K, V, d_k)', 'Attention(x)');
+    const userFns = buildUserFunctionRegistry(
+      graphStore.getState().graph.expressions,
+      graphStore.getState().graph.functionLibrary
+    );
+    const classified1Arg = classifyLatexExpression('Attention(x)', {}, userFns);
+    expect(classified1Arg.valid).toBe(true);
+    expect(classified1Arg.calledFunctions).toContain('Attention');
+    const dkClassified = classified1Arg.symbols.find((s) => s.name === 'd_k');
+    expect(dkClassified?.domainMode).toBe('positive');
+    expect(dkClassified?.domainSource).toBe('Attention');
+    expect(dkClassified?.defaultMin).toBe(0.5);
+
+    const dkSliderLocked = graphStore.getState().graph.sliders.d_k;
+    expect(dkSliderLocked).toBeDefined();
+    expect(dkSliderLocked.domainMode).toBe('positive');
+    expect(dkSliderLocked.domainSource).toBe('Attention');
+    expect(dkSliderLocked.min).toBe(0.5);
+
+    // 3. While locked (> 0), setting min = -1 protects d_k >= 0.01
+    store.updateSliderBounds('d_k', { min: -1 });
+    expect(graphStore.getState().graph.sliders.d_k.min).toBeGreaterThanOrEqual(0.01);
+
+    // 4. Unlocking d_k to 'free' (ℝ) accepts min = -1 and value = -0.5 without clamping
+    store.updateSliderBounds('d_k', { domainMode: 'free', min: -1, value: -0.5 });
+    const dkUnlocked = graphStore.getState().graph.sliders.d_k;
+    expect(dkUnlocked.domainMode).toBe('free');
+    expect(dkUnlocked.domainUserSet).toBe(true);
+    expect(dkUnlocked.min).toBe(-1);
+    expect(dkUnlocked.value).toBe(-0.5);
+
+    // Editing expressions preserves the user's unlocked ℝ domain & min = -1
+    store.addExpression('\\sin(x)', 'g(x)');
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('free');
+    expect(graphStore.getState().graph.sliders.d_k.min).toBe(-1);
+    expect(graphStore.getState().graph.sliders.d_k.value).toBe(-0.5);
+
+    // 5. AST Stability Pass & Compute Worker respect unlockedSymbols (no silent Sqrt(Max(d_k, 0.0001)) clamp)
+    expect(
+      applyStabilityPass(['Sqrt', 'd_k'], { unlockedSymbols: new Set(['d_k']) })
+    ).toEqual(['Sqrt', 'd_k']);
+
+    const attExpr = graphStore.getState().graph.expressions[0];
+    const workerAtNegativeDk = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 1,
+      expressions: [attExpr],
+      paramValues: { K: 1, V: 1, d_k: -0.5 },
+      paramBounds: {
+        K: { min: -5, max: 5, domainMode: 'free' },
+        V: { min: -5, max: 5, domainMode: 'free' },
+        d_k: { min: -1, max: 64, domainMode: 'free' },
+      },
+      symbolOverrides: {},
+      subgradConvention: 'zero',
+      leftViewport: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+      rightViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      screenWidth: 400,
+      screenHeight: 300,
+      dataPoints: [],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1,
+      batchNormEnabled: false,
+      optimizerRace: graphStore.getState().graph.optimizerRace,
+      hoveredDataPointId: null,
+      surfaceParamW1: 'K',
+      surfaceParamW2: 'V',
+      functionLibrary: graphStore.getState().graph.functionLibrary,
+    });
+    // At d_k = -0.5, sqrt(-0.5) is undefined in ℝ -> 0 finite curve points rather than fake clamped curve
+    expect(workerAtNegativeDk.curves[0].primaryPoints.length).toBe(0);
+
+    const workerAtPositiveDk = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 2,
+      expressions: [attExpr],
+      paramValues: { K: 1, V: 1, d_k: 4 },
+      paramBounds: {
+        K: { min: -5, max: 5, domainMode: 'free' },
+        V: { min: -5, max: 5, domainMode: 'free' },
+        d_k: { min: -1, max: 64, domainMode: 'free' },
+      },
+      symbolOverrides: {},
+      subgradConvention: 'zero',
+      leftViewport: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+      rightViewport: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+      screenWidth: 400,
+      screenHeight: 300,
+      dataPoints: [],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1,
+      batchNormEnabled: false,
+      optimizerRace: graphStore.getState().graph.optimizerRace,
+      hoveredDataPointId: null,
+      surfaceParamW1: 'K',
+      surfaceParamW2: 'V',
+      functionLibrary: graphStore.getState().graph.functionLibrary,
+    });
+    expect(workerAtPositiveDk.curves[0].primaryPoints.length).toBeGreaterThan(10);
+
+    // 6. URL Codec (#v2.dr.*) round-trips slider domainMode & domainUserSet losslessly
+    const unlockedHash = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const decodedUnlocked = decodeStateFromUrlHashSync(
+      unlockedHash,
+      createInitialGraphState('T-00')
+    );
+    expect(decodedUnlocked?.sliders.d_k.domainMode).toBe('free');
+    expect(decodedUnlocked?.sliders.d_k.domainUserSet).toBe(true);
+    expect(decodedUnlocked?.sliders.d_k.min).toBe(-1);
+    expect(decodedUnlocked?.sliders.d_k.value).toBe(-0.5);
+
+    // 7. Plain expression `f(x) = d_k * x` (outside Attention) has domainMode: 'free' by default
+    store.clearAllExpressions();
+    store.addExpression('d_k \\cdot x', 'f(x)');
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('free');
+    store.updateSliderBounds('d_k', { min: -1, value: -1 });
+    expect(graphStore.getState().graph.sliders.d_k.min).toBe(-1);
+    expect(graphStore.getState().graph.sliders.d_k.value).toBe(-1);
+
+    // 8. Updating Attention.paramConfigs.d_k in Function Library propagates to active sliders & URL codec
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, K, V, d_k)', 'Attention(x)');
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('positive');
+
+    const currentLib = graphStore.getState().graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+    const attToUpdate = currentLib.find((f) => f.name === 'Attention')!;
+    store.upsertLibraryFunction({
+      ...attToUpdate,
+      paramConfigs: {
+        ...attToUpdate.paramConfigs,
+        d_k: {
+          role: 'hyperparam',
+          domainMode: 'free',
+          min: -2,
+          max: 32,
+          step: 0.5,
+          defaultValue: 4,
+        },
+      },
+    });
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('free');
+    expect(graphStore.getState().graph.sliders.d_k.min).toBe(-2);
+
+    const customLibHash = encodeStateToUrlHashSync(graphStore.getState().graph);
+    const decodedCustomLib = decodeStateFromUrlHashSync(
+      customLibHash,
+      createInitialGraphState('T-00')
+    );
+    const decodedAtt = decodedCustomLib?.functionLibrary?.find((f) => f.name === 'Attention');
+    expect(decodedAtt?.paramConfigs?.d_k.domainMode).toBe('free');
+    expect(decodedAtt?.paramConfigs?.d_k.min).toBe(-2);
+
+    store.resetFunctionLibrary();
+
+    // 9. Multi-expression order-independent monotonic domain merge + reset when restricted expression is removed
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, K, V, d_k)', 'Attention(x)');
+    store.addExpression('d_k \\cdot x', 'linear');
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('positive');
+    expect(graphStore.getState().graph.sliders.d_k.domainSource).toBe('Attention');
+
+    // Reversing expression order (`[d_k * x, Attention(x)]`) produces identical domain metadata
+    const firstId = graphStore.getState().graph.expressions[0].id;
+    store.reorderExpressions(0, 1);
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('positive');
+    expect(graphStore.getState().graph.sliders.d_k.domainSource).toBe('Attention');
+
+    // Deleting `Attention(x)` leaves only `d_k * x` -> non-user-set `d_k` cleanly resets to `'free'`
+    store.removeExpression(firstId);
+    expect(graphStore.getState().graph.sliders.d_k.domainMode).toBe('free');
+    expect(graphStore.getState().graph.sliders.d_k.domainSource).toBeUndefined();
+
+    // 10. Self-attention `Attention(x, x, V, d_k)` keeps `x` as `data_var` (`primaryVar`) and never creates an `x` slider
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, x, V, d_k)', 'SelfAttention');
+    const selfAttSliders = graphStore.getState().graph.sliders;
+    expect(selfAttSliders.x).toBeUndefined();
+    expect(selfAttSliders.V).toBeDefined();
+    expect(selfAttSliders.d_k?.domainMode).toBe('positive');
+
+    // 11. Editing an unreferenced library function (`SwiGLU`) never clobbers unrelated active sliders,
+    //     and editing `d_k` in `Attention` preserves customized sibling slider (`V`) bounds & value
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, K, V, d_k) + b \\cdot x', 'mixed');
+    store.updateSliderBounds('b', { min: -12, max: 12, value: -7 });
+    store.updateSliderBounds('V', { min: -20, max: 20, value: 6.5 });
+
+    const libBeforeSwiglu =
+      graphStore.getState().graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+    const swigluEntry = libBeforeSwiglu.find((f) => f.name === 'SwiGLU')!;
+    store.upsertLibraryFunction({
+      ...swigluEntry,
+      paramConfigs: {
+        ...swigluEntry.paramConfigs,
+        b: { role: 'param', domainMode: 'positive', min: 1, max: 5, step: 0.1, defaultValue: 2 },
+      },
+    });
+    expect(graphStore.getState().graph.sliders.b.min).toBe(-12);
+    expect(graphStore.getState().graph.sliders.b.value).toBe(-7);
+    expect(graphStore.getState().graph.sliders.b.domainMode).toBe('free');
+
+    const attEntryForSibling = (
+      graphStore.getState().graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY
+    ).find((f) => f.name === 'Attention')!;
+    store.upsertLibraryFunction({
+      ...attEntryForSibling,
+      paramConfigs: {
+        ...attEntryForSibling.paramConfigs,
+        d_k: {
+          role: 'hyperparam',
+          domainMode: 'positive',
+          min: 1,
+          max: 128,
+          step: 0.5,
+          defaultValue: 8,
+        },
+      },
+    });
+    expect(graphStore.getState().graph.sliders.d_k.min).toBe(1);
+    expect(graphStore.getState().graph.sliders.d_k.max).toBe(128);
+    expect(graphStore.getState().graph.sliders.V.min).toBe(-20);
+    expect(graphStore.getState().graph.sliders.V.value).toBe(6.5);
+
+    // 12. Worker honors user-lowered positive (`0.1`) or non_negative (`0`) slider min below library default (`0.5`)
+    store.resetFunctionLibrary();
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, d_k, V, d_k)', 'TunableDk');
+    store.setSymbolRole('d_k', 'param');
+    const tunableExpr = graphStore.getState().graph.expressions[0];
+    const workerLowPositive = executeComputeJob({
+      type: 'EVALUATE_FRAME',
+      seq: 3,
+      expressions: [tunableExpr],
+      paramValues: { V: 1, d_k: 0.12 },
+      paramBounds: {
+        V: { min: -5, max: 5, domainMode: 'free' },
+        d_k: { min: 0.1, max: 64, domainMode: 'positive' },
+      },
+      symbolOverrides: { d_k: 'param' },
+      subgradConvention: 'zero',
+      leftViewport: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+      rightViewport: { xMin: 0.1, xMax: 5, yMin: -5, yMax: 5 },
+      screenWidth: 400,
+      screenHeight: 300,
+      dataPoints: [
+        { id: 'p1', x: 1, y: 0.5, split: 'train' },
+        { id: 'p2', x: 2, y: 0.8, split: 'train' },
+      ],
+      lossKind: 'mse',
+      regularizationKind: 'none',
+      regularizationRadius: 1,
+      batchNormEnabled: false,
+      optimizerRace: {
+        ...graphStore.getState().graph.optimizerRace,
+        startW1: 0.12,
+        startW2: 1.0,
+        steps: 5,
+      },
+      hoveredDataPointId: null,
+      surfaceParamW1: 'd_k',
+      surfaceParamW2: 'V',
+      functionLibrary: graphStore.getState().graph.functionLibrary,
+    });
+    expect(workerLowPositive.trajectories.sgd[0].w1).toBeCloseTo(0.12, 5);
+
+    store.resetFunctionLibrary();
+  });
 });

@@ -14,6 +14,7 @@
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import type {
   LibraryFunctionEntry,
+  ParamDomainMode,
   SubgradConvention,
   SymbolRole,
 } from '../types/math';
@@ -78,6 +79,9 @@ type CompactSliderTuple = [
   SliderLoopMode?,
   PlaybackSpeed?,
   (1 | -1)?,
+  ParamDomainMode?,
+  (0 | 1)?,
+  string?,
 ];
 
 interface CompactPayloadV2 {
@@ -129,6 +133,31 @@ interface CompactPayloadV2 {
   ];
 }
 
+function isSameParamConfigs(
+  a?: LibraryFunctionEntry['paramConfigs'],
+  b?: LibraryFunctionEntry['paramConfigs']
+): boolean {
+  const keysA = Object.keys(a ?? {});
+  const keysB = Object.keys(b ?? {});
+  if (keysA.length !== keysB.length) return false;
+  for (const k of keysA) {
+    const ca = a?.[k];
+    const cb = b?.[k];
+    if (!ca || !cb) return false;
+    if (
+      ca.role !== cb.role ||
+      (ca.domainMode ?? 'free') !== (cb.domainMode ?? 'free') ||
+      ca.min !== cb.min ||
+      ca.max !== cb.max ||
+      ca.step !== cb.step ||
+      ca.defaultValue !== cb.defaultValue
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function isDefaultFunctionLibrary(lib?: LibraryFunctionEntry[]): boolean {
   if (!lib) return true;
   if (lib.length !== DEFAULT_FUNCTION_LIBRARY.length) return false;
@@ -139,7 +168,8 @@ function isDefaultFunctionLibrary(lib?: LibraryFunctionEntry[]): boolean {
       a.id !== b.id ||
       a.name !== b.name ||
       a.enabled !== b.enabled ||
-      a.definitionLatex !== b.definitionLatex
+      a.definitionLatex !== b.definitionLatex ||
+      !isSameParamConfigs(a.paramConfigs, b.paramConfigs)
     ) {
       return false;
     }
@@ -174,8 +204,49 @@ export function packStateToCompactV2(state: GraphStateV2): CompactPayloadV2 {
   });
 
   const s: CompactSliderTuple[] = Object.values(state.sliders).map((sl) => {
+    const isDefaultPositiveScalar =
+      sl.name === 'sigma' ||
+      sl.name === 'tau' ||
+      sl.name === 'epsilon' ||
+      sl.name === 'delta';
+    const hasCustomDomain =
+      Boolean(sl.domainUserSet) ||
+      (sl.domainMode !== undefined && sl.domainMode !== 'free') ||
+      (isDefaultPositiveScalar && sl.domainMode === 'free');
     const hasCustomAnim =
       sl.loopMode !== 'bounce' || sl.speed !== 1 || sl.direction !== 1;
+    if (hasCustomDomain) {
+      return sl.domainSource
+        ? [
+            sl.name,
+            sl.latex,
+            sl.role,
+            num4(sl.value),
+            num4(sl.min),
+            num4(sl.max),
+            num4(sl.step),
+            sl.loopMode,
+            sl.speed,
+            sl.direction,
+            sl.domainMode ?? 'free',
+            sl.domainUserSet ? 1 : 0,
+            sl.domainSource,
+          ]
+        : [
+            sl.name,
+            sl.latex,
+            sl.role,
+            num4(sl.value),
+            num4(sl.min),
+            num4(sl.max),
+            num4(sl.step),
+            sl.loopMode,
+            sl.speed,
+            sl.direction,
+            sl.domainMode ?? 'free',
+            sl.domainUserSet ? 1 : 0,
+          ];
+    }
     return hasCustomAnim
       ? [
           sl.name,
@@ -354,7 +425,25 @@ export function unpackCompactV2ToState(
   );
 
   const sliders: Record<string, SliderState> = {};
-  for (const [name, latex, role, value, min, max, step, loopMode, speed, direction] of compact.s) {
+  for (const [
+    name,
+    latex,
+    role,
+    value,
+    min,
+    max,
+    step,
+    loopMode,
+    speed,
+    direction,
+    domainMode,
+    domainUserSetBit,
+    domainSource,
+  ] of compact.s) {
+    const validDomainMode =
+      domainMode === 'free' || domainMode === 'non_negative' || domainMode === 'positive'
+        ? domainMode
+        : undefined;
     sliders[name] = {
       name,
       latex,
@@ -367,6 +456,9 @@ export function unpackCompactV2ToState(
       speed: speed ?? 1,
       loopMode: loopMode ?? 'bounce',
       direction: direction === -1 ? -1 : 1,
+      ...(validDomainMode ? { domainMode: validDomainMode } : {}),
+      ...(domainUserSetBit !== undefined ? { domainUserSet: domainUserSetBit === 1 } : {}),
+      ...(typeof domainSource === 'string' && domainSource ? { domainSource } : {}),
     };
   }
 

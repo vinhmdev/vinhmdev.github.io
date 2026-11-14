@@ -281,5 +281,20 @@
   "gallery_no_examples": "Không tìm thấy kịch bản phù hợp.",
   "gallery_no_saved": "Chưa có đồ thị nào được lưu trên thiết bị này.",
   "gallery_loading_community": "Đang tải thư viện cộng đồng...",
-  "gallery_no_community": "Chưa có đồ thị cộng đồng hoặc chưa cấu hình Firebase."
+  "gallery_no_community": "Chưa có đồ thị cộng đồng hoặc chưa cấu hình Firebase.",
+  "domain_label": "Miền",
+  "domain_free": "ℝ Tự do",
+  "domain_free_short": "ℝ",
+  "domain_non_neg": "≥ 0",
+  "domain_positive": "> 0",
+  "domain_badge_tooltip": "Ràng buộc miền {param} {mode}{src} • Bấm để cấu hình hoặc mở khóa",
+  "domain_from_source": "từ {src}",
+  "domain_guard_notice": "Đang khóa miền {param} {mode}",
+  "domain_unlock_and_set": "Mở khóa ℝ & đặt {val}",
+  "domain_open_fn_setup": "Thiết lập hàm",
+  "fn_param_setup_btn": "⚙ Thiết lập tham số",
+  "fn_param_setup_title": "Thiết lập tham số & ràng buộc miền",
+  "fn_param_axis_badge": "trục đầu vào",
+  "fn_param_default_label": "mặc định",
+  "fn_card_ref_tooltip": "Đang dùng hàm thư viện {fn} — bấm để xem & chỉnh thiết lập tham số"
 }

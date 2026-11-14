@@ -13,6 +13,7 @@
 import type {
   DataPoint2D,
   LossKind,
+  ParamDomainMode,
   RegularizationKind,
   SubgradConvention,
   Viewport2DBounds,
@@ -36,8 +37,8 @@ export interface PredictorModel {
   paramNames: string[];
   /** Current base parameter values from sliders */
   baseParams: Record<string, number>;
-  /** Bounds for parameters (min, max from sliders) for projected gradient */
-  paramBounds?: Record<string, { min: number; max: number }>;
+  /** Bounds for parameters (min, max, domainMode from sliders) for projected gradient */
+  paramBounds?: Record<string, { min: number; max: number; domainMode?: ParamDomainMode }>;
   /** Surface axis parameter keys */
   w1Key: string;
   w2Key: string;

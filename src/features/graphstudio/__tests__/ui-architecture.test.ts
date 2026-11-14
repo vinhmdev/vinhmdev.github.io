@@ -767,4 +767,111 @@ describe('Phase 1–3 — Preact Component Render & Contextual HUD Verification'
     expect(galleryHtml).toContain(enDict.gallery_cat_math.replace('&', '&amp;'));
     graphStore.getState().setGalleryDrawerOpen(false);
   });
+
+  it('surfaces transparent parameter domain badges & setup UI across CompactSliderCard, ExpressionSidebar, and FunctionLibraryDrawer', () => {
+    const store = graphStore.getState();
+    store.selectTemplate('T-00');
+    store.resetFunctionLibrary();
+    store.clearAllExpressions();
+    store.addExpression('\\operatorname{Attention}(x, K, V, d_k)', 'Attention(x)');
+
+    const stLocked = graphStore.getState();
+    const attExpr = stLocked.graph.expressions[0];
+    const dkLocked = stLocked.graph.sliders.d_k;
+    expect(dkLocked.domainMode).toBe('positive');
+
+    const dummyItemBind = {
+      ref: () => {},
+      style: undefined,
+      isDragging: false,
+      dropIndicator: null,
+      onKeyDown: () => {},
+    };
+    const dummyHandleBind = {
+      onPointerDown: () => {},
+      onPointerMove: () => {},
+      onPointerUp: () => {},
+      onPointerCancel: () => {},
+      onClick: () => {},
+    };
+
+    // 1. CompactSliderCard renders inline `>0` domain pill & 3-mode domain selector in setup tray
+    const sliderCardClosedHtml = renderToString(
+      h(CompactSliderCard, {
+        slider: dkLocked,
+        index: 0,
+        totalCount: 3,
+        axisBadge: null,
+        storeState: stLocked,
+        configOpen: false,
+        onToggleConfig: () => {},
+        itemBind: dummyItemBind,
+        handleBind: dummyHandleBind,
+      })
+    );
+    expect(sliderCardClosedHtml).toContain('data-testid="slider-domain-pill-d_k"');
+    expect(sliderCardClosedHtml).toContain('>>0</button>');
+    expect(sliderCardClosedHtml).toContain('(from Attention)');
+
+    const sliderCardOpenHtml = renderToString(
+      h(CompactSliderCard, {
+        slider: dkLocked,
+        index: 0,
+        totalCount: 3,
+        axisBadge: null,
+        storeState: stLocked,
+        configOpen: true,
+        onToggleConfig: () => {},
+        itemBind: dummyItemBind,
+        handleBind: dummyHandleBind,
+      })
+    );
+    expect(sliderCardOpenHtml).toContain(enDict.domain_free);
+    expect(sliderCardOpenHtml).toContain(enDict.domain_non_neg);
+
+    // 2. ExpressionSidebar renders library reference chip (`fx: Attention(Q, K, V, d_k)` + `d_k > 0`)
+    const sidebarLockedHtml = renderToString(
+      h(ExpressionSidebar, { storeState: stLocked })
+    );
+    expect(sidebarLockedHtml).toContain(`data-testid="expr-fn-ref-${attExpr.id}-Attention"`);
+    expect(sidebarLockedHtml).toContain('>d_k > 0</span>');
+
+    // When unlocked to ℝ, slider pill disappears and ExpressionSidebar chip reflects `d_k ∈ ℝ`
+    store.updateSliderBounds('d_k', { domainMode: 'free', min: -1 });
+    const stUnlocked = graphStore.getState();
+    const sliderCardUnlockedHtml = renderToString(
+      h(CompactSliderCard, {
+        slider: stUnlocked.graph.sliders.d_k,
+        index: 0,
+        totalCount: 3,
+        axisBadge: null,
+        storeState: stUnlocked,
+        configOpen: false,
+        onToggleConfig: () => {},
+        itemBind: dummyItemBind,
+        handleBind: dummyHandleBind,
+      })
+    );
+    expect(sliderCardUnlockedHtml).not.toContain('data-testid="slider-domain-pill-d_k"');
+
+    const sidebarUnlockedHtml = renderToString(
+      h(ExpressionSidebar, { storeState: stUnlocked })
+    );
+    expect(sidebarUnlockedHtml).toContain('d_k ∈ ℝ');
+
+    // 3. FunctionLibraryDrawer renders parameter chips, setup button, and auto-expands when focused on 'Attention'
+    store.setFunctionLibraryDrawerOpen(true, 'Attention');
+    const fnDrawerFocusedHtml = renderToString(
+      h(FunctionLibraryDrawer, {
+        storeState: graphStore.getState(),
+        onToast: () => {},
+      })
+    );
+    expect(fnDrawerFocusedHtml).toContain('data-testid="fn-param-chip-Attention-d_k"');
+    expect(fnDrawerFocusedHtml).toContain('data-testid="fn-param-setup-toggle-Attention"');
+    expect(fnDrawerFocusedHtml).toContain(
+      enDict.fn_param_setup_title.replace('&', '&amp;')
+    );
+    store.setFunctionLibraryDrawerOpen(false);
+  });
 });

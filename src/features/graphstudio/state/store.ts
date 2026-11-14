@@ -4,6 +4,7 @@
 import { createStore } from 'zustand/vanilla';
 import type {
   LibraryFunctionEntry,
+  ParamDomainMode,
   SubgradConvention,
   SymbolRole,
 } from '../types/math';
@@ -150,10 +151,19 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
   const nextSliders: Record<string, SliderState> = { ...state.sliders };
   const activeSymbols = new Set<string>();
   const restrictedInPass = new Set<string>();
+  const domainSeenInPass = new Set<string>();
+  const domainRank = (m?: ParamDomainMode): number =>
+    m === 'positive' ? 2 : m === 'non_negative' ? 1 : 0;
   let hasInvalidNonEmptyExpr = false;
   const plottable = getPlottableExpressions(state.expressions);
 
   const userFunctions = buildUserFunctionRegistry(plottable, state.functionLibrary);
+  const unlockedSymbols = new Set<string>();
+  for (const [k, sl] of Object.entries(state.sliders)) {
+    if (sl.domainUserSet && sl.domainMode === 'free') {
+      unlockedSymbols.add(k);
+    }
+  }
 
   const isGenericAutoBounds = (s: SliderState): boolean =>
     (s.min === -5 && s.max === 5) ||
@@ -167,7 +177,8 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
     const classified = classifyLatexExpression(
       trimmed,
       state.symbolOverrides,
-      userFunctions
+      userFunctions,
+      unlockedSymbols
     );
     if (!classified.valid) {
       hasInvalidNonEmptyExpr = true;
@@ -180,9 +191,11 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
         const symIsRestricted = isBoundedDomainParam(sym.name, {
           min: sym.defaultMin,
           max: sym.defaultMax,
+          domainMode: sym.domainMode,
         });
         if (!nextSliders[sym.name]) {
           if (symIsRestricted) restrictedInPass.add(sym.name);
+          domainSeenInPass.add(sym.name);
           nextSliders[sym.name] = {
             name: sym.name,
             latex: sym.latex,
@@ -195,12 +208,44 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
             speed: 1,
             loopMode: 'bounce',
             direction: 1,
+            domainMode: sym.domainMode ?? 'free',
+            domainSource: sym.domainSource,
           };
         } else {
           const existing = nextSliders[sym.name];
           const wasCreatedInPass = !state.sliders[sym.name];
+          const seenEarlierInPass = domainSeenInPass.has(sym.name);
+          domainSeenInPass.add(sym.name);
+
+          let nextDomainMode: ParamDomainMode;
+          let nextDomainSource: string | undefined;
+          if (existing.domainUserSet) {
+            nextDomainMode = existing.domainMode ?? 'free';
+            nextDomainSource = existing.domainSource;
+          } else if (!seenEarlierInPass) {
+            nextDomainMode = sym.domainMode ?? 'free';
+            nextDomainSource = sym.domainSource;
+          } else {
+            const curMode = existing.domainMode ?? 'free';
+            const incMode = sym.domainMode ?? 'free';
+            if (domainRank(incMode) > domainRank(curMode)) {
+              nextDomainMode = incMode;
+              nextDomainSource = sym.domainSource;
+            } else {
+              nextDomainMode = curMode;
+              nextDomainSource = existing.domainSource;
+            }
+          }
+          const nextRole =
+            seenEarlierInPass &&
+            !state.symbolOverrides[sym.name] &&
+            domainRank(existing.domainMode) > domainRank(sym.domainMode)
+              ? existing.role
+              : sym.role;
           const shouldTightenBounds =
-            symIsRestricted && (wasCreatedInPass || isGenericAutoBounds(existing));
+            !existing.domainUserSet &&
+            symIsRestricted &&
+            (wasCreatedInPass || isGenericAutoBounds(existing));
           let nextMin = existing.min;
           let nextMax = existing.max;
           let nextStep = existing.step;
@@ -221,16 +266,28 @@ export function syncSlidersFromExpressions(state: GraphStateV2): GraphStateV2 {
               nextVal = Math.min(Math.max(sym.defaultValue, nextMin), nextMax);
             }
             restrictedInPass.add(sym.name);
+          } else if (!existing.domainUserSet) {
+            if (nextDomainMode === 'positive' && nextMin <= 0) {
+              nextMin = sym.defaultMin > 0 ? sym.defaultMin : 0.01;
+              nextMax = Math.max(nextMin + nextStep, nextMax);
+              nextVal = Math.min(Math.max(nextVal, nextMin), nextMax);
+            } else if (nextDomainMode === 'non_negative' && nextMin < 0) {
+              nextMin = sym.defaultMin >= 0 ? sym.defaultMin : 0;
+              nextMax = Math.max(nextMin + nextStep, nextMax);
+              nextVal = Math.min(Math.max(nextVal, nextMin), nextMax);
+            }
           }
 
           nextSliders[sym.name] = {
             ...existing,
-            role: sym.role,
+            role: nextRole,
             latex: sym.latex || existing.latex || sym.name,
             min: nextMin,
             max: nextMax,
             step: nextStep,
             value: nextVal,
+            domainMode: nextDomainMode,
+            domainSource: nextDomainSource,
           };
         }
       } else if (sym.role === 'data_var') {
@@ -333,6 +390,7 @@ export interface GraphStoreState {
   galleryInitialTab: 'examples' | 'my_docs' | 'community';
   customOptModalOpen: boolean;
   functionLibraryDrawerOpen: boolean;
+  functionLibraryFocusName: string | null;
   /** Latest computed worker output */
   curves: CurveRenderPacket[];
   trainLoss: number;
@@ -397,7 +455,10 @@ export interface GraphStoreState {
   setExpressionFitLoss: (id: string) => void;
   toggleAllExpressionsVisible: () => void;
   setSurfaceParamAxes: (w1Key: string, w2Key: string) => void;
-  setFunctionLibraryDrawerOpen: (open: boolean) => void;
+  setFunctionLibraryDrawerOpen: (
+    open: boolean,
+    focusFunctionName?: string | null
+  ) => void;
   toggleLibraryFunction: (id: string, enabled?: boolean) => void;
   toggleAllLibraryFunctions: (enabled: boolean) => void;
   upsertLibraryFunction: (
@@ -479,33 +540,46 @@ export const EXPRESSION_COLORS = [
   '#06b6d4',
 ];
 
-export function isStrictlyPositiveParam(slider: SliderState): boolean {
-  return (
+export function getSliderDomainMode(slider: SliderState): ParamDomainMode {
+  if (slider.domainMode) return slider.domainMode;
+  if (
     slider.name === 'sigma' ||
-    slider.name === 'd_k' ||
-    slider.name === 'd_v' ||
-    slider.name === 'd_model' ||
     slider.name === 'tau' ||
     slider.name === 'epsilon' ||
-    slider.name === 'delta' ||
-    slider.name === 'gamma'
-  );
+    slider.name === 'delta'
+  ) {
+    return 'positive';
+  }
+  return 'free';
+}
+
+export function isStrictlyPositiveParam(slider: SliderState): boolean {
+  return getSliderDomainMode(slider) === 'positive';
 }
 
 function applySyncedSliderVal(
   slider: SliderState,
   rawVal: number
 ): SliderState {
+  const domainMode = getSliderDomainMode(slider);
   const projected = projectParam(slider.name, rawVal, {
     min: slider.min,
     max: slider.max,
+    domainMode,
   });
-  const isStrictlyPositive = isStrictlyPositiveParam(slider);
-  const floorLimit = slider.min > 0 ? slider.min : 0.01;
-  const guardedVal = isStrictlyPositive ? Math.max(floorLimit, projected) : projected;
+  const isStrictlyPositive = domainMode === 'positive';
+  const isNonNegative = domainMode === 'non_negative';
+  const floorLimit = isStrictlyPositive
+    ? slider.min > 0 && slider.min < 0.01
+      ? slider.min
+      : 0.01
+    : 0;
+  const guardedVal =
+    isStrictlyPositive || isNonNegative ? Math.max(floorLimit, projected) : projected;
   const val = Math.round(guardedVal * 1e6) / 1e6;
   const rawMin = val < slider.min ? Math.floor(val * 10) / 10 : slider.min;
-  const nextMin = isStrictlyPositive ? Math.max(floorLimit, rawMin) : rawMin;
+  const nextMin =
+    isStrictlyPositive || isNonNegative ? Math.max(floorLimit, rawMin) : rawMin;
   const nextMax = val > slider.max ? Math.ceil(val * 10) / 10 : slider.max;
   return {
     ...slider,
@@ -639,6 +713,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
     galleryInitialTab: 'examples',
     customOptModalOpen: false,
     functionLibraryDrawerOpen: false,
+    functionLibraryFocusName: null,
     curves: [],
     trainLoss: 0,
     testLoss: 0,
@@ -1085,8 +1160,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       );
     },
 
-    setFunctionLibraryDrawerOpen(functionLibraryDrawerOpen) {
-      set({ functionLibraryDrawerOpen });
+    setFunctionLibraryDrawerOpen(functionLibraryDrawerOpen, focusFunctionName = null) {
+      set({
+        functionLibraryDrawerOpen,
+        functionLibraryFocusName: functionLibraryDrawerOpen ? focusFunctionName : null,
+      });
     },
 
     toggleLibraryFunction(id, enabled) {
@@ -1117,6 +1195,7 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const existingIdx = currentLib.findIndex(
         (item) => item.id === id || item.name === entry.name
       );
+      const prevEntry = existingIdx >= 0 ? currentLib[existingIdx] : undefined;
       let nextLib: LibraryFunctionEntry[];
       if (existingIdx >= 0) {
         nextLib = currentLib.map((item, idx) =>
@@ -1125,7 +1204,118 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       } else {
         nextLib = [...currentLib, { ...entry, id }];
       }
-      commitGraph({ ...g, functionLibrary: nextLib }, true);
+
+      // Propagate explicitly edited parameter setups from Function Library to active sliders
+      // ONLY when `entry` is actually invoked by an active canvas expression (not shadowed)
+      // AND ONLY for parameter keys whose configuration actually changed (`cfgChanged`).
+      let nextSliders = g.sliders;
+      let nextSymbolOverrides = g.symbolOverrides;
+      if (entry.paramConfigs) {
+        const plottable = getPlottableExpressions(g.expressions);
+        const nextUserFunctions = buildUserFunctionRegistry(plottable, nextLib);
+        const targetId = prevEntry?.id ?? id;
+        const targetNameLower = entry.name.toLowerCase();
+        const resolvedDef = Object.values(nextUserFunctions).find(
+          (fn) => fn.signature.name.toLowerCase() === targetNameLower
+        );
+        const isUnshadowedLibEntry = resolvedDef?.sourceExprId === targetId;
+        const isCalledOnCanvas =
+          isUnshadowedLibEntry &&
+          plottable.some((expr) => {
+            const trimmed = expr.latex.trim();
+            if (!trimmed) return false;
+            const cls = classifyLatexExpression(
+              trimmed,
+              g.symbolOverrides,
+              nextUserFunctions
+            );
+            return (
+              cls.valid &&
+              Boolean(
+                cls.calledFunctions?.some((fn) => fn.toLowerCase() === targetNameLower)
+              )
+            );
+          });
+
+        if (isCalledOnCanvas) {
+          const builtinEntry = DEFAULT_FUNCTION_LIBRARY.find(
+            (b) => b.id === targetId || b.name.toLowerCase() === targetNameLower
+          );
+          nextSliders = { ...g.sliders };
+          for (const [pKey, pCfg] of Object.entries(entry.paramConfigs)) {
+            const prevCfg =
+              prevEntry?.paramConfigs?.[pKey] ?? builtinEntry?.paramConfigs?.[pKey];
+            const cfgChanged =
+              !prevCfg ||
+              prevCfg.role !== pCfg.role ||
+              (prevCfg.domainMode ?? 'free') !== (pCfg.domainMode ?? 'free') ||
+              prevCfg.min !== pCfg.min ||
+              prevCfg.max !== pCfg.max ||
+              prevCfg.step !== pCfg.step ||
+              prevCfg.defaultValue !== pCfg.defaultValue;
+            if (!cfgChanged) continue;
+
+            if (
+              pCfg.role &&
+              prevCfg?.role !== pCfg.role &&
+              g.symbolOverrides[pKey] &&
+              g.symbolOverrides[pKey] !== pCfg.role
+            ) {
+              nextSymbolOverrides = { ...nextSymbolOverrides };
+              delete nextSymbolOverrides[pKey];
+            }
+            const sl = nextSliders[pKey];
+            if (sl) {
+              const domainMode: ParamDomainMode = pCfg.domainMode ?? 'free';
+              let min =
+                pCfg.min !== undefined && prevCfg?.min !== pCfg.min ? pCfg.min : sl.min;
+              let max =
+                pCfg.max !== undefined && prevCfg?.max !== pCfg.max ? pCfg.max : sl.max;
+              const step = Math.max(
+                1e-4,
+                pCfg.step !== undefined && prevCfg?.step !== pCfg.step
+                  ? pCfg.step
+                  : sl.step
+              );
+              if (domainMode === 'positive' && min <= 0) {
+                min = pCfg.min !== undefined && pCfg.min > 0 ? pCfg.min : 0.01;
+              }
+              if (domainMode === 'non_negative' && min < 0) {
+                min = pCfg.min !== undefined && pCfg.min >= 0 ? pCfg.min : 0;
+              }
+              if (min > max) max = min + Math.max(step, 1);
+              const rawVal =
+                pCfg.defaultValue !== undefined &&
+                prevCfg?.defaultValue !== pCfg.defaultValue
+                  ? pCfg.defaultValue
+                  : sl.value;
+              const value = Math.min(Math.max(rawVal, min), max);
+              nextSliders[pKey] = {
+                ...sl,
+                role:
+                  pCfg.role && prevCfg?.role !== pCfg.role ? pCfg.role : sl.role,
+                min,
+                max,
+                step,
+                value,
+                domainMode,
+                domainSource: domainMode !== 'free' ? entry.name : undefined,
+                domainUserSet: false,
+              };
+            }
+          }
+        }
+      }
+
+      commitGraph(
+        {
+          ...g,
+          functionLibrary: nextLib,
+          sliders: nextSliders,
+          symbolOverrides: nextSymbolOverrides,
+        },
+        true
+      );
     },
 
     removeLibraryFunction(id) {
@@ -1138,10 +1328,18 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
 
     resetFunctionLibrary() {
       const g = get().graph;
+      const resetSliders: Record<string, SliderState> = {};
+      for (const [k, sl] of Object.entries(g.sliders)) {
+        resetSliders[k] = { ...sl, domainUserSet: false };
+      }
       commitGraph(
         {
           ...g,
-          functionLibrary: DEFAULT_FUNCTION_LIBRARY.map((f) => ({ ...f })),
+          sliders: resetSliders,
+          functionLibrary: DEFAULT_FUNCTION_LIBRARY.map((f) => ({
+            ...f,
+            ...(f.paramConfigs ? { paramConfigs: { ...f.paramConfigs } } : {}),
+          })),
         },
         true
       );
@@ -1253,6 +1451,20 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
       const existing = g.sliders[name];
       if (!existing) return;
 
+      const nextDomainMode: ParamDomainMode =
+        bounds.domainMode !== undefined
+          ? bounds.domainMode
+          : getSliderDomainMode(existing);
+      const nextDomainUserSet =
+        bounds.domainMode !== undefined
+          ? (bounds.domainUserSet ?? true)
+          : existing.domainUserSet;
+      const nextDomainSource =
+        bounds.domainMode !== undefined
+          ? (bounds.domainSource ??
+            (bounds.domainMode === 'free' ? undefined : existing.domainSource ?? 'user'))
+          : existing.domainSource;
+
       let nextMin =
         bounds.min !== undefined && Number.isFinite(bounds.min)
           ? bounds.min
@@ -1266,9 +1478,14 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           ? Math.max(1e-4, bounds.step)
           : existing.step;
 
-      const isPositive = isStrictlyPositiveParam(existing);
+      const isPositive = nextDomainMode === 'positive';
+      const isNonNeg = nextDomainMode === 'non_negative';
+      const posFloor =
+        existing.min > 0 && existing.min < 0.01 ? existing.min : 0.01;
       if (isPositive && nextMin <= 0) {
-        nextMin = 0.01;
+        nextMin = posFloor;
+      } else if (isNonNeg && nextMin < 0) {
+        nextMin = 0;
       }
 
       if (nextMin > nextMax) {
@@ -1277,7 +1494,10 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
         } else {
           nextMin = nextMax - Math.max(nextStep, 1);
           if (isPositive && nextMin <= 0) {
-            nextMin = 0.01;
+            nextMin = posFloor;
+            nextMax = Math.max(nextMax, nextMin + Math.max(nextStep, 1));
+          } else if (isNonNeg && nextMin < 0) {
+            nextMin = 0;
             nextMax = Math.max(nextMax, nextMin + Math.max(nextStep, 1));
           }
         }
@@ -1330,6 +1550,9 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           value: nextValue,
           loopMode: nextLoopMode,
           direction: nextDir,
+          domainMode: nextDomainMode,
+          domainSource: nextDomainSource,
+          domainUserSet: nextDomainUserSet,
         },
       };
       const boundsEdited =
@@ -1365,7 +1588,11 @@ export const graphStore = createStore<GraphStoreState>((set, get) => {
           : Math.max(rightViewport.yMax, nextMax, nextValue, lo + 0.5);
         rightViewport = { ...rightViewport, yMin: lo, yMax: hi };
       }
-      commitGraph({ ...g, sliders, rightViewport }, false, true);
+      commitGraph(
+        { ...g, sliders, rightViewport },
+        bounds.domainMode !== undefined,
+        true
+      );
     },
 
     stepSliderByDelta(name, dir) {

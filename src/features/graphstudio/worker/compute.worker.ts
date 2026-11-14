@@ -32,7 +32,12 @@ import {
   isBoundedDomainParam,
   runOptimizerRace,
 } from '../core/simulation/optimizers';
-import type { MathJsonExpr, SymbolRole, UserFunctionRegistry } from '../types/math';
+import type {
+  MathJsonExpr,
+  ParamDomainMode,
+  SymbolRole,
+  UserFunctionRegistry,
+} from '../types/math';
 import type { CurveRenderPacket } from '../types/state';
 import { createDoubleBufferPool } from './double-buffer';
 import type { ComputeJobRequest, ComputeJobResponse } from './protocol';
@@ -47,7 +52,10 @@ interface CachedExpressionEntry {
   secondDerivLatex?: string;
   paramNames?: string[];
   paramGradKernels?: Record<string, (x: number, params: Record<string, number>) => number>;
-  defaultParamBounds?: Record<string, { min: number; max: number }>;
+  defaultParamBounds?: Record<
+    string,
+    { min: number; max: number; domainMode?: ParamDomainMode }
+  >;
   isCustomPredictor?: boolean;
 }
 
@@ -87,7 +95,8 @@ function getOrCompileExpression(
   latex: string,
   symbolOverrides: Record<string, SymbolRole> = {},
   userFunctions?: UserFunctionRegistry,
-  fnCacheTag = ''
+  fnCacheTag = '',
+  unlockedSymbols?: ReadonlySet<string>
 ): CachedExpressionEntry {
   const overrideKeys = Object.keys(symbolOverrides);
   const baseKey =
@@ -97,11 +106,20 @@ function getOrCompileExpression(
           .sort()
           .map((k) => `${k}=${symbolOverrides[k]}`)
           .join(',')}`;
-  const cacheKey = fnCacheTag ? `${baseKey}@@${fnCacheTag}` : baseKey;
+  const unlockedTag =
+    unlockedSymbols && unlockedSymbols.size > 0
+      ? `~u:${Array.from(unlockedSymbols).sort().join(',')}`
+      : '';
+  const cacheKey = `${fnCacheTag ? `${baseKey}@@${fnCacheTag}` : baseKey}${unlockedTag}`;
   const existing = kernelCache.get(cacheKey);
   if (existing) return existing;
 
-  const classified = classifyLatexExpression(latex, symbolOverrides, userFunctions);
+  const classified = classifyLatexExpression(
+    latex,
+    symbolOverrides,
+    userFunctions,
+    unlockedSymbols
+  );
   if (!classified.valid) {
     const invalidEntry: CachedExpressionEntry = {
       latex,
@@ -112,7 +130,9 @@ function getOrCompileExpression(
     return invalidEntry;
   }
 
-  const kernel = compileJet2Kernel(classified.stabilizedExpr, classified.primaryVar);
+  const kernel = compileJet2Kernel(classified.stabilizedExpr, classified.primaryVar, {
+    unlockedSymbols,
+  });
   const d1Ast = symbolicDiff(classified.stabilizedExpr, classified.primaryVar);
   const d2Ast = symbolicSecondDiff(classified.stabilizedExpr, classified.primaryVar);
 
@@ -127,15 +147,24 @@ function getOrCompileExpression(
   if (isCustomPredictor && paramNames.length > 0) {
     for (const pName of paramNames) {
       const dParamAst = symbolicDiff(classified.stabilizedExpr, pName);
-      const pKernel = compileJet2Kernel(dParamAst, classified.primaryVar);
+      const pKernel = compileJet2Kernel(dParamAst, classified.primaryVar, {
+        unlockedSymbols,
+      });
       paramGradKernels[pName] = pKernel.evalScalar;
     }
   }
 
-  const defaultParamBounds: Record<string, { min: number; max: number }> = {};
+  const defaultParamBounds: Record<
+    string,
+    { min: number; max: number; domainMode?: ParamDomainMode }
+  > = {};
   for (const sym of classified.symbols) {
     if (sym.role === 'param' || sym.role === 'hyperparam') {
-      defaultParamBounds[sym.name] = { min: sym.defaultMin, max: sym.defaultMax };
+      defaultParamBounds[sym.name] = {
+        min: sym.defaultMin,
+        max: sym.defaultMax,
+        domainMode: sym.domainMode,
+      };
     }
   }
 
@@ -176,9 +205,23 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
   const fnCacheTag = userFunctions
     ? Object.keys(userFunctions)
         .sort()
-        .map((k) => `${k}:${userFunctions[k].rawLatex}`)
+        .map(
+          (k) =>
+            `${k}:${userFunctions[k].rawLatex}:${JSON.stringify(
+              userFunctions[k].paramConfigs ?? {}
+            )}`
+        )
         .join('|')
     : '';
+
+  const unlockedSymbols = new Set<string>();
+  if (req.paramBounds) {
+    for (const [k, b] of Object.entries(req.paramBounds)) {
+      if (b.domainMode === 'free') {
+        unlockedSymbols.add(k);
+      }
+    }
+  }
 
   const curves: CurveRenderPacket[] = [];
   const compiledByExprId = new Map<string, CachedExpressionEntry>();
@@ -189,7 +232,8 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
       item.latex,
       req.symbolOverrides,
       userFunctions,
-      fnCacheTag
+      fnCacheTag,
+      unlockedSymbols
     );
     compiledByExprId.set(item.id, compiled);
     const resolvedLabel = item.label?.trim() || `f_${idx + 1}(x)`;
@@ -299,7 +343,9 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
     req.expressions[0];
   const targetCompiled = targetExpr ? compiledByExprId.get(targetExpr.id) : undefined;
 
-  let effectiveParamBounds: Record<string, { min: number; max: number }> | undefined;
+  let effectiveParamBounds:
+    | Record<string, { min: number; max: number; domainMode?: ParamDomainMode }>
+    | undefined;
   if (targetCompiled?.defaultParamBounds || req.paramBounds) {
     effectiveParamBounds = {
       ...(targetCompiled?.defaultParamBounds ?? {}),
@@ -309,13 +355,41 @@ export function executeComputeJob(req: ComputeJobRequest): ComputeJobResponse {
       for (const [k, astB] of Object.entries(targetCompiled.defaultParamBounds)) {
         const reqB = req.paramBounds[k];
         if (!reqB) continue;
+        if (reqB.domainMode === 'free') {
+          effectiveParamBounds[k] = { ...reqB };
+          continue;
+        }
+        if (reqB.domainMode === 'non_negative') {
+          const min = Math.max(0, reqB.min);
+          const max =
+            astB.max <= 1.0 && astB.min >= -1.0
+              ? Math.max(min, Math.min(astB.max, reqB.max))
+              : Math.max(min, reqB.max);
+          effectiveParamBounds[k] = { min, max, domainMode: 'non_negative' };
+          continue;
+        }
+        if (reqB.domainMode === 'positive') {
+          const fallbackPositiveFloor =
+            astB.min > 0 ? Math.min(0.01, astB.min) : 0.01;
+          const min = reqB.min > 0 ? reqB.min : Math.max(1e-4, fallbackPositiveFloor);
+          const max =
+            astB.max <= 1.0 && astB.min >= -1.0
+              ? Math.max(min, Math.min(astB.max, reqB.max))
+              : Math.max(min, reqB.max);
+          effectiveParamBounds[k] = { min, max, domainMode: 'positive' };
+          continue;
+        }
         if (isBoundedDomainParam(k, astB)) {
           const min = Math.max(astB.min, reqB.min);
           const max =
             astB.max <= 1.0
               ? Math.max(min, Math.min(astB.max, reqB.max))
               : Math.max(min, reqB.max);
-          effectiveParamBounds[k] = { min, max };
+          effectiveParamBounds[k] = {
+            min,
+            max,
+            domainMode: astB.domainMode,
+          };
         }
       }
     }

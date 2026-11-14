@@ -7,10 +7,19 @@
  */
 import katex from 'katex';
 import type { JSX } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { t } from '../scripts/i18n-client';
-import type { GraphStoreState } from '../state/store';
-import type { PlaybackSpeed, SliderLoopMode, SliderState } from '../types/state';
+import {
+  getSliderDomainMode,
+  graphStore,
+  type GraphStoreState,
+} from '../state/store';
+import type {
+  ParamDomainMode,
+  PlaybackSpeed,
+  SliderLoopMode,
+  SliderState,
+} from '../types/state';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -57,13 +66,50 @@ export function CompactSliderCard({
   handleBind,
 }: CompactSliderCardProps): JSX.Element {
   const [editingBound, setEditingBound] = useState<'min' | 'max' | null>(null);
+  const [blockedAttempt, setBlockedAttempt] = useState<{
+    targetMin: number;
+    targetValue?: number;
+  } | null>(null);
   const boundInputRef = useRef<HTMLInputElement>(null);
+
+  const domainMode = getSliderDomainMode(sl);
+  const domainModeLabel = domainMode === 'positive' ? '> 0' : '≥ 0';
+  const hasExternalFnSource =
+    Boolean(sl.domainSource) &&
+    sl.domainSource !== 'user' &&
+    sl.domainSource !== sl.name &&
+    !sl.domainSource!.startsWith('\\');
+
+  useEffect(() => {
+    if (domainMode === 'free' && blockedAttempt !== null) {
+      setBlockedAttempt(null);
+    }
+  }, [domainMode, blockedAttempt]);
+
+  const commitMinBound = (rawMin: number): void => {
+    if (!Number.isFinite(rawMin)) return;
+    const isBlocked =
+      (domainMode === 'positive' && rawMin <= 0) ||
+      (domainMode === 'non_negative' && rawMin < 0);
+    if (isBlocked) {
+      setBlockedAttempt({ targetMin: rawMin });
+    } else {
+      setBlockedAttempt(null);
+    }
+    storeState.updateSliderBounds(sl.name, { min: rawMin });
+  };
 
   useLayoutEffect(() => {
     if (!editingBound || !boundInputRef.current) return;
     boundInputRef.current.focus();
     boundInputRef.current.select();
   }, [editingBound]);
+
+  const domainOptions: { id: ParamDomainMode; label: string; title: string }[] = [
+    { id: 'free', label: t('domain_free_short'), title: t('domain_free') },
+    { id: 'non_negative', label: '≥0', title: `${sl.name} ≥ 0` },
+    { id: 'positive', label: '>0', title: `${sl.name} > 0` },
+  ];
 
   const loopModes: { id: SliderLoopMode; icon: string; title: string }[] = [
     { id: 'once', icon: '→|', title: t('loop_once_desc') },
@@ -157,6 +203,14 @@ export function CompactSliderCard({
               onChange={(e) => {
                 const raw = Number((e.target as HTMLInputElement).value);
                 if (!Number.isFinite(raw)) return;
+                const isBlockedVal =
+                  (domainMode === 'positive' && raw <= 0) ||
+                  (domainMode === 'non_negative' && raw < 0);
+                if (isBlockedVal) {
+                  setBlockedAttempt({ targetMin: Math.min(raw, -1), targetValue: raw });
+                } else {
+                  setBlockedAttempt(null);
+                }
                 if (raw < sl.min || raw > sl.max) {
                   storeState.updateSliderBounds(sl.name, {
                     min: Math.min(sl.min, raw),
@@ -172,8 +226,35 @@ export function CompactSliderCard({
             />
           </label>
 
-          {/* Inline Bound Pills + Range Scrubber */}
+          {/* Inline Domain Pill + Bound Pills + Range Scrubber */}
           <div class="flex-1 min-w-0 flex items-center gap-1">
+            {domainMode !== 'free' && (
+              <button
+                type="button"
+                data-testid={`slider-domain-pill-${sl.name}`}
+                onClick={() => {
+                  if (!configOpen) {
+                    onToggleConfig();
+                  } else {
+                    storeState.updateSliderBounds(sl.name, { domainMode: 'free' });
+                    setBlockedAttempt(null);
+                  }
+                }}
+                title={t('domain_badge_tooltip')
+                  .replace('{param}', sl.name)
+                  .replace('{mode}', domainModeLabel)
+                  .replace(
+                    '{src}',
+                    sl.domainSource && sl.domainSource !== 'user'
+                      ? ` (${t('domain_from_source').replace('{src}', sl.domainSource)})`
+                      : ''
+                  )}
+                class="shrink-0 px-1 py-0.5 rounded border border-amber-500/45 bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 font-mono font-bold text-[9px] leading-none transition-colors"
+              >
+                {domainMode === 'positive' ? '>0' : '≥0'}
+              </button>
+            )}
+
             {editingBound === 'min' ? (
               <input
                 ref={boundInputRef}
@@ -183,12 +264,14 @@ export function CompactSliderCard({
                 defaultValue={String(sl.min)}
                 onBlur={(e) => {
                   const v = Number((e.target as HTMLInputElement).value);
-                  if (Number.isFinite(v)) storeState.updateSliderBounds(sl.name, { min: v });
+                  if (Number.isFinite(v)) commitMinBound(v);
                   setEditingBound(null);
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === 'Escape') {
+                  if (e.key === 'Enter') {
                     (e.target as HTMLInputElement).blur();
+                  } else if (e.key === 'Escape') {
+                    setEditingBound(null);
                   }
                 }}
                 class="w-10 sm:w-11 px-1 py-0.5 rounded border border-orange-500 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-center focus:outline-none"
@@ -277,6 +360,68 @@ export function CompactSliderCard({
           </button>
         </div>
 
+        {/* Transparent Notice & 1-Click Unlock when User Enters Blocked Min/Value */}
+        {blockedAttempt !== null && domainMode !== 'free' && (
+          <div
+            role="status"
+            data-testid={`slider-domain-guard-${sl.name}`}
+            class="flex flex-wrap items-center justify-between gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/35 text-[10px] text-amber-800 dark:text-amber-200"
+          >
+            <span class="min-w-0">
+              ⚠{' '}
+              <strong>
+                {t('domain_guard_notice')
+                  .replace('{param}', sl.name)
+                  .replace('{mode}', domainModeLabel)}
+              </strong>
+              {sl.domainSource && sl.domainSource !== 'user'
+                ? ` (${t('domain_from_source').replace('{src}', sl.domainSource)})`
+                : ''}
+            </span>
+            <div class="flex items-center gap-1 ml-auto">
+              {hasExternalFnSource && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    storeState.setFunctionLibraryDrawerOpen(true, sl.domainSource ?? null)
+                  }
+                  class="px-1.5 py-0.5 rounded border border-amber-500/45 hover:bg-amber-500/20 font-semibold transition-colors"
+                >
+                  {t('domain_open_fn_setup')}
+                </button>
+              )}
+              <button
+                type="button"
+                data-testid={`unlock-domain-${sl.name}`}
+                onClick={() => {
+                  storeState.updateSliderBounds(sl.name, {
+                    domainMode: 'free',
+                    min: blockedAttempt.targetMin,
+                    ...(blockedAttempt.targetValue !== undefined
+                      ? { value: blockedAttempt.targetValue }
+                      : {}),
+                  });
+                  setBlockedAttempt(null);
+                }}
+                class="px-1.5 py-0.5 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
+              >
+                {t('domain_unlock_and_set').replace(
+                  '{val}',
+                  String(blockedAttempt.targetValue ?? blockedAttempt.targetMin)
+                )}
+              </button>
+              <button
+                type="button"
+                aria-label="Dismiss"
+                onClick={() => setBlockedAttempt(null)}
+                class="px-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Expandable ⚙️ Setup Tray */}
         {configOpen && (
           <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-neutral-100 dark:border-neutral-800/80 text-[10px] text-neutral-500">
@@ -355,19 +500,59 @@ export function CompactSliderCard({
               </button>
             </div>
 
-            {/* Min / Δ / Max + Move Up / Down */}
+            {/* Domain Mode + Min / Δ / Max + Move Up / Down */}
             <div class="flex flex-wrap items-center gap-1 ml-auto">
+              <div
+                class="inline-flex items-center gap-0.5 mr-0.5"
+                title={t('domain_label')}
+              >
+                <span class="font-mono">{t('domain_label')}:</span>
+                <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-0.5 gap-0.5">
+                  {domainOptions.map((opt) => {
+                    const active = domainMode === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        data-testid={`slider-domain-opt-${sl.name}-${opt.id}`}
+                        onClick={() => {
+                          storeState.updateSliderBounds(sl.name, { domainMode: opt.id });
+                          if (opt.id === 'free') setBlockedAttempt(null);
+                        }}
+                        title={opt.title}
+                        class={`px-1 py-0.5 rounded font-mono text-[10px] leading-none transition-colors ${
+                          active
+                            ? 'bg-orange-500 text-white font-bold'
+                            : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <label class="inline-flex items-center gap-0.5" title="Min">
                 <span class="font-mono">min:</span>
                 <input
+                  key={`min-${sl.min}-${domainMode}`}
                   type="number"
                   step="0.1"
-                  value={sl.min}
-                  onChange={(e) =>
-                    storeState.updateSliderBounds(sl.name, {
-                      min: Number((e.target as HTMLInputElement).value),
-                    })
-                  }
+                  defaultValue={String(sl.min)}
+                  onBlur={(e) => {
+                    const inputEl = e.target as HTMLInputElement;
+                    const v = Number(inputEl.value);
+                    if (Number.isFinite(v)) commitMinBound(v);
+                    const latestMin =
+                      graphStore.getState().graph.sliders[sl.name]?.min ?? sl.min;
+                    inputEl.value = String(latestMin);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
                   class="w-11 px-1 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 font-mono text-[10px] text-neutral-700 dark:text-neutral-200 focus:border-orange-500 focus:outline-none"
                 />
               </label>

@@ -28,7 +28,12 @@ import { resolveSurfaceParamPair } from '../core/simulation/loss-evaluator';
 import { QUICK_FORMULA_GROUPS } from '../extensions/templates';
 import { t } from '../scripts/i18n-client';
 import { getPlottableExpressions, isNoteExpression } from '../state/expression-kind';
-import { EXPRESSION_COLORS, graphStore, type GraphStoreState } from '../state/store';
+import {
+  EXPRESSION_COLORS,
+  getSliderDomainMode,
+  graphStore,
+  type GraphStoreState,
+} from '../state/store';
 import type { SymbolRole } from '../types/math';
 import type { CurveLineStyle } from '../types/state';
 import { CompactSliderCard } from './CompactSliderCard';
@@ -149,9 +154,18 @@ export function ExpressionSidebar({
 
   const plottableExprs = getPlottableExpressions(graph.expressions);
   const userFunctions = buildUserFunctionRegistry(plottableExprs, graph.functionLibrary);
-  const activeLibCount = (graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY).filter(
-    (f) => f.enabled
-  ).length;
+  const libEntries = graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+  const activeLibCount = libEntries.filter((f) => f.enabled).length;
+  const sidebarDefinedFnNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const item of plottableExprs) {
+      const sig = extractFunctionSignature(item.latex);
+      if (sig && sig.formalParams.length > 0) {
+        names.add(sig.name.toLowerCase());
+      }
+    }
+    return names;
+  }, [plottableExprs]);
   const anyExprVisible = graph.expressions.some((e) => e.visible);
   const activeFitExprId =
     plottableExprs.find((e) => e.fitLoss)?.id ?? plottableExprs[0]?.id;
@@ -882,6 +896,72 @@ export function ExpressionSidebar({
                             </button>
                           </div>
                         )}
+
+                      {/* Library Function Reference & Domain Transparency Chip Row */}
+                      {classified.valid &&
+                        classified.calledFunctions &&
+                        classified.calledFunctions.length > 0 &&
+                        (() => {
+                          const matchedLibFns = classified.calledFunctions
+                            .map((fnName) =>
+                              sidebarDefinedFnNames.has(fnName.toLowerCase())
+                                ? undefined
+                                : libEntries.find(
+                                    (entry) =>
+                                      entry.enabled &&
+                                      entry.name.toLowerCase() === fnName.toLowerCase()
+                                  )
+                            )
+                            .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+                          if (matchedLibFns.length === 0) return null;
+                          return (
+                            <div class="flex flex-wrap items-center gap-1 min-w-0">
+                              {matchedLibFns.map((libEntry) => {
+                                const formalParams =
+                                  extractFunctionSignature(libEntry.definitionLatex)
+                                    ?.formalParams ?? [];
+                                const domainBadges: string[] = [];
+                                for (const pName of formalParams.slice(1)) {
+                                  const sl = graph.sliders[pName];
+                                  const cfgMode = libEntry.paramConfigs?.[pName]?.domainMode;
+                                  const effMode = sl ? getSliderDomainMode(sl) : cfgMode ?? 'free';
+                                  if (effMode === 'positive') {
+                                    domainBadges.push(`${pName} > 0`);
+                                  } else if (effMode === 'non_negative') {
+                                    domainBadges.push(`${pName} ≥ 0`);
+                                  } else if (cfgMode && cfgMode !== 'free' && sl?.domainUserSet) {
+                                    domainBadges.push(`${pName} ∈ ℝ`);
+                                  }
+                                }
+                                return (
+                                  <button
+                                    key={libEntry.id}
+                                    type="button"
+                                    data-testid={`expr-fn-ref-${expr.id}-${libEntry.name}`}
+                                    onClick={() =>
+                                      storeState.setFunctionLibraryDrawerOpen(true, libEntry.name)
+                                    }
+                                    title={t('fn_card_ref_tooltip').replace('{fn}', libEntry.name)}
+                                    class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 text-[10px] text-violet-700 dark:text-violet-300 font-mono transition-colors max-w-full"
+                                  >
+                                    <span class="truncate">
+                                      fx: <strong>{libEntry.signature}</strong>
+                                    </span>
+                                    {domainBadges.map((badge) => (
+                                      <span
+                                        key={badge}
+                                        class="shrink-0 px-1 py-px rounded bg-amber-500/15 border border-amber-500/35 text-amber-700 dark:text-amber-300 text-[9px] font-semibold"
+                                      >
+                                        {badge}
+                                      </span>
+                                    ))}
+                                    <span class="shrink-0 text-[9px] opacity-80">⚙</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
 
                       {isShadowed &&
                         !(

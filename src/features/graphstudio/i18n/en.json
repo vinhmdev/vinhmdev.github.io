@@ -281,5 +281,20 @@
   "gallery_no_examples": "No matching scenarios found.",
   "gallery_no_saved": "No saved graphs on this device yet.",
   "gallery_loading_community": "Loading community graphs...",
-  "gallery_no_community": "No community graphs found or Firebase not configured."
+  "gallery_no_community": "No community graphs found or Firebase not configured.",
+  "domain_label": "Domain",
+  "domain_free": "ℝ Free",
+  "domain_free_short": "ℝ",
+  "domain_non_neg": "≥ 0",
+  "domain_positive": "> 0",
+  "domain_badge_tooltip": "Domain constraint {param} {mode}{src} • Click to configure or unlock",
+  "domain_from_source": "from {src}",
+  "domain_guard_notice": "Domain locked: {param} {mode}",
+  "domain_unlock_and_set": "Unlock ℝ & set {val}",
+  "domain_open_fn_setup": "Function setup",
+  "fn_param_setup_btn": "⚙ Param Setup",
+  "fn_param_setup_title": "Parameter Setup & Domain Constraints",
+  "fn_param_axis_badge": "input axis",
+  "fn_param_default_label": "default",
+  "fn_card_ref_tooltip": "Uses library function {fn} — click to inspect & configure parameters"
 }

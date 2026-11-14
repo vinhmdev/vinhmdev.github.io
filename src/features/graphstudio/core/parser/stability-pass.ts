@@ -14,7 +14,15 @@
  */
 import type { MathJsonExpr } from '../../types/math';
 
-export function applyStabilityPass(expr: MathJsonExpr): MathJsonExpr {
+export interface StabilityPassOptions {
+  /** Parameter symbols explicitly unlocked to unconstrained ℝ ('free') by the user or function config */
+  unlockedSymbols?: ReadonlySet<string>;
+}
+
+export function applyStabilityPass(
+  expr: MathJsonExpr,
+  options?: StabilityPassOptions
+): MathJsonExpr {
   if (typeof expr === 'number' || typeof expr === 'string') {
     return expr;
   }
@@ -25,7 +33,7 @@ export function applyStabilityPass(expr: MathJsonExpr): MathJsonExpr {
   }
 
   const [head, ...rawArgs] = expr;
-  const args = rawArgs.map(applyStabilityPass);
+  const args = rawArgs.map((arg) => applyStabilityPass(arg, options));
 
   // Rule 1: Explicit Sigmoid -> SafeSigmoid
   if (head === 'Sigmoid' && args.length === 1) {
@@ -90,9 +98,14 @@ export function applyStabilityPass(expr: MathJsonExpr): MathJsonExpr {
   }
 
   // Rule 6: Free parameter in Sqrt guard for architectural dimensions (d_k, d_v, d_model)
+  // Skipped when the parameter is explicitly unlocked to unconstrained ℝ ('free').
   if (head === 'Sqrt' && args.length === 1) {
     const inner = args[0];
-    if (typeof inner === 'string' && (inner === 'd_k' || inner === 'd_v' || inner === 'd_model')) {
+    if (
+      typeof inner === 'string' &&
+      (inner === 'd_k' || inner === 'd_v' || inner === 'd_model') &&
+      !options?.unlockedSymbols?.has(inner)
+    ) {
       return ['Sqrt', ['Max', inner, 0.0001]];
     }
   }

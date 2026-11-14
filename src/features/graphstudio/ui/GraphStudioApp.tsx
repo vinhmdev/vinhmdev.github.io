@@ -19,7 +19,13 @@ import { runCustomOptimizerTrajectoryInWasm } from '../extensions/quickjs-sandbo
 import { exportDualViewportPng } from '../renderers/image-exporter';
 import { fetchCommunityGraph } from '../state/firebase-gallery-store';
 import { classifyUrlHash } from '../state/hash-router';
-import { createInitialGraphState, graphStore, type GraphStoreState } from '../state/store';
+import {
+  createInitialGraphState,
+  getSliderDomainMode,
+  graphStore,
+  type GraphStoreState,
+} from '../state/store';
+import type { ParamDomainMode } from '../types/math';
 import {
   decodeStateFromUrlHashSync,
   encodeStateToUrlHashSync,
@@ -217,10 +223,17 @@ export default function GraphStudioApp(): JSX.Element {
   useEffect(() => {
     const g = storeState.graph;
     const paramValues: Record<string, number> = {};
-    const paramBounds: Record<string, { min: number; max: number }> = {};
+    const paramBounds: Record<
+      string,
+      { min: number; max: number; domainMode?: ParamDomainMode }
+    > = {};
     for (const [k, sl] of Object.entries(g.sliders)) {
       paramValues[k] = sl.value;
-      paramBounds[k] = { min: sl.min, max: sl.max };
+      paramBounds[k] = {
+        min: sl.min,
+        max: sl.max,
+        domainMode: getSliderDomainMode(sl),
+      };
     }
 
     const dpr =

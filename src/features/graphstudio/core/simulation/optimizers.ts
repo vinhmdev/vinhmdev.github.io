@@ -14,6 +14,7 @@ import type {
   OptimizerId,
   OptimizerRaceConfig,
   OptimizerTrajectoryStep,
+  ParamDomainMode,
   RegularizationKind,
   SubgradConvention,
 } from '../../types/state';
@@ -36,10 +37,22 @@ const POSITIVE_DOMAIN_BOUNDS: Record<string, number> = {
   gamma: 0.01,
 };
 
+export interface ParamProjectionBounds {
+  min: number;
+  max: number;
+  domainMode?: ParamDomainMode;
+}
+
 export function isBoundedDomainParam(
   name: string,
-  bounds?: { min: number; max: number }
+  bounds?: ParamProjectionBounds
 ): boolean {
+  if (bounds?.domainMode === 'free') {
+    return bounds.min >= 0 || (bounds.min >= -1.0 && bounds.max <= 1.0);
+  }
+  if (bounds?.domainMode === 'positive' || bounds?.domainMode === 'non_negative') {
+    return true;
+  }
   if (POSITIVE_DOMAIN_BOUNDS[name] !== undefined) return true;
   if (!bounds) return false;
   return bounds.min >= 0 || (bounds.min >= -1.0 && bounds.max <= 1.0);
@@ -48,17 +61,40 @@ export function isBoundedDomainParam(
 export function projectParam(
   name: string,
   val: number,
-  bounds?: { min: number; max: number }
+  bounds?: ParamProjectionBounds
 ): number {
   if (!Number.isFinite(val)) return val;
   let clamped = val;
-  const fallbackMin = POSITIVE_DOMAIN_BOUNDS[name];
+  const explicitMode = bounds?.domainMode;
+  if (explicitMode === 'free') {
+    const restricted =
+      bounds !== undefined &&
+      (bounds.min >= 0 || (bounds.min >= -1.0 && bounds.max <= 1.0));
+    if (restricted && bounds) {
+      clamped = Math.min(Math.max(clamped, bounds.min), Math.max(bounds.min, bounds.max));
+    }
+    return clamped;
+  }
+  if (explicitMode === 'non_negative') {
+    const minVal = Math.max(0, bounds?.min ?? 0);
+    clamped = Math.max(minVal, clamped);
+    if (bounds?.max !== undefined) {
+      clamped = Math.min(Math.max(minVal, bounds.max), clamped);
+    }
+    return clamped;
+  }
+  const fallbackMin =
+    explicitMode === 'positive'
+      ? (POSITIVE_DOMAIN_BOUNDS[name] ?? 0.01)
+      : POSITIVE_DOMAIN_BOUNDS[name];
   const hasRestrictedDomain = isBoundedDomainParam(name, bounds);
   let effectiveMin: number | undefined;
   if (fallbackMin !== undefined) {
     effectiveMin =
       bounds?.min !== undefined && bounds.min > 0
-        ? Math.max(fallbackMin, bounds.min)
+        ? explicitMode === 'positive'
+          ? bounds.min
+          : Math.max(fallbackMin, bounds.min)
         : fallbackMin;
     clamped = Math.max(effectiveMin, clamped);
   } else if (hasRestrictedDomain && bounds?.min !== undefined) {
@@ -110,7 +146,7 @@ export function runOptimizerRace(
   regKind: RegularizationKind,
   convention: SubgradConvention = 'zero',
   predictor?: PredictorModel,
-  paramBounds?: Record<string, { min: number; max: number }>
+  paramBounds?: Record<string, ParamProjectionBounds>
 ): Record<OptimizerId, OptimizerTrajectoryStep[]> {
   const result: Record<OptimizerId, OptimizerTrajectoryStep[]> = {
     sgd: [],

@@ -8,17 +8,77 @@
  */
 import katex from 'katex';
 import type { JSX } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import {
+  classifySymbolRole,
+  getDefaultSliderBounds,
+} from '../core/parser/ast-classifier';
 import {
   DEFAULT_FUNCTION_LIBRARY,
   extractFunctionSignature,
   formatExpressionForKatex,
+  parseLatexToMathJson,
 } from '../core/parser/cortex-setup';
 import { t } from '../scripts/i18n-client';
 import { graphStore, type GraphStoreState } from '../state/store';
-import type { LibraryFunctionEntry } from '../types/math';
+import type {
+  LibraryFunctionEntry,
+  LibraryParamConfig,
+  ParamDomainMode,
+} from '../types/math';
 import { IconClose, IconFunction, IconTrash } from './icons';
 import { getPlottableExpressions } from '../state/expression-kind';
+
+function resolveEffectiveParamCfg(
+  paramName: string,
+  cfg?: LibraryParamConfig
+): Required<LibraryParamConfig> {
+  const rawRole = classifySymbolRole(paramName);
+  const baseRole: 'param' | 'hyperparam' =
+    cfg?.role ?? (rawRole === 'hyperparam' ? 'hyperparam' : 'param');
+  const baseBounds = getDefaultSliderBounds(paramName, baseRole);
+  const domainMode: ParamDomainMode = cfg?.domainMode ?? 'free';
+  let min = cfg?.min ?? baseBounds.min;
+  if (domainMode === 'positive' && min <= 0) min = 0.01;
+  if (domainMode === 'non_negative' && min < 0) min = 0;
+  const step = Math.max(1e-4, cfg?.step ?? baseBounds.step);
+  const max = Math.max(min + step, cfg?.max ?? baseBounds.max);
+  const defaultValue = Math.min(
+    Math.max(cfg?.defaultValue ?? baseBounds.defaultValue, min),
+    max
+  );
+  return {
+    role: baseRole,
+    domainMode,
+    min,
+    max,
+    step,
+    defaultValue,
+  };
+}
+
+function getConfigurableParamsForEntry(
+  formalParams: string[],
+  paramConfigs?: Record<string, LibraryParamConfig>
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of formalParams.slice(1)) {
+    if (!seen.has(p)) {
+      seen.add(p);
+      out.push(p);
+    }
+  }
+  if (paramConfigs) {
+    for (const k of Object.keys(paramConfigs)) {
+      if (k !== formalParams[0] && !seen.has(k)) {
+        seen.add(k);
+        out.push(k);
+      }
+    }
+  }
+  return out;
+}
 
 export function renderLibraryLatexPreview(latex: string): string {
   try {
@@ -42,11 +102,39 @@ export function FunctionLibraryDrawer({
 }: FunctionLibraryDrawerProps): JSX.Element | null {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFormula, setEditFormula] = useState('');
+  const [paramSetupOpenId, setParamSetupOpenId] = useState<string | null>(() => {
+    if (!storeState.functionLibraryFocusName) return null;
+    const targetLower = storeState.functionLibraryFocusName.toLowerCase();
+    const lib = storeState.graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+    return lib.find((f) => f.name.toLowerCase() === targetLower)?.id ?? null;
+  });
   const [newDefLatex, setNewDefLatex] = useState('');
   const [isEditingNewLatex, setIsEditingNewLatex] = useState(false);
   const [newDesc, setNewDesc] = useState('');
+  const [newParamConfigs, setNewParamConfigs] = useState<
+    Record<string, LibraryParamConfig>
+  >({});
   const editInputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const newDefInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!storeState.functionLibraryDrawerOpen || !storeState.functionLibraryFocusName) {
+      return;
+    }
+    const targetLower = storeState.functionLibraryFocusName.toLowerCase();
+    const lib = storeState.graph.functionLibrary ?? DEFAULT_FUNCTION_LIBRARY;
+    const matched = lib.find((f) => f.name.toLowerCase() === targetLower);
+    if (matched) {
+      setParamSetupOpenId(matched.id);
+      const el = cardRefs.current.get(matched.id);
+      el?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [
+    storeState.functionLibraryDrawerOpen,
+    storeState.functionLibraryFocusName,
+    storeState.graph.functionLibrary,
+  ]);
 
   useLayoutEffect(() => {
     if (!editingId) return;
@@ -94,14 +182,82 @@ export function FunctionLibraryDrawer({
       onToast('Formula must start with FunctionName(arg1, arg2, ...) = ...');
       return;
     }
+    const nextParamConfigs: Record<string, LibraryParamConfig> = {};
+    for (const p of sig.formalParams.slice(1)) {
+      nextParamConfigs[p] = resolveEffectiveParamCfg(p, entry.paramConfigs?.[p]);
+    }
+    if (entry.paramConfigs) {
+      const parsedBody = parseLatexToMathJson(trimmed, {
+        extraAllowedSymbols: [
+          ...sig.formalParams,
+          ...Object.keys(entry.paramConfigs),
+        ],
+      });
+      const bodyLeaves = new Set<string>();
+      const collectLeaves = (node: unknown): void => {
+        if (typeof node === 'string') {
+          bodyLeaves.add(node);
+        } else if (Array.isArray(node)) {
+          for (let i = 1; i < node.length; i++) collectLeaves(node[i]);
+        }
+      };
+      if (parsedBody.valid) collectLeaves(parsedBody.expr);
+      for (const [k, existingCfg] of Object.entries(entry.paramConfigs)) {
+        if (k !== sig.formalParams[0] && !(k in nextParamConfigs) && bodyLeaves.has(k)) {
+          nextParamConfigs[k] = existingCfg;
+        }
+      }
+    }
     graphStore.getState().upsertLibraryFunction({
       ...entry,
       name: sig.name,
       signature: sig.rawHeader,
       definitionLatex: trimmed,
+      paramConfigs:
+        Object.keys(nextParamConfigs).length > 0 ? nextParamConfigs : entry.paramConfigs,
     });
     setEditingId(null);
     onToast(`Updated ${sig.name}(${sig.formalParams.join(', ')})`);
+  };
+
+  const handleUpdateEntryParamConfig = (
+    entry: LibraryFunctionEntry,
+    formalParams: string[],
+    paramName: string,
+    patch: Partial<LibraryParamConfig>
+  ): void => {
+    const allParams = getConfigurableParamsForEntry(formalParams, entry.paramConfigs);
+    const nextConfigs: Record<string, LibraryParamConfig> = {
+      ...(entry.paramConfigs ?? {}),
+    };
+    for (const p of allParams) {
+      nextConfigs[p] = resolveEffectiveParamCfg(p, nextConfigs[p]);
+    }
+    const base = resolveEffectiveParamCfg(paramName, nextConfigs[paramName]);
+    const merged: LibraryParamConfig = { ...base, ...patch };
+    const mode = merged.domainMode ?? 'free';
+    let min = merged.min ?? base.min;
+    let max = merged.max ?? base.max;
+    const step = Math.max(1e-4, merged.step ?? base.step);
+    if (mode === 'positive' && min <= 0) min = 0.01;
+    if (mode === 'non_negative' && min < 0) min = 0;
+    if (min > max) max = min + Math.max(step, 1);
+    const defaultValue = Math.min(
+      Math.max(merged.defaultValue ?? base.defaultValue, min),
+      max
+    );
+    nextConfigs[paramName] = {
+      role: merged.role ?? base.role,
+      domainMode: mode,
+      min,
+      max,
+      step,
+      defaultValue,
+    };
+    graphStore.getState().upsertLibraryFunction({
+      ...entry,
+      paramConfigs: nextConfigs,
+    });
   };
 
   const handleAddCustomFunction = (): void => {
@@ -111,10 +267,21 @@ export function FunctionLibraryDrawer({
       onToast('Please enter a valid definition: Name(p1, p2) = expression');
       return;
     }
+    const resolvedConfigs: Record<string, LibraryParamConfig> = {};
+    for (const p of sig.formalParams.slice(1)) {
+      resolvedConfigs[p] = resolveEffectiveParamCfg(p, newParamConfigs[p]);
+    }
+    const defaultArgs: Record<string, string> = {};
+    for (const p of sig.formalParams.slice(1)) {
+      defaultArgs[p] = p;
+    }
     graphStore.getState().upsertLibraryFunction({
       name: sig.name,
       signature: sig.rawHeader,
       exampleCallLatex: `${sig.name}(x${sig.formalParams.length > 1 ? ', ' + sig.formalParams.slice(1).join(', ') : ''})`,
+      defaultArgs: Object.keys(defaultArgs).length > 0 ? defaultArgs : undefined,
+      paramConfigs:
+        Object.keys(resolvedConfigs).length > 0 ? resolvedConfigs : undefined,
       category: 'custom',
       description:
         newDesc.trim() ||
@@ -124,8 +291,20 @@ export function FunctionLibraryDrawer({
     });
     setNewDefLatex('');
     setNewDesc('');
+    setNewParamConfigs({});
     onToast(`Added ${sig.name}(${sig.formalParams.join(', ')}) to library`);
   };
+
+  const newSigPreview = extractFunctionSignature(newDefLatex.trim());
+  const newConfigurableParams = newSigPreview
+    ? newSigPreview.formalParams.slice(1)
+    : [];
+
+  const domainChoices: { id: ParamDomainMode; label: string }[] = [
+    { id: 'free', label: t('domain_free') },
+    { id: 'non_negative', label: t('domain_non_neg') },
+    { id: 'positive', label: t('domain_positive') },
+  ];
 
   return (
     <div class="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
@@ -283,6 +462,102 @@ export function FunctionLibraryDrawer({
                 </span>
               </button>
             )}
+            {newConfigurableParams.length > 0 && (
+              <div class="p-2.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-2">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  {t('fn_param_setup_title')}
+                </div>
+                {newConfigurableParams.map((pName) => {
+                  const cfg = resolveEffectiveParamCfg(pName, newParamConfigs[pName]);
+                  return (
+                    <div
+                      key={pName}
+                      class="flex flex-wrap items-center justify-between gap-1.5 text-[10px] py-1 border-t first:border-t-0 border-neutral-100 dark:border-neutral-800/80"
+                    >
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-mono font-bold text-xs text-neutral-800 dark:text-neutral-100">
+                          {pName}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNewParamConfigs((prev) => ({
+                              ...prev,
+                              [pName]: {
+                                ...cfg,
+                                role: cfg.role === 'param' ? 'hyperparam' : 'param',
+                              },
+                            }))
+                          }
+                          class={`px-1.5 py-0.5 rounded border font-semibold ${
+                            cfg.role === 'param'
+                              ? 'bg-blue-500/15 border-blue-500/40 text-blue-700 dark:text-blue-300'
+                              : 'bg-purple-500/15 border-purple-500/40 text-purple-700 dark:text-purple-300'
+                          }`}
+                        >
+                          {cfg.role === 'param' ? 'Param' : 'Hyper'}
+                        </button>
+                        <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-0.5 gap-0.5">
+                          {domainChoices.map((dc) => (
+                            <button
+                              key={dc.id}
+                              type="button"
+                              onClick={() =>
+                                setNewParamConfigs((prev) => ({
+                                  ...prev,
+                                  [pName]: { ...cfg, domainMode: dc.id },
+                                }))
+                              }
+                              class={`px-1.5 py-0.5 rounded font-mono font-semibold ${
+                                cfg.domainMode === dc.id
+                                  ? 'bg-orange-500 text-white'
+                                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/70 dark:hover:bg-neutral-800'
+                              }`}
+                            >
+                              {dc.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1 font-mono">
+                        <span>min:</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={cfg.min}
+                          onChange={(e) => {
+                            const v = Number((e.target as HTMLInputElement).value);
+                            if (Number.isFinite(v)) {
+                              setNewParamConfigs((prev) => ({
+                                ...prev,
+                                [pName]: { ...cfg, min: v },
+                              }));
+                            }
+                          }}
+                          class="w-12 px-1 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900"
+                        />
+                        <span>max:</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={cfg.max}
+                          onChange={(e) => {
+                            const v = Number((e.target as HTMLInputElement).value);
+                            if (Number.isFinite(v)) {
+                              setNewParamConfigs((prev) => ({
+                                ...prev,
+                                [pName]: { ...cfg, max: v },
+                              }));
+                            }
+                          }}
+                          class="w-12 px-1 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div class="flex items-center gap-2">
               <input
                 type="text"
@@ -309,15 +584,30 @@ export function FunctionLibraryDrawer({
             {library.map((entry) => {
               const sig = extractFunctionSignature(entry.definitionLatex);
               const paramList = sig?.formalParams ?? ['x'];
+              const configurableParams = getConfigurableParamsForEntry(
+                paramList,
+                entry.paramConfigs
+              );
               const isEditing = editingId === entry.id;
+              const isParamSetupOpen = paramSetupOpenId === entry.id;
+              const isFocusedCard =
+                storeState.functionLibraryFocusName?.toLowerCase() ===
+                entry.name.toLowerCase();
 
               return (
                 <div
                   key={entry.id}
+                  ref={(el) => {
+                    if (el) cardRefs.current.set(entry.id, el);
+                    else cardRefs.current.delete(entry.id);
+                  }}
+                  data-testid={`fn-lib-card-${entry.name}`}
                   class={`p-3.5 rounded-xl border transition-colors ${
-                    entry.enabled
-                      ? 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50'
-                      : 'border-neutral-200/70 dark:border-neutral-800/50 bg-neutral-50/30 dark:bg-neutral-950/20 opacity-65'
+                    isFocusedCard
+                      ? 'border-orange-500 ring-1 ring-orange-500/30 bg-orange-500/5'
+                      : entry.enabled
+                        ? 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50'
+                        : 'border-neutral-200/70 dark:border-neutral-800/50 bg-neutral-50/30 dark:bg-neutral-950/20 opacity-65'
                   }`}
                 >
                   <div class="flex items-start justify-between gap-3">
@@ -431,7 +721,54 @@ export function FunctionLibraryDrawer({
                     </button>
                   )}
 
-                  {/* Actions: Insert Call, Insert Full Definition, Edit Formula */}
+                  {/* Transparent Parameter Summary Chips */}
+                  {paramList.length > 0 && (
+                    <div class="mt-2 flex flex-wrap items-center gap-1">
+                      <span class="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-mono text-[10px]">
+                        {paramList[0]}: {t('fn_param_axis_badge')}
+                      </span>
+                      {configurableParams.map((pName) => {
+                        const cfg = resolveEffectiveParamCfg(
+                          pName,
+                          entry.paramConfigs?.[pName]
+                        );
+                        const domainTag =
+                          cfg.domainMode === 'positive'
+                            ? '> 0'
+                            : cfg.domainMode === 'non_negative'
+                              ? '≥ 0'
+                              : 'ℝ';
+                        const isRestricted = cfg.domainMode !== 'free';
+                        return (
+                          <button
+                            key={pName}
+                            type="button"
+                            data-testid={`fn-param-chip-${entry.name}-${pName}`}
+                            onClick={() =>
+                              setParamSetupOpenId(isParamSetupOpen ? null : entry.id)
+                            }
+                            title={t('fn_param_setup_title')}
+                            class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border font-mono text-[10px] transition-colors ${
+                              isRestricted
+                                ? 'border-amber-500/45 bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/25 font-semibold'
+                                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-orange-500/60'
+                            }`}
+                          >
+                            <span class="font-bold">{pName}</span>
+                            <span class="opacity-70">·</span>
+                            <span>{cfg.role === 'param' ? 'Param' : 'Hyper'}</span>
+                            <span class="opacity-70">·</span>
+                            <span>{domainTag}</span>
+                            <span class="opacity-65 text-[9px]">
+                              [{cfg.min}, {cfg.max}]
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Actions: Insert Call, Insert Full Definition, Parameter Setup, Edit Formula */}
                   <div class="mt-2.5 flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
@@ -465,6 +802,23 @@ export function FunctionLibraryDrawer({
                     >
                       {t('fn_lib_insert_def_btn')}
                     </button>
+                    {configurableParams.length > 0 && (
+                      <button
+                        type="button"
+                        data-testid={`fn-param-setup-toggle-${entry.name}`}
+                        aria-expanded={isParamSetupOpen}
+                        onClick={() =>
+                          setParamSetupOpenId(isParamSetupOpen ? null : entry.id)
+                        }
+                        class={`px-2.5 py-1 rounded text-[10px] font-semibold border transition-colors ${
+                          isParamSetupOpen
+                            ? 'bg-orange-500 text-white border-orange-500'
+                            : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-orange-500'
+                        }`}
+                      >
+                        {t('fn_param_setup_btn')}
+                      </button>
+                    )}
                     {!isEditing && (
                       <button
                         type="button"
@@ -478,6 +832,208 @@ export function FunctionLibraryDrawer({
                       </button>
                     )}
                   </div>
+
+                  {/* Expandable Parameter Setup Panel */}
+                  {isParamSetupOpen && configurableParams.length > 0 && (
+                    <div
+                      data-testid={`fn-param-setup-panel-${entry.name}`}
+                      class="mt-2.5 p-2.5 rounded-lg bg-white dark:bg-neutral-950 border border-orange-500/35 space-y-2"
+                    >
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                        {t('fn_param_setup_title')} — {entry.name}
+                      </div>
+                      {configurableParams.map((pName) => {
+                        const cfg = resolveEffectiveParamCfg(
+                          pName,
+                          entry.paramConfigs?.[pName]
+                        );
+                        return (
+                          <div
+                            key={pName}
+                            class="flex flex-col gap-1.5 pt-2 first:pt-0 border-t first:border-t-0 border-neutral-100 dark:border-neutral-800/80 text-[10px]"
+                          >
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                              <div class="flex items-center gap-1.5">
+                                <span class="font-mono font-bold text-xs text-neutral-900 dark:text-neutral-100">
+                                  {pName}
+                                </span>
+                                <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-0.5 gap-0.5">
+                                  {(['param', 'hyperparam'] as const).map((rOpt) => (
+                                    <button
+                                      key={rOpt}
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateEntryParamConfig(
+                                          entry,
+                                          paramList,
+                                          pName,
+                                          { role: rOpt }
+                                        )
+                                      }
+                                      class={`px-1.5 py-0.5 rounded font-semibold ${
+                                        cfg.role === rOpt
+                                          ? rOpt === 'param'
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-purple-500 text-white'
+                                          : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800'
+                                      }`}
+                                    >
+                                      {rOpt === 'param' ? 'Param' : 'Hyper'}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div class="flex items-center gap-1">
+                                <span class="font-mono text-neutral-500">
+                                  {t('domain_label')}:
+                                </span>
+                                <div class="inline-flex items-center rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-0.5 gap-0.5">
+                                  {domainChoices.map((dc) => (
+                                    <button
+                                      key={dc.id}
+                                      type="button"
+                                      data-testid={`fn-param-domain-${entry.name}-${pName}-${dc.id}`}
+                                      onClick={() =>
+                                        handleUpdateEntryParamConfig(
+                                          entry,
+                                          paramList,
+                                          pName,
+                                          { domainMode: dc.id }
+                                        )
+                                      }
+                                      class={`px-1.5 py-0.5 rounded font-mono font-semibold transition-colors ${
+                                        cfg.domainMode === dc.id
+                                          ? 'bg-orange-500 text-white'
+                                          : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800'
+                                      }`}
+                                    >
+                                      {dc.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2 font-mono text-neutral-600 dark:text-neutral-300">
+                              <label class="inline-flex items-center gap-1">
+                                <span>min:</span>
+                                <input
+                                  key={`fn-min-${pName}-${cfg.min}-${cfg.domainMode}`}
+                                  type="number"
+                                  step="0.1"
+                                  defaultValue={String(cfg.min)}
+                                  onBlur={(e) => {
+                                    const v = Number((e.target as HTMLInputElement).value);
+                                    if (Number.isFinite(v)) {
+                                      handleUpdateEntryParamConfig(
+                                        entry,
+                                        paramList,
+                                        pName,
+                                        {
+                                          min: v,
+                                          ...(v <= 0 && cfg.domainMode === 'positive'
+                                            ? { domainMode: 'free' }
+                                            : v < 0 && cfg.domainMode === 'non_negative'
+                                              ? { domainMode: 'free' }
+                                              : {}),
+                                        }
+                                      );
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }}
+                                  class="w-14 px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 focus:border-orange-500 focus:outline-none"
+                                />
+                              </label>
+                              <label class="inline-flex items-center gap-1">
+                                <span>max:</span>
+                                <input
+                                  key={`fn-max-${pName}-${cfg.max}`}
+                                  type="number"
+                                  step="0.1"
+                                  defaultValue={String(cfg.max)}
+                                  onBlur={(e) => {
+                                    const v = Number((e.target as HTMLInputElement).value);
+                                    if (Number.isFinite(v)) {
+                                      handleUpdateEntryParamConfig(
+                                        entry,
+                                        paramList,
+                                        pName,
+                                        { max: v }
+                                      );
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }}
+                                  class="w-14 px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 focus:border-orange-500 focus:outline-none"
+                                />
+                              </label>
+                              <label class="inline-flex items-center gap-1">
+                                <span>Δ:</span>
+                                <input
+                                  key={`fn-step-${pName}-${cfg.step}`}
+                                  type="number"
+                                  step="0.01"
+                                  min="0.0001"
+                                  defaultValue={String(cfg.step)}
+                                  onBlur={(e) => {
+                                    const v = Number((e.target as HTMLInputElement).value);
+                                    if (Number.isFinite(v)) {
+                                      handleUpdateEntryParamConfig(
+                                        entry,
+                                        paramList,
+                                        pName,
+                                        { step: Math.max(1e-4, v) }
+                                      );
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }}
+                                  class="w-14 px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 focus:border-orange-500 focus:outline-none"
+                                />
+                              </label>
+                              <label class="inline-flex items-center gap-1">
+                                <span>{t('fn_param_default_label')}:</span>
+                                <input
+                                  key={`fn-def-${pName}-${cfg.defaultValue}`}
+                                  type="number"
+                                  step="0.1"
+                                  defaultValue={String(cfg.defaultValue)}
+                                  onBlur={(e) => {
+                                    const v = Number((e.target as HTMLInputElement).value);
+                                    if (Number.isFinite(v)) {
+                                      handleUpdateEntryParamConfig(
+                                        entry,
+                                        paramList,
+                                        pName,
+                                        { defaultValue: v }
+                                      );
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }}
+                                  class="w-14 px-1.5 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 focus:border-orange-500 focus:outline-none"
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

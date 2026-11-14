@@ -18,6 +18,7 @@ import {
 import type {
   FunctionSignature,
   LibraryFunctionEntry,
+  LibraryParamConfig,
   MathJsonExpr,
   UserFunctionDef,
   UserFunctionRegistry,
@@ -123,6 +124,18 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'Attention(Q, K, V, d_k) = \\operatorname{softmax}\\left(\\frac{Q \\cdot K^T}{\\sqrt{d_k}}\\right) \\cdot V',
     exampleCallLatex: 'Attention(x, K, V, d_k)',
     defaultArgs: { d_k: 'd_k' },
+    paramConfigs: {
+      K: { role: 'param', domainMode: 'free', min: 1, max: 100, step: 1, defaultValue: 3 },
+      V: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      d_k: {
+        role: 'hyperparam',
+        domainMode: 'positive',
+        min: 0.5,
+        max: 64,
+        step: 0.5,
+        defaultValue: 4,
+      },
+    },
     category: 'transformer',
     description:
       'Scaled Dot-Product Attention (Vaswani et al.): pure mathematical composition of softmax((Q·K)/√d_k)·V',
@@ -137,6 +150,12 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'SwiGLU(x, w_1, w_2, b, c) = \\operatorname{swish}(w_1 \\cdot x + b) \\cdot (w_2 \\cdot x + c)',
     exampleCallLatex: 'SwiGLU(x, w_1, w_2)',
     defaultArgs: { w_1: 'w_1', w_2: 'w_2', b: 0, c: 0 },
+    paramConfigs: {
+      w_1: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      w_2: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      b: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 0 },
+      c: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 0 },
+    },
     category: 'transformer',
     description:
       'Swish-Gated Linear Unit FFN (Shazeer / LLaMA): product of swish gate and linear projection',
@@ -151,6 +170,12 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'GeGLU(x, w_1, w_2, b, c) = \\operatorname{gelu}(w_1 \\cdot x + b) \\cdot (w_2 \\cdot x + c)',
     exampleCallLatex: 'GeGLU(x, w_1, w_2)',
     defaultArgs: { w_1: 'w_1', w_2: 'w_2', b: 0, c: 0 },
+    paramConfigs: {
+      w_1: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      w_2: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      b: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 0 },
+      c: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 0 },
+    },
     category: 'transformer',
     description: 'GELU-Gated Linear Unit FFN: product of GELU gate and linear projection',
     enabled: true,
@@ -164,6 +189,24 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'RMSNorm(x, \\gamma, \\epsilon) = \\frac{x}{\\sqrt{x^2 + \\epsilon}} \\cdot \\gamma',
     exampleCallLatex: 'RMSNorm(x, \\gamma, \\epsilon)',
     defaultArgs: { gamma: 'gamma', epsilon: 1e-5 },
+    paramConfigs: {
+      gamma: {
+        role: 'hyperparam',
+        domainMode: 'free',
+        min: -5,
+        max: 5,
+        step: 0.05,
+        defaultValue: 1,
+      },
+      epsilon: {
+        role: 'hyperparam',
+        domainMode: 'positive',
+        min: 0.0001,
+        max: 1,
+        step: 0.001,
+        defaultValue: 0.01,
+      },
+    },
     category: 'normalization',
     description: 'Root Mean Square Normalization (Zhang & Sennrich)',
     enabled: true,
@@ -177,6 +220,41 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'LayerNorm(x, \\mu, \\sigma, \\gamma, \\beta, \\epsilon) = \\gamma \\cdot \\frac{x - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}} + \\beta',
     exampleCallLatex: 'LayerNorm(x, \\mu, \\sigma, \\gamma, \\beta)',
     defaultArgs: { mu: 'mu', sigma: 'sigma', gamma: 'gamma', beta: 'beta', epsilon: 1e-5 },
+    paramConfigs: {
+      mu: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 0 },
+      sigma: {
+        role: 'param',
+        domainMode: 'positive',
+        min: 0.1,
+        max: 5,
+        step: 0.05,
+        defaultValue: 1,
+      },
+      gamma: {
+        role: 'hyperparam',
+        domainMode: 'free',
+        min: -5,
+        max: 5,
+        step: 0.05,
+        defaultValue: 1,
+      },
+      beta: {
+        role: 'hyperparam',
+        domainMode: 'free',
+        min: -5,
+        max: 5,
+        step: 0.05,
+        defaultValue: 0,
+      },
+      epsilon: {
+        role: 'hyperparam',
+        domainMode: 'positive',
+        min: 0.0001,
+        max: 1,
+        step: 0.001,
+        defaultValue: 0.01,
+      },
+    },
     category: 'normalization',
     description: 'Standard affine Layer Normalization with mean μ, std σ, scale γ, shift β',
     enabled: true,
@@ -190,6 +268,10 @@ export const DEFAULT_FUNCTION_LIBRARY: LibraryFunctionEntry[] = [
       'RoPE(x, m, \\theta) = x \\cdot \\cos(m \\cdot \\theta) - \\sin(m \\cdot \\theta)',
     exampleCallLatex: 'RoPE(x, m, \\theta)',
     defaultArgs: { m: 'm', theta: 'theta' },
+    paramConfigs: {
+      m: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+      theta: { role: 'param', domainMode: 'free', min: -5, max: 5, step: 0.05, defaultValue: 1 },
+    },
     category: 'transformer',
     description: 'Rotary Position Embedding (Su et al.) 2D rotation formula',
     enabled: true,
@@ -1067,6 +1149,12 @@ export function substituteAstParams(
   return [head, ...args.map((arg) => substituteAstParams(arg, paramBindings))];
 }
 
+export interface BoundParamConfigInfo {
+  config: LibraryParamConfig;
+  sourceFn: string;
+  formalParam: string;
+}
+
 export interface ParseOptions {
   userFunctions?: UserFunctionRegistry;
   extraAllowedSymbols?: Iterable<string>;
@@ -1077,6 +1165,8 @@ export interface ParseResult {
   expr: MathJsonExpr;
   signature?: FunctionSignature;
   tokenToLatexMap?: Record<string, string>;
+  calledFunctions?: string[];
+  boundParamConfigs?: Record<string, BoundParamConfigInfo>;
   errorMessage?: string;
   errorOffset?: number;
 }
@@ -1126,6 +1216,8 @@ export function parseLatexToMathJson(
     }
 
     let pos = 0;
+    const calledFunctionsSet = new Set<string>();
+    const boundParamConfigs: Record<string, BoundParamConfigInfo> = {};
     const peek = (): Token | undefined => tokens[pos];
     const consume = (): Token => tokens[pos++];
 
@@ -1328,13 +1420,72 @@ export function parseLatexToMathJson(
           // 1. User-defined or Library function takes highest precedence (pure mathematical beta-reduction)
           const userDef = resolveUserFunction(name, options?.userFunctions);
           if (userDef && userDef.signature.name.toLowerCase() !== signature?.name.toLowerCase()) {
+            calledFunctionsSet.add(userDef.signature.name);
+            const putBoundParamCfg = (
+              symName: string,
+              incoming: BoundParamConfigInfo
+            ): void => {
+              const rank = (m?: string): number =>
+                m === 'positive' ? 2 : m === 'non_negative' ? 1 : 0;
+              const prev = boundParamConfigs[symName];
+              if (!prev) {
+                boundParamConfigs[symName] = incoming;
+                return;
+              }
+              const prevRank = rank(prev.config.domainMode);
+              const incRank = rank(incoming.config.domainMode);
+              if (incRank > prevRank) {
+                boundParamConfigs[symName] = {
+                  ...incoming,
+                  config: {
+                    ...prev.config,
+                    ...incoming.config,
+                    min:
+                      prev.config.min !== undefined && incoming.config.min !== undefined
+                        ? Math.max(prev.config.min, incoming.config.min)
+                        : (incoming.config.min ?? prev.config.min),
+                  },
+                };
+              } else if (incRank === prevRank && incRank > 0) {
+                boundParamConfigs[symName] = {
+                  ...prev,
+                  config: {
+                    ...prev.config,
+                    min:
+                      prev.config.min !== undefined && incoming.config.min !== undefined
+                        ? Math.max(prev.config.min, incoming.config.min)
+                        : (prev.config.min ?? incoming.config.min),
+                  },
+                };
+              }
+            };
             const formal = userDef.signature.formalParams;
             if (formal.length > 0) {
               const bindings: Record<string, MathJsonExpr> = {};
               for (let idx = 0; idx < formal.length; idx++) {
                 const paramName = formal[idx];
-                bindings[paramName] =
+                const actualExpr =
                   args[idx] ?? userDef.defaultArgs?.[paramName] ?? paramName;
+                bindings[paramName] = actualExpr;
+                const paramCfg = userDef.paramConfigs?.[paramName];
+                if (paramCfg && typeof actualExpr === 'string' && idx > 0) {
+                  putBoundParamCfg(actualExpr, {
+                    config: paramCfg,
+                    sourceFn: userDef.signature.name,
+                    formalParam: paramName,
+                  });
+                }
+              }
+              if (userDef.paramConfigs) {
+                for (const [cfgKey, paramCfg] of Object.entries(userDef.paramConfigs)) {
+                  if (!(cfgKey in bindings)) {
+                    putBoundParamCfg(cfgKey, {
+                      config: paramCfg,
+                      sourceFn: userDef.signature.name,
+                      formalParam: cfgKey,
+                    });
+                  }
+                }
               }
               return substituteAstParams(userDef.bodyExpr, bindings);
             }
@@ -1367,7 +1518,16 @@ export function parseLatexToMathJson(
 
     // Touch ComputeEngine singleton to ensure Cortex dictionary compatibility
     getComputeEngine();
-    return { valid: true, expr: ast, signature, tokenToLatexMap: preserved.tokenToLatex };
+    return {
+      valid: true,
+      expr: ast,
+      signature,
+      tokenToLatexMap: preserved.tokenToLatex,
+      calledFunctions:
+        calledFunctionsSet.size > 0 ? Array.from(calledFunctionsSet) : undefined,
+      boundParamConfigs:
+        Object.keys(boundParamConfigs).length > 0 ? boundParamConfigs : undefined,
+    };
   } catch (err) {
     return {
       valid: false,

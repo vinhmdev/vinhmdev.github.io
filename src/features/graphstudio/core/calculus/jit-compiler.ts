@@ -8,7 +8,10 @@
  * 2. `evaluateScalar(x, params)` — fast scalar closure for 3D surfaces and vector fields.
  */
 import type { Jet2Tuple, MathJsonExpr, SubgradConvention } from '../../types/math';
-import { applyStabilityPass } from '../parser/stability-pass';
+import {
+  applyStabilityPass,
+  type StabilityPassOptions,
+} from '../parser/stability-pass';
 import { SafeMathRuntime } from './safe-math-runtime';
 
 export interface CompiledJet2Kernel {
@@ -33,9 +36,10 @@ export interface CompiledJet2Kernel {
 
 export function compileJet2Kernel(
   rawAst: MathJsonExpr,
-  indepVar = 'x'
+  indepVar = 'x',
+  stabilityOptions?: StabilityPassOptions
 ): CompiledJet2Kernel {
-  const ast = applyStabilityPass(rawAst);
+  const ast = applyStabilityPass(rawAst, stabilityOptions);
 
   // Common Subexpression Elimination (CSE) table
   const cseMap = new Map<string, number>();

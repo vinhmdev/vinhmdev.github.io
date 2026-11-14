@@ -19,6 +19,7 @@ import type {
   ClassifiedSymbol,
   LibraryFunctionEntry,
   MathJsonExpr,
+  ParamDomainMode,
   SymbolRole,
   UserFunctionRegistry,
 } from '../../types/math';
@@ -263,6 +264,7 @@ export function buildUserFunctionRegistry(
         bodyExpr: parsed.expr,
         rawLatex: entry.definitionLatex,
         defaultArgs: entry.defaultArgs,
+        paramConfigs: entry.paramConfigs,
         sourceExprId: entry.id,
       };
     }
@@ -383,10 +385,18 @@ function getDefaultUserFunctionRegistry(): UserFunctionRegistry {
   return cachedDefaultRegistry;
 }
 
+const DEFAULT_POSITIVE_SCALAR_SYMBOLS = new Set([
+  'sigma',
+  'tau',
+  'epsilon',
+  'delta',
+]);
+
 export function classifyLatexExpression(
   rawLatex: string,
   overrides: Record<string, SymbolRole> = {},
-  userFunctions?: UserFunctionRegistry
+  userFunctions?: UserFunctionRegistry,
+  unlockedSymbols?: ReadonlySet<string>
 ): ClassifiedAST {
   const resolvedUserFunctions = userFunctions ?? getDefaultUserFunctionRegistry();
   const sigPreview = extractFunctionSignature(rawLatex);
@@ -435,7 +445,36 @@ export function classifyLatexExpression(
     };
   }
 
-  const stabilizedExpr = applyStabilityPass(parsed.expr);
+  const sigMatchingFnDef = sigPreview
+    ? Object.values(resolvedUserFunctions).find(
+        (fn) =>
+          fn.signature.name.toLowerCase() === sigPreview.name.toLowerCase() &&
+          fn.paramConfigs !== undefined
+      )
+    : undefined;
+
+  const effectiveUnlocked = new Set<string>(unlockedSymbols ?? []);
+  for (const dimSym of ['d_k', 'd_v', 'd_model']) {
+    const boundCfg =
+      parsed.boundParamConfigs?.[dimSym]?.config ??
+      sigMatchingFnDef?.paramConfigs?.[dimSym];
+    if (boundCfg?.domainMode === 'free' || (!boundCfg && !effectiveUnlocked.has(dimSym))) {
+      if (boundCfg?.domainMode !== 'positive') {
+        effectiveUnlocked.add(dimSym);
+      }
+    }
+  }
+  if (parsed.boundParamConfigs) {
+    for (const [symKey, info] of Object.entries(parsed.boundParamConfigs)) {
+      if (info.config.domainMode === 'free') {
+        effectiveUnlocked.add(symKey);
+      }
+    }
+  }
+
+  const stabilizedExpr = applyStabilityPass(parsed.expr, {
+    unlockedSymbols: effectiveUnlocked,
+  });
   const symbolMap = new Map<string, ClassifiedSymbol>();
   const formalParams = parsed.signature?.formalParams ?? [];
   const leadingFormalParam = formalParams[0];
@@ -554,14 +593,59 @@ export function classifyLatexExpression(
   }
   scanDomainRestrictions(stabilizedExpr);
 
+  function resolveBoundConfig(symName: string) {
+    if (parsed.boundParamConfigs?.[symName]) {
+      return parsed.boundParamConfigs[symName];
+    }
+    if (sigMatchingFnDef?.paramConfigs?.[symName]) {
+      return {
+        config: sigMatchingFnDef.paramConfigs[symName],
+        sourceFn: sigMatchingFnDef.signature.name,
+        formalParam: symName,
+      };
+    }
+    return undefined;
+  }
+
+  function resolveDomainMeta(
+    symName: string,
+    boundInfo: ReturnType<typeof resolveBoundConfig>
+  ): { domainMode: ParamDomainMode; domainSource?: string } {
+    if (unlockedSymbols?.has(symName)) {
+      return { domainMode: 'free' };
+    }
+    if (boundInfo?.config.domainMode !== undefined) {
+      return {
+        domainMode: boundInfo.config.domainMode,
+        domainSource:
+          boundInfo.config.domainMode !== 'free' ? boundInfo.sourceFn : undefined,
+      };
+    }
+    if (DEFAULT_POSITIVE_SCALAR_SYMBOLS.has(symName)) {
+      return {
+        domainMode: 'positive',
+        domainSource: SYMBOL_LATEX_MAP[symName] ?? symName,
+      };
+    }
+    return { domainMode: 'free' };
+  }
+
   function walk(node: MathJsonExpr): void {
     if (typeof node === 'number') return;
     if (typeof node === 'string') {
+      const boundInfo = resolveBoundConfig(node);
       let role = classifySymbolRole(node, overrides);
       // If the expression defines a formal function f(t) = ... or Attention(Q, K, V) = ...,
       // the first formal parameter acts as the primary independent axis variable unless overridden
       if (!overrides[node] && leadingFormalParam && node === leadingFormalParam) {
         role = 'data_var';
+      } else if (
+        !overrides[node] &&
+        role !== 'data_var' &&
+        role !== 'constant' &&
+        boundInfo?.config.role
+      ) {
+        role = boundInfo.config.role;
       }
       if (role !== 'constant' && !symbolMap.has(node)) {
         const bounds = getDefaultSliderBounds(
@@ -569,16 +653,24 @@ export function classifyLatexExpression(
           role,
           domainRestrictedSymbols.get(node)
         );
+        const cfg = boundInfo?.config;
+        const defaultMin = cfg?.min ?? bounds.min;
+        const defaultMax = cfg?.max ?? bounds.max;
+        const defaultStep = cfg?.step ?? bounds.step;
+        const defaultValue = cfg?.defaultValue ?? bounds.defaultValue;
+        const { domainMode, domainSource } = resolveDomainMeta(node, boundInfo);
         const latexDisplay =
           parsed.tokenToLatexMap?.[node] ?? SYMBOL_LATEX_MAP[node] ?? node;
         symbolMap.set(node, {
           name: node,
           latex: latexDisplay,
           role,
-          defaultMin: bounds.min,
-          defaultMax: bounds.max,
-          defaultStep: bounds.step,
-          defaultValue: bounds.defaultValue,
+          defaultMin,
+          defaultMax,
+          defaultStep,
+          defaultValue,
+          domainMode,
+          domainSource,
         });
       }
       return;
@@ -615,16 +707,21 @@ export function classifyLatexExpression(
       sym.name !== primaryVar &&
       overrides[sym.name] !== 'data_var'
     ) {
-      sym.role = 'param';
+      const boundInfo = resolveBoundConfig(sym.name);
+      sym.role = boundInfo?.config.role ?? 'param';
       const bounds = getDefaultSliderBounds(
         sym.name,
-        'param',
+        sym.role,
         domainRestrictedSymbols.get(sym.name)
       );
-      sym.defaultMin = bounds.min;
-      sym.defaultMax = bounds.max;
-      sym.defaultStep = bounds.step;
-      sym.defaultValue = bounds.defaultValue;
+      const cfg = boundInfo?.config;
+      sym.defaultMin = cfg?.min ?? bounds.min;
+      sym.defaultMax = cfg?.max ?? bounds.max;
+      sym.defaultStep = cfg?.step ?? bounds.step;
+      sym.defaultValue = cfg?.defaultValue ?? bounds.defaultValue;
+      const domainMeta = resolveDomainMeta(sym.name, boundInfo);
+      sym.domainMode = domainMeta.domainMode;
+      sym.domainSource = domainMeta.domainSource;
     }
   }
 
@@ -637,6 +734,7 @@ export function classifyLatexExpression(
     primaryVar,
     isImplicitRelation: false,
     signature: parsed.signature,
+    calledFunctions: parsed.calledFunctions,
   };
 }
 
