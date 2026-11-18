@@ -25,6 +25,8 @@ import {
   onPaste,
   onScroll,
   getScrollDOM,
+  getContentDOM,
+  isComposing,
   scrollTo,
   focus,
   setReadOnly,
@@ -33,10 +35,12 @@ import { initSettings } from './settings';
 import {
   initPreview,
   renderPreview,
+  cancelPendingRender,
   syncPreviewTheme,
   invalidateParser,
   getRenderer,
 } from './preview';
+import { createScrollSyncController } from './scroll-sync';
 import { initExportPDF } from './export-pdf';
 import { initExportDocx } from './export-docx';
 import {
@@ -47,9 +51,28 @@ import {
 } from '@shared/paste-share/share';
 import { createDualDraftStore } from '@shared/paste-share/draft-store';
 
+const LIVE_PREVIEW_DEBOUNCE_MS = 80;
+
+function initViewportHeightSync(): void {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const syncViewportHeight = (): void => {
+    // Ignore pinch-zoom scaling so desktop/mobile zoom does not shrink the shell
+    if (Math.abs(vv.scale - 1) > 0.05) return;
+    document.documentElement.style.setProperty('--c2md-vvh', `${Math.round(vv.height)}px`);
+    if (vv.offsetTop > 0 || window.scrollY > 0) {
+      window.scrollTo(0, 0);
+    }
+  };
+  vv.addEventListener('resize', syncViewportHeight, { passive: true });
+  vv.addEventListener('scroll', syncViewportHeight, { passive: true });
+  syncViewportHeight();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Lucide is loaded via CDN — typed in src/shared/globals.d.ts.
   window.lucide?.createIcons();
+  initViewportHeightSync();
 
   // ─── Initialize core modules ────────────────────────────────────────────────
   createEditor(document.getElementById('codemirror-host') as HTMLDivElement);
@@ -57,39 +80,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const settings = initSettings();
   const draftStore = createDualDraftStore('c2md');
   let isProgrammaticSet = false;
+  let isImmediateTransform = false;
   let isEditorReadOnly = false;
-
-  function handleSetReadOnly(ro: boolean): void {
-    isEditorReadOnly = ro;
-    setReadOnly(ro);
-  }
-
-  function setProgrammaticValue(val: string): void {
-    isProgrammaticSet = true;
-    try {
-      setValue(val);
-      if (!val) {
-        getRenderer()?.clear();
-        updateEmptyStates('');
-      }
-    } finally {
-      isProgrammaticSet = false;
-    }
-  }
+  let hasUserEdited = false;
+  let isInitialWorkspaceSwitch = true;
+  let liveUpdateTimer: number | null = null;
+  let hasPendingDraftSave = false;
 
   const previewHostEl = document.getElementById('preview-host') as HTMLDivElement;
   const preview = initPreview(previewHostEl);
+  const previewScrollEl = preview.getScrollEl();
 
   const isDark = (): boolean => document.documentElement.classList.contains('dark');
 
   // ─── Empty-state visibility helpers ─────────────────────────────────────────
   const emptyState = document.getElementById('empty-state') as HTMLDivElement;
   const previewEmptyState = document.getElementById('preview-empty-state') as HTMLDivElement;
+  let lastEmptyFlag: boolean | null = null;
 
   function updateEmptyStates(val: string): void {
-    emptyState.style.opacity = val ? '0' : '1';
-    previewEmptyState.style.opacity = val ? '0' : '1';
+    const isEmpty = val.length === 0;
+    if (isEmpty === lastEmptyFlag) return;
+    lastEmptyFlag = isEmpty;
+    emptyState.classList.toggle('is-hidden', !isEmpty);
+    previewEmptyState.classList.toggle('is-hidden', !isEmpty);
   }
+  updateEmptyStates(getValue());
 
   // ─── Render helper (shared options) ─────────────────────────────────────────
   function getRenderOpts() {
@@ -98,6 +114,105 @@ document.addEventListener('DOMContentLoaded', () => {
       renderLatex: settings.get('renderLatex'),
       isDark: isDark(),
     };
+  }
+
+  // ─── Synchronized scrolling (driver-isolated, loop-free) ────────────────────
+  const scrollSync = createScrollSyncController({
+    isEnabled: () => settings.get('syncScroll'),
+    getEditorMetrics: () => {
+      const scrollDOM = getScrollDOM();
+      if (!scrollDOM) return null;
+      return {
+        scrollTop: scrollDOM.scrollTop,
+        scrollHeight: scrollDOM.scrollHeight,
+        clientHeight: scrollDOM.clientHeight,
+      };
+    },
+    getPreviewMetrics: () => ({
+      scrollTop: previewScrollEl.scrollTop,
+      scrollHeight: previewScrollEl.scrollHeight,
+      clientHeight: previewScrollEl.clientHeight,
+    }),
+    scrollEditorTo: (top) => scrollTo(top),
+    scrollPreviewTo: (top) => {
+      previewScrollEl.scrollTop = top;
+    },
+  });
+
+  const editorPaneEl = document.getElementById('editor-pane');
+  const previewPaneEl = document.getElementById('preview-pane');
+  const setEditorDriver = (): void => scrollSync.setActiveDriver('editor');
+  const setPreviewDriver = (): void => scrollSync.setActiveDriver('preview');
+
+  for (const evName of ['wheel', 'pointerdown', 'touchstart', 'keydown', 'focusin'] as const) {
+    editorPaneEl?.addEventListener(evName, setEditorDriver, { passive: true });
+  }
+  for (const evName of ['wheel', 'pointerdown', 'touchstart', 'keydown'] as const) {
+    previewPaneEl?.addEventListener(evName, setPreviewDriver, { passive: true });
+    previewScrollEl.addEventListener(evName, setPreviewDriver, { passive: true });
+  }
+
+  async function runPreviewRender(md: string, opts = getRenderOpts()): Promise<void> {
+    scrollSync.beginPreviewMutation();
+    try {
+      await renderPreview(md, opts);
+    } finally {
+      scrollSync.endPreviewMutation();
+    }
+  }
+
+  function clearScheduledLiveUpdate(): void {
+    if (liveUpdateTimer !== null) {
+      window.clearTimeout(liveUpdateTimer);
+      liveUpdateTimer = null;
+    }
+  }
+
+  function flushPendingDraftSave(): void {
+    if (!hasPendingDraftSave) return;
+    hasPendingDraftSave = false;
+    if (!hasActiveSharedDoc()) {
+      draftStore.save({ content: getValue() });
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushPendingDraftSave();
+    }
+  });
+  window.addEventListener('beforeunload', flushPendingDraftSave);
+
+  function handleSetReadOnly(ro: boolean): void {
+    isEditorReadOnly = ro;
+    setReadOnly(ro);
+  }
+
+  function setProgrammaticValue(val: string): void {
+    clearScheduledLiveUpdate();
+    hasPendingDraftSave = false;
+    isProgrammaticSet = true;
+    try {
+      setValue(val, { preservePosition: false });
+      updateEmptyStates(val);
+      if (!val) {
+        cancelPendingRender();
+        getRenderer()?.clear();
+      }
+    } finally {
+      isProgrammaticSet = false;
+    }
+  }
+
+  function applyInPlaceTransform(val: string): void {
+    clearScheduledLiveUpdate();
+    hasPendingDraftSave = false;
+    isImmediateTransform = true;
+    try {
+      setValue(val, { preservePosition: true });
+    } finally {
+      isImmediateTransform = false;
+    }
   }
 
   // ─── Paste handler ───────────────────────────────────────────────────────────
@@ -117,22 +232,64 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   });
 
-  // ─── Live preview ────────────────────────────────────────────────────────────
-  onUpdate(async (val) => {
+  // ─── Live preview (coalesced during typing / IME bursts) ─────────────────────
+  function scheduleLivePreviewRender(): void {
+    clearScheduledLiveUpdate();
+    liveUpdateTimer = window.setTimeout(() => {
+      liveUpdateTimer = null;
+      if (isComposing()) return;
+      flushPendingDraftSave();
+      void runPreviewRender(getValue());
+    }, LIVE_PREVIEW_DEBOUNCE_MS);
+  }
+
+  getContentDOM()?.addEventListener('compositionend', () => {
+    scrollSync.markUserEditing();
+    clearScheduledLiveUpdate();
+    flushPendingDraftSave();
+    void runPreviewRender(getValue());
+  });
+
+  onUpdate((val, meta) => {
     updateEmptyStates(val);
-    if (!isProgrammaticSet && !hasActiveSharedDoc()) {
-      draftStore.save({ content: val });
+
+    if (isProgrammaticSet) {
+      shareNotify();
+      if (val) {
+        void runPreviewRender(val);
+      }
+      return;
     }
-    shareNotify(); // refresh the share bar's unsaved indicator
-    await renderPreview(val, getRenderOpts());
+
+    hasUserEdited = true;
+    scrollSync.markUserEditing();
+    shareNotify();
+
+    if (meta.isPaste || isImmediateTransform) {
+      clearScheduledLiveUpdate();
+      hasPendingDraftSave = false;
+      if (!hasActiveSharedDoc()) {
+        draftStore.save({ content: val });
+      }
+      void runPreviewRender(val);
+      return;
+    }
+
+    if (!hasActiveSharedDoc()) {
+      hasPendingDraftSave = true;
+    }
+    if (meta.isComposing) return;
+    scheduleLivePreviewRender();
   });
 
   // Re-render when toggle settings change
   settings.onChange('renderLatex', () => {
     invalidateParser();
-    renderPreview(getValue(), getRenderOpts());
+    void runPreviewRender(getValue());
   });
-  settings.onChange('renderMermaid', () => renderPreview(getValue(), getRenderOpts()));
+  settings.onChange('renderMermaid', () => {
+    void runPreviewRender(getValue());
+  });
 
   // ─── Theme change ────────────────────────────────────────────────────────────
   window.addEventListener('themechange', (e: Event) => {
@@ -141,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     syncPreviewTheme(newThemeIsDark);
     // Re-render Mermaid in new theme if content exists
     if (settings.get('renderMermaid') && getValue()) {
-      renderPreview(getValue(), {
+      void runPreviewRender(getValue(), {
         renderMermaid: settings.get('renderMermaid'),
         renderLatex: settings.get('renderLatex'),
         isDark: newThemeIsDark,
@@ -149,33 +306,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ─── Synchronized scrolling ───────────────────────────────────────────────────
-  const previewScrollEl = preview.getScrollEl();
-  let isSyncingScroll = false;
-
   onScroll((info) => {
-    if (!settings.get('syncScroll') || isSyncingScroll) return;
-    isSyncingScroll = true;
-    const ratio = info.scrollTop / (info.scrollHeight - info.clientHeight || 1);
-    previewScrollEl.scrollTop =
-      ratio * (previewScrollEl.scrollHeight - previewScrollEl.clientHeight);
-    requestAnimationFrame(() => {
-      isSyncingScroll = false;
-    });
+    scrollSync.handleEditorScroll(info);
   });
 
-  previewScrollEl.addEventListener('scroll', () => {
-    if (!settings.get('syncScroll') || isSyncingScroll) return;
-    isSyncingScroll = true;
-    const ratio =
-      previewScrollEl.scrollTop /
-      (previewScrollEl.scrollHeight - previewScrollEl.clientHeight || 1);
-    const scrollDOM = getScrollDOM();
-    if (scrollDOM) scrollTo(ratio * (scrollDOM.scrollHeight - scrollDOM.clientHeight));
-    requestAnimationFrame(() => {
-      isSyncingScroll = false;
-    });
-  });
+  previewScrollEl.addEventListener(
+    'scroll',
+    () => {
+      scrollSync.handlePreviewScroll({
+        scrollTop: previewScrollEl.scrollTop,
+        scrollHeight: previewScrollEl.scrollHeight,
+        clientHeight: previewScrollEl.clientHeight,
+      });
+    },
+    { passive: true }
+  );
 
   // ─── Export handlers ─────────────────────────────────────────────────────────
   initExportPDF(() => getRenderer()?.getHTML() ?? '', isDark, showToast, t);
@@ -242,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         parser: 'markdown',
         plugins,
       });
-      setValue(formatted);
+      applyInPlaceTransform(formatted);
       focus();
       showToast('wand-sparkles', t('toast_formatted'));
     } catch (err) {
@@ -297,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    setValue(compacted);
+    applyInPlaceTransform(compacted);
     focus();
     showToast('minimize', t('toast_compacted') || 'Compacted!');
   });
@@ -340,12 +485,23 @@ document.addEventListener('DOMContentLoaded', () => {
     storageKey: 'md:docs',
     cloudCollection: 'md_docs',
     setReadOnly: handleSetReadOnly,
-    onBeforeSignOut: () => draftStore.flush(),
+    onBeforeSignOut: () => {
+      flushPendingDraftSave();
+      return draftStore.flush();
+    },
     onAuthWorkspaceSwitch: async (user) => {
+      const firstBoot = isInitialWorkspaceSwitch;
+      isInitialWorkspaceSwitch = false;
       const draft = await draftStore.switchUser(user?.uid ?? null);
-      if (!hasShareLink()) {
-        setProgrammaticValue(draft.content);
+      if (hasShareLink()) return;
+      if (firstBoot && hasUserEdited) {
+        const liveVal = getValue();
+        if (liveVal || !draft.content) {
+          draftStore.save({ content: liveVal });
+          return;
+        }
       }
+      setProgrammaticValue(draft.content);
     },
     onDetach: async () => {
       const draft = await draftStore.load();

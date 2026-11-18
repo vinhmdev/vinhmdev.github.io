@@ -11,7 +11,7 @@ import {
   drawSelection,
   rectangularSelection,
 } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Text } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -27,6 +27,8 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 
 // --- Custom highlight style factory ---
 // Only theme-sensitive values differ between light and dark; everything else is shared.
+// All tokens keep uniform 1em monospace metrics so typing `#`, `-`, `---`, or `=`
+// never changes line height, re-wraps paragraphs, or shifts CodeMirror's virtualized height.
 interface HighlightColors {
   heading: string;
   link: string;
@@ -40,19 +42,16 @@ function buildHighlightStyle(colors: HighlightColors) {
     {
       tag: tags.heading1,
       fontWeight: '700',
-      fontSize: '1.4em',
       color: colors.heading,
     },
     {
       tag: tags.heading2,
       fontWeight: '700',
-      fontSize: '1.25em',
       color: colors.heading,
     },
     {
       tag: tags.heading3,
       fontWeight: '600',
-      fontSize: '1.1em',
       color: colors.heading,
     },
     { tag: tags.heading4, fontWeight: '600', color: colors.heading },
@@ -103,6 +102,8 @@ const baseTheme = EditorView.theme({
     lineHeight: '1.7',
     padding: '1.25rem 0',
     overflow: 'auto',
+    scrollbarGutter: 'stable',
+    overscrollBehavior: 'contain',
   },
   '.cm-content': {
     padding: '0 1.25rem 0 0.5rem',
@@ -129,9 +130,10 @@ const baseTheme = EditorView.theme({
   },
   '.cm-lineNumbers .cm-gutterElement': {
     padding: '0 0.75rem 0 1rem',
-    minWidth: '2.75rem',
+    minWidth: '3.25rem',
     textAlign: 'right',
     fontSize: '0.75rem',
+    fontVariantNumeric: 'tabular-nums',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'transparent',
@@ -169,9 +171,39 @@ function getHighlightExtensions() {
   ];
 }
 
+export interface EditorUpdateMeta {
+  isPaste: boolean;
+  isComposing: boolean;
+}
+
+export interface SetValueOptions {
+  /**
+   * When true (default), preserves cursor line/column and scroll position
+   * across full-document transforms (e.g. Pretty / Compact) so the next
+   * keystroke does not teleport back to line 1.
+   * When false, resets cursor and scroll to the top (e.g. Clear / Load doc).
+   */
+  preservePosition?: boolean;
+}
+
+/**
+ * Map a cursor offset from `oldDoc` onto the corresponding `(line, col)` in
+ * `newDoc`, clamping safely when lines or columns shrink.
+ */
+export function computePreservedCursor(oldDoc: Text, oldHead: number, newDoc: Text): number {
+  if (newDoc.length === 0) return 0;
+  const clampedOldPos = Math.min(Math.max(0, oldHead), oldDoc.length);
+  const oldLine = oldDoc.lineAt(clampedOldPos);
+  const col = clampedOldPos - oldLine.from;
+  const targetLineNumber = Math.min(oldLine.number, newDoc.lines);
+  const targetLine = newDoc.line(targetLineNumber);
+  return targetLine.from + Math.min(col, targetLine.length);
+}
+
 // --- Singleton module state — one editor instance per page ---
 let editorView: EditorView | null = null;
-let updateCallbacks: Array<(value: string) => void> = [];
+let themeObserver: MutationObserver | null = null;
+let updateCallbacks: Array<(value: string, meta: EditorUpdateMeta) => void> = [];
 let scrollCallbacks: Array<
   (info: { scrollTop: number; scrollHeight: number; clientHeight: number }) => void
 > = [];
@@ -181,6 +213,8 @@ let pasteCallback: ((html: string, plain: string) => string | null) | null = nul
  * Create and mount the CodeMirror editor.
  */
 export function createEditor(parent: HTMLElement): EditorView {
+  themeObserver?.disconnect();
+
   const state = EditorState.create({
     doc: '',
     extensions: [
@@ -201,7 +235,11 @@ export function createEditor(parent: HTMLElement): EditorView {
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const value = update.state.doc.toString();
-          for (const cb of updateCallbacks) cb(value);
+          const meta: EditorUpdateMeta = {
+            isPaste: update.transactions.some((tr) => tr.isUserEvent('input.paste')),
+            isComposing: update.view.composing,
+          };
+          for (const cb of updateCallbacks) cb(value, meta);
         }
       }),
       // Listen for paste events — route through our converter
@@ -219,7 +257,10 @@ export function createEditor(parent: HTMLElement): EditorView {
           if (result === null || view.state.readOnly) return false;
 
           e.preventDefault();
-          view.dispatch(view.state.replaceSelection(result));
+          view.dispatch(view.state.replaceSelection(result), {
+            scrollIntoView: true,
+            userEvent: 'input.paste',
+          });
           return true;
         },
       }),
@@ -244,14 +285,14 @@ export function createEditor(parent: HTMLElement): EditorView {
   editorView = new EditorView({ state, parent });
 
   // Watch for dark mode changes to update highlighting
-  const observer = new MutationObserver(() => {
+  themeObserver = new MutationObserver(() => {
     if (editorView) {
       editorView.dispatch({
         effects: highlightCompartment.reconfigure(getHighlightExtensions()),
       });
     }
   });
-  observer.observe(document.documentElement, {
+  themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class'],
   });
@@ -265,15 +306,43 @@ export function getValue(): string {
 }
 
 /** Set editor content (replaces all). */
-export function setValue(text: string): void {
+export function setValue(text: string, options: SetValueOptions = {}): void {
   if (!editorView) return;
 
+  const preservePosition = options.preservePosition ?? true;
   const scroller = editorView.scrollDOM;
+  const currentText = editorView.state.doc.toString();
+
+  if (text === currentText) {
+    if (!preservePosition) {
+      scroller.scrollTop = 0;
+      scroller.scrollLeft = 0;
+    }
+    return;
+  }
+
+  if (!preservePosition || text.length === 0) {
+    editorView.dispatch({
+      changes: { from: 0, to: editorView.state.doc.length, insert: text },
+      selection: { anchor: 0 },
+    });
+    scroller.scrollTop = 0;
+    scroller.scrollLeft = 0;
+    return;
+  }
+
   const top = scroller.scrollTop;
   const left = scroller.scrollLeft;
+  const nextDoc = Text.of(text.split(/\r\n|\r|\n/));
+  const nextAnchor = computePreservedCursor(
+    editorView.state.doc,
+    editorView.state.selection.main.head,
+    nextDoc
+  );
 
   editorView.dispatch({
     changes: { from: 0, to: editorView.state.doc.length, insert: text },
+    selection: { anchor: nextAnchor },
   });
 
   // Preserve scroll position across full document replacements
@@ -288,7 +357,7 @@ export function setValue(text: string): void {
 }
 
 /** Register a callback for content changes. */
-export function onUpdate(callback: (value: string) => void): void {
+export function onUpdate(callback: (value: string, meta: EditorUpdateMeta) => void): void {
   updateCallbacks.push(callback);
 }
 
@@ -313,6 +382,16 @@ export function onScroll(
 /** Get the scroll DOM element for synchronized scrolling. */
 export function getScrollDOM(): HTMLElement | null {
   return editorView?.scrollDOM ?? null;
+}
+
+/** Get the editable content DOM element (for IME compositionend listeners). */
+export function getContentDOM(): HTMLElement | null {
+  return editorView?.contentDOM ?? null;
+}
+
+/** Whether an IME composition session is currently active in the editor. */
+export function isComposing(): boolean {
+  return editorView?.composing ?? false;
 }
 
 /** Set scroll position. */

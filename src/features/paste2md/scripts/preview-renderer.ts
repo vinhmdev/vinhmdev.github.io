@@ -60,6 +60,13 @@ function scopeAlertColors(css: string): string {
   return NOTE_ACCENT.reduce((acc, [from, to]) => acc.replace(from, to), scoped);
 }
 
+export interface SetSafeHTMLOptions {
+  renderMermaid?: boolean;
+  isDark?: boolean;
+}
+
+const MAX_MERMAID_CACHE_ENTRIES = 100;
+
 export class PreviewRenderer {
   private readonly shadow: ShadowRoot;
   private readonly bodyEl: HTMLElement;
@@ -67,7 +74,10 @@ export class PreviewRenderer {
   private readonly hljsStyle: HTMLStyleElement;
   private readonly alertColorsStyle: HTMLStyleElement;
 
+  private isDarkMode = false;
   private mermaidIdCounter = 0;
+  /** Bounded LRU cache of rendered Mermaid SVGs keyed by `(theme, source)`. */
+  private readonly mermaidSvgCache = new Map<string, string>();
   /** Pending "Copied!" label restore timers, one per copy button. */
   private readonly copyResetTimers = new WeakMap<HTMLButtonElement, number>();
 
@@ -101,6 +111,7 @@ export class PreviewRenderer {
    * The 'dark' class on .markdown-body drives supplemental dark overrides.
    */
   setColorMode(isDark: boolean): void {
+    this.isDarkMode = isDark;
     this.githubMdStyle.textContent = isDark ? githubMdDark : githubMdLight;
     this.hljsStyle.textContent = isDark ? hljsDark : hljsLight;
     // GitHub alert colors ship scoped to `:root` / `.dark` — neither of which
@@ -110,25 +121,51 @@ export class PreviewRenderer {
   }
 
   /**
-   * Inject pre-sanitized HTML into the shadow DOM.
+   * Inject pre-sanitized HTML into the shadow DOM while preserving scroll
+   * position, already-decoded images, and cached Mermaid diagrams so typing
+   * in the editor never triggers layout collapse or scroll thrashing.
    *
    * SAFETY CONTRACT: the caller MUST sanitize before passing here.
    * The custom DOMPurify config used by preview.ts allows SVG/MathML for
    * Mermaid + KaTeX output, so this method cannot do a second sanitization
    * pass with default config without stripping those legitimate elements.
    */
-  setSafeHTML(sanitizedHtml: string): void {
+  setSafeHTML(sanitizedHtml: string, opts: SetSafeHTMLOptions = {}): void {
+    const savedScrollTop = this.bodyEl.scrollTop;
+    const savedScrollLeft = this.bodyEl.scrollLeft;
+    const renderMermaid = opts.renderMermaid ?? true;
+    const isDark = opts.isDark ?? this.isDarkMode;
+
+    const prevMermaidHeights = Array.from(
+      this.bodyEl.querySelectorAll<HTMLElement>(
+        '.mermaid-wrapper, pre.mermaid-source, [data-mermaid-error]'
+      )
+    ).map((node) => node.offsetHeight);
+
+    const decodedImagesBySrc = this._collectDecodedImages();
+
     this.bodyEl.innerHTML = sanitizedHtml;
-    this._prepareMermaidBlocks();
+
+    this._reuseDecodedImages(decodedImagesBySrc);
+    this._prepareMermaidBlocks(renderMermaid, isDark, prevMermaidHeights);
     this._enhanceCodeBlocks();
+
+    this.bodyEl.scrollTop = savedScrollTop;
+    this.bodyEl.scrollLeft = savedScrollLeft;
   }
 
   /**
-   * Render Mermaid diagrams via mermaid.render() — the SVG string API.
+   * Render uncached Mermaid diagrams via mermaid.render() — the SVG string API.
+   * Cached diagrams are already injected synchronously during setSafeHTML().
    * Uses mermaid.render() (not mermaid.run()) — correct approach for Shadow DOM.
    * Mermaid is loaded via CDN — typed in src/shared/globals.d.ts.
    */
-  async renderMermaid(isDark: boolean): Promise<void> {
+  async renderMermaid(isDark: boolean, isCancelled?: () => boolean): Promise<void> {
+    if (isCancelled?.()) return;
+
+    const blocks = this.bodyEl.querySelectorAll('pre.mermaid-source > code.language-mermaid');
+    if (blocks.length === 0) return;
+
     const mermaid = window.mermaid;
     if (typeof mermaid === 'undefined') {
       // CDN never arrived — reveal the raw source instead of showing nothing.
@@ -142,25 +179,40 @@ export class PreviewRenderer {
       securityLevel: 'loose',
     });
 
-    const blocks = this.bodyEl.querySelectorAll('pre.mermaid-source > code.language-mermaid');
     for (const code of blocks) {
+      if (isCancelled?.()) return;
       const pre = code.parentElement;
-      if (!pre || pre.tagName !== 'PRE') continue;
+      if (!pre || pre.tagName !== 'PRE' || !pre.isConnected) continue;
 
       const codeText = code.textContent || '';
+      const cacheKey = this._mermaidCacheKey(isDark, codeText);
+      const cachedSvg = this._getCachedMermaidSvg(cacheKey);
+      if (cachedSvg !== undefined) {
+        const beforeTop = this.bodyEl.scrollTop;
+        pre.replaceWith(this._createMermaidWrapper(codeText, cachedSvg));
+        this.bodyEl.scrollTop = beforeTop;
+        continue;
+      }
+
+      const id = `mermaid-sdom-${this.mermaidIdCounter++}`;
       try {
-        const id = `mermaid-sdom-${this.mermaidIdCounter++}`;
         const { svg } = await mermaid.render(id, codeText);
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mermaid-wrapper';
-        wrapper.setAttribute('data-original-code', codeText);
-        wrapper.innerHTML = svg;
-        pre.replaceWith(wrapper);
+        this._rememberMermaidSvg(cacheKey, svg);
+        if (isCancelled?.() || !pre.isConnected) return;
+        const beforeTop = this.bodyEl.scrollTop;
+        pre.replaceWith(this._createMermaidWrapper(codeText, svg));
+        this.bodyEl.scrollTop = beforeTop;
       } catch (err: unknown) {
+        // Clean up any temporary measurement/error nodes Mermaid may leave on document
+        document.getElementById(id)?.remove();
+        document.getElementById(`d${id}`)?.remove();
+
+        if (isCancelled?.() || !pre.isConnected) return;
         console.warn('[preview-renderer] Mermaid render failed:', err);
         // Show an error alert instead of silently hiding so the user can see their code
         const wrapper = document.createElement('div');
         wrapper.className = 'markdown-alert markdown-alert-warning';
+        wrapper.setAttribute('data-mermaid-error', 'true');
         wrapper.style.margin = '1.2em 0';
         wrapper.innerHTML = `
           <p class="markdown-alert-title">
@@ -169,7 +221,9 @@ export class PreviewRenderer {
           </p>
           <pre class="hljs" style="margin-top: 0.5em; background: transparent; padding: 0;"><code>${codeText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
         `;
+        const beforeTop = this.bodyEl.scrollTop;
         pre.replaceWith(wrapper);
+        this.bodyEl.scrollTop = beforeTop;
       }
     }
   }
@@ -200,6 +254,8 @@ export class PreviewRenderer {
   /** Clear the rendered content. */
   clear(): void {
     this.bodyEl.innerHTML = '';
+    this.bodyEl.scrollTop = 0;
+    this.bodyEl.scrollLeft = 0;
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
@@ -210,22 +266,112 @@ export class PreviewRenderer {
     return el;
   }
 
+  private _mermaidCacheKey(isDark: boolean, codeText: string): string {
+    return `${isDark ? 'dark' : 'light'}\0${codeText}`;
+  }
+
+  private _getCachedMermaidSvg(key: string): string | undefined {
+    const val = this.mermaidSvgCache.get(key);
+    if (val !== undefined) {
+      // Refresh LRU insertion order
+      this.mermaidSvgCache.delete(key);
+      this.mermaidSvgCache.set(key, val);
+    }
+    return val;
+  }
+
+  private _rememberMermaidSvg(key: string, svg: string): void {
+    if (this.mermaidSvgCache.has(key)) {
+      this.mermaidSvgCache.delete(key);
+    } else if (this.mermaidSvgCache.size >= MAX_MERMAID_CACHE_ENTRIES) {
+      const oldestKey = this.mermaidSvgCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.mermaidSvgCache.delete(oldestKey);
+      }
+    }
+    this.mermaidSvgCache.set(key, svg);
+  }
+
+  private _createMermaidWrapper(codeText: string, svg: string): HTMLDivElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mermaid-wrapper';
+    wrapper.setAttribute('data-original-code', codeText);
+    wrapper.innerHTML = svg;
+    return wrapper;
+  }
+
+  private _collectDecodedImages(): Map<string, HTMLImageElement[]> {
+    const buckets = new Map<string, HTMLImageElement[]>();
+    this.bodyEl.querySelectorAll<HTMLImageElement>('img[src]').forEach((img) => {
+      const src = img.getAttribute('src');
+      if (!src || !img.complete || img.naturalWidth === 0) return;
+      const list = buckets.get(src);
+      if (list) list.push(img);
+      else buckets.set(src, [img]);
+    });
+    return buckets;
+  }
+
+  private _reuseDecodedImages(buckets: Map<string, HTMLImageElement[]>): void {
+    if (buckets.size === 0) return;
+    this.bodyEl.querySelectorAll<HTMLImageElement>('img[src]').forEach((freshImg) => {
+      const src = freshImg.getAttribute('src');
+      if (!src) return;
+      const list = buckets.get(src);
+      const reused = list?.shift();
+      if (!reused) return;
+
+      // Sync sanitized attributes from freshImg onto reused image element
+      const nextNames = new Set(freshImg.getAttributeNames());
+      for (const attrName of Array.from(reused.getAttributeNames())) {
+        if (!nextNames.has(attrName)) reused.removeAttribute(attrName);
+      }
+      for (const attrName of nextNames) {
+        if (attrName === 'src') continue;
+        const val = freshImg.getAttribute(attrName);
+        if (val !== null) reused.setAttribute(attrName, val);
+      }
+      freshImg.replaceWith(reused);
+    });
+  }
+
   /**
-   * Hide raw mermaid fences only when mermaid is actually available to replace
-   * them. If the CDN is blocked or still loading, the source stays visible —
-   * far better than a blank gap where a diagram should be.
+   * Inject cached Mermaid SVGs synchronously and reserve height for uncached
+   * fences when mermaid is available to replace them asynchronously.
    */
-  private _prepareMermaidBlocks(): void {
-    if (typeof window.mermaid === 'undefined') return;
-    this.bodyEl.querySelectorAll('pre.mermaid-source').forEach((pre) => {
+  private _prepareMermaidBlocks(
+    renderMermaid: boolean,
+    isDark: boolean,
+    prevHeights: readonly number[]
+  ): void {
+    if (!renderMermaid) return;
+    const hasMermaidGlobal = typeof window.mermaid !== 'undefined';
+
+    let slotIndex = 0;
+    this.bodyEl.querySelectorAll<HTMLElement>('pre.mermaid-source').forEach((pre) => {
+      const currentSlot = slotIndex++;
+      const code = pre.querySelector('code.language-mermaid');
+      const codeText = code?.textContent || '';
+      const cachedSvg = this._getCachedMermaidSvg(this._mermaidCacheKey(isDark, codeText));
+      if (cachedSvg !== undefined) {
+        pre.replaceWith(this._createMermaidWrapper(codeText, cachedSvg));
+        return;
+      }
+
+      if (!hasMermaidGlobal) return;
       pre.classList.add('mermaid-rendered-hide');
+      const prevH = prevHeights[currentSlot];
+      if (typeof prevH === 'number' && prevH > 0) {
+        pre.style.minHeight = `${prevH}px`;
+      }
     });
   }
 
   /** Undo _prepareMermaidBlocks() when mermaid turns out to be unavailable. */
   private _revealMermaidSources(): void {
-    this.bodyEl.querySelectorAll('pre.mermaid-rendered-hide').forEach((pre) => {
+    this.bodyEl.querySelectorAll<HTMLElement>('pre.mermaid-rendered-hide').forEach((pre) => {
       pre.classList.remove('mermaid-rendered-hide');
+      pre.style.removeProperty('min-height');
     });
   }
 

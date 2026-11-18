@@ -144,6 +144,7 @@ let renderer: PreviewRenderer | null = null;
 let mdParser: MarkdownIt | null = null;
 let latexEnabledState = true;
 let mermaidEnabledState = true;
+let renderGeneration = 0;
 
 // ─── Plugin attachment ────────────────────────────────────────────────────────
 function attachPlugins(md: MarkdownIt, renderLatex: boolean): void {
@@ -241,12 +242,19 @@ export interface RenderOptions {
   isDark: boolean;
 }
 
+/** Cancel any in-flight async Mermaid render pass (e.g. when clearing). */
+export function cancelPendingRender(): void {
+  renderGeneration += 1;
+}
+
 /**
  * Render markdown to the preview pane.
  * Rebuilds the parser only when the latex or mermaid setting changes.
  */
 export async function renderPreview(markdown: string, opts: RenderOptions): Promise<void> {
   if (!renderer) return;
+
+  const gen = ++renderGeneration;
 
   try {
     // Rebuild parser only when the latex or mermaid setting changes
@@ -263,10 +271,15 @@ export async function renderPreview(markdown: string, opts: RenderOptions): Prom
     const rawHtml = mdParser.render(markdown || '');
     const cleanHtml = DOMPurify.sanitize(rawHtml, DOMPURIFY_CONFIG) as string;
 
-    renderer.setSafeHTML(cleanHtml);
+    if (gen !== renderGeneration) return;
+
+    renderer.setSafeHTML(cleanHtml, {
+      renderMermaid: opts.renderMermaid,
+      isDark: opts.isDark,
+    });
 
     if (opts.renderMermaid) {
-      await renderer.renderMermaid(opts.isDark);
+      await renderer.renderMermaid(opts.isDark, () => gen !== renderGeneration);
     }
   } catch (error) {
     console.error('[preview] ERROR during render pipeline:', error);

@@ -196,6 +196,7 @@ function canCurrentUserEdit(doc: { mode: PasteMode; ownerUid: string | null }): 
 
 // ─── header mode indicator pill (#md-mode-badge) ─────────────────────────────
 let modeBadge: HTMLElement | null = null;
+let lastModeBadgeSignature = '';
 
 function buildModeIndicator(): void {
   const shareBtn = document.getElementById('share-btn');
@@ -208,6 +209,7 @@ function buildModeIndicator(): void {
     modeBadge.id = 'md-mode-badge';
     shareBtn.parentElement.insertBefore(modeBadge, shareBtn);
   }
+  lastModeBadgeSignature = '';
   updateModeIndicator();
 }
 
@@ -244,6 +246,10 @@ function updateModeIndicator(): void {
   }
 
   const text = t(labelKey);
+  const nextSignature = `${variant}|${icon}|${text}`;
+  if (nextSignature === lastModeBadgeSignature) return;
+  lastModeBadgeSignature = nextSignature;
+
   modeBadge.className = `md-mode-pill ${variant}`;
   modeBadge.title = text;
   modeBadge.innerHTML = `<i data-lucide="${icon}" class="w-3.5 h-3.5"></i><span class="md-mode-pill-label">${text}</span>`;
@@ -413,9 +419,12 @@ function syncBarSpacing(): void {
   });
 }
 
+let lastBarDirtyState: boolean | null = null;
+
 function updateBar(): void {
   updateModeIndicator();
   if (!current) {
+    lastBarDirtyState = null;
     bar.hidden = true;
     syncBarSpacing();
     return;
@@ -437,6 +446,7 @@ function updateBar(): void {
   }
 
   const dirty = isDirty();
+  lastBarDirtyState = dirty;
   const stateEl = bar.querySelector<HTMLElement>('#md-bar-state');
   if (stateEl) {
     stateEl.textContent = canEdit ? (dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`) : '';
@@ -478,9 +488,32 @@ function updateBar(): void {
   syncBarSpacing();
 }
 
-/** Called by the host on every editor change to refresh the dirty indicator. */
+/**
+ * Called by the host on every editor change to refresh the dirty indicator.
+ * O(1) no-op unless the dirty boolean actually transitioned, avoiding
+ * full-document Lucide SVG scans and header/bar DOM churn while typing.
+ */
 export function notifyChange(): void {
-  if (current) updateBar();
+  if (!current || !bar || bar.hidden) return;
+  const canEdit = canCurrentUserEdit(current);
+  if (!canEdit) return;
+  const dirty = isDirty();
+  if (dirty === lastBarDirtyState) return;
+  lastBarDirtyState = dirty;
+
+  const prevBarHeight = bar.offsetHeight;
+  const stateEl = bar.querySelector<HTMLElement>('#md-bar-state');
+  if (stateEl) {
+    stateEl.textContent = dirty ? `• ${t('bar_unsaved')}` : `• ${t('bar_saved')}`;
+    stateEl.classList.toggle('is-dirty', dirty);
+  }
+  const primary = bar.querySelector<HTMLButtonElement>('#md-bar-primary');
+  if (primary) {
+    primary.disabled = !dirty;
+  }
+  if (bar.offsetHeight !== prevBarHeight) {
+    syncBarSpacing();
+  }
 }
 
 // ─── create / save ───────────────────────────────────────────────────────────
