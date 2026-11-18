@@ -57,10 +57,16 @@ function initViewportHeightSync(): void {
   const vv = window.visualViewport;
   if (!vv) return;
   const syncViewportHeight = (): void => {
-    // Ignore pinch-zoom scaling so desktop/mobile zoom does not shrink the shell
-    if (Math.abs(vv.scale - 1) > 0.05) return;
-    document.documentElement.style.setProperty('--c2md-vvh', `${Math.round(vv.height)}px`);
-    if (vv.offsetTop > 0 || window.scrollY > 0) {
+    // Never shrink the layout shell during trackpad / touch pinch-zoom
+    if (Math.abs(vv.scale - 1) > 0.01) return;
+
+    if (window.innerHeight - vv.height > 4) {
+      document.documentElement.style.setProperty('--c2md-vvh', `${Math.round(vv.height)}px`);
+    } else {
+      document.documentElement.style.removeProperty('--c2md-vvh');
+    }
+
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
       window.scrollTo(0, 0);
     }
   };
@@ -140,17 +146,26 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const editorPaneEl = document.getElementById('editor-pane');
-  const previewPaneEl = document.getElementById('preview-pane');
   const setEditorDriver = (): void => scrollSync.setActiveDriver('editor');
   const setPreviewDriver = (): void => scrollSync.setActiveDriver('preview');
 
   for (const evName of ['wheel', 'pointerdown', 'touchstart', 'keydown', 'focusin'] as const) {
     editorPaneEl?.addEventListener(evName, setEditorDriver, { passive: true });
   }
-  for (const evName of ['wheel', 'pointerdown', 'touchstart', 'keydown'] as const) {
-    previewPaneEl?.addEventListener(evName, setPreviewDriver, { passive: true });
+  for (const evName of ['wheel', 'touchstart', 'keydown'] as const) {
     previewScrollEl.addEventListener(evName, setPreviewDriver, { passive: true });
   }
+  previewScrollEl.addEventListener(
+    'pointerdown',
+    (ev: PointerEvent) => {
+      const target = ev.target;
+      if (target instanceof Element && target.closest('button, a, summary, input, select')) {
+        return;
+      }
+      setPreviewDriver();
+    },
+    { passive: true }
+  );
 
   async function runPreviewRender(md: string, opts = getRenderOpts()): Promise<void> {
     scrollSync.beginPreviewMutation();
@@ -188,12 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setReadOnly(ro);
   }
 
-  function setProgrammaticValue(val: string): void {
+  function setProgrammaticValue(val: string, opts: { resetHistory?: boolean } = {}): void {
     clearScheduledLiveUpdate();
     hasPendingDraftSave = false;
     isProgrammaticSet = true;
     try {
-      setValue(val, { preservePosition: false });
+      setValue(val, { preservePosition: false, resetHistory: opts.resetHistory ?? true });
       updateEmptyStates(val);
       if (!val) {
         cancelPendingRender();
@@ -450,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Clear ───────────────────────────────────────────────────────────────────
   document.getElementById('clear-btn')?.addEventListener('click', () => {
     if (isEditorReadOnly) return showToast('lock', t('toast_readonly_hint'));
-    setProgrammaticValue('');
+    setProgrammaticValue('', { resetHistory: false });
     if (!hasActiveSharedDoc()) {
       void draftStore.clear();
     }
@@ -478,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Share layer (encrypt + share link, open shared docs, Dual Local/Cloud history).
   initShare({
     getValue,
-    setValue: setProgrammaticValue,
+    setValue: (val) => setProgrammaticValue(val, { resetHistory: true }),
     showToast,
     t,
     linkBase: '/paste2md/',
@@ -495,17 +510,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const draft = await draftStore.switchUser(user?.uid ?? null);
       if (hasShareLink()) return;
       if (firstBoot && hasUserEdited) {
-        const liveVal = getValue();
-        if (liveVal || !draft.content) {
-          draftStore.save({ content: liveVal });
-          return;
-        }
+        draftStore.save({ content: getValue() });
+        return;
       }
-      setProgrammaticValue(draft.content);
+      setProgrammaticValue(draft.content, { resetHistory: true });
     },
     onDetach: async () => {
       const draft = await draftStore.load();
-      setProgrammaticValue(draft.content);
+      setProgrammaticValue(draft.content, { resetHistory: true });
     },
   });
 });

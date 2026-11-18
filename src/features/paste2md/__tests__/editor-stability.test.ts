@@ -8,9 +8,9 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Text } from '@codemirror/state';
+import { ChangeSet, Text, type ChangeSpec } from '@codemirror/state';
 import { describe, expect, it } from 'vitest';
-import { computePreservedCursor } from '../scripts/codemirror-editor';
+import { computeMinimalLineChanges, computePreservedCursor } from '../scripts/codemirror-editor';
 import { createScrollSyncController, type ScrollMetrics } from '../scripts/scroll-sync';
 
 const PASTE2MD_DIR = resolve(process.cwd(), 'src/features/paste2md');
@@ -199,31 +199,96 @@ describe('createScrollSyncController', () => {
 
     expect(h.editorWrites).toEqual([3700]);
   });
+
+  it('keeps Preview DOM-mutation suppression intact even if user switches driver to Preview right after render', () => {
+    const h = setupHarness();
+    h.editor.scrollTop = 2400;
+    h.preview.scrollTop = 4500;
+
+    // Preview render finishes (e.g. debounced live update at 80ms)
+    h.controller.beginPreviewMutation();
+    h.controller.endPreviewMutation();
+
+    // 10ms later, user clicks inside Preview while a queued mutation-clamped scroll fires
+    h.advance(10);
+    h.controller.setActiveDriver('preview');
+    h.preview.scrollHeight = 9000;
+    h.preview.scrollTop = 8400;
+    h.controller.handlePreviewScroll(h.preview);
+
+    expect(h.editorWrites).toEqual([]);
+    expect(h.editor.scrollTop).toBe(2400);
+  });
 });
 
-describe('computePreservedCursor', () => {
+describe('computeMinimalLineChanges & computePreservedCursor', () => {
   const toText = (s: string) => Text.of(s.split(/\r\n|\r|\n/));
 
-  it('preserves exact line and column when compacting or formatting multi-line documents', () => {
-    const before = toText('# Title\n\n\n\nParagraph on line 5\n| a   | b   |\n| --- | --- |');
-    const after = toText('# Title\n\nParagraph on line 5\n| a | b |\n| --- | --- |');
+  function assertMinimalDiffAppliesCleanly(beforeStr: string, afterStr: string): void {
+    const beforeDoc = toText(beforeStr);
+    const changes = computeMinimalLineChanges(beforeStr, afterStr);
+    const cs = ChangeSet.of(changes as ChangeSpec[], beforeDoc.length);
+    const result = cs.apply(beforeDoc).toString();
+    expect(result).toBe(afterStr);
+  }
 
-    // Cursor at line 5 ("Paragraph on line 5"), col 10 -> in `after`, line 5 exists ("| --- | --- |")
-    const line5 = before.line(5);
-    const oldHead = line5.from + 10;
-    const mapped = computePreservedCursor(before, oldHead, after);
-    const mappedLine = after.lineAt(mapped);
+  it('produces minimal ordered hunks that reconstruct Compact and Pretty transforms byte-for-byte', () => {
+    assertMinimalDiffAppliesCleanly('', '');
+    assertMinimalDiffAppliesCleanly('', '# First heading\n\nBody');
+    assertMinimalDiffAppliesCleanly('# Old\n\nBody', '');
+    assertMinimalDiffAppliesCleanly('a\n\n\nb\n', 'a\nb');
+    assertMinimalDiffAppliesCleanly(
+      '## H1\nPara 1\n## H2\nPara 2',
+      '## H1\n\nPara 1\n\n## H2\n\nPara 2\n'
+    );
+    assertMinimalDiffAppliesCleanly(
+      '# Title\n\n\n\nParagraph with trailing spaces   \n| a   | b   |\n| --- | --- |',
+      '# Title\n\nParagraph with trailing spaces\n| a | b |\n| --- | --- |'
+    );
+  });
 
-    expect(mappedLine.number).toBe(5);
-    expect(mapped - mappedLine.from).toBe(10);
+  it('preserves semantic target line and column across Compact (blank-line deletion) and Pretty (blank-line insertion)', () => {
+    // Compact: 2 blank lines deleted ABOVE "Paragraph on target line"
+    const beforeCompact = toText(
+      '# Title\n\n\n\nParagraph on target line   \n| a   | b   |\n| --- | --- |'
+    );
+    const afterCompact = toText('# Title\n\nParagraph on target line\n| a | b |\n| --- | --- |');
+
+    const oldTargetLine = beforeCompact.line(5);
+    expect(oldTargetLine.text).toBe('Paragraph on target line   ');
+    const mappedAfterCompact = computePreservedCursor(
+      beforeCompact,
+      oldTargetLine.from + 10,
+      afterCompact
+    );
+    const newCompactLine = afterCompact.lineAt(mappedAfterCompact);
+    expect(newCompactLine.text).toBe('Paragraph on target line');
+    expect(mappedAfterCompact - newCompactLine.from).toBe(10);
+
+    // Pretty: Prettier inserts blank lines ABOVE "## Target Heading" and its paragraph
+    const beforePretty = toText('## Intro\nIntro text\n## Target Heading\nEditing right here.');
+    const afterPretty = toText(
+      '## Intro\n\nIntro text\n\n## Target Heading\n\nEditing right here.\n'
+    );
+
+    const oldEditLine = beforePretty.line(4);
+    expect(oldEditLine.text).toBe('Editing right here.');
+    // Column 0 as well as mid-line column 8 stay on "Editing right here."
+    const mappedCol0 = computePreservedCursor(beforePretty, oldEditLine.from, afterPretty);
+    expect(afterPretty.lineAt(mappedCol0).text).toBe('Editing right here.');
+    expect(mappedCol0 - afterPretty.lineAt(mappedCol0).from).toBe(0);
+
+    const mappedCol8 = computePreservedCursor(beforePretty, oldEditLine.from + 8, afterPretty);
+    expect(afterPretty.lineAt(mappedCol8).text).toBe('Editing right here.');
+    expect(mappedCol8 - afterPretty.lineAt(mappedCol8).from).toBe(8);
   });
 
   it('clamps safely when line count or line length shrinks or becomes empty', () => {
     const before = toText('Line 1\nLine 2\nLine 3 with very long trailing content\n\n\n');
     const shorter = toText('Line 1\nLine 2\nShort');
 
-    // Cursor was on line 6 (removed trailing blank lines) -> clamps to last line (line 3)
-    expect(computePreservedCursor(before, before.length, shorter)).toBe(shorter.line(3).from);
+    // Cursor was on line 6 (removed trailing blank lines) -> clamps to end of last remaining line
+    expect(computePreservedCursor(before, before.length, shorter)).toBe(shorter.line(3).to);
 
     // Cursor was at end of long line 3 -> clamps to end of "Short"
     const oldLine3End = before.line(3).to;
@@ -234,25 +299,32 @@ describe('computePreservedCursor', () => {
 
     // Out-of-bounds negative / huge offsets clamp safely
     expect(computePreservedCursor(before, -50, shorter)).toBe(0);
-    expect(computePreservedCursor(before, 999999, shorter)).toBe(shorter.line(3).from);
+    expect(computePreservedCursor(before, 999999, shorter)).toBe(shorter.line(3).to);
   });
 });
 
 describe('Paste2MD layout & CSS stability contracts', () => {
-  it('keeps CodeMirror heading syntax tokens at uniform 1em font-size to prevent Setext/ATX jumps', () => {
+  it('keeps CodeMirror heading syntax tokens at uniform 1em font-size and aligns documentPadding on .cm-content', () => {
     const editorTs = readFileSync(resolve(PASTE2MD_DIR, 'scripts/codemirror-editor.ts'), 'utf8');
     const highlightBlock = editorTs.slice(
       editorTs.indexOf('function buildHighlightStyle'),
       editorTs.indexOf('const baseTheme')
     );
     expect(highlightBlock).not.toMatch(/fontSize\s*:/);
+    expect(editorTs).toContain("padding: '1.25rem 1.25rem 1.25rem 0.5rem'");
+    expect(editorTs).toContain("minWidth: '3.75rem'");
+    expect(editorTs).toContain('Transaction.addToHistory.of(false)');
     expect(editorTs).toContain('scrollIntoView: true');
     expect(editorTs).toContain("userEvent: 'input.paste'");
   });
 
-  it('prevents outer double-scroll containers and scroll-anchoring spikes in CSS', () => {
+  it('prevents outer double-scroll containers, scroll-anchoring spikes, and concurrent Mermaid singleton races', () => {
     const editorCss = readFileSync(resolve(PASTE2MD_DIR, 'styles/editor.css'), 'utf8');
     const previewCss = readFileSync(resolve(PASTE2MD_DIR, 'styles/preview-overrides.css'), 'utf8');
+    const previewRendererTs = readFileSync(
+      resolve(PASTE2MD_DIR, 'scripts/preview-renderer.ts'),
+      'utf8'
+    );
     const pageAstro = readFileSync(resolve(PASTE2MD_DIR, 'page.astro'), 'utf8');
 
     expect(editorCss).toMatch(/\.pane-body\s*\{[^}]*overflow:\s*hidden/);
@@ -260,6 +332,7 @@ describe('Paste2MD layout & CSS stability contracts', () => {
     expect(previewCss).toMatch(/\.markdown-body\s*\{[^}]*overflow-anchor:\s*none/);
     expect(previewCss).toMatch(/pre\.mermaid-rendered-hide\s*\{[^}]*visibility:\s*hidden/);
     expect(previewCss).not.toMatch(/pre\.mermaid-rendered-hide\s*\{[^}]*display:\s*none/);
+    expect(previewRendererTs).toContain('this.mermaidQueue');
     expect(pageAstro).toContain('h-[var(--c2md-vvh,100dvh)]');
   });
 });

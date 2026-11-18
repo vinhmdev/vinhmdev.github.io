@@ -61,15 +61,22 @@ export function createScrollSyncController(deps: ScrollSyncDeps): ScrollSyncCont
 
   let activeDriver: ScrollDriver = 'editor';
   let ignoreEditorUntil = 0;
-  let ignorePreviewUntil = 0;
+  let ignorePreviewEchoUntil = 0;
+  let ignorePreviewEditUntil = 0;
+  let ignorePreviewMutationUntil = 0;
   let previewMutationDepth = 0;
 
   return {
     setActiveDriver(driver: ScrollDriver): void {
       if (driver !== activeDriver) {
         activeDriver = driver;
-        if (driver === 'preview' && previewMutationDepth === 0) {
-          ignorePreviewUntil = 0;
+        if (driver === 'preview') {
+          // User explicitly interacted with Preview: lift the user-edit lock
+          // immediately so wheeling Preview right after typing works, while
+          // keeping `ignorePreviewMutationUntil` intact so DOM-mutation scroll
+          // clamping can never yank Editor.
+          ignorePreviewEditUntil = 0;
+          ignorePreviewEchoUntil = 0;
         } else if (driver === 'editor') {
           ignoreEditorUntil = 0;
         }
@@ -82,17 +89,23 @@ export function createScrollSyncController(deps: ScrollSyncDeps): ScrollSyncCont
 
     markUserEditing(): void {
       activeDriver = 'editor';
-      ignorePreviewUntil = Math.max(ignorePreviewUntil, now() + MUTATION_SUPPRESS_MS);
+      ignorePreviewEditUntil = Math.max(ignorePreviewEditUntil, now() + MUTATION_SUPPRESS_MS);
     },
 
     beginPreviewMutation(): void {
       previewMutationDepth += 1;
-      ignorePreviewUntil = Math.max(ignorePreviewUntil, now() + MUTATION_SUPPRESS_MS);
+      ignorePreviewMutationUntil = Math.max(
+        ignorePreviewMutationUntil,
+        now() + MUTATION_SUPPRESS_MS
+      );
     },
 
     endPreviewMutation(): void {
       previewMutationDepth = Math.max(0, previewMutationDepth - 1);
-      ignorePreviewUntil = Math.max(ignorePreviewUntil, now() + MUTATION_SUPPRESS_MS);
+      ignorePreviewMutationUntil = Math.max(
+        ignorePreviewMutationUntil,
+        now() + MUTATION_SUPPRESS_MS
+      );
     },
 
     handleEditorScroll(metrics: ScrollMetrics): void {
@@ -110,7 +123,7 @@ export function createScrollSyncController(deps: ScrollSyncDeps): ScrollSyncCont
 
       if (Math.abs(preview.scrollTop - targetTop) < SCROLL_DEADBAND_PX) return;
 
-      ignorePreviewUntil = Math.max(ignorePreviewUntil, ts + ECHO_SUPPRESS_MS);
+      ignorePreviewEchoUntil = Math.max(ignorePreviewEchoUntil, ts + ECHO_SUPPRESS_MS);
       deps.scrollPreviewTo(targetTop);
     },
 
@@ -119,7 +132,13 @@ export function createScrollSyncController(deps: ScrollSyncDeps): ScrollSyncCont
       if (activeDriver !== 'preview') return;
       if (previewMutationDepth > 0) return;
       const ts = now();
-      if (ts < ignorePreviewUntil) return;
+      if (
+        ts < ignorePreviewMutationUntil ||
+        ts < ignorePreviewEditUntil ||
+        ts < ignorePreviewEchoUntil
+      ) {
+        return;
+      }
 
       const editor = deps.getEditorMetrics();
       if (!editor) return;

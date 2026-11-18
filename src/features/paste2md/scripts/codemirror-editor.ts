@@ -11,10 +11,24 @@ import {
   drawSelection,
   rectangularSelection,
 } from '@codemirror/view';
-import { EditorState, Compartment, Text } from '@codemirror/state';
+import {
+  EditorState,
+  Compartment,
+  Text,
+  ChangeSet,
+  EditorSelection,
+  Transaction,
+  type ChangeSpec,
+} from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+  isolateHistory,
+} from '@codemirror/commands';
 import {
   syntaxHighlighting,
   defaultHighlightStyle,
@@ -100,13 +114,13 @@ const baseTheme = EditorView.theme({
   '.cm-scroller': {
     fontFamily: "'JetBrains Mono', monospace",
     lineHeight: '1.7',
-    padding: '1.25rem 0',
+    padding: '0',
     overflow: 'auto',
     scrollbarGutter: 'stable',
     overscrollBehavior: 'contain',
   },
   '.cm-content': {
-    padding: '0 1.25rem 0 0.5rem',
+    padding: '1.25rem 1.25rem 1.25rem 0.5rem',
     caretColor: '#f97316',
   },
   '.cm-cursor': {
@@ -130,7 +144,7 @@ const baseTheme = EditorView.theme({
   },
   '.cm-lineNumbers .cm-gutterElement': {
     padding: '0 0.75rem 0 1rem',
-    minWidth: '3.25rem',
+    minWidth: '3.75rem',
     textAlign: 'right',
     fontSize: '0.75rem',
     fontVariantNumeric: 'tabular-nums',
@@ -151,6 +165,7 @@ const baseTheme = EditorView.theme({
 // --- Compartments for dynamic reconfiguration ---
 const highlightCompartment = new Compartment();
 const readOnlyCompartment = new Compartment();
+const historyCompartment = new Compartment();
 
 // Check if currently in dark mode
 function isDarkMode(): boolean {
@@ -178,26 +193,358 @@ export interface EditorUpdateMeta {
 
 export interface SetValueOptions {
   /**
-   * When true (default), preserves cursor line/column and scroll position
-   * across full-document transforms (e.g. Pretty / Compact) so the next
-   * keystroke does not teleport back to line 1.
+   * When true (default), applies minimal line-diff hunks so cursor position,
+   * undo history, and visual viewport offset are preserved across full-document
+   * transforms (e.g. Pretty / Compact) without yanking the screen.
    * When false, resets cursor and scroll to the top (e.g. Clear / Load doc).
    */
   preservePosition?: boolean;
+  /**
+   * When true, omits the replacement from Undo history and clears prior undo
+   * entries (used when hydrating drafts, loading shared docs, or switching
+   * auth workspaces so Cmd/Ctrl+Z never wipes loaded work or leaks prior docs).
+   */
+  resetHistory?: boolean;
+}
+
+interface LineDiffHunk {
+  oldStart: number;
+  oldEnd: number;
+  newStart: number;
+  newEnd: number;
+}
+
+const MAX_DIFF_EDIT_DISTANCE = 800;
+
+function computeLineDiffHunks(
+  oldLines: readonly string[],
+  newLines: readonly string[],
+  prefix: number,
+  n: number,
+  m: number
+): LineDiffHunk[] {
+  if (n === 0 && m === 0) return [];
+  if (n === 0) return [{ oldStart: prefix, oldEnd: prefix, newStart: prefix, newEnd: prefix + m }];
+  if (m === 0) return [{ oldStart: prefix, oldEnd: prefix + n, newStart: prefix, newEnd: prefix }];
+
+  // Intern strings to integer IDs so Myers comparisons are O(1)
+  const idByLine = new Map<string, number>();
+  let nextId = 1;
+  const a = new Int32Array(n);
+  const b = new Int32Array(m);
+  for (let i = 0; i < n; i++) {
+    const s = oldLines[prefix + i];
+    let id = idByLine.get(s);
+    if (id === undefined) {
+      id = nextId++;
+      idByLine.set(s, id);
+    }
+    a[i] = id;
+  }
+  for (let j = 0; j < m; j++) {
+    const s = newLines[prefix + j];
+    let id = idByLine.get(s);
+    if (id === undefined) {
+      id = nextId++;
+      idByLine.set(s, id);
+    }
+    b[j] = id;
+  }
+
+  const maxD = n + m;
+  const limit = Math.min(maxD, MAX_DIFF_EDIT_DISTANCE);
+  const offset = maxD;
+  const v = new Int32Array(2 * maxD + 1);
+  const trace: Int32Array[] = [];
+  let foundD = -1;
+
+  outer: for (let d = 0; d <= limit; d++) {
+    if (d > 0) {
+      trace[d] = v.slice(offset - (d - 1), offset + (d - 1) + 1);
+    }
+    for (let k = -d; k <= d; k += 2) {
+      let x: number;
+      if (k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1])) {
+        x = v[offset + k + 1];
+      } else {
+        x = v[offset + k - 1] + 1;
+      }
+      let y = x - k;
+      while (x < n && y < m && a[x] === b[y]) {
+        x++;
+        y++;
+      }
+      v[offset + k] = x;
+      if (x >= n && y >= m) {
+        foundD = d;
+        break outer;
+      }
+    }
+  }
+
+  if (foundD < 0) {
+    return [{ oldStart: prefix, oldEnd: prefix + n, newStart: prefix, newEnd: prefix + m }];
+  }
+
+  const rawEdits: LineDiffHunk[] = [];
+  let x = n;
+  let y = m;
+  for (let step = foundD; step >= 1; step--) {
+    const vPrev = trace[step];
+    const base = step - 1;
+    const k = x - y;
+    const moveDown = k === -step || (k !== step && vPrev[k - 1 + base] < vPrev[k + 1 + base]);
+    const prevK = moveDown ? k + 1 : k - 1;
+    const startX = vPrev[prevK + base];
+    const startY = startX - prevK;
+    const midX = moveDown ? startX : startX + 1;
+    const midY = moveDown ? startY + 1 : startY;
+    rawEdits.push({
+      oldStart: prefix + startX,
+      oldEnd: prefix + midX,
+      newStart: prefix + startY,
+      newEnd: prefix + midY,
+    });
+    x = startX;
+    y = startY;
+  }
+
+  rawEdits.reverse();
+  const merged: LineDiffHunk[] = [];
+  for (const ed of rawEdits) {
+    const prev = merged[merged.length - 1];
+    if (prev && prev.oldEnd === ed.oldStart && prev.newEnd === ed.newStart) {
+      prev.oldEnd = ed.oldEnd;
+      prev.newEnd = ed.newEnd;
+    } else {
+      merged.push({ ...ed });
+    }
+  }
+  return merged;
+}
+
+function normalizeLineMatchKey(line: string): string {
+  return line.trim().replace(/\s+/g, ' ');
 }
 
 /**
- * Map a cursor offset from `oldDoc` onto the corresponding `(line, col)` in
- * `newDoc`, clamping safely when lines or columns shrink.
+ * Refine coarse replacement hunks by pairing non-empty lines whose whitespace-
+ * normalized text matches (e.g. trailing-space trims or compacted table rows),
+ * isolating pure blank-line insertions/deletions from intra-line edits.
+ */
+function refineReplacementHunks(
+  hunks: readonly LineDiffHunk[],
+  oldLines: readonly string[],
+  newLines: readonly string[]
+): LineDiffHunk[] {
+  const refined: LineDiffHunk[] = [];
+
+  for (const h of hunks) {
+    const oldLen = h.oldEnd - h.oldStart;
+    const newLen = h.newEnd - h.newStart;
+    if (oldLen === 0 || newLen === 0 || (oldLen === 1 && newLen === 1)) {
+      refined.push(h);
+      continue;
+    }
+
+    const oldKeys = new Array<string>(oldLen);
+    for (let i = 0; i < oldLen; i++) {
+      oldKeys[i] = normalizeLineMatchKey(oldLines[h.oldStart + i]);
+    }
+    const newKeys = new Array<string>(newLen);
+    for (let j = 0; j < newLen; j++) {
+      newKeys[j] = normalizeLineMatchKey(newLines[h.newStart + j]);
+    }
+
+    let curOld = 0;
+    let curNew = 0;
+    for (let i = 0; i < oldLen; i++) {
+      const key = oldKeys[i];
+      if (!key) continue;
+      let matchJ = -1;
+      for (let j = curNew; j < newLen; j++) {
+        if (newKeys[j] === key) {
+          matchJ = j;
+          break;
+        }
+      }
+      if (matchJ < 0) continue;
+
+      if (i > curOld || matchJ > curNew) {
+        refined.push({
+          oldStart: h.oldStart + curOld,
+          oldEnd: h.oldStart + i,
+          newStart: h.newStart + curNew,
+          newEnd: h.newStart + matchJ,
+        });
+      }
+      refined.push({
+        oldStart: h.oldStart + i,
+        oldEnd: h.oldStart + i + 1,
+        newStart: h.newStart + matchJ,
+        newEnd: h.newStart + matchJ + 1,
+      });
+      curOld = i + 1;
+      curNew = matchJ + 1;
+    }
+
+    if (curOld < oldLen || curNew < newLen) {
+      refined.push({
+        oldStart: h.oldStart + curOld,
+        oldEnd: h.oldEnd,
+        newStart: h.newStart + curNew,
+        newEnd: h.newEnd,
+      });
+    }
+  }
+
+  return refined;
+}
+
+export interface MinimalTextChange {
+  from: number;
+  to: number;
+  insert: string;
+}
+
+/**
+ * Compute minimal ordered character-range changes transforming `oldText` into
+ * `newText` (both normalized to `\n`), preserving unchanged lines and trimming
+ * common character prefixes/suffixes within modified lines so CodeMirror's
+ * `ChangeSet.mapPos` tracks cursor positions accurately across Pretty/Compact.
+ */
+export function computeMinimalLineChanges(oldText: string, newText: string): MinimalTextChange[] {
+  if (oldText === newText) return [];
+
+  const oldLines = oldText.split('\n');
+  const newLines = newText.split('\n');
+  const N = oldLines.length;
+  const M = newLines.length;
+
+  let prefix = 0;
+  while (prefix < N && prefix < M && oldLines[prefix] === newLines[prefix]) {
+    prefix++;
+  }
+
+  let suffix = 0;
+  while (
+    suffix < N - prefix &&
+    suffix < M - prefix &&
+    oldLines[N - 1 - suffix] === newLines[M - 1 - suffix]
+  ) {
+    suffix++;
+  }
+
+  const n = N - prefix - suffix;
+  const m = M - prefix - suffix;
+  if (n === 0 && m === 0) return [];
+
+  const lineStarts = new Int32Array(N);
+  for (let i = 1; i < N; i++) {
+    lineStarts[i] = lineStarts[i - 1] + oldLines[i - 1].length + 1;
+  }
+
+  const hunks = refineReplacementHunks(
+    computeLineDiffHunks(oldLines, newLines, prefix, n, m),
+    oldLines,
+    newLines
+  );
+  const changes: MinimalTextChange[] = [];
+
+  for (const { oldStart, oldEnd, newStart, newEnd } of hunks) {
+    const oldCount = oldEnd - oldStart;
+    const newCount = newEnd - newStart;
+
+    if (oldCount > 0 && newCount > 0) {
+      let from = lineStarts[oldStart];
+      let to = lineStarts[oldEnd - 1] + oldLines[oldEnd - 1].length;
+      let insert = newLines.slice(newStart, newEnd).join('\n');
+      const oldSlice = oldText.slice(from, to);
+
+      let cp = 0;
+      while (
+        cp < oldSlice.length &&
+        cp < insert.length &&
+        oldSlice.charCodeAt(cp) === insert.charCodeAt(cp)
+      ) {
+        cp++;
+      }
+      let cs = 0;
+      while (
+        cs < oldSlice.length - cp &&
+        cs < insert.length - cp &&
+        oldSlice.charCodeAt(oldSlice.length - 1 - cs) === insert.charCodeAt(insert.length - 1 - cs)
+      ) {
+        cs++;
+      }
+
+      from += cp;
+      to -= cs;
+      insert = insert.slice(cp, insert.length - cs);
+      if (from < to || insert.length > 0) {
+        changes.push({ from, to, insert });
+      }
+    } else if (oldCount > 0 && newCount === 0) {
+      if (oldEnd < N) {
+        changes.push({ from: lineStarts[oldStart], to: lineStarts[oldEnd], insert: '' });
+      } else if (oldStart > 0) {
+        const beforeNewline = lineStarts[oldStart - 1] + oldLines[oldStart - 1].length;
+        changes.push({ from: beforeNewline, to: oldText.length, insert: '' });
+      } else {
+        changes.push({ from: 0, to: oldText.length, insert: '' });
+      }
+    } else if (oldCount === 0 && newCount > 0) {
+      const insText = newLines.slice(newStart, newEnd).join('\n');
+      if (oldStart > 0) {
+        const beforeNewline = lineStarts[oldStart - 1] + oldLines[oldStart - 1].length;
+        changes.push({ from: beforeNewline, to: beforeNewline, insert: '\n' + insText });
+      } else {
+        changes.push({ from: 0, to: 0, insert: insText + '\n' });
+      }
+    }
+  }
+
+  return changes;
+}
+
+function mapPosWithChanges(
+  clampedOldPos: number,
+  changes: readonly MinimalTextChange[],
+  changeSet: ChangeSet,
+  newDocLength: number
+): number {
+  for (const ch of changes) {
+    if (
+      ch.from < ch.to &&
+      ch.insert.length > 0 &&
+      clampedOldPos > ch.from &&
+      clampedOldPos <= ch.to
+    ) {
+      const mappedStart = changeSet.mapPos(ch.from, -1);
+      const offsetInOld = clampedOldPos - ch.from;
+      const clampedInInsert = Math.min(offsetInOld, ch.insert.length);
+      return Math.min(Math.max(0, mappedStart + clampedInInsert), newDocLength);
+    }
+    if (ch.from >= clampedOldPos) break;
+  }
+  const assoc = clampedOldPos === 0 && changes[0]?.from === 0 && changes[0]?.to === 0 ? 1 : -1;
+  return Math.min(Math.max(0, changeSet.mapPos(clampedOldPos, assoc)), newDocLength);
+}
+
+/**
+ * Map a cursor offset from `oldDoc` onto the corresponding semantic position in
+ * `newDoc` across line insertions, deletions, and intra-line formatting edits.
  */
 export function computePreservedCursor(oldDoc: Text, oldHead: number, newDoc: Text): number {
   if (newDoc.length === 0) return 0;
   const clampedOldPos = Math.min(Math.max(0, oldHead), oldDoc.length);
-  const oldLine = oldDoc.lineAt(clampedOldPos);
-  const col = clampedOldPos - oldLine.from;
-  const targetLineNumber = Math.min(oldLine.number, newDoc.lines);
-  const targetLine = newDoc.line(targetLineNumber);
-  return targetLine.from + Math.min(col, targetLine.length);
+  const oldText = oldDoc.toString();
+  const newText = newDoc.toString();
+  if (oldText === newText) return clampedOldPos;
+
+  const changes = computeMinimalLineChanges(oldText, newText);
+  const changeSet = ChangeSet.of(changes as ChangeSpec[], oldDoc.length);
+  return mapPosWithChanges(clampedOldPos, changes, changeSet, newDoc.length);
 }
 
 // --- Singleton module state — one editor instance per page ---
@@ -221,7 +568,7 @@ export function createEditor(parent: HTMLElement): EditorView {
       baseTheme,
       highlightCompartment.of(getHighlightExtensions()),
       readOnlyCompartment.of(EditorState.readOnly.of(false)),
-      history(),
+      historyCompartment.of(history()),
       lineNumbers(),
       highlightActiveLineGutter(),
       drawSelection(),
@@ -305,15 +652,25 @@ export function getValue(): string {
   return editorView?.state.doc.toString() ?? '';
 }
 
-/** Set editor content (replaces all). */
+function purgeEditorHistory(view: EditorView): void {
+  view.dispatch({ effects: historyCompartment.reconfigure([]) });
+  view.dispatch({ effects: historyCompartment.reconfigure(history()) });
+}
+
+/** Set editor content (replaces all or applies minimal diff for transforms). */
 export function setValue(text: string, options: SetValueOptions = {}): void {
   if (!editorView) return;
 
   const preservePosition = options.preservePosition ?? true;
+  const resetHistory = options.resetHistory ?? false;
   const scroller = editorView.scrollDOM;
+  const normalizedText = text.replace(/\r\n?/g, '\n');
   const currentText = editorView.state.doc.toString();
 
-  if (text === currentText) {
+  if (normalizedText === currentText) {
+    if (resetHistory) {
+      purgeEditorHistory(editorView);
+    }
     if (!preservePosition) {
       scroller.scrollTop = 0;
       scroller.scrollLeft = 0;
@@ -321,11 +678,24 @@ export function setValue(text: string, options: SetValueOptions = {}): void {
     return;
   }
 
-  if (!preservePosition || text.length === 0) {
-    editorView.dispatch({
-      changes: { from: 0, to: editorView.state.doc.length, insert: text },
-      selection: { anchor: 0 },
-    });
+  if (!preservePosition || normalizedText.length === 0) {
+    if (resetHistory) {
+      editorView.dispatch({
+        changes: { from: 0, to: editorView.state.doc.length, insert: normalizedText },
+        selection: { anchor: 0 },
+        annotations: Transaction.addToHistory.of(false),
+        effects: historyCompartment.reconfigure([]),
+      });
+      editorView.dispatch({
+        effects: historyCompartment.reconfigure(history()),
+      });
+    } else {
+      editorView.dispatch({
+        changes: { from: 0, to: editorView.state.doc.length, insert: normalizedText },
+        selection: { anchor: 0 },
+        annotations: [isolateHistory.of('full'), Transaction.userEvent.of('delete')],
+      });
+    }
     scroller.scrollTop = 0;
     scroller.scrollLeft = 0;
     return;
@@ -333,25 +703,70 @@ export function setValue(text: string, options: SetValueOptions = {}): void {
 
   const top = scroller.scrollTop;
   const left = scroller.scrollLeft;
-  const nextDoc = Text.of(text.split(/\r\n|\r|\n/));
-  const nextAnchor = computePreservedCursor(
-    editorView.state.doc,
-    editorView.state.selection.main.head,
-    nextDoc
-  );
+  const padTop = editorView.documentPadding.top;
+  const oldSel = editorView.state.selection.main;
+  const cursorBlock = editorView.lineBlockAt(oldSel.head);
+  const cursorVisible =
+    cursorBlock.bottom + padTop > top && cursorBlock.top + padTop < top + scroller.clientHeight;
+
+  const changes = computeMinimalLineChanges(currentText, normalizedText);
+  if (changes.length === 0) return;
+
+  const changeSet = ChangeSet.of(changes as ChangeSpec[], editorView.state.doc.length);
+
+  let refOffset: number;
+  let refMappedPos: number;
+  let nextSelection: EditorSelection;
+
+  if (cursorVisible || !oldSel.empty) {
+    refOffset = cursorBlock.top - top;
+    if (oldSel.empty) {
+      refMappedPos = mapPosWithChanges(oldSel.head, changes, changeSet, normalizedText.length);
+      nextSelection = EditorSelection.single(refMappedPos);
+    } else {
+      nextSelection = editorView.state.selection.map(changeSet, -1);
+      refMappedPos = nextSelection.main.head;
+    }
+  } else {
+    // Cursor was left off-screen while the user scrolled elsewhere before
+    // clicking Pretty/Compact: anchor both viewport and cursor to the first
+    // non-blank visible line comfortably inside CodeMirror's scroll margin so
+    // neither the screen nor the next keystroke jumps.
+    const docHeightAtTop = Math.max(0, top - padTop + 28);
+    let anchorBlock = editorView.lineBlockAtHeight(docHeightAtTop);
+    const maxVisibleDocY = Math.max(docHeightAtTop, top - padTop + scroller.clientHeight - 28);
+    const startLine = editorView.state.doc.lineAt(anchorBlock.from);
+    for (let ln = startLine.number; ln <= editorView.state.doc.lines; ln++) {
+      const candidateLine = editorView.state.doc.line(ln);
+      const blk = editorView.lineBlockAt(candidateLine.from);
+      if (blk.top > maxVisibleDocY) break;
+      if (candidateLine.text.trim().length > 0) {
+        anchorBlock = blk;
+        break;
+      }
+    }
+    refOffset = anchorBlock.top - top;
+    refMappedPos = mapPosWithChanges(anchorBlock.from, changes, changeSet, normalizedText.length);
+    nextSelection = EditorSelection.single(refMappedPos);
+  }
 
   editorView.dispatch({
-    changes: { from: 0, to: editorView.state.doc.length, insert: text },
-    selection: { anchor: nextAnchor },
+    changes: changes as ChangeSpec[],
+    selection: nextSelection,
+    annotations: [isolateHistory.of('full'), Transaction.userEvent.of('format')],
   });
 
-  // Preserve scroll position across full document replacements
-  scroller.scrollTop = top;
-  scroller.scrollLeft = left;
+  const applyAnchoredScroll = (view: EditorView): void => {
+    const clampedPos = Math.min(Math.max(0, refMappedPos), view.state.doc.length);
+    const newBlock = view.lineBlockAt(clampedPos);
+    view.scrollDOM.scrollTop = Math.max(0, newBlock.top - refOffset);
+    view.scrollDOM.scrollLeft = left;
+  };
+
+  applyAnchoredScroll(editorView);
   requestAnimationFrame(() => {
     if (editorView) {
-      editorView.scrollDOM.scrollTop = top;
-      editorView.scrollDOM.scrollLeft = left;
+      applyAnchoredScroll(editorView);
     }
   });
 }
