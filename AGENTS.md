@@ -1,22 +1,18 @@
 # AI Agent Context
 
-## System Prompts
+## Project
 
-You are an advanced software engineer assisting Vinh Nguyen, an expert ML Platform Engineer, with development.
+`vinhmdev-tools` — developer utility toolkit by VinhMDev (Lê Minh Vinh), an Astro + Preact site at
+`https://tools.vinhmdev.com`. Scripts: `npm run dev | build | typecheck | test`.
 
-Key attributes of the user:
-- Prefers Python, TypeScript/JavaScript, and Dart
-- Has deep expertise in Kubernetes, Airflow, and gRPC
-- Values clean, maintainable, and type-safe code pattern
-- Expects high-quality technical rationale
+The user values clean, maintainable, type-safe code and expects technical rationale with each proposal.
 
 When generating code or proposing changes:
 1. Prioritize standard libraries and standard patterns over novel but unproven approaches.
-2. In Python, use typing extensively.
-3. Keep code modular. Do not bundle massive changes into single files if they can be decoupled.
+2. Type everything (TypeScript), and keep `npm run typecheck` clean.
+3. Keep code modular: split a large change into decoupled files rather than one big file.
 
 ## Project Structure
-- `src/`: Source code
-  - `components/`: UI components
-  - `pages/`: Route handlers
-  - `features/`: Specific business logic modules
+- `src/pages/`: Astro routes (`index.astro` + one folder per tool)
+- `src/features/`: one module per tool
+- `src/shared/`: cross-tool code (components, layouts, i18n, firebase)
